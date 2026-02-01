@@ -31,7 +31,7 @@ public class X_ZZ_WSP_ATR_Lookup_Mapping_Detail extends PO implements I_ZZ_WSP_A
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260119L;
+	private static final long serialVersionUID = 20260201L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Lookup_Mapping_Detail (Properties ctx, int ZZ_WSP_ATR_Lookup_Mapping_Detail_ID, String trxName)
@@ -39,6 +39,8 @@ public class X_ZZ_WSP_ATR_Lookup_Mapping_Detail extends PO implements I_ZZ_WSP_A
       super (ctx, ZZ_WSP_ATR_Lookup_Mapping_Detail_ID, trxName);
       /** if (ZZ_WSP_ATR_Lookup_Mapping_Detail_ID == 0)
         {
+			setIgnore_If_Blank (false);
+// N
 			setIsMandatory (false);
 // N
 			setZZ_Create_If_Not_Exists (false);
@@ -55,6 +57,8 @@ public class X_ZZ_WSP_ATR_Lookup_Mapping_Detail extends PO implements I_ZZ_WSP_A
       super (ctx, ZZ_WSP_ATR_Lookup_Mapping_Detail_ID, trxName, virtualColumns);
       /** if (ZZ_WSP_ATR_Lookup_Mapping_Detail_ID == 0)
         {
+			setIgnore_If_Blank (false);
+// N
 			setIsMandatory (false);
 // N
 			setZZ_Create_If_Not_Exists (false);
@@ -71,6 +75,8 @@ public class X_ZZ_WSP_ATR_Lookup_Mapping_Detail extends PO implements I_ZZ_WSP_A
       super (ctx, ZZ_WSP_ATR_Lookup_Mapping_Detail_UU, trxName);
       /** if (ZZ_WSP_ATR_Lookup_Mapping_Detail_UU == null)
         {
+			setIgnore_If_Blank (false);
+// N
 			setIsMandatory (false);
 // N
 			setZZ_Create_If_Not_Exists (false);
@@ -87,6 +93,8 @@ public class X_ZZ_WSP_ATR_Lookup_Mapping_Detail extends PO implements I_ZZ_WSP_A
       super (ctx, ZZ_WSP_ATR_Lookup_Mapping_Detail_UU, trxName, virtualColumns);
       /** if (ZZ_WSP_ATR_Lookup_Mapping_Detail_UU == null)
         {
+			setIgnore_If_Blank (false);
+// N
 			setIsMandatory (false);
 // N
 			setZZ_Create_If_Not_Exists (false);
@@ -179,6 +187,28 @@ public class X_ZZ_WSP_ATR_Lookup_Mapping_Detail extends PO implements I_ZZ_WSP_A
 		if (ii == null)
 			 return 0;
 		return ii.intValue();
+	}
+
+	/** Set Ignore If Blank.
+		@param Ignore_If_Blank Ignore If Blank
+	*/
+	public void setIgnore_If_Blank (boolean Ignore_If_Blank)
+	{
+		set_Value (COLUMNNAME_Ignore_If_Blank, Boolean.valueOf(Ignore_If_Blank));
+	}
+
+	/** Get Ignore If Blank.
+		@return Ignore If Blank	  */
+	public boolean isIgnore_If_Blank()
+	{
+		Object oo = get_Value(COLUMNNAME_Ignore_If_Blank);
+		if (oo != null)
+		{
+			 if (oo instanceof Boolean)
+				 return ((Boolean)oo).booleanValue();
+			return "Y".equals(oo);
+		}
+		return false;
 	}
 
 	/** Set Mandatory.

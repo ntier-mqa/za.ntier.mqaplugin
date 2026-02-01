@@ -39,7 +39,6 @@ import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
 public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 
 	// Data usually starts at row 7 (Excel 1-based) => index 6 (0-based)
-	private static final int DEFAULT_DATA_START_ROW = 4;
 	private static final int DEFAULT_COMMIT_EVERY = 1000; // change as you like
 
 
@@ -106,6 +105,8 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 				meta.nameColumnIndex = columnLetterToIndex(nameColLetter);
 			}
 			meta.mandatory = det.isMandatory(); 
+			meta.ignoreIfBlank = det.isIgnore_If_Blank();
+
 
 			colIndexToMeta.put(colIndex, meta);
 		}
@@ -116,12 +117,31 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 
 		// Determine target table name once (needed for restartable check)
 		String targetTableName = getTargetTableNameOrThrow(ctx, mappingHeader);
+		int startRow = (mappingHeader.getStart_Row() == null) ? 0 : mappingHeader.getStart_Row().intValue();
+		if (startRow <= 0) startRow = 4; // keep current default behavior
 
-		for (int r = DEFAULT_DATA_START_ROW; r <= lastRow; r++) {
+		for (int r = startRow; r <= lastRow; r++) {
 			Row row = sheet.getRow(r);
 			if (row == null)
 				continue;
 
+			// ✅ SINGLE rule: ignore empty rows
+			if (isRowCompletelyEmpty(
+			        row,
+			        colIndexToMeta.keySet(),
+			        formatter,
+			        process.getEvaluator())) {
+			    continue;
+			}
+			
+			// 2️⃣ Ignore rows based on Ignore_If_Blank
+			if (shouldIgnoreRowBecauseOfIgnoreIfBlank(
+			        row,
+			        colIndexToMeta.values(),
+			        formatter,
+			        process.getEvaluator())) {
+			    continue;
+			}
 			if (isRowEmptyByMappedColumns(row, colIndexToMeta.keySet(), formatter,process))
 				continue;
 
@@ -490,21 +510,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 	}
 
 
-	/**
-	 * Column metadata for one mapped column.
-	 */
-	private static class ColumnMeta {
-		int columnIndex;
-		X_ZZ_WSP_ATR_Lookup_Mapping_Detail detail;
-		MColumn column;
-		boolean useValueForRef;
-
-		// create-if-missing support
-		boolean createIfNotExist;
-		Integer valueColumnIndex; // may be null
-		Integer nameColumnIndex;  // may be null
-		boolean mandatory; // if text is empty then ignore entire row.
-	}
+	
 
 	private static class SkipRowException extends RuntimeException {
 		SkipRowException(String msg) { super(msg); }

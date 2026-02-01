@@ -55,17 +55,37 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
             meta.column = column;
             meta.useValueForRef = det.isZZ_Use_Value();
             meta.mandatory = det.isMandatory();
+            meta.ignoreIfBlank = det.isIgnore_If_Blank();
+
 
             colIndexToMeta.put(colIndex, meta);
         }
 
         int errors = 0;
         int lastRow = sheet.getLastRowNum();
-
-        for (int r = 4; r <= lastRow; r++) { // your DEFAULT_DATA_START_ROW
+    	int startRow = (mappingHeader.getStart_Row() == null) ? 0 : mappingHeader.getStart_Row().intValue();
+		if (startRow <= 0) startRow = 4; // keep current default behavior
+        for (int r = startRow; r <= lastRow; r++) { // your DEFAULT_DATA_START_ROW
             Row row = sheet.getRow(r);
             if (row == null) continue;
 
+         // ✅ NEW: ignore fully-empty rows
+            if (isRowCompletelyEmpty(
+                    row,
+                    colIndexToMeta.keySet(),
+                    formatter,
+                    evaluator)) {
+                continue;
+            }
+            
+         // 2️⃣ Ignore rows based on Ignore_If_Blank
+            if (shouldIgnoreRowBecauseOfIgnoreIfBlank(
+                    row,
+                    colIndexToMeta.values(),
+                    formatter,
+                    evaluator)) {
+                continue;
+            }
             // 1) Mandatory missing
             for (ColumnMeta meta : colIndexToMeta.values()) {
                 if (!meta.mandatory) continue;
@@ -100,12 +120,7 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
         return errors;
     }
 
-    private static class ColumnMeta {
-        int columnIndex;
-        MColumn column;
-        boolean useValueForRef;
-        boolean mandatory;
-    }
+   
 
 	@Override
 	public int importData(Properties ctx, Workbook wb, X_ZZ_WSP_ATR_Submitted submitted,
