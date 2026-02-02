@@ -462,8 +462,10 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 				//pi.setAD_Org_ID(Env.getAD_Org_ID(ctx));
 
 				// Start via iDempiere process engine
-				String trxName = Trx.createTrxName("WebWSPATR_Submit");
-				org.adempiere.util.ProcessUtil.startJavaProcess(ctx, pi, Trx.get(trxName, true), false, null);
+				//String trxName = Trx.createTrxName("WebWSPATR_Submit");
+				//org.adempiere.util.ProcessUtil.startJavaProcess(ctx, pi, Trx.get(trxName, true), false, null);
+				boolean ok = org.adempiere.util.ProcessUtil.startJavaProcess(ctx, pi, null, true, null);
+
 
 			} catch (Exception ex) {
 				// process should attach ERROR file itself
