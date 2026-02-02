@@ -310,6 +310,7 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 		Integer nameColumnIndex;  // may be null
 		boolean mandatory; // if text is empty then ignore entire row.
 		boolean ignoreIfBlank;
+		String headerName; // from mapping detail (Header Name)
 	}
 
 

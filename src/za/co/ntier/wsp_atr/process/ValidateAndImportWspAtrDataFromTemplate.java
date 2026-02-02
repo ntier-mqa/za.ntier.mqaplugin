@@ -39,63 +39,73 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 
 	@Override
 	protected String doIt() throws Exception {
-		if (p_ZZ_WSP_ATR_Submitted_ID <= 0)
-			throw new AdempiereException("No WSP/ATR Submitted record selected");
+		try {
+			if (p_ZZ_WSP_ATR_Submitted_ID <= 0)
+				throw new AdempiereException("No WSP/ATR Submitted record selected");
 
-		updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID, X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Validating);
+			updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID, X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Validating);
 
 
-		Properties ctx = Env.getCtx();
-		String trxName = get_TrxName();
+			Properties ctx = Env.getCtx();
+			String trxName = get_TrxName();
 
-		X_ZZ_WSP_ATR_Submitted submitted =
-				new X_ZZ_WSP_ATR_Submitted(ctx, p_ZZ_WSP_ATR_Submitted_ID, trxName);
+			X_ZZ_WSP_ATR_Submitted submitted =
+					new X_ZZ_WSP_ATR_Submitted(ctx, p_ZZ_WSP_ATR_Submitted_ID, trxName);
 
-		// Load workbook (same as your existing)
-		Workbook wb = loadWorkbook(submitted);
-		DataFormatter formatter = new DataFormatter();
-		FormulaEvaluator evaluator = wb.getCreationHelper().createFormulaEvaluator();
+			// Load workbook (same as your existing)
+			Workbook wb = loadWorkbook(submitted);
+			DataFormatter formatter = new DataFormatter();
+			FormulaEvaluator evaluator = wb.getCreationHelper().createFormulaEvaluator();
 
-		// Load mapping headers
-		List<X_ZZ_WSP_ATR_Lookup_Mapping> headers = new Query(
-				ctx,
-				X_ZZ_WSP_ATR_Lookup_Mapping.Table_Name,
-				null,
-				trxName)
-				.setOnlyActiveRecords(true)
-				.list();
+			// Load mapping headers
+			List<X_ZZ_WSP_ATR_Lookup_Mapping> headers = new Query(
+					ctx,
+					X_ZZ_WSP_ATR_Lookup_Mapping.Table_Name,
+					null,
+					trxName)
+					.setOnlyActiveRecords(true)
+					.list();
 
-		if (headers == null || headers.isEmpty())
-			throw new AdempiereException("No WSP/ATR mapping header records defined");
+			if (headers == null || headers.isEmpty())
+				throw new AdempiereException("No WSP/ATR mapping header records defined");
 
-		int totalErrors = 0;
+			int totalErrors = 0;
 
-		for (X_ZZ_WSP_ATR_Lookup_Mapping mapHeader : headers) {
-			if (mapHeader.getAD_Table_ID() <= 0) continue;
+			for (X_ZZ_WSP_ATR_Lookup_Mapping mapHeader : headers) {
+				if (mapHeader.getAD_Table_ID() <= 0) continue;
 
-			boolean isColumns = mapHeader.get_ValueAsBoolean("ZZ_Is_Columns");
-			if (isColumns) {
-				ColumnModeSheetValidator v = new ColumnModeSheetValidator(refService, this);
-				totalErrors += v.validate(ctx, wb, submitted, mapHeader, trxName, formatter, evaluator);
-			} else {
-				// build RowModeSheetValidator similarly
-				// totalErrors += rowValidator.validate(...)
+				boolean isColumns = mapHeader.get_ValueAsBoolean("ZZ_Is_Columns");
+				if (isColumns) {
+					ColumnModeSheetValidator v = new ColumnModeSheetValidator(refService, this);
+					totalErrors += v.validate(ctx, wb, submitted, mapHeader, trxName, formatter, evaluator);
+				} else {
+					// build RowModeSheetValidator similarly
+					// totalErrors += rowValidator.validate(...)
+				}
 			}
+
+			if (totalErrors > 0) {
+				// write workbook to bytes + attach as error file
+				String errName = buildErrorFileName(submitted);
+				attachErrorWorkbook(submitted, wb, errName);
+				updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID,X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_ValidationError );
+
+
+				// attachErrorWorkbook(submitted, wb, "ERROR_" + safeFileName(submitted) + ".xlsm");
+				throw new AdempiereException("Template has " + totalErrors
+						+ " validation errors. Download the attached error file, fix highlighted cells, and try again.");
+			}
+
+			updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID, X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Importing);
+		} catch (Exception ex) {
+			// ✅ This is the missing piece: sheet missing / workbook load / any unexpected validation error
+			updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID,X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_ErrorImporting);
+
+			// Optional: store message somewhere if you have a column (recommended)
+			// updateSubmittedErrorCommitted(p_ZZ_WSP_ATR_Submitted_ID, ex.getMessage());
+
+			throw ex;
 		}
-
-		if (totalErrors > 0) {
-			// write workbook to bytes + attach as error file
-			String errName = buildErrorFileName(submitted);
-			attachErrorWorkbook(submitted, wb, errName);
-			updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID,X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_ValidationError );
-
-
-			// attachErrorWorkbook(submitted, wb, "ERROR_" + safeFileName(submitted) + ".xlsm");
-			throw new AdempiereException("Template has " + totalErrors
-					+ " validation errors. Download the attached error file, fix highlighted cells, and try again.");
-		}
-
-		updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID, X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Importing);
 
 
 		// No errors => run import
@@ -109,7 +119,7 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 			throw ex;
 		}
 
-		
+
 	}
 
 	// implement: loadWorkbook(submitted) same as you already have
@@ -235,23 +245,23 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 	}
 
 
-	
+
 	private void updateSubmittedStatusCommitted(int submittedId, String status) throws Exception {
-	    String trxName = Trx.createTrxName("WSPATR_STATUS");
-	    Trx trx = Trx.get(trxName, true);
-	    try {
-	        DB.executeUpdateEx(
-	            "UPDATE ZZ_WSP_ATR_Submitted SET ZZ_WSP_ATR_Status=? WHERE ZZ_WSP_ATR_Submitted_ID=?",
-	            new Object[] { status, submittedId },
-	            trxName
-	        );
-	        trx.commit(true);
-	    } catch (Exception e) {
-	        trx.rollback();
-	        throw e;
-	    } finally {
-	        trx.close();
-	    }
+		String trxName = Trx.createTrxName("WSPATR_STATUS");
+		Trx trx = Trx.get(trxName, true);
+		try {
+			DB.executeUpdateEx(
+					"UPDATE ZZ_WSP_ATR_Submitted SET ZZ_WSP_ATR_Status=? WHERE ZZ_WSP_ATR_Submitted_ID=?",
+					new Object[] { status, submittedId },
+					trxName
+					);
+			trx.commit(true);
+		} catch (Exception e) {
+			trx.rollback();
+			throw e;
+		} finally {
+			trx.close();
+		}
 	}
 
 

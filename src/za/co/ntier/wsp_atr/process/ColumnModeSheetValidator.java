@@ -25,6 +25,9 @@ import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
 public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
 
     private final ExcelErrorMarker marker = new ExcelErrorMarker();
+    private final ExcelErrorLogSheet errorLog = new ExcelErrorLogSheet();
+
+    
 
     public ColumnModeSheetValidator(ReferenceLookupService refService, SvrProcess proc) {
         super(refService, proc);
@@ -56,6 +59,7 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
             meta.useValueForRef = det.isZZ_Use_Value();
             meta.mandatory = det.isMandatory();
             meta.ignoreIfBlank = det.isIgnore_If_Blank();
+            meta.headerName =  det.getZZ_Header_Name();
 
 
             colIndexToMeta.put(colIndex, meta);
@@ -91,9 +95,17 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
                 if (!meta.mandatory) continue;
 
                 String txt = getCellText(row, meta.columnIndex, formatter, evaluator);
-                if (Util.isEmpty(txt, true)) {
-                    marker.markError(wb, sheet, row, meta.columnIndex,
-                            "Mandatory field is missing (" + meta.column.getColumnName() + ")");
+                if (Util.isEmpty(txt, true)) {                    
+                    String msg = "Mandatory field is missing (" + meta.column.getColumnName() + ")";
+                    marker.markError(wb, sheet, row, meta.columnIndex, msg);
+                    errorLog.appendError(
+                        wb,
+                        mappingHeader.getZZ_Tab_Name(),
+                        meta.headerName,
+                        row.getRowNum(),
+                        meta.columnIndex,
+                        msg
+                    );
                     errors++;
                 }
             }
@@ -110,10 +122,22 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
                 Integer id = tryResolveRefId(ctx, meta.column, txt, meta.useValueForRef, trxName);
                 if (id == null || id <= 0) {
                     // If mandatory ref: this is a hard error (and you should block import)
-                    String msg = "Reference not found for value '" + txt + "' (" + meta.column.getColumnName() + ")";
-                    marker.markError(wb, sheet, row, meta.columnIndex, msg);
-                    errors++;
-                }
+                	if (id == null || id <= 0) {
+                	    String msg = "Reference not found for value '" + txt + "' (" + meta.column.getColumnName() + ")";
+                	    marker.markError(wb, sheet, row, meta.columnIndex, msg);
+                	    errorLog.appendError(
+                	        wb,
+                	        mappingHeader.getZZ_Tab_Name(),
+                	        meta.headerName,
+                	        row.getRowNum(),
+                	        meta.columnIndex,
+                	        msg
+                	    );
+                	    errors++;
+                	}
+
+                }                
+
             }
         }
 
