@@ -80,6 +80,48 @@ public interface I_ZZ_WSP_ATR_ATR_Detail
 	  */
 	public int getCreatedBy();
 
+    /** Column name Dropout_Reason_ID */
+    public static final String COLUMNNAME_Dropout_Reason_ID = "Dropout_Reason_ID";
+
+	/** Set Dropout_Reason_ID	  */
+	public void setDropout_Reason_ID (int Dropout_Reason_ID);
+
+	/** Get Dropout_Reason_ID	  */
+	public int getDropout_Reason_ID();
+
+	public I_ZZ_Not_Achieved_Ref getDropout_Reason() throws RuntimeException;
+
+    /** Column name Employee_Name */
+    public static final String COLUMNNAME_Employee_Name = "Employee_Name";
+
+	/** Set Employee_Name	  */
+	public void setEmployee_Name (String Employee_Name);
+
+	/** Get Employee_Name	  */
+	public String getEmployee_Name();
+
+    /** Column name Employee_Number_ID */
+    public static final String COLUMNNAME_Employee_Number_ID = "Employee_Number_ID";
+
+	/** Set Employee_Number_ID	  */
+	public void setEmployee_Number_ID (int Employee_Number_ID);
+
+	/** Get Employee_Number_ID	  */
+	public int getEmployee_Number_ID();
+
+	public I_ZZ_WSP_Employees getEmployee_Number() throws RuntimeException;
+
+    /** Column name Field_of_Study_Specify_ID */
+    public static final String COLUMNNAME_Field_of_Study_Specify_ID = "Field_of_Study_Specify_ID";
+
+	/** Set Field_of_Study_Specify_ID	  */
+	public void setField_of_Study_Specify_ID (int Field_of_Study_Specify_ID);
+
+	/** Get Field_of_Study_Specify_ID	  */
+	public int getField_of_Study_Specify_ID();
+
+	public I_ZZ_Field_of_Study_Specify_Ref getField_of_Study_Specify() throws RuntimeException;
+
     /** Column name IsActive */
     public static final String COLUMNNAME_IsActive = "IsActive";
 
@@ -93,6 +135,37 @@ public interface I_ZZ_WSP_ATR_ATR_Detail
 	  */
 	public boolean isActive();
 
+    /** Column name Learning_Programme_Detail_ID */
+    public static final String COLUMNNAME_Learning_Programme_Detail_ID = "Learning_Programme_Detail_ID";
+
+	/** Set Learning_Programme_Detail_ID	  */
+	public void setLearning_Programme_Detail_ID (int Learning_Programme_Detail_ID);
+
+	/** Get Learning_Programme_Detail_ID	  */
+	public int getLearning_Programme_Detail_ID();
+
+	public I_ZZ_Qualification_Type_Details_Ref getLearning_Programme_Detail() throws RuntimeException;
+
+    /** Column name Qualification */
+    public static final String COLUMNNAME_Qualification = "Qualification";
+
+	/** Set Qualification	  */
+	public void setQualification (String Qualification);
+
+	/** Get Qualification	  */
+	public String getQualification();
+
+    /** Column name Qualification_Type_ID */
+    public static final String COLUMNNAME_Qualification_Type_ID = "Qualification_Type_ID";
+
+	/** Set Qualification_Type_ID	  */
+	public void setQualification_Type_ID (int Qualification_Type_ID);
+
+	/** Get Qualification_Type_ID	  */
+	public int getQualification_Type_ID();
+
+	public I_ZZ_Learning_Programme_Ref getQualification_Type() throws RuntimeException;
+
     /** Column name Row_No */
     public static final String COLUMNNAME_Row_No = "Row_No";
 
@@ -101,6 +174,26 @@ public interface I_ZZ_WSP_ATR_ATR_Detail
 
 	/** Get Row No	  */
 	public int getRow_No();
+
+    /** Column name Total_Training_Cost */
+    public static final String COLUMNNAME_Total_Training_Cost = "Total_Training_Cost";
+
+	/** Set Total_Training_Cost	  */
+	public void setTotal_Training_Cost (BigDecimal Total_Training_Cost);
+
+	/** Get Total_Training_Cost	  */
+	public BigDecimal getTotal_Training_Cost();
+
+    /** Column name Training_Status_ID */
+    public static final String COLUMNNAME_Training_Status_ID = "Training_Status_ID";
+
+	/** Set Training_Status_ID	  */
+	public void setTraining_Status_ID (int Training_Status_ID);
+
+	/** Get Training_Status_ID	  */
+	public int getTraining_Status_ID();
+
+	public I_ZZ_Achievement_Status_Ref getTraining_Status() throws RuntimeException;
 
     /** Column name Updated */
     public static final String COLUMNNAME_Updated = "Updated";
@@ -117,6 +210,24 @@ public interface I_ZZ_WSP_ATR_ATR_Detail
 	  * User who updated this records
 	  */
 	public int getUpdatedBy();
+
+    /** Column name Year_Completed */
+    public static final String COLUMNNAME_Year_Completed = "Year_Completed";
+
+	/** Set Year_Completed	  */
+	public void setYear_Completed (String Year_Completed);
+
+	/** Get Year_Completed	  */
+	public String getYear_Completed();
+
+    /** Column name Year_Enrolled */
+    public static final String COLUMNNAME_Year_Enrolled = "Year_Enrolled";
+
+	/** Set Year_Enrolled	  */
+	public void setYear_Enrolled (String Year_Enrolled);
+
+	/** Get Year_Enrolled	  */
+	public String getYear_Enrolled();
 
     /** Column name ZZ_WSP_ATR_ATR_Detail_ID */
     public static final String COLUMNNAME_ZZ_WSP_ATR_ATR_Detail_ID = "ZZ_WSP_ATR_ATR_Detail_ID";
