@@ -114,10 +114,11 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
             for (ColumnMeta meta : colIndexToMeta.values()) {
                 String txt = getCellText(row, meta.columnIndex, formatter, evaluator);
                 if (Util.isEmpty(txt, true)) continue;
-
+                
                 int ref = meta.column.getAD_Reference_ID();
                 boolean isRef = (ref == DisplayType.Table || ref == DisplayType.TableDir || ref == DisplayType.Search);
                 if (!isRef) continue;
+                if (meta.createIfNotExist) continue;
 
                 Integer id = tryResolveRefId(ctx, meta.column, txt, meta.useValueForRef, trxName);
                 if (id == null || id <= 0) {
