@@ -60,6 +60,7 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
             meta.mandatory = det.isMandatory();
             meta.ignoreIfBlank = det.isIgnore_If_Blank();
             meta.headerName =  det.getZZ_Header_Name();
+            meta.createIfNotExist = det.isZZ_Create_If_Not_Exists();
 
 
             colIndexToMeta.put(colIndex, meta);
