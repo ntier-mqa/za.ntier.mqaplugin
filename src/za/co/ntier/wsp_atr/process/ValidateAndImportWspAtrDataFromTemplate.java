@@ -39,6 +39,8 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 
 	@Override
 	protected String doIt() throws Exception {
+		int totalErrors = 0;
+		boolean validationCompletedWithErrors = false;
 		try {
 			if (p_ZZ_WSP_ATR_Submitted_ID <= 0)
 				throw new AdempiereException("No WSP/ATR Submitted record selected");
@@ -69,7 +71,7 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 			if (headers == null || headers.isEmpty())
 				throw new AdempiereException("No WSP/ATR mapping header records defined");
 
-			int totalErrors = 0;
+
 
 			for (X_ZZ_WSP_ATR_Lookup_Mapping mapHeader : headers) {
 				if (mapHeader.getAD_Table_ID() <= 0) continue;
@@ -92,17 +94,20 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 
 
 				// attachErrorWorkbook(submitted, wb, "ERROR_" + safeFileName(submitted) + ".xlsm");
+				validationCompletedWithErrors = true;
 				throw new AdempiereException("Template has " + totalErrors
 						+ " validation errors. Download the attached error file, fix highlighted cells, and try again.");
 			}
 
 			updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID, X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Importing);
 		} catch (Exception ex) {
-			// ✅ This is the missing piece: sheet missing / workbook load / any unexpected validation error
-			updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID,X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_ErrorImporting);
+			if (!validationCompletedWithErrors) {
+				// ✅ This is the missing piece: sheet missing / workbook load / any unexpected validation error
+				updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID,X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_ErrorImporting);
 
-			// Optional: store message somewhere if you have a column (recommended)
-			// updateSubmittedErrorCommitted(p_ZZ_WSP_ATR_Submitted_ID, ex.getMessage());
+				// Optional: store message somewhere if you have a column (recommended)
+				// updateSubmittedErrorCommitted(p_ZZ_WSP_ATR_Submitted_ID, ex.getMessage());
+			}
 
 			throw ex;
 		}
