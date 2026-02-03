@@ -614,6 +614,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	        "FROM adempiere.zzsdforganisation_v " +
 	        "WHERE ad_user_id = ? " +
 	        "AND isactive = 'Y' " +
+	        "AND zzreplacingprimarysdf = 'Y'" +
 	        "ORDER BY orgname";
 
 	    List<List<Object>> rows =
