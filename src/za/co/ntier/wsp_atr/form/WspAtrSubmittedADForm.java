@@ -17,9 +17,11 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import org.adempiere.exceptions.AdempiereException;
+import org.adempiere.util.Callback;
 import org.adempiere.webui.AdempiereWebUI;
 import org.adempiere.webui.ISupportMask;
 import org.adempiere.webui.LayoutUtils;
+import org.adempiere.webui.apps.BackgroundJob;
 import org.adempiere.webui.component.Borderlayout;
 import org.adempiere.webui.component.Label;
 import org.adempiere.webui.component.ListCell;
@@ -446,32 +448,66 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 	// ---------------- Background Process ----------------
 
+	
+	
 	private void runValidateImportInBackground(final int submittedId) {
-		new Thread(() -> {
-			try {
-				Properties ctx = Env.getCtx();
-				MProcess mProcess = MProcess.get(ctx, PROCESS_VALIDATE_IMPORT_UU);
-				ProcessInfo pi = new ProcessInfo("Validate & Import WSP/ATR", mProcess.getAD_Process_ID());
-				pi.setClassName(mProcess.getClassname());
-				MPInstance instance = new MPInstance(Env.getCtx(), pi.getAD_Process_ID(), 0, 0, null);
-				instance.saveEx();
-				pi.setAD_PInstance_ID(instance.getAD_PInstance_ID()); 
-				pi.setRecord_ID(submittedId);
-				pi.setAD_User_ID(Env.getAD_User_ID(ctx));
-				pi.setAD_Client_ID(Env.getAD_Client_ID(ctx));
-				//pi.setAD_Org_ID(Env.getAD_Org_ID(ctx));
+	    final Properties ctx = Env.getCtx();
 
-				// Start via iDempiere process engine
-				//String trxName = Trx.createTrxName("WebWSPATR_Submit");
-				//org.adempiere.util.ProcessUtil.startJavaProcess(ctx, pi, Trx.get(trxName, true), false, null);
-				boolean ok = org.adempiere.util.ProcessUtil.startJavaProcess(ctx, pi, null, true, null);
+	    final MProcess proc = MProcess.get(ctx, PROCESS_VALIDATE_IMPORT_UU);
+	    if (proc == null || proc.getAD_Process_ID() <= 0) {
+	        throw new AdempiereException("Validate/Import process not found (UU=" + PROCESS_VALIDATE_IMPORT_UU + ")");
+	    }
 
+	    String trxName = null;
+	    if (hasRunningJob(proc.getAD_Process_ID(), submittedId, trxName)) {
+	        lblInfo.setValue("A job is already running for Submitted ID " + submittedId);
+	        return;
+	    }
 
-			} catch (Exception ex) {
-				// process should attach ERROR file itself
-			}
-		}, "WSPATR_VALIDATE_IMPORT_" + submittedId).start();
+	    // Build ProcessInfo
+	    final ProcessInfo pi = new ProcessInfo(proc.getName(), proc.getAD_Process_ID());
+	    pi.setAD_User_ID(Env.getAD_User_ID(ctx));
+	    pi.setAD_Client_ID(Env.getAD_Client_ID(ctx));
+	    pi.setRecord_ID(submittedId);
+	    pi.setAD_Process_UU(proc.getAD_Process_UU());
+
+	    // Create MPInstance tied to THIS record so the process runs with correct context
+	    final MPInstance instance = new MPInstance(ctx, proc.getAD_Process_ID(), 0, submittedId, null);
+	    instance.setIsRunAsJob(true);
+
+	    // Optional: force notification type (Notice is usually nicest in UI)
+	    instance.setNotificationType(MPInstance.NOTIFICATIONTYPE_EMailPlusNotice);
+
+	    instance.saveEx();
+	    pi.setAD_PInstance_ID(instance.getAD_PInstance_ID());
+
+	    // No parameters to save from this form, so callback can be empty
+	    Callback<Integer> createInstanceParaCallback = id -> {
+	        // If you later add process parameters, you’d save them here.
+	    };
+
+	    BackgroundJob.create(pi)
+	        .withContext(ctx)
+	        .withNotificationType(instance.getNotificationType())  // or hardcode Notice/Email
+	        .withInitialDelay(500)                                // optional
+	        .run(createInstanceParaCallback);
+
+	    lblInfo.setValue("Background job queued for Submitted ID " + submittedId);
 	}
+	
+	private boolean hasRunningJob(int adProcessId, int recordId, String trxName) {
+	    // AD_PInstance.IsProcessing='Y' is the usual “still running”
+	    int cnt = DB.getSQLValueEx(trxName,
+	        "SELECT COUNT(1) " +
+	        "FROM AD_PInstance " +
+	        "WHERE AD_Process_ID=? " +
+	        "AND Record_ID=? " +
+	        "AND IsProcessing='Y'",
+	        adProcessId, recordId);
+	    return cnt > 0;
+	}
+
+
 
 	// ---------------- Download Error ----------------
 
