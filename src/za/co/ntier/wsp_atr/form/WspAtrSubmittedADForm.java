@@ -77,7 +77,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 	private Hbox actions = new Hbox();
 	private Toolbarbutton btnUpload = new Toolbarbutton("Upload .xlsm");
-	private Toolbarbutton btnSubmit = new Toolbarbutton("Submit");
+	//private Toolbarbutton btnSubmit = new Toolbarbutton("Submit");
 	private Toolbarbutton btnRefresh = new Toolbarbutton("Refresh");
 	private Label lblInfo = new Label("");
 	private Label lblSelectedOrg = new Label("");
@@ -118,14 +118,14 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 	    actions.setSpacing("12px");
 	    actions.appendChild(btnUpload);
-	    actions.appendChild(btnSubmit);
+	//    actions.appendChild(btnSubmit);
 	    actions.appendChild(btnRefresh);
 
 	    // IMPORTANT: use ON_UPLOAD for upload button if you're using UploadEvent
 	    btnUpload.setUpload(AdempiereWebUI.getUploadSetting());
 	    btnUpload.addEventListener(Events.ON_UPLOAD, this);
 
-	    btnSubmit.addEventListener(Events.ON_CLICK, this);
+	   // btnSubmit.addEventListener(Events.ON_CLICK, this);
 	    btnRefresh.addEventListener(Events.ON_CLICK, this);
 
 	    northDiv.appendChild(actions);
@@ -174,10 +174,11 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	        return;
 	    }
 
-		if (event.getTarget() == btnSubmit) {
+	/*	if (event.getTarget() == btnSubmit) {
 			doSubmitSelected();
 			return;
 		}
+		*/
 		if (event.getTarget() == btnRefresh) {
 			refreshList();
 			return;
@@ -189,11 +190,12 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 			return;
 		}
 
-		if ("onRunProcess".equals(event.getName())) {
+	/*	if ("onRunProcess".equals(event.getName())) {
 			int submittedId = (Integer) event.getData();
 			runValidateImportInBackground(submittedId);
 			return;
 		}
+		*/
 	}
 
 
@@ -302,6 +304,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	            submitted.setName("WSP/ATR " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
 	            submitted.setZZ_Import_Submitted_Data("N");
 	            submitted.setZZSdfOrganisation_ID(org.zzSdfOrganisationId);
+	            submitted.setZZ_WSP_ATR_Status(X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Validating);
 	            submitted.saveEx();
 
 	            submittedId = existingId;
@@ -313,6 +316,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	            submitted.setFileName(filename);
 	            submitted.setZZ_Import_Submitted_Data("N");
 	            submitted.setZZSdfOrganisation_ID(org.zzSdfOrganisationId);
+	            submitted.setZZ_WSP_ATR_Status(X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Validating);
 	            submitted.saveEx();
 
 	            submittedId = submitted.get_ID();
@@ -335,12 +339,12 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	    lblSelectedOrg.setValue("Organisation: " + org.orgName);
 	    lblInfo.setValue("Uploaded: " + filename + " (ID " + submittedId + ")");
 	    refreshList();
-
 	    runValidateImportInBackground(submittedId);
+	    
 	}
 	
 
-
+/*
 	private void doSubmitSelected() {
 		Integer id = getSelectedId();
 		if (id == null)
@@ -349,6 +353,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 		runValidateImportInBackground(id);
 		lblInfo.setValue("Validation/Import started for ID " + id);
 	}
+	
 
 	private Integer getSelectedId() {
 		ListItem sel = list.getSelectedItem();
@@ -356,6 +361,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 			return null;
 		return (Integer) sel.getValue();
 	}
+	*/
 
 		
 	private void refreshList() {
@@ -425,11 +431,12 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	    ListCell actions = new ListCell();
 	    Hbox hb = new Hbox();
 	    hb.setSpacing("8px");
-
+/*
 	    Toolbarbutton runBtn = new Toolbarbutton("Run");
 	    runBtn.addEventListener(Events.ON_CLICK, (EventListener<Event>) e ->
 	        Events.postEvent(new Event("onRunProcess", this, Integer.valueOf(id))));
 	    hb.appendChild(runBtn);
+	    */
 
 	    if (!Util.isEmpty(latestError, true)) {
 	        Toolbarbutton dlBtn = new Toolbarbutton("Download Error");
