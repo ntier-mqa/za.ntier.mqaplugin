@@ -69,6 +69,11 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 	        // Link to checklist template
 	        line.setzz_wsp_atr_checklist_ref_ID(refID);
+	        
+	        // Copy name from template
+	        X_ZZ_WSP_ATR_Checklist_Ref ref =
+	            new X_ZZ_WSP_ATR_Checklist_Ref(getCtx(), refID, get_TrxName());
+	        line.setName(ref.getName());
 
 	        // Default completed flag
 	        line.setZZ_Information_Completed(false);

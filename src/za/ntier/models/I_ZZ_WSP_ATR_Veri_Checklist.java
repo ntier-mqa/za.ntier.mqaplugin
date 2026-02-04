@@ -43,6 +43,27 @@ public interface I_ZZ_WSP_ATR_Veri_Checklist
 
     /** Load Meta Data */
 
+    /** Column name AD_Client_ID */
+    public static final String COLUMNNAME_AD_Client_ID = "AD_Client_ID";
+
+	/** Get Tenant.
+	  * Tenant for this installation.
+	  */
+	public int getAD_Client_ID();
+
+    /** Column name AD_Org_ID */
+    public static final String COLUMNNAME_AD_Org_ID = "AD_Org_ID";
+
+	/** Set Unit.
+	  * Organizational entity within tenant
+	  */
+	public void setAD_Org_ID (int AD_Org_ID);
+
+	/** Get Unit.
+	  * Organizational entity within tenant
+	  */
+	public int getAD_Org_ID();
+
     /** Column name Comments */
     public static final String COLUMNNAME_Comments = "Comments";
 
