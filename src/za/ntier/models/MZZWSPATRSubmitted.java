@@ -1,6 +1,7 @@
 package za.ntier.models;
 
 import java.sql.ResultSet;
+import org.compiere.model.PO;  // Required for getAllIDs
 import java.util.Properties;
 
 public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
@@ -40,7 +41,41 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	@Override
 	protected boolean afterSave(boolean newRecord, boolean success) {
 		// TODO Auto-generated method stub
-		return super.afterSave(newRecord, success);
+		 if (!newRecord || !success)
+	            return success;
+
+	        createVerificationChecklist();
+	        return success;
+	}
+	
+	private void createVerificationChecklist()
+	{
+	    String whereClause =
+	        X_ZZ_WSP_ATR_Checklist_Ref.COLUMNNAME_IsActive + "='Y'";
+
+	    int[] checklistRefIDs = PO.getAllIDs(
+	        X_ZZ_WSP_ATR_Checklist_Ref.Table_Name,
+	        whereClause,
+	        get_TrxName());
+
+	    for (int refID : checklistRefIDs)
+	    {
+	        // Child line
+	        MZZWSPATRVeriChecklist line =
+	            new MZZWSPATRVeriChecklist(getCtx(), 0, get_TrxName());
+
+	        // Link to header
+	        line.setZZ_WSP_ATR_Submitted_ID(getZZ_WSP_ATR_Submitted_ID());
+
+	        // Link to checklist template
+	        line.setzz_wsp_atr_checklist_ref_ID(refID);
+
+	        // Default completed flag
+	        line.setZZ_Information_Completed(false);
+
+	        // Save child line
+	        line.saveEx();
+	    }
 	}
 
 }
