@@ -80,6 +80,32 @@ public interface I_ZZ_WSP_ATR_Submitted
 	  */
 	public int getCreatedBy();
 
+    /** Column name Description */
+    public static final String COLUMNNAME_Description = "Description";
+
+	/** Set Description.
+	  * Optional short description of the record
+	  */
+	public void setDescription (String Description);
+
+	/** Get Description.
+	  * Optional short description of the record
+	  */
+	public String getDescription();
+
+    /** Column name FileName */
+    public static final String COLUMNNAME_FileName = "FileName";
+
+	/** Set File Name.
+	  * Name of the local file or URL
+	  */
+	public void setFileName (String FileName);
+
+	/** Get File Name.
+	  * Name of the local file or URL
+	  */
+	public String getFileName();
+
     /** Column name IsActive */
     public static final String COLUMNNAME_IsActive = "IsActive";
 
@@ -92,6 +118,28 @@ public interface I_ZZ_WSP_ATR_Submitted
 	  * The record is active in the system
 	  */
 	public boolean isActive();
+
+    /** Column name Name */
+    public static final String COLUMNNAME_Name = "Name";
+
+	/** Set Name.
+	  * Alphanumeric identifier of the entity
+	  */
+	public void setName (String Name);
+
+	/** Get Name.
+	  * Alphanumeric identifier of the entity
+	  */
+	public String getName();
+
+    /** Column name SubmittedDate */
+    public static final String COLUMNNAME_SubmittedDate = "SubmittedDate";
+
+	/** Set Submitted Date	  */
+	public void setSubmittedDate (Timestamp SubmittedDate);
+
+	/** Get Submitted Date	  */
+	public Timestamp getSubmittedDate();
 
     /** Column name Updated */
     public static final String COLUMNNAME_Updated = "Updated";

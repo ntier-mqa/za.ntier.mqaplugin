@@ -18,6 +18,7 @@
 package za.ntier.models;
 
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.util.Properties;
 import org.compiere.model.*;
 
@@ -100,6 +101,69 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
         .append(get_ID()).append(",Name=").append(getName()).append("]");
       return sb.toString();
     }
+
+	/** Set Description.
+		@param Description Optional short description of the record
+	*/
+	public void setDescription (String Description)
+	{
+		set_Value (COLUMNNAME_Description, Description);
+	}
+
+	/** Get Description.
+		@return Optional short description of the record
+	  */
+	public String getDescription()
+	{
+		return (String)get_Value(COLUMNNAME_Description);
+	}
+
+	/** Set File Name.
+		@param FileName Name of the local file or URL
+	*/
+	public void setFileName (String FileName)
+	{
+		set_Value (COLUMNNAME_FileName, FileName);
+	}
+
+	/** Get File Name.
+		@return Name of the local file or URL
+	  */
+	public String getFileName()
+	{
+		return (String)get_Value(COLUMNNAME_FileName);
+	}
+
+	/** Set Name.
+		@param Name Alphanumeric identifier of the entity
+	*/
+	public void setName (String Name)
+	{
+		set_Value (COLUMNNAME_Name, Name);
+	}
+
+	/** Get Name.
+		@return Alphanumeric identifier of the entity
+	  */
+	public String getName()
+	{
+		return (String)get_Value(COLUMNNAME_Name);
+	}
+
+	/** Set Submitted Date.
+		@param SubmittedDate Submitted Date
+	*/
+	public void setSubmittedDate (Timestamp SubmittedDate)
+	{
+		set_Value (COLUMNNAME_SubmittedDate, SubmittedDate);
+	}
+
+	/** Get Submitted Date.
+		@return Submitted Date	  */
+	public Timestamp getSubmittedDate()
+	{
+		return (Timestamp)get_Value(COLUMNNAME_SubmittedDate);
+	}
 
 	/** Set SDF Organisation.
 		@param ZZSdfOrganisation_ID Link Organisation And SDF
