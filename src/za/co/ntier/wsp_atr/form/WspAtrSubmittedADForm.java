@@ -105,6 +105,14 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 		refreshList();
 		this.addEventListener("onDownloadError", this);
 		this.addEventListener("onRunProcess", this);
+		org.zkoss.zk.ui.util.Clients.evalJavaScript(
+			    "var s=document.createElement('style');" +
+			    "s.innerHTML=`" +
+			    ".wsp-edit-purple{background:#2f2d8f!important;border-color:#2f2d8f!important;color:#fff!important;}" +
+			    ".wsp-edit-purple:hover{background:#262372!important;border-color:#262372!important;color:#fff!important;}" +
+			    "`;" +
+			    "document.head.appendChild(s);"
+			);
 
 	}
 
@@ -434,17 +442,18 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	    ListCell actions = new ListCell();
 	    Hbox hb = new Hbox();
 	    hb.setSpacing("8px");
-/*
-	    Toolbarbutton runBtn = new Toolbarbutton("Run");
-	    runBtn.addEventListener(Events.ON_CLICK, (EventListener<Event>) e ->
-	        Events.postEvent(new Event("onRunProcess", this, Integer.valueOf(id))));
-	    hb.appendChild(runBtn);
-	    */
 
+	    
 	    if (!Util.isEmpty(latestError, true)) {
-	        Toolbarbutton dlBtn = new Toolbarbutton("Download Error");
+	        org.adempiere.webui.component.Button dlBtn =
+	                new org.adempiere.webui.component.Button("Download Error");
+
+	        // these classes usually render like the standard purple “Edit” button in iDempiere themes
+	        dlBtn.setSclass("btn btn-sm btn-primary wsp-edit-purple");
+
 	        dlBtn.addEventListener(Events.ON_CLICK, (EventListener<Event>) e ->
 	            Events.postEvent(new Event("onDownloadError", this, Integer.valueOf(id))));
+
 	        hb.appendChild(dlBtn);
 	    }
 

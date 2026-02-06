@@ -96,7 +96,7 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 				// attachErrorWorkbook(submitted, wb, "ERROR_" + safeFileName(submitted) + ".xlsm");
 				validationCompletedWithErrors = true;
 				throw new AdempiereException("Template has " + totalErrors
-						+ " validation errors. Download the attached error file, fix highlighted cells, and try again.");
+						+ " validation errors. Download the attached error file from the Upload Dashboard, fix highlighted cells, and try again.");
 			}
 
 			updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID, X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Importing);
