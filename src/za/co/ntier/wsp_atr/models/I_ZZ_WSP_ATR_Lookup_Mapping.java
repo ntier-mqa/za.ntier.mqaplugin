@@ -108,6 +108,15 @@ public interface I_ZZ_WSP_ATR_Lookup_Mapping
 	  */
 	public boolean isActive();
 
+    /** Column name Start_Row */
+    public static final String COLUMNNAME_Start_Row = "Start_Row";
+
+	/** Set Start Row	  */
+	public void setStart_Row (BigDecimal Start_Row);
+
+	/** Get Start Row	  */
+	public BigDecimal getStart_Row();
+
     /** Column name Updated */
     public static final String COLUMNNAME_Updated = "Updated";
 

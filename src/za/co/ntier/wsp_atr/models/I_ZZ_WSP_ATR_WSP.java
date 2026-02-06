@@ -93,6 +93,15 @@ public interface I_ZZ_WSP_ATR_WSP
 	  */
 	public boolean isActive();
 
+    /** Column name Qualification */
+    public static final String COLUMNNAME_Qualification = "Qualification";
+
+	/** Set Qualification	  */
+	public void setQualification (String Qualification);
+
+	/** Get Qualification	  */
+	public String getQualification();
+
     /** Column name Row_No */
     public static final String COLUMNNAME_Row_No = "Row_No";
 

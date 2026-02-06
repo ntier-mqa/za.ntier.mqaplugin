@@ -25,6 +25,9 @@ import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
 public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
 
     private final ExcelErrorMarker marker = new ExcelErrorMarker();
+    private final ExcelErrorLogSheet errorLog = new ExcelErrorLogSheet();
+
+    
 
     public ColumnModeSheetValidator(ReferenceLookupService refService, SvrProcess proc) {
         super(refService, proc);
@@ -55,25 +58,55 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
             meta.column = column;
             meta.useValueForRef = det.isZZ_Use_Value();
             meta.mandatory = det.isMandatory();
+            meta.ignoreIfBlank = det.isIgnore_If_Blank();
+            meta.headerName =  det.getZZ_Header_Name();
+            meta.createIfNotExist = det.isZZ_Create_If_Not_Exists();
+
 
             colIndexToMeta.put(colIndex, meta);
         }
 
         int errors = 0;
         int lastRow = sheet.getLastRowNum();
-
-        for (int r = 4; r <= lastRow; r++) { // your DEFAULT_DATA_START_ROW
+    	int startRow = (mappingHeader.getStart_Row() == null) ? 0 : mappingHeader.getStart_Row().intValue();
+		if (startRow <= 0) startRow = 4; // keep current default behavior
+        for (int r = startRow; r <= lastRow; r++) { // your DEFAULT_DATA_START_ROW
             Row row = sheet.getRow(r);
             if (row == null) continue;
 
+         // ✅ NEW: ignore fully-empty rows
+            if (isRowCompletelyEmpty(
+                    row,
+                    colIndexToMeta.keySet(),
+                    formatter,
+                    evaluator)) {
+                continue;
+            }
+            
+         // 2️⃣ Ignore rows based on Ignore_If_Blank
+            if (shouldIgnoreRowBecauseOfIgnoreIfBlank(
+                    row,
+                    colIndexToMeta.values(),
+                    formatter,
+                    evaluator)) {
+                continue;
+            }
             // 1) Mandatory missing
             for (ColumnMeta meta : colIndexToMeta.values()) {
                 if (!meta.mandatory) continue;
 
                 String txt = getCellText(row, meta.columnIndex, formatter, evaluator);
-                if (Util.isEmpty(txt, true)) {
-                    marker.markError(wb, sheet, row, meta.columnIndex,
-                            "Mandatory field is missing (" + meta.column.getColumnName() + ")");
+                if (Util.isEmpty(txt, true)) {                    
+                    String msg = "Mandatory field is missing (" + meta.column.getColumnName() + ")";
+                    marker.markError(wb, sheet, row, meta.columnIndex, msg);
+                    errorLog.appendError(
+                        wb,
+                        mappingHeader.getZZ_Tab_Name(),
+                        meta.headerName,
+                        row.getRowNum(),
+                        meta.columnIndex,
+                        msg
+                    );
                     errors++;
                 }
             }
@@ -82,30 +115,38 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
             for (ColumnMeta meta : colIndexToMeta.values()) {
                 String txt = getCellText(row, meta.columnIndex, formatter, evaluator);
                 if (Util.isEmpty(txt, true)) continue;
-
+                
                 int ref = meta.column.getAD_Reference_ID();
                 boolean isRef = (ref == DisplayType.Table || ref == DisplayType.TableDir || ref == DisplayType.Search);
                 if (!isRef) continue;
+                if (meta.createIfNotExist) continue;
 
                 Integer id = tryResolveRefId(ctx, meta.column, txt, meta.useValueForRef, trxName);
                 if (id == null || id <= 0) {
                     // If mandatory ref: this is a hard error (and you should block import)
-                    String msg = "Reference not found for value '" + txt + "' (" + meta.column.getColumnName() + ")";
-                    marker.markError(wb, sheet, row, meta.columnIndex, msg);
-                    errors++;
-                }
+                	if (id == null || id <= 0) {
+                	    String msg = "Reference not found for value '" + txt + "' (" + meta.column.getColumnName() + ")";
+                	    marker.markError(wb, sheet, row, meta.columnIndex, msg);
+                	    errorLog.appendError(
+                	        wb,
+                	        mappingHeader.getZZ_Tab_Name(),
+                	        meta.headerName,
+                	        row.getRowNum(),
+                	        meta.columnIndex,
+                	        msg
+                	    );
+                	    errors++;
+                	}
+
+                }                
+
             }
         }
 
         return errors;
     }
 
-    private static class ColumnMeta {
-        int columnIndex;
-        MColumn column;
-        boolean useValueForRef;
-        boolean mandatory;
-    }
+   
 
 	@Override
 	public int importData(Properties ctx, Workbook wb, X_ZZ_WSP_ATR_Submitted submitted,

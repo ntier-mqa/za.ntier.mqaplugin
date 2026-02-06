@@ -34,6 +34,7 @@ Require-Bundle: org.osgi.service.component.annotations;bundle-version="1.5.1",
  za.co.ntier.fa
 Service-Component: OSGI-INF/org.adempiere.webui.factory.NtierEditorFactory.xml,
  OSGI-INF/org.adempiere.webui.window.ZkJRViewerProviderNtier.xml,
+ OSGI-INF/za.co.ntier.wsp_atr.form.MQAFormAnnotationFormFactory.xml,
  OSGI-INF/za.ntier.callouts.CalloutFactory.xml,
  OSGI-INF/za.ntier.editors.MyDisplayTypeFactory.xml,
  OSGI-INF/za.ntier.editors.MyEditorFactory.xml,

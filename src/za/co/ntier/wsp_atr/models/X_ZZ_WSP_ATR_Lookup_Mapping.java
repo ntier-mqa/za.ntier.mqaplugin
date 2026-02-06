@@ -17,9 +17,11 @@
 /** Generated Model - DO NOT CHANGE */
 package za.co.ntier.wsp_atr.models;
 
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.util.Properties;
 import org.compiere.model.*;
+import org.compiere.util.Env;
 
 /** Generated Model for ZZ_WSP_ATR_Lookup_Mapping
  *  @author iDempiere (generated)
@@ -31,7 +33,7 @@ public class X_ZZ_WSP_ATR_Lookup_Mapping extends PO implements I_ZZ_WSP_ATR_Look
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260114L;
+	private static final long serialVersionUID = 20260201L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Lookup_Mapping (Properties ctx, int ZZ_WSP_ATR_Lookup_Mapping_ID, String trxName)
@@ -135,6 +137,24 @@ public class X_ZZ_WSP_ATR_Lookup_Mapping extends PO implements I_ZZ_WSP_ATR_Look
 		if (ii == null)
 			 return 0;
 		return ii.intValue();
+	}
+
+	/** Set Start Row.
+		@param Start_Row Start Row
+	*/
+	public void setStart_Row (BigDecimal Start_Row)
+	{
+		set_Value (COLUMNNAME_Start_Row, Start_Row);
+	}
+
+	/** Get Start Row.
+		@return Start Row	  */
+	public BigDecimal getStart_Row()
+	{
+		BigDecimal bd = (BigDecimal)get_Value(COLUMNNAME_Start_Row);
+		if (bd == null)
+			 return Env.ZERO;
+		return bd;
 	}
 
 	/** Set Is Columns.

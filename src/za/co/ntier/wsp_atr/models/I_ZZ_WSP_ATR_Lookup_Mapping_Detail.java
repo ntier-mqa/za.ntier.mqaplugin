@@ -110,6 +110,15 @@ public interface I_ZZ_WSP_ATR_Lookup_Mapping_Detail
 	  */
 	public int getCreatedBy();
 
+    /** Column name Ignore_If_Blank */
+    public static final String COLUMNNAME_Ignore_If_Blank = "Ignore_If_Blank";
+
+	/** Set Ignore If Blank	  */
+	public void setIgnore_If_Blank (boolean Ignore_If_Blank);
+
+	/** Get Ignore If Blank	  */
+	public boolean isIgnore_If_Blank();
+
     /** Column name IsActive */
     public static final String COLUMNNAME_IsActive = "IsActive";
 
