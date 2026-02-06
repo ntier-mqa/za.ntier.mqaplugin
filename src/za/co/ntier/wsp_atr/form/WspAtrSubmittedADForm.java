@@ -277,7 +277,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	    String filename = media.getName();
 	    if (!filename.toLowerCase().endsWith(".xlsm"))
 	        throw new AdempiereException("Please upload an .xlsm file");
-	    if (!filename.toLowerCase().startsWith("error")) {
+	    if (filename.toLowerCase().startsWith("error")) {
 	    	throw new AdempiereException("File Name cannot start with Error,please rename and try again");
 	    }
 
