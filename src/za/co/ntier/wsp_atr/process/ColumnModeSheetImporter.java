@@ -127,20 +127,20 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 
 			// ✅ SINGLE rule: ignore empty rows
 			if (isRowCompletelyEmpty(
-			        row,
-			        colIndexToMeta.keySet(),
-			        formatter,
-			        process.getEvaluator())) {
-			    continue;
+					row,
+					colIndexToMeta.keySet(),
+					formatter,
+					process.getEvaluator())) {
+				continue;
 			}
-			
+
 			// 2️⃣ Ignore rows based on Ignore_If_Blank
 			if (shouldIgnoreRowBecauseOfIgnoreIfBlank(
-			        row,
-			        colIndexToMeta.values(),
-			        formatter,
-			        process.getEvaluator())) {
-			    continue;
+					row,
+					colIndexToMeta.values(),
+					formatter,
+					process.getEvaluator())) {
+				continue;
 			}
 			if (isRowEmptyByMappedColumns(row, colIndexToMeta.keySet(), formatter,process))
 				continue;
@@ -208,7 +208,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 					} else {
 						if (Util.isEmpty(mainText, true))
 							continue;
-						
+
 						setValueFromTextMandatoryRefAware(ctx, line, meta, mainText, trxName);
 					}
 				} 
@@ -387,19 +387,19 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 		}
 
 		// Enforce: if a Name column is configured, it must have a value to create
-		
-		
+
+
 		if (meta.nameColumnIndex != null && Util.isEmpty(nameText, true)) {
-		    if (meta.mandatory) {
-		        throw new SkipRowException("Mandatory ref cannot be created (Name empty) for column "
-		                + column.getColumnName());
-		    }
-		    if (svrProcess != null) {
-		        svrProcess.addLog("Skipping create in " + refTableName
-		                + " for column " + column.getColumnName()
-		                + " - Name column is configured but empty. Sheet value='" + (mainText != null ? mainText : "") + "'");
-		    }
-		    return;
+			if (meta.mandatory) {
+				throw new SkipRowException("Mandatory ref cannot be created (Name empty) for column "
+						+ column.getColumnName());
+			}
+			if (svrProcess != null) {
+				svrProcess.addLog("Skipping create in " + refTableName
+						+ " for column " + column.getColumnName()
+						+ " - Name column is configured but empty. Sheet value='" + (mainText != null ? mainText : "") + "'");
+			}
+			return;
 		}
 
 
@@ -418,11 +418,14 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 			}
 		}
 
+		if ((meta.valueColumnIndex == null || meta.valueColumnIndex < 0)
+				&& !meta.useValueForRef) {
+			valueToUse = getNextAddedValue(refTableName, trxName);
+		}
 		// For Value, if we don't have anything, we can reuse Name
 		if (valueToUse == null && nameToUse != null) {
 			valueToUse = nameToUse;
 		}
-
 		// Set standard fields if those columns exist
 		if (refTable.getColumn("Value") != null && valueToUse != null) {
 			refPO.set_ValueOfColumn("Value", valueToUse);
@@ -443,6 +446,20 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 		}
 
 		po.set_ValueOfColumn(column.getColumnName(), newId);
+	}
+
+	private String getNextAddedValue(String tableName, String trxName) {
+		// Extract numeric part after 'ADDED_'
+		final String sql =
+				"SELECT MAX(CAST(SUBSTRING(Value, 7) AS INTEGER)) " +
+						"FROM " + tableName + " " +
+						"WHERE Value LIKE 'ADDED_%'";
+
+		int max = DB.getSQLValueEx(trxName, sql);
+
+		int next = max > 0 ? max + 1 : 1;
+
+		return String.format("ADDED_%05d", next);
 	}
 
 	private void setValueFromTextMandatoryRefAware(Properties ctx, PO po, ColumnMeta meta, String text, String trxName) {
@@ -475,7 +492,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 		po.set_ValueOfColumn(column.getColumnName(), id);
 	}
 
-	
+
 
 
 	/**
@@ -510,7 +527,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 	}
 
 
-	
+
 
 	private static class SkipRowException extends RuntimeException {
 		SkipRowException(String msg) { super(msg); }
