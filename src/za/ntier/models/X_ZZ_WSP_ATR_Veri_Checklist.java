@@ -31,7 +31,7 @@ public class X_ZZ_WSP_ATR_Veri_Checklist extends PO implements I_ZZ_WSP_ATR_Veri
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260204L;
+	private static final long serialVersionUID = 20260206L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Veri_Checklist (Properties ctx, int ZZ_WSP_ATR_Veri_Checklist_ID, String trxName)
@@ -191,6 +191,21 @@ public class X_ZZ_WSP_ATR_Veri_Checklist extends PO implements I_ZZ_WSP_ATR_Veri
 	public String getValue()
 	{
 		return (String)get_Value(COLUMNNAME_Value);
+	}
+
+	/** Set CheckList No.
+		@param ZZ_Checklist_No CheckList No
+	*/
+	public void setZZ_Checklist_No (String ZZ_Checklist_No)
+	{
+		set_Value (COLUMNNAME_ZZ_Checklist_No, ZZ_Checklist_No);
+	}
+
+	/** Get CheckList No.
+		@return CheckList No	  */
+	public String getZZ_Checklist_No()
+	{
+		return (String)get_Value(COLUMNNAME_ZZ_Checklist_No);
 	}
 
 	/** Set Information Completed.

@@ -174,6 +174,15 @@ public interface I_ZZ_WSP_ATR_Veri_Checklist
 	  */
 	public String getValue();
 
+    /** Column name ZZ_Checklist_No */
+    public static final String COLUMNNAME_ZZ_Checklist_No = "ZZ_Checklist_No";
+
+	/** Set CheckList No	  */
+	public void setZZ_Checklist_No (String ZZ_Checklist_No);
+
+	/** Get CheckList No	  */
+	public String getZZ_Checklist_No();
+
     /** Column name ZZ_Information_Completed */
     public static final String COLUMNNAME_ZZ_Information_Completed = "ZZ_Information_Completed";
 

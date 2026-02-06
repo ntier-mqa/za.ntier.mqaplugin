@@ -73,6 +73,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	        // Copy name from template
 	        X_ZZ_WSP_ATR_Checklist_Ref ref =
 	            new X_ZZ_WSP_ATR_Checklist_Ref(getCtx(), refID, get_TrxName());
+	        line.setZZ_Checklist_No(ref.getValue());  // "1", "2", "3"
 	        line.setName(ref.getName());
 
 	        // Default completed flag
