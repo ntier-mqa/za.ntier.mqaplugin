@@ -32,7 +32,7 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260114L;
+	private static final long serialVersionUID = 20260130L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Submitted (Properties ctx, int ZZ_WSP_ATR_Submitted_ID, String trxName)
@@ -165,6 +165,28 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 		return (Timestamp)get_Value(COLUMNNAME_SubmittedDate);
 	}
 
+	/** Set SDF Organisation.
+		@param ZZSdfOrganisation_ID Link Organisation And SDF
+	*/
+	public void setZZSdfOrganisation_ID (int ZZSdfOrganisation_ID)
+	{
+		if (ZZSdfOrganisation_ID < 1)
+			set_Value (COLUMNNAME_ZZSdfOrganisation_ID, null);
+		else
+			set_Value (COLUMNNAME_ZZSdfOrganisation_ID, Integer.valueOf(ZZSdfOrganisation_ID));
+	}
+
+	/** Get SDF Organisation.
+		@return Link Organisation And SDF
+	  */
+	public int getZZSdfOrganisation_ID()
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_ZZSdfOrganisation_ID);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
+	}
+
 	/** Set Import Submitted Data.
 		@param ZZ_Import_Submitted_Data Import Submitted Data
 	*/
@@ -178,6 +200,34 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	public String getZZ_Import_Submitted_Data()
 	{
 		return (String)get_Value(COLUMNNAME_ZZ_Import_Submitted_Data);
+	}
+
+	/** Draft = DR */
+	public static final String ZZ_WSP_ATR_STATUS_Draft = "DR";
+	/** Error Importing = EE */
+	public static final String ZZ_WSP_ATR_STATUS_ErrorImporting = "EE";
+	/** Validation Error = ER */
+	public static final String ZZ_WSP_ATR_STATUS_ValidationError = "ER";
+	/** Imported = IM */
+	public static final String ZZ_WSP_ATR_STATUS_Imported = "IM";
+	/** Importing = IP */
+	public static final String ZZ_WSP_ATR_STATUS_Importing = "IP";
+	/** Validating = VA */
+	public static final String ZZ_WSP_ATR_STATUS_Validating = "VA";
+	/** Set Status.
+		@param ZZ_WSP_ATR_Status Status
+	*/
+	public void setZZ_WSP_ATR_Status (String ZZ_WSP_ATR_Status)
+	{
+
+		set_Value (COLUMNNAME_ZZ_WSP_ATR_Status, ZZ_WSP_ATR_Status);
+	}
+
+	/** Get Status.
+		@return Status	  */
+	public String getZZ_WSP_ATR_Status()
+	{
+		return (String)get_Value(COLUMNNAME_ZZ_WSP_ATR_Status);
 	}
 
 	/** Set WSP/ATR Submitted File.

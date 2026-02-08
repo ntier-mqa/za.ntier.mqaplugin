@@ -157,6 +157,19 @@ public interface I_ZZ_WSP_ATR_Submitted
 	  */
 	public int getUpdatedBy();
 
+    /** Column name ZZSdfOrganisation_ID */
+    public static final String COLUMNNAME_ZZSdfOrganisation_ID = "ZZSdfOrganisation_ID";
+
+	/** Set SDF Organisation.
+	  * Link Organisation And SDF
+	  */
+	public void setZZSdfOrganisation_ID (int ZZSdfOrganisation_ID);
+
+	/** Get SDF Organisation.
+	  * Link Organisation And SDF
+	  */
+	public int getZZSdfOrganisation_ID();
+
     /** Column name ZZ_Import_Submitted_Data */
     public static final String COLUMNNAME_ZZ_Import_Submitted_Data = "ZZ_Import_Submitted_Data";
 
@@ -165,6 +178,15 @@ public interface I_ZZ_WSP_ATR_Submitted
 
 	/** Get Import Submitted Data	  */
 	public String getZZ_Import_Submitted_Data();
+
+    /** Column name ZZ_WSP_ATR_Status */
+    public static final String COLUMNNAME_ZZ_WSP_ATR_Status = "ZZ_WSP_ATR_Status";
+
+	/** Set Status	  */
+	public void setZZ_WSP_ATR_Status (String ZZ_WSP_ATR_Status);
+
+	/** Get Status	  */
+	public String getZZ_WSP_ATR_Status();
 
     /** Column name ZZ_WSP_ATR_Submitted_ID */
     public static final String COLUMNNAME_ZZ_WSP_ATR_Submitted_ID = "ZZ_WSP_ATR_Submitted_ID";

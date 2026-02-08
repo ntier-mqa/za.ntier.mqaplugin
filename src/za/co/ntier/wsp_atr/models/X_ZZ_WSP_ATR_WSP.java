@@ -31,7 +31,7 @@ public class X_ZZ_WSP_ATR_WSP extends PO implements I_ZZ_WSP_ATR_WSP, I_Persiste
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260114L;
+	private static final long serialVersionUID = 20260202L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_WSP (Properties ctx, int ZZ_WSP_ATR_WSP_ID, String trxName)
@@ -39,17 +39,7 @@ public class X_ZZ_WSP_ATR_WSP extends PO implements I_ZZ_WSP_ATR_WSP, I_Persiste
       super (ctx, ZZ_WSP_ATR_WSP_ID, trxName);
       /** if (ZZ_WSP_ATR_WSP_ID == 0)
         {
-			setZZ_African (0);
-			setZZ_Coloured (0);
-			setZZ_Disabled (0);
-			setZZ_Female (0);
-			setZZ_Indian (0);
-			setZZ_Learning_Programme_ID (0);
-			setZZ_Learning_Programme_Type_ID (0);
-			setZZ_Male (0);
-			setZZ_OFO_Specialisation_ID (0);
 			setZZ_WSP_ATR_WSP_ID (0);
-			setZZ_White (0);
         } */
     }
 
@@ -59,17 +49,7 @@ public class X_ZZ_WSP_ATR_WSP extends PO implements I_ZZ_WSP_ATR_WSP, I_Persiste
       super (ctx, ZZ_WSP_ATR_WSP_ID, trxName, virtualColumns);
       /** if (ZZ_WSP_ATR_WSP_ID == 0)
         {
-			setZZ_African (0);
-			setZZ_Coloured (0);
-			setZZ_Disabled (0);
-			setZZ_Female (0);
-			setZZ_Indian (0);
-			setZZ_Learning_Programme_ID (0);
-			setZZ_Learning_Programme_Type_ID (0);
-			setZZ_Male (0);
-			setZZ_OFO_Specialisation_ID (0);
 			setZZ_WSP_ATR_WSP_ID (0);
-			setZZ_White (0);
         } */
     }
 
@@ -79,17 +59,7 @@ public class X_ZZ_WSP_ATR_WSP extends PO implements I_ZZ_WSP_ATR_WSP, I_Persiste
       super (ctx, ZZ_WSP_ATR_WSP_UU, trxName);
       /** if (ZZ_WSP_ATR_WSP_UU == null)
         {
-			setZZ_African (0);
-			setZZ_Coloured (0);
-			setZZ_Disabled (0);
-			setZZ_Female (0);
-			setZZ_Indian (0);
-			setZZ_Learning_Programme_ID (0);
-			setZZ_Learning_Programme_Type_ID (0);
-			setZZ_Male (0);
-			setZZ_OFO_Specialisation_ID (0);
 			setZZ_WSP_ATR_WSP_ID (0);
-			setZZ_White (0);
         } */
     }
 
@@ -99,17 +69,7 @@ public class X_ZZ_WSP_ATR_WSP extends PO implements I_ZZ_WSP_ATR_WSP, I_Persiste
       super (ctx, ZZ_WSP_ATR_WSP_UU, trxName, virtualColumns);
       /** if (ZZ_WSP_ATR_WSP_UU == null)
         {
-			setZZ_African (0);
-			setZZ_Coloured (0);
-			setZZ_Disabled (0);
-			setZZ_Female (0);
-			setZZ_Indian (0);
-			setZZ_Learning_Programme_ID (0);
-			setZZ_Learning_Programme_Type_ID (0);
-			setZZ_Male (0);
-			setZZ_OFO_Specialisation_ID (0);
 			setZZ_WSP_ATR_WSP_ID (0);
-			setZZ_White (0);
         } */
     }
 
@@ -140,6 +100,21 @@ public class X_ZZ_WSP_ATR_WSP extends PO implements I_ZZ_WSP_ATR_WSP, I_Persiste
         .append(get_ID()).append("]");
       return sb.toString();
     }
+
+	/** Set Qualification.
+		@param Qualification Qualification
+	*/
+	public void setQualification (String Qualification)
+	{
+		set_Value (COLUMNNAME_Qualification, Qualification);
+	}
+
+	/** Get Qualification.
+		@return Qualification	  */
+	public String getQualification()
+	{
+		return (String)get_Value(COLUMNNAME_Qualification);
+	}
 
 	/** Set Row No.
 		@param Row_No Row No

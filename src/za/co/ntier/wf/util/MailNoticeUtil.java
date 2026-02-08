@@ -33,6 +33,9 @@ public final class MailNoticeUtil {
 			                                ,MZZWFLines step, PO po, za.co.ntier.wf.model.MZZWFHeader hdr, 
 			                                int tableID,int recordID,MMailText mailText,
 			                                Properties ctx, String trxName) {
+		if (mailText == null) {
+			return;
+		}
 		for (int roleId : MZZWFLineRole.getRoleIds(step.get_ID(), "N","Y",ctx, trxName)) {
 			MailNoticeUtil.queueNotifyForRole(queueNotifis, roleId, tableID, recordID, mailText);
 		}
@@ -51,6 +54,9 @@ public final class MailNoticeUtil {
 	}
 
 	public static void queueNotifyForRole(List<Map<NotificationFields, Object>> queueNotifis, int mailRoleId, int tableID, int recordID, MMailText mailTemplate) {
+		if (mailTemplate == null) {
+			return;
+		}
 		Arrays.asList(MUserRoles.getOfRole(Env.getCtx(), mailRoleId)).forEach(role -> {
 			if (role.isActive()) {
 				MailNoticeUtil.queueNotify(queueNotifis, role.getAD_User_ID(), tableID, recordID, mailTemplate);
@@ -59,6 +65,9 @@ public final class MailNoticeUtil {
 	}
 
 	public static void queueNotify(List<Map<NotificationFields, Object>> queueNotifis, int mailToUserId, int tableID, int recordID, MMailText mailTemplate) {
+		if (mailTemplate == null) {
+			return;
+		}
 		Map<NotificationFields, Object> sentNotifyInfo = new EnumMap<>(NotificationFields.class);
 		sentNotifyInfo.put(NotificationFields.MAIL_TO_USER_ID, mailToUserId);
 		sentNotifyInfo.put(NotificationFields.TABLE_ID, tableID);

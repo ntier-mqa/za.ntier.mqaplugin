@@ -18,7 +18,7 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
     private static final CLogger log = CLogger.getCLogger(MZZSdfOrganisation.class);
 
     // Your fixed mail template UUID
-    private static final String SDF_APPROVED_MAILTEXT_UU = "4ace9d73-8349-44a6-8d2d-5a0838c79362";
+    private static final String SDF_APPROVED_MAILTEXT_UU = "00a3c0c0-93e6-40d1-ac00-962e92d0977e";
 
     public MZZSdfOrganisation(Properties ctx, int ZZSdfOrganisation_ID, String trxName) {
         super(ctx, ZZSdfOrganisation_ID, trxName);

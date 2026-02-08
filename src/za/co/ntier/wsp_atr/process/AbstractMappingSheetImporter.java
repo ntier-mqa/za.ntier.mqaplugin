@@ -12,6 +12,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.compiere.model.MColumn;
+import org.compiere.model.MRefTable;
 import org.compiere.model.MTable;
 import org.compiere.model.PO;
 import org.compiere.model.Query;
@@ -23,9 +24,6 @@ import org.compiere.util.Util;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping_Detail;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
-
-
-import org.compiere.model.MRefTable;
 
 public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImporter {
 
@@ -243,5 +241,78 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 
 	    return (id > 0) ? id : null;
 	}
+	
+	protected boolean isRowCompletelyEmpty(
+	        Row row,
+	        Iterable<Integer> colIndexes,
+	        DataFormatter formatter,
+	        FormulaEvaluator evaluator) {
+
+	    for (Integer colIndex : colIndexes) {
+	        if (colIndex == null || colIndex < 0)
+	            continue;
+
+	        String txt = getCellText(row, colIndex, formatter, evaluator);
+	        if (!isBlankOrZero(txt)) {
+	            return false; // found real data → row is NOT empty
+	        }
+	    }
+	    return true; // all mapped cols empty / zero
+	}
+
+	protected boolean isBlankOrZero(String txt) {
+	    if (txt == null)
+	        return true;
+
+	    String s = txt.trim();
+	    if (s.isEmpty())
+	        return true;
+
+	    // normalize numeric-looking strings
+	    s = s.replace(" ", "").replace(",", "");
+
+	    try {
+	        return new java.math.BigDecimal(s)
+	                .compareTo(java.math.BigDecimal.ZERO) == 0;
+	    } catch (Exception ignore) {
+	        return false; // non-numeric non-empty text
+	    }
+	}
+	
+	protected boolean shouldIgnoreRowBecauseOfIgnoreIfBlank(
+	        Row row,
+	        Iterable<ColumnMeta> metas,
+	        DataFormatter formatter,
+	        FormulaEvaluator evaluator) {
+
+	    for (ColumnMeta meta : metas) {
+	        if (!meta.ignoreIfBlank)
+	            continue;
+
+	        String txt = getCellText(row, meta.columnIndex, formatter, evaluator);
+
+	        if (isBlankOrZero(txt)) {
+	            return true; // 🔴 ignore entire row
+	        }
+	    }
+	    return false;
+	}
+	
+	protected static class ColumnMeta {
+		int columnIndex;
+		X_ZZ_WSP_ATR_Lookup_Mapping_Detail detail;
+		MColumn column;
+		boolean useValueForRef;
+
+		// create-if-missing support
+		boolean createIfNotExist;
+		Integer valueColumnIndex; // may be null
+		Integer nameColumnIndex;  // may be null
+		boolean mandatory; // if text is empty then ignore entire row.
+		boolean ignoreIfBlank;
+		String headerName; // from mapping detail (Header Name)
+	}
+
+
 }
 
