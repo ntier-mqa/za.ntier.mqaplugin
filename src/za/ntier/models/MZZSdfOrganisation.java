@@ -11,6 +11,7 @@ import org.compiere.model.MUser;
 import org.compiere.util.CLogger;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
+import org.compiere.util.Util;
 
 public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
 
@@ -59,11 +60,40 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
         }
         return super.afterSave(newRecord, success);
     }
+    
+    private void sendSdfApprovedMail(MClient client) {
+        int adUserId = getSdfUserId();
+        if (adUserId <= 0) return;
+
+        MUser user = MUser.get(getCtx(), adUserId);
+        if (user == null || Util.isEmpty(user.getEMail(), true)) return;
+
+        String to = user.getEMail();
+        String subject = "SDF Organisation Approved";
+
+        // Compose body manually (no MailText fallback)
+        String orgName = getOrganisationName();
+        if (orgName == null) orgName = "";
+
+        String sdlNo = getSdlNumber();
+        if (sdlNo == null) sdlNo = "";
+
+        String body =
+            "Dear " + user.getName() + ",<br/><br/>" +
+            "Your request to link to organisation: " + orgName +
+            " with SDL Number: " + sdlNo +
+            " as a Primary/Secondary SDF (check the window for these details) has been Approved.<br/><br/>" +
+            "Regards<br/>MQA Skills Development and Research (SDR) Team";
+
+        boolean sent = client.sendEMail(to, subject, body, null, true);
+        if (!sent) log.warning("Failed to send SDF approval email to " + to);
+    }
+
 
     /**
      * Send email to the SDF linked to this organisation when approved.
      */
-    private void sendSdfApprovedMail(MClient client) {
+    /*private void sendSdfApprovedMail(MClient client) {
         // 1) Find SDF user
         int adUserId = getSdfUserId();
         if (adUserId <= 0) {
@@ -108,8 +138,18 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
         if (sdlNo == null) {
             sdlNo = "";
         }
-        message = message.replace("@ZZ_SDL_No@", sdlNo);
-        subject = subject.replace("@ZZ_SDL_No@", sdlNo);   
+        String SdfUserName = getSdfUserName();
+        if (SdfUserName == null) {
+        	SdfUserName = "";
+        }
+        String orgName = getOrganisationName();
+        if (orgName == null)
+            orgName = "";
+
+        message = message.replace("@OrgName@", orgName);
+        message = message.replace("@Name@", SdfUserName);
+        message = message.replace("@ZZ_SDLNumber@", sdlNo);
+        subject = subject.replace("@ZZ_SDLNumber@", sdlNo);   
 
         // 3) Send via client
         boolean sent = client.sendEMail(to, subject, message, null, true);
@@ -120,7 +160,7 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
             log.info("SDF approval email sent to " + to
                     + " for ZZSdfOrganisation_ID=" + getZZSdfOrganisation_ID());
         }
-    }
+    }*/
 
     /**
      * FROM adempiere.zzsdforganisation orglink
@@ -151,6 +191,46 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
         }
         return 0;
     }
+    
+    private String getSdfUserName() {
+
+        String sql =
+            "SELECT u.name " +
+            "FROM adempiere.zzsdforganisation orglink " +
+            "JOIN adempiere.zzsdf sdf ON orglink.zzsdf_id = sdf.zzsdf_id " +
+            "JOIN adempiere.ad_user u ON sdf.ad_user_id = u.ad_user_id " +
+            "WHERE orglink.zzsdforganisation_id = ?";
+
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            pstmt = DB.prepareStatement(sql, get_TrxName());
+            pstmt.setInt(1, getZZSdfOrganisation_ID());
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString(1);
+            }
+        } catch (Exception e) {
+            log.severe("Error getting SDF Name: " + e.getMessage());
+        } finally {
+            DB.close(rs, pstmt);
+        }
+        return null;
+    }
+
+    private String getOrganisationName() {
+
+        int bpId = getC_BPartner_ID();
+        if (bpId <= 0)
+            return null;
+
+        MBPartner bp = MBPartner.get(getCtx(), bpId);
+        if (bp == null)
+            return null;
+
+        return bp.getName();
+    }
+
     
     /**
      * Get SDL number from linked Business Partner (C_BPartner.Value)

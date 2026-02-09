@@ -80,7 +80,7 @@ public class MyModelFactory implements IModelFactory {
         register(I_ZZ_WSP_ATR_Lookup_Mapping_Detail.Table_Name,     X_ZZ_WSP_ATR_Lookup_Mapping_Detail.class);
         register(I_ZZ_WSP_ATR_Biodata_Detail.Table_Name,X_ZZ_WSP_ATR_Biodata_Detail.class);
         register(I_ZZ_WSP_Employees.Table_Name,X_ZZ_WSP_Employees.class);
-        register(I_ZZ_WSP_ATR_Submitted.Table_Name,X_ZZ_WSP_ATR_Submitted.class);
+        //register(I_ZZ_WSP_ATR_Submitted.Table_Name,X_ZZ_WSP_ATR_Submitted.class);
     }
 
     private static void register(String tableName, Class<? extends PO> modelClass) {

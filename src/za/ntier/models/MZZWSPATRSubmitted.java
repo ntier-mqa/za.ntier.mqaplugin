@@ -41,11 +41,14 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	@Override
 	protected boolean afterSave(boolean newRecord, boolean success) {
 		// TODO Auto-generated method stub
-		 if (!newRecord || !success)
-	            return success;
+	    // Call parent first
+	    boolean ok = super.afterSave(newRecord, success);
 
+	    // Only create checklist on new record
+	    if (ok && newRecord)
 	        createVerificationChecklist();
-	        return success;
+
+	    return ok;
 	}
 	
 	private void createVerificationChecklist()
@@ -83,5 +86,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	        line.saveEx();
 	    }
 	}
+	
+	
 
 }
