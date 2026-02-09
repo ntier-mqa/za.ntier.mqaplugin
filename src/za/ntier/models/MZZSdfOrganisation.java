@@ -69,7 +69,7 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
         if (user == null || Util.isEmpty(user.getEMail(), true)) return;
 
         String to = user.getEMail();
-        String subject = "SDF Organisation Approved";
+        String subject = "Document Has Been Approved";
 
         // Compose body manually (no MailText fallback)
         String orgName = getOrganisationName();
