@@ -121,10 +121,10 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
         if (orgName == null)
             orgName = "";
 
-        message = message.replace("@OrganisationName@", orgName);
-        message = message.replace("@Name@", SdfUserName);
-        message = message.replace("@ZZ_SDLNumber@", sdlNo);
-        subject = subject.replace("@ZZ_SDLNumber@", sdlNo);   
+        //message = message.replace("@OrganisationName@", orgName);
+        //message = message.replace("@Name@", SdfUserName);
+        //message = message.replace("@ZZ_SDLNumber@", sdlNo);
+        //subject = subject.replace("@ZZ_SDLNumber@", sdlNo);   
 
         // 3) Send via client
      //   boolean sent = client.sendEMail(to, subject, message, null, true);
@@ -147,7 +147,7 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
      * JOIN adempiere.zzsdf sdf ON orglink.zzsdf_id = sdf.zzsdf_id
      * JOIN adempiere.ad_user usr ON sdf.ad_user_id = usr.ad_user_id
      */
-    private int getSdfUserId() {
+    public int getSdfUserId() {
         String sql =
                 "SELECT u.ad_user_id " +
                 "FROM adempiere.zzsdforganisation orglink " +
@@ -172,7 +172,7 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
         return 0;
     }
     
-    private String getSdfUserName() {
+    public String getSdfUserName() {
 
         String sql =
             "SELECT u.name " +
@@ -198,7 +198,7 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
         return null;
     }
 
-    private String getOrganisationName() {
+    public String getOrganisationName() {
 
         int bpId = getC_BPartner_ID();
         if (bpId <= 0)
@@ -215,7 +215,7 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
     /**
      * Get SDL number from linked Business Partner (C_BPartner.Value)
      */
-    private String getSdlNumber() {
+    public String getSdlNumber() {
         int bpId = getC_BPartner_ID();
         if (bpId <= 0) {
             return null;
