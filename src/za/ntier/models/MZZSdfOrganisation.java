@@ -108,26 +108,10 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
         if (subject == null || subject.trim().isEmpty()) {
             subject = "SDF Organisation Approved";
         }
-        //String msgBody = mText.getMailText();
-        String sdlNo = getSdlNumber();
-        if (sdlNo == null) {
-            sdlNo = "";
-        }
-        String SdfUserName = getSdfUserName();
-        if (SdfUserName == null) {
-        	SdfUserName = "";
-        }
-        String orgName = getOrganisationName();
-        if (orgName == null)
-            orgName = "";
 
-        //message = message.replace("@OrganisationName@", orgName);
-        //message = message.replace("@Name@", SdfUserName);
-        //message = message.replace("@ZZ_SDLNumber@", sdlNo);
-        //subject = subject.replace("@ZZ_SDLNumber@", sdlNo);   
 
         // 3) Send via client
-     //   boolean sent = client.sendEMail(to, subject, message, null, true);
+
         
         MUser from = MUser.get(Env.getCtx(), FROM_EMAIL_USER_ID);
         
