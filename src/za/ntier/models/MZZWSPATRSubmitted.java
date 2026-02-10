@@ -3,6 +3,8 @@ package za.ntier.models;
 import java.sql.ResultSet;
 import org.compiere.model.PO;  // Required for getAllIDs
 import java.util.Properties;
+import java.util.List;
+import org.compiere.model.Query;
 
 public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
@@ -51,40 +53,31 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	    return ok;
 	}
 	
-	private void createVerificationChecklist()
-	{
-	    String whereClause =
-	        X_ZZ_WSP_ATR_Checklist_Ref.COLUMNNAME_IsActive + "='Y'";
+	
+	private void createVerificationChecklist() {
+	    // Load checklist template rows in numeric order of Value
+		List<PO> poList = new Query(getCtx(),
+		        X_ZZ_WSP_ATR_Checklist_Ref.Table_Name,
+		        X_ZZ_WSP_ATR_Checklist_Ref.COLUMNNAME_IsActive + "='Y'",
+		        get_TrxName())
+		    .setOrderBy("CAST(Value AS integer)")
+		    .list();   // <-- returns List<PO>
 
-	    int[] checklistRefIDs = PO.getAllIDs(
-	        X_ZZ_WSP_ATR_Checklist_Ref.Table_Name,
-	        whereClause,
-	        get_TrxName());
+		int lineNo = 10;
+		for (PO po : poList) {
+		    X_ZZ_WSP_ATR_Checklist_Ref ref = 
+		        new X_ZZ_WSP_ATR_Checklist_Ref(po.getCtx(), po.get_ID(), po.get_TrxName());
 
-	    for (int refID : checklistRefIDs)
-	    {
-	        // Child line
-	        MZZWSPATRVeriChecklist line =
-	            new MZZWSPATRVeriChecklist(getCtx(), 0, get_TrxName());
-
-	        // Link to header
-	        line.setZZ_WSP_ATR_Submitted_ID(getZZ_WSP_ATR_Submitted_ID());
-
-	        // Link to checklist template
-	        line.setzz_wsp_atr_checklist_ref_ID(refID);
-	        
-	        // Copy name from template
-	        X_ZZ_WSP_ATR_Checklist_Ref ref =
-	            new X_ZZ_WSP_ATR_Checklist_Ref(getCtx(), refID, get_TrxName());
-	        line.setZZ_Checklist_No(ref.getValue());  // "1", "2", "3"
-	        line.setName(ref.getName());
-
-	        // Default completed flag
-	        line.setZZ_Information_Completed(false);
-
-	        // Save child line
-	        line.saveEx();
-	    }
+		    MZZWSPATRVeriChecklist line = new MZZWSPATRVeriChecklist(getCtx(), 0, get_TrxName());
+		    line.setZZ_WSP_ATR_Submitted_ID(getZZ_WSP_ATR_Submitted_ID());
+		    line.setzz_wsp_atr_checklist_ref_ID(ref.getzz_wsp_atr_checklist_ref_ID());
+		    line.setLineNo(lineNo);
+		    lineNo += 10;
+		    line.setZZ_Checklist_No(ref.getValue());
+		    line.setName(ref.getName());
+		    line.setZZ_Information_Completed(false);
+		    line.saveEx();
+		}
 	}
 	
 	
