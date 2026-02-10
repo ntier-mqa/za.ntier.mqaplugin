@@ -7,6 +7,7 @@ import java.util.Properties;
 import org.compiere.model.MBPartner;
 import org.compiere.model.MClient;
 import org.compiere.model.MMailText;
+import org.compiere.model.MSysConfig;
 import org.compiere.model.MUser;
 import org.compiere.util.CLogger;
 import org.compiere.util.DB;
@@ -17,6 +18,7 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
 
     private static final long serialVersionUID = 1L;
     private static final CLogger log = CLogger.getCLogger(MZZSdfOrganisation.class);
+    public static final int FROM_EMAIL_USER_ID = MSysConfig.getIntValue("FROM_EMAIL_USER_ID",1000011);
 
     // Your fixed mail template UUID
     private static final String SDF_APPROVED_MAILTEXT_UU = "00a3c0c0-93e6-40d1-ac00-962e92d0977e";
@@ -61,39 +63,12 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
         return super.afterSave(newRecord, success);
     }
     
-    private void sendSdfApprovedMail(MClient client) {
-        int adUserId = getSdfUserId();
-        if (adUserId <= 0) return;
-
-        MUser user = MUser.get(getCtx(), adUserId);
-        if (user == null || Util.isEmpty(user.getEMail(), true)) return;
-
-        String to = user.getEMail();
-        String subject = "Document Has Been Approved";
-
-        // Compose body manually (no MailText fallback)
-        String orgName = getOrganisationName();
-        if (orgName == null) orgName = "";
-
-        String sdlNo = getSdlNumber();
-        if (sdlNo == null) sdlNo = "";
-
-        String body =
-            "Dear " + user.getName() + ",<br/><br/>" +
-            "Your request to link to organisation: " + orgName +
-            " with SDL Number: " + sdlNo +
-            " as a Primary/Secondary SDF (check the window for these details) has been Approved.<br/><br/>" +
-            "Regards<br/>MQA Skills Development and Research (SDR) Team";
-
-        boolean sent = client.sendEMail(to, subject, body, null, true);
-        if (!sent) log.warning("Failed to send SDF approval email to " + to);
-    }
-
+  
 
     /**
      * Send email to the SDF linked to this organisation when approved.
      */
-    /*private void sendSdfApprovedMail(MClient client) {
+    private void sendSdfApprovedMail(MClient client) {
         // 1) Find SDF user
         int adUserId = getSdfUserId();
         if (adUserId <= 0) {
@@ -133,7 +108,7 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
         if (subject == null || subject.trim().isEmpty()) {
             subject = "SDF Organisation Approved";
         }
-        
+        String msgBody = mText.getMailText();
         String sdlNo = getSdlNumber();
         if (sdlNo == null) {
             sdlNo = "";
@@ -146,13 +121,18 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
         if (orgName == null)
             orgName = "";
 
-        message = message.replace("@OrgName@", orgName);
-        message = message.replace("@Name@", SdfUserName);
-        message = message.replace("@ZZ_SDLNumber@", sdlNo);
-        subject = subject.replace("@ZZ_SDLNumber@", sdlNo);   
+   //     message = message.replace("@OrgName@", orgName);
+   //     message = message.replace("@Name@", SdfUserName);
+    //    message = message.replace("@ZZ_SDLNumber@", sdlNo);
+     //   subject = subject.replace("@ZZ_SDLNumber@", sdlNo);   
 
         // 3) Send via client
-        boolean sent = client.sendEMail(to, subject, message, null, true);
+     //   boolean sent = client.sendEMail(to, subject, message, null, true);
+        
+        MUser from = MUser.get(Env.getCtx(), FROM_EMAIL_USER_ID);
+        
+        boolean sent = client.sendEMail(from, user, subject, msgBody, null, mText.isHtml());
+        
         if (!sent) {
             log.warning("Failed to send SDF approval email to " + to
                     + " for ZZSdfOrganisation_ID=" + getZZSdfOrganisation_ID());
@@ -160,7 +140,7 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
             log.info("SDF approval email sent to " + to
                     + " for ZZSdfOrganisation_ID=" + getZZSdfOrganisation_ID());
         }
-    }*/
+    }
 
     /**
      * FROM adempiere.zzsdforganisation orglink
