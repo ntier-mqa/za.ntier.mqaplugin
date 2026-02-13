@@ -42,6 +42,18 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
     public MZZSdfOrganisation(Properties ctx, ResultSet rs, String trxName) {
         super(ctx, rs, trxName);
     }
+    
+    /**
+     * Returns Primary or Secondary SDF text
+     */
+    public String getSdfType() {
+
+        if (isZZSecondarySdf())
+            return "Secondary";
+
+        return "Primary";
+    }
+
 
     @Override
     protected boolean afterSave(boolean newRecord, boolean success) {
