@@ -9,6 +9,8 @@ import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Submitted;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Report;
 import org.compiere.model.MTable;
 
+@org.adempiere.base.annotation.Process(
+		name = "za.co.ntier.wsp_atr.report.process.GenerateWspAtrReportProcess")
 public class GenerateWspAtrReportProcess extends SvrProcess {
 
     private int p_ZZ_WSP_ATR_Submitted_ID;
