@@ -2,12 +2,13 @@ package za.co.ntier.wsp_atr.report.process;
 
 import java.util.List;
 
+import org.compiere.model.MTable;
 import org.compiere.process.SvrProcess;
 import org.compiere.util.Env;
 
 import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Submitted;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Report;
-import org.compiere.model.MTable;
+import za.ntier.models.MZZWSPATRSubmitted;
 
 @org.adempiere.base.annotation.Process(
 		name = "za.co.ntier.wsp_atr.report.process.GenerateWspAtrReportProcess")
@@ -27,8 +28,8 @@ public class GenerateWspAtrReportProcess extends SvrProcess {
     protected String doIt() throws Exception {
 
         // Load the submitted record (window record)
-        I_ZZ_WSP_ATR_Submitted submitted =
-                (I_ZZ_WSP_ATR_Submitted) MTable.get(getCtx(), I_ZZ_WSP_ATR_Submitted.Table_ID)
+    	MZZWSPATRSubmitted submitted =
+                (MZZWSPATRSubmitted) MTable.get(getCtx(), I_ZZ_WSP_ATR_Submitted.Table_ID)
                         .getPO(p_ZZ_WSP_ATR_Submitted_ID, get_TrxName());
 
         if (submitted == null) {
@@ -53,7 +54,7 @@ public class GenerateWspAtrReportProcess extends SvrProcess {
                 + ". Total inserted rows=" + totalInserted;
     }
 
-    private X_ZZ_WSP_ATR_Report createReport(I_ZZ_WSP_ATR_Submitted submitted) {
+    private X_ZZ_WSP_ATR_Report createReport(MZZWSPATRSubmitted submitted) {
         X_ZZ_WSP_ATR_Report report = new X_ZZ_WSP_ATR_Report(getCtx(), 0, get_TrxName());
 
         // Name/Description: make it meaningful for your users

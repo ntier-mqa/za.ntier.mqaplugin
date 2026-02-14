@@ -1,7 +1,7 @@
 package za.co.ntier.wsp_atr.report.process;
 
-import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Submitted;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Report;
+import za.ntier.models.MZZWSPATRSubmitted;
 
 public interface IReportSectionBuilder {
 
@@ -15,5 +15,5 @@ public interface IReportSectionBuilder {
      * Build this report section for the submitted record.
      * Must insert rows linked to report.getZZ_WSP_ATR_Report_ID().
      */
-    ReportBuildResult build(X_ZZ_WSP_ATR_Report report, I_ZZ_WSP_ATR_Submitted submitted, String trxName) throws Exception;
+    ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted, String trxName) throws Exception;
 }

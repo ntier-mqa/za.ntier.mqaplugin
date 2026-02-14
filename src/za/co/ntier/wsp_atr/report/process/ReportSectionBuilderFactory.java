@@ -5,13 +5,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Submitted;
+import za.ntier.models.MZZWSPATRSubmitted;
 
 public class ReportSectionBuilderFactory {
 
     private ReportSectionBuilderFactory() {}
 
-    public static List<IReportSectionBuilder> getBuilders(Properties ctx, I_ZZ_WSP_ATR_Submitted submitted) {
+    public static List<IReportSectionBuilder> getBuilders(Properties ctx, MZZWSPATRSubmitted submitted) {
         // Later you can filter based on submitted columns (template type, year, etc.)
         List<IReportSectionBuilder> list = new ArrayList<>();
 

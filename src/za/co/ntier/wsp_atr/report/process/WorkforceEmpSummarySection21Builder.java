@@ -5,9 +5,9 @@ import java.sql.ResultSet;
 
 import org.compiere.util.DB;
 
-import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Submitted;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Report;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_WorkForce_Profile_Emp_Summ_Rep;
+import za.ntier.models.MZZWSPATRSubmitted;
 
 public class WorkforceEmpSummarySection21Builder extends AbstractReportSectionBuilder {
 
@@ -25,7 +25,7 @@ public class WorkforceEmpSummarySection21Builder extends AbstractReportSectionBu
     }
 
     @Override
-    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, I_ZZ_WSP_ATR_Submitted submitted, String trxName) throws Exception {
+    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted, String trxName) throws Exception {
 
         // If you want reruns to overwrite the same report header, delete previous rows for this section:
         deleteExistingByReportAndSection(TARGET_TABLE, report.getZZ_WSP_ATR_Report_ID(), SECTION, trxName);
