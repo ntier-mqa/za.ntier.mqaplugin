@@ -44,7 +44,8 @@ public class CreateDemographicCountColumns extends SvrProcess {
             throw new AdempiereException("Please select AD_Table_ID");
         }
 
-        final MTable table = MTable.get(getCtx(), p_AD_Table_ID);
+        
+        MTable table = new MTable (getCtx(), p_AD_Table_ID,get_TrxName());;
         if (table == null || table.getAD_Table_ID() <= 0) {
             throw new AdempiereException("Invalid AD_Table_ID=" + p_AD_Table_ID);
         }
@@ -67,10 +68,8 @@ public class CreateDemographicCountColumns extends SvrProcess {
                 element = new M_Element(getCtx(), 0, get_TrxName());
                 element.setColumnName(def.dbColumnName);
                 element.setName(def.name);
-                element.setPrintName(def.printName);
-                if (def.description != null) {
-                    element.setDescription(def.description);
-                }
+                element.setPrintName(def.name);
+                element.setDescription(def.name);
                 element.setEntityType(p_EntityType);
                 element.saveEx();
                 createdElements++;
@@ -85,7 +84,7 @@ public class CreateDemographicCountColumns extends SvrProcess {
                 col.setAD_Element_ID(element.getAD_Element_ID());
                 col.setColumnName(def.dbColumnName);
                 col.setName(def.name);
-                col.setDescription(def.description);
+                col.setDescription(def.name);
 
                 // Count column settings
                 col.setAD_Reference_ID(DisplayType.Integer); // integer count
@@ -156,14 +155,10 @@ public class CreateDemographicCountColumns extends SvrProcess {
     private static class ColDef {
         final String dbColumnName;
         final String name;
-        final String printName;
-        final String description;
 
         ColDef(String dbColumnName, String name) {
             this.dbColumnName = dbColumnName;
             this.name = name;
-            this.printName = name;
-            this.description = name;
         }
     }
 

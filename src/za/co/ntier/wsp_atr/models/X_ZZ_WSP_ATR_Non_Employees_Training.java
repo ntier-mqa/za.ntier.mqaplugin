@@ -31,7 +31,7 @@ public class X_ZZ_WSP_ATR_Non_Employees_Training extends PO implements I_ZZ_WSP_
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260114L;
+	private static final long serialVersionUID = 20260214L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Non_Employees_Training (Properties ctx, int ZZ_WSP_ATR_Non_Employees_Training_ID, String trxName)
@@ -39,24 +39,8 @@ public class X_ZZ_WSP_ATR_Non_Employees_Training extends PO implements I_ZZ_WSP_
       super (ctx, ZZ_WSP_ATR_Non_Employees_Training_ID, trxName);
       /** if (ZZ_WSP_ATR_Non_Employees_Training_ID == 0)
         {
-			setZZ_African (0);
-			setZZ_Coloured (0);
-			setZZ_Disabled_Done (0);
-			setZZ_Disabled_Planned (0);
-			setZZ_Female (0);
-			setZZ_Indian (0);
-			setZZ_Learning_Programme_Done_ID (0);
-			setZZ_Learning_Programme_Planned_ID (0);
-			setZZ_Learning_Programme_Type_Done_ID (0);
-			setZZ_Learning_Programme_Type_Planned_ID (0);
-			setZZ_Male (0);
-			setZZ_Non_Emp_Status_Done_ID (0);
-			setZZ_Non_Emp_Status_Planned_ID (0);
-			setZZ_Target_Ben_Done_ID (0);
 			setZZ_Target_Ben_Planned_ID (0);
-			setZZ_Total_Planned (0);
 			setZZ_WSP_ATR_Non_Employees_Training_ID (0);
-			setZZ_White (0);
         } */
     }
 
@@ -66,24 +50,8 @@ public class X_ZZ_WSP_ATR_Non_Employees_Training extends PO implements I_ZZ_WSP_
       super (ctx, ZZ_WSP_ATR_Non_Employees_Training_ID, trxName, virtualColumns);
       /** if (ZZ_WSP_ATR_Non_Employees_Training_ID == 0)
         {
-			setZZ_African (0);
-			setZZ_Coloured (0);
-			setZZ_Disabled_Done (0);
-			setZZ_Disabled_Planned (0);
-			setZZ_Female (0);
-			setZZ_Indian (0);
-			setZZ_Learning_Programme_Done_ID (0);
-			setZZ_Learning_Programme_Planned_ID (0);
-			setZZ_Learning_Programme_Type_Done_ID (0);
-			setZZ_Learning_Programme_Type_Planned_ID (0);
-			setZZ_Male (0);
-			setZZ_Non_Emp_Status_Done_ID (0);
-			setZZ_Non_Emp_Status_Planned_ID (0);
-			setZZ_Target_Ben_Done_ID (0);
 			setZZ_Target_Ben_Planned_ID (0);
-			setZZ_Total_Planned (0);
 			setZZ_WSP_ATR_Non_Employees_Training_ID (0);
-			setZZ_White (0);
         } */
     }
 
@@ -93,24 +61,8 @@ public class X_ZZ_WSP_ATR_Non_Employees_Training extends PO implements I_ZZ_WSP_
       super (ctx, ZZ_WSP_ATR_Non_Employees_Training_UU, trxName);
       /** if (ZZ_WSP_ATR_Non_Employees_Training_UU == null)
         {
-			setZZ_African (0);
-			setZZ_Coloured (0);
-			setZZ_Disabled_Done (0);
-			setZZ_Disabled_Planned (0);
-			setZZ_Female (0);
-			setZZ_Indian (0);
-			setZZ_Learning_Programme_Done_ID (0);
-			setZZ_Learning_Programme_Planned_ID (0);
-			setZZ_Learning_Programme_Type_Done_ID (0);
-			setZZ_Learning_Programme_Type_Planned_ID (0);
-			setZZ_Male (0);
-			setZZ_Non_Emp_Status_Done_ID (0);
-			setZZ_Non_Emp_Status_Planned_ID (0);
-			setZZ_Target_Ben_Done_ID (0);
 			setZZ_Target_Ben_Planned_ID (0);
-			setZZ_Total_Planned (0);
 			setZZ_WSP_ATR_Non_Employees_Training_ID (0);
-			setZZ_White (0);
         } */
     }
 
@@ -120,24 +72,8 @@ public class X_ZZ_WSP_ATR_Non_Employees_Training extends PO implements I_ZZ_WSP_
       super (ctx, ZZ_WSP_ATR_Non_Employees_Training_UU, trxName, virtualColumns);
       /** if (ZZ_WSP_ATR_Non_Employees_Training_UU == null)
         {
-			setZZ_African (0);
-			setZZ_Coloured (0);
-			setZZ_Disabled_Done (0);
-			setZZ_Disabled_Planned (0);
-			setZZ_Female (0);
-			setZZ_Indian (0);
-			setZZ_Learning_Programme_Done_ID (0);
-			setZZ_Learning_Programme_Planned_ID (0);
-			setZZ_Learning_Programme_Type_Done_ID (0);
-			setZZ_Learning_Programme_Type_Planned_ID (0);
-			setZZ_Male (0);
-			setZZ_Non_Emp_Status_Done_ID (0);
-			setZZ_Non_Emp_Status_Planned_ID (0);
-			setZZ_Target_Ben_Done_ID (0);
 			setZZ_Target_Ben_Planned_ID (0);
-			setZZ_Total_Planned (0);
 			setZZ_WSP_ATR_Non_Employees_Training_ID (0);
-			setZZ_White (0);
         } */
     }
 
@@ -554,6 +490,24 @@ public class X_ZZ_WSP_ATR_Non_Employees_Training extends PO implements I_ZZ_WSP_
 	public int getZZ_Target_Ben_Planned_ID()
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_ZZ_Target_Ben_Planned_ID);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
+	}
+
+	/** Set Total Done.
+		@param ZZ_Total_Done Total Done
+	*/
+	public void setZZ_Total_Done (int ZZ_Total_Done)
+	{
+		set_Value (COLUMNNAME_ZZ_Total_Done, Integer.valueOf(ZZ_Total_Done));
+	}
+
+	/** Get Total Done.
+		@return Total Done	  */
+	public int getZZ_Total_Done()
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_ZZ_Total_Done);
 		if (ii == null)
 			 return 0;
 		return ii.intValue();

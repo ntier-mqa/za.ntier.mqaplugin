@@ -287,6 +287,15 @@ public interface I_ZZ_WSP_ATR_Non_Employees_Training
 
 	public I_ZZ_Target_Beneficiary_Ref getZZ_Target_Ben_Planned() throws RuntimeException;
 
+    /** Column name ZZ_Total_Done */
+    public static final String COLUMNNAME_ZZ_Total_Done = "ZZ_Total_Done";
+
+	/** Set Total Done	  */
+	public void setZZ_Total_Done (int ZZ_Total_Done);
+
+	/** Get Total Done	  */
+	public int getZZ_Total_Done();
+
     /** Column name ZZ_Total_Planned */
     public static final String COLUMNNAME_ZZ_Total_Planned = "ZZ_Total_Planned";
 
