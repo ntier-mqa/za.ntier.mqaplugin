@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport
+    xmlns="http://jasperreports.sourceforge.net/jasperreports"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+                        http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+    name="ZZ_WSP_ATR_WorkforceProfile_Master"
+    pageWidth="842"
+    pageHeight="595"
+    orientation="Landscape"
+    columnWidth="802"
+    leftMargin="20"
+    rightMargin="20"
+    topMargin="20"
+    bottomMargin="20"
+    whenNoDataType="AllSectionsNoDetail">
+
+    <!-- ===================== -->
+    <!-- STYLES (TOP ONLY)     -->
+    <!-- ===================== -->
+
+    <style name="Title" fontName="SansSerif" fontSize="14" isBold="true"/>
+    <style name="SubTitle" fontName="SansSerif" fontSize="11" isBold="true"/>
+    <style name="Normal" fontName="SansSerif" fontSize="9"/>
+
+    <!-- ===================== -->
+    <!-- PARAMETERS            -->
+    <!-- ===================== -->
+
+    <!-- Passed from iDempiere process -->
+    <parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
+
+    <!-- Standard iDempiere pattern: directory where .jasper subreports live -->
+    <parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+        <defaultValueExpression><![CDATA[""]]></defaultValueExpression>
+    </parameter>
+
+    <!-- Optional: for DB connection if you prefer to use the same connection -->
+    <parameter name="REPORT_CONNECTION" class="java.sql.Connection" isForPrompting="false"/>
+
+    <!-- ===================== -->
+    <!-- TITLE                 -->
+    <!-- ===================== -->
+
+    <title>
+        <band height="35">
+            <staticText>
+                <reportElement x="0" y="0" width="802" height="25" style="Title"/>
+                <textElement textAlignment="Left" verticalAlignment="Middle"/>
+                <text><![CDATA[Section 2: Workforce Profile]]></text>
+            </staticText>
+        </band>
+    </title>
+
+    <!-- ===================== -->
+    <!-- DETAIL: SUBREPORTS     -->
+    <!-- ===================== -->
+
+    <detail>
+        <!-- Make this tall enough to hold multiple subreports.
+             Jasper will page-break automatically if they overflow. -->
+        <band height="900" splitType="Stretch">
+
+            <!-- ===================== -->
+            <!-- Subreport: Section 2.1 -->
+            <!-- ===================== -->
+            <subreport>
+                <reportElement x="0" y="0" width="802" height="420"/>
+                <!-- If you compile to .jasper, reference the .jasper -->
+                <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_2_1_Workforce_Emp_Summ.jasper"]]></subreportExpression>
+
+                <subreportParameter name="ZZ_WSP_ATR_Report_ID">
+                    <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+                </subreportParameter>
+
+                <!-- Use the same DB connection from the master if available -->
+                <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+            </subreport>
+
+            <!-- ===================== -->
+            <!-- Subreport: Section 2.2 -->
+            <!-- ===================== -->
+            <subreport>
+                <reportElement x="0" y="440" width="802" height="220"/>
+                <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_2_2_Geo_Dist.jasper"]]></subreportExpression>
+
+                <subreportParameter name="ZZ_WSP_ATR_Report_ID">
+                    <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+                </subreportParameter>
+
+                <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+            </subreport>
+
+            <!-- ===================== -->
+            <!-- Placeholder for 2.3+   -->
+            <!-- Copy/paste blocks above
+                 and adjust y + file name  WSP_ATR_Section_2_3_Terminated_Employees -->
+            <!-- ===================== -->
+              <subreport>
+                <reportElement x="0" y="440" width="802" height="220"/>
+                <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_2_3_Terminated_Employees.jasper"]]></subreportExpression>
+
+                <subreportParameter name="ZZ_WSP_ATR_Report_ID">
+                    <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+                </subreportParameter>
+
+                <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+            </subreport>
+
+        </band>
+    </detail>
+
+</jasperReport>
