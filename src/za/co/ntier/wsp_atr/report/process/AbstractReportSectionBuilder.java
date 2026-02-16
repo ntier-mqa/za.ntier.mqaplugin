@@ -8,7 +8,7 @@ public abstract class AbstractReportSectionBuilder implements IReportSectionBuil
      * Optional: if you want reruns to be idempotent, delete prior rows for this report+section.
      */
     protected int deleteExistingByReportAndSection(String targetTable, int reportId, String section, String trxName) {
-        String sql = "DELETE FROM " + targetTable + " WHERE ZZ_WSP_ATR_Report_ID=? AND ZZ_Section=?";
-        return DB.executeUpdateEx(sql, new Object[] { reportId, section }, trxName);
+        String sql = "DELETE FROM " + targetTable + " WHERE ZZ_WSP_ATR_Report_ID=?";
+        return DB.executeUpdateEx(sql, new Object[] { reportId}, trxName);
     }
 }

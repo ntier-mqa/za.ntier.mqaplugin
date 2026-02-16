@@ -45,10 +45,10 @@ public class WorkforceEmpSummarySection21Builder extends AbstractReportSectionBu
                 "WITH bd2 AS ( \n"
               + "  SELECT \n"
               + "    bd.OFO_Occupation_Code_ID, \n"
-              + "    COALESCE(eq.Value, eq.Name, '') AS race_txt, \n"
-              + "    COALESCE(g.Value,  g.Name,  '') AS gender_txt, \n"
-              + "    COALESCE(dis.Value, dis.Name, '') AS disabled_txt, \n"
-              + "    COALESCE(sa.Value, sa.Name, '') AS sa_txt, \n"
+              + "    COALESCE(eq.Name, eq.Name, '') AS race_txt, \n"
+              + "    COALESCE(g.Name,  g.Name,  '') AS gender_txt, \n"
+              + "    COALESCE(dis.Name, dis.Name, '') AS disabled_txt, \n"
+              + "    COALESCE(sa.Name, sa.Name, '') AS sa_txt, \n"
               + "    CASE \n"
               + "      WHEN NULLIF(regexp_replace(COALESCE(bd.Birth_Year_TRUE,''), '[^0-9]', '', 'g'), '') IS NULL THEN NULL \n"
               + "      ELSE (extract(year from current_date)::int \n"
@@ -93,7 +93,7 @@ public class WorkforceEmpSummarySection21Builder extends AbstractReportSectionBu
                             new X_ZZ_WSP_ATR_WorkForce_Profile_Emp_Summ_Rep(report.getCtx(), 0, trxName);
 
                     row.setZZ_WSP_ATR_Report_ID(report.getZZ_WSP_ATR_Report_ID());
-                    row.set_ValueOfColumn("ZZ_Section", SECTION);
+                    row.set_ValueOfColumn("ZZ_Report_Section", SECTION);
 
                     row.setOFO_Occupation_Code_ID(rs.getInt("ofo_occupation_code_id"));
 

@@ -41,7 +41,9 @@ public class HeaderLogoImageLoader {
 
 		if (image != null ) {
 			byte [] data = image.getBinaryData();
-			writeLogoFilesToTmpReportDir(data,destinationFolder);
+			if (data != null) {
+				writeLogoFilesToTmpReportDir(data,destinationFolder);
+			}
 		}
 	}
 
