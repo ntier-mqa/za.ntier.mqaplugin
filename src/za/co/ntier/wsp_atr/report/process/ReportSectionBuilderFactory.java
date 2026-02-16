@@ -16,7 +16,7 @@ public class ReportSectionBuilderFactory {
         List<IReportSectionBuilder> list = new ArrayList<>();
 
         list.add(new WorkforceEmpSummarySection21Builder());
-
+        list.add(new GeoDistributionSection22Builder());
         // list.add(new AnotherSectionBuilder());
         // list.add(new YetAnotherSectionBuilder());
 
