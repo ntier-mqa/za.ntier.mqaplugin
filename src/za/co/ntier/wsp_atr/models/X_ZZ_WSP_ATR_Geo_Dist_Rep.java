@@ -31,7 +31,7 @@ public class X_ZZ_WSP_ATR_Geo_Dist_Rep extends PO implements I_ZZ_WSP_ATR_Geo_Di
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260214L;
+	private static final long serialVersionUID = 20260216L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Geo_Dist_Rep (Properties ctx, int ZZ_WSP_ATR_Geo_Dist_Rep_ID, String trxName)
@@ -335,6 +335,21 @@ public class X_ZZ_WSP_ATR_Geo_Dist_Rep extends PO implements I_ZZ_WSP_ATR_Geo_Di
 		if (ii == null)
 			 return 0;
 		return ii.intValue();
+	}
+
+	/** Set Section.
+		@param ZZ_Report_Section Section
+	*/
+	public void setZZ_Report_Section (String ZZ_Report_Section)
+	{
+		set_Value (COLUMNNAME_ZZ_Report_Section, ZZ_Report_Section);
+	}
+
+	/** Get Section.
+		@return Section	  */
+	public String getZZ_Report_Section()
+	{
+		return (String)get_Value(COLUMNNAME_ZZ_Report_Section);
 	}
 
 	/** Set Total Female Count.

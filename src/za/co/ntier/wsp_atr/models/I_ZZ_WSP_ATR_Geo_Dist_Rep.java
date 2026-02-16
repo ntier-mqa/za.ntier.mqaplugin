@@ -271,6 +271,15 @@ public interface I_ZZ_WSP_ATR_Geo_Dist_Rep
 	  */
 	public int getZZ_NonSA_Cnt();
 
+    /** Column name ZZ_Report_Section */
+    public static final String COLUMNNAME_ZZ_Report_Section = "ZZ_Report_Section";
+
+	/** Set Section	  */
+	public void setZZ_Report_Section (String ZZ_Report_Section);
+
+	/** Get Section	  */
+	public String getZZ_Report_Section();
+
     /** Column name ZZ_Total_Female_Cnt */
     public static final String COLUMNNAME_ZZ_Total_Female_Cnt = "ZZ_Total_Female_Cnt";
 

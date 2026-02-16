@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport
+    xmlns="http://jasperreports.sourceforge.net/jasperreports"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+                        http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+    name="Section_2_2_Geo_Dist"
+    pageWidth="842"
+    pageHeight="595"
+    orientation="Landscape"
+    columnWidth="802"
+    leftMargin="20"
+    rightMargin="20"
+    topMargin="20"
+    bottomMargin="20">
+
+    <!-- ===================== -->
+    <!-- STYLES (TOP ONLY)     -->
+    <!-- ===================== -->
+
+    <style name="HdrBig" fontName="SansSerif" fontSize="12" isBold="true"/>
+    <style name="HdrSmall" fontName="SansSerif" fontSize="10" isBold="true"/>
+    <style name="CellText" fontName="SansSerif" fontSize="9"/>
+    <style name="CellNum" fontName="SansSerif" fontSize="9"/>
+
+    <!-- ===================== -->
+    <!-- PARAMETER             -->
+    <!-- ===================== -->
+
+    <parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
+
+    <!-- ===================== -->
+    <!-- QUERY                 -->
+    <!-- ===================== -->
+
+    <queryString>
+        <![CDATA[
+        SELECT
+            p.Name AS province_name,
+            r.*
+        FROM ZZ_WSP_ATR_Geo_Dist_Rep r
+        LEFT JOIN ZZ_Province_Ref p ON p.ZZ_Province_Ref_ID = r.Province_ID
+        WHERE r.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
+          AND r.ZZ_Report_Section = '2.2'
+        ORDER BY p.Name
+        ]]>
+    </queryString>
+
+    <!-- ===================== -->
+    <!-- FIELDS                -->
+    <!-- ===================== -->
+
+    <field name="province_name" class="java.lang.String"/>
+    <field name="ZZ_African_Male_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_African_Female_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_Coloured_Male_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_Coloured_Female_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_Indian_Male_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_Indian_Female_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_White_Male_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_White_Female_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_Total_Male_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_Total_Female_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_Disabled_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_NonSA_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_Age_U35_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_Age_35_55_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_Age_O55_Cnt" class="java.lang.Integer"/>
+
+    <!-- ===================== -->
+    <!-- VARIABLES (TOTALS)    -->
+    <!-- ===================== -->
+
+    <variable name="Sum_Total_Male" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{ZZ_Total_Male_Cnt}]]></variableExpression>
+    </variable>
+
+    <variable name="Sum_Total_Female" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{ZZ_Total_Female_Cnt}]]></variableExpression>
+    </variable>
+
+    <variable name="Grand_Total_Employees" class="java.lang.Integer" calculation="Nothing">
+        <variableExpression><![CDATA[
+($V{Sum_Total_Male} == null ? 0 : $V{Sum_Total_Male})
++
+($V{Sum_Total_Female} == null ? 0 : $V{Sum_Total_Female})
+        ]]></variableExpression>
+    </variable>
+
+    <!-- ===================== -->
+    <!-- TITLE                 -->
+    <!-- ===================== -->
+
+    <title>
+        <band height="30">
+            <staticText>
+                <reportElement x="0" y="0" width="802" height="20" style="HdrBig"/>
+                <textElement textAlignment="Left"/>
+                <text><![CDATA[2.2 Geographical Distribution of Employees]]></text>
+            </staticText>
+        </band>
+    </title>
+
+    <!-- ===================== -->
+    <!-- DETAIL (Province Rows)-->
+    <!-- ===================== -->
+
+    <detail>
+        <band height="18">
+
+            <textField>
+                <reportElement x="0" y="0" width="100" height="18" style="CellText"/>
+                <textFieldExpression><![CDATA[$F{province_name}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="450" y="0" width="50" height="18" style="CellNum"/>
+                <textFieldExpression><![CDATA[$F{ZZ_Total_Male_Cnt}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="500" y="0" width="50" height="18" style="CellNum"/>
+                <textFieldExpression><![CDATA[$F{ZZ_Total_Female_Cnt}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="550" y="0" width="50" height="18" style="CellNum"/>
+                <textFieldExpression><![CDATA[$F{ZZ_Disabled_Cnt}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="600" y="0" width="50" height="18" style="CellNum"/>
+                <textFieldExpression><![CDATA[$F{ZZ_NonSA_Cnt}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="650" y="0" width="50" height="18" style="CellNum"/>
+                <textFieldExpression><![CDATA[$F{ZZ_Age_U35_Cnt}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="700" y="0" width="50" height="18" style="CellNum"/>
+                <textFieldExpression><![CDATA[$F{ZZ_Age_35_55_Cnt}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="750" y="0" width="50" height="18" style="CellNum"/>
+                <textFieldExpression><![CDATA[$F{ZZ_Age_O55_Cnt}]]></textFieldExpression>
+            </textField>
+
+        </band>
+    </detail>
+
+    <!-- ===================== -->
+    <!-- SUMMARY (Totals)      -->
+    <!-- ===================== -->
+
+    <summary>
+        <band height="40">
+
+            <!-- Total Row -->
+            <staticText>
+                <reportElement x="0" y="0" width="200" height="18" style="HdrSmall"/>
+                <text><![CDATA[Total]]></text>
+            </staticText>
+
+            <!-- Grand Total Row -->
+            <staticText>
+                <reportElement x="0" y="20" width="300" height="18" style="HdrSmall"/>
+                <text><![CDATA[Grand Total (Employees)]]></text>
+            </staticText>
+
+            <textField>
+                <reportElement x="600" y="20" width="100" height="18" style="HdrSmall"/>
+                <textFieldExpression><![CDATA[$V{Grand_Total_Employees}]]></textFieldExpression>
+            </textField>
+
+        </band>
+    </summary>
+
+</jasperReport>
