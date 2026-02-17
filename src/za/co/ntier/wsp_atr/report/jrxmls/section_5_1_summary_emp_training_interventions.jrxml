@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+              http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="section_5_1_summary_emp_training_interventions"
+              pageWidth="842" pageHeight="595" orientation="Landscape"
+              columnWidth="802" leftMargin="20" rightMargin="20" topMargin="15" bottomMargin="15"
+              uuid="b5d0a7f2-1f2a-4d7e-9b7f-65a3f1e25b10">
+
+    <!-- Styles (declare near top; use reportElement style="...") -->
+    <style name="TitleBar" fontName="SansSerif" fontSize="10" isBold="true"
+           hTextAlign="Center" vTextAlign="Middle" backcolor="#BFBFBF" mode="Opaque"/>
+    <style name="SubTitleBar" fontName="SansSerif" fontSize="9" isBold="true"
+           hTextAlign="Left" vTextAlign="Middle" backcolor="#BFBFBF" mode="Opaque"/>
+    <style name="Hdr" fontName="SansSerif" fontSize="9" isBold="true"
+           hTextAlign="Center" vTextAlign="Middle" backcolor="#BFBFBF" mode="Opaque"/>
+    <style name="HdrSmall" fontName="SansSerif" fontSize="8" isBold="true"
+           hTextAlign="Center" vTextAlign="Middle" backcolor="#BFBFBF" mode="Opaque"/>
+    <style name="CellText" fontName="SansSerif" fontSize="8"
+           vTextAlign="Middle"/>
+    <style name="CellNum" fontName="SansSerif" fontSize="8"
+           hTextAlign="Center" vTextAlign="Middle"/>
+
+    <!-- Parameter -->
+    <parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
+
+    <!-- Query -->
+    <queryString language="SQL">
+        <![CDATA[
+SELECT
+    COALESCE(lp.Value, lp.Name) AS learning_programme_type,
+    COALESCE(det.Name, det.Value) AS skills_programme,
+
+    t.ZZ_African_Male_Cnt,
+    t.ZZ_African_Female_Cnt,
+    t.ZZ_Coloured_Male_Cnt,
+    t.ZZ_Coloured_Female_Cnt,
+    t.ZZ_Indian_Male_Cnt,
+    t.ZZ_Indian_Female_Cnt,
+    t.ZZ_White_Male_Cnt,
+    t.ZZ_White_Female_Cnt,
+    t.ZZ_Total_Male_Cnt,
+    t.ZZ_Total_Female_Cnt,
+    t.ZZ_Disabled_Cnt,
+    t.ZZ_NonSA_Cnt,
+    t.ZZ_Age_U35_Cnt,
+    t.ZZ_Age_35_55_Cnt,
+    t.ZZ_Age_O55_Cnt
+FROM ZZ_WSP_ATR_Summ_Emp_Train_Inter_Rep t
+LEFT JOIN ZZ_Learning_Programme_Ref lp
+       ON lp.ZZ_Learning_Programme_Ref_ID = t.Qualification_Type_ID
+LEFT JOIN ZZ_Qualification_Type_Details_Ref det
+       ON det.ZZ_Qualification_Type_Details_Ref_ID = t.Learning_Programme_Detail_ID
+WHERE t.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
+  AND (t.ZZ_Report_Section IS NULL OR t.ZZ_Report_Section = '5.1')
+ORDER BY COALESCE(lp.Value, lp.Name), COALESCE(det.Name, det.Value)
+        ]]>
+    </queryString>
+
+    <!-- Fields -->
+    <field name="learning_programme_type" class="java.lang.String"/>
+    <field name="skills_programme" class="java.lang.String"/>
+
+    <field name="ZZ_African_Male_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_African_Female_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_Coloured_Male_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_Coloured_Female_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_Indian_Male_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_Indian_Female_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_White_Male_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_White_Female_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_Total_Male_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_Total_Female_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_Disabled_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_NonSA_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_Age_U35_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_Age_35_55_Cnt" class="java.lang.Integer"/>
+    <field name="ZZ_Age_O55_Cnt" class="java.lang.Integer"/>
+
+    <!-- Variables (Totals) -->
+    <variable name="Sum_African_Male" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{ZZ_African_Male_Cnt}]]></variableExpression>
+    </variable>
+    <variable name="Sum_African_Female" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{ZZ_African_Female_Cnt}]]></variableExpression>
+    </variable>
+
+    <variable name="Sum_Coloured_Male" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{ZZ_Coloured_Male_Cnt}]]></variableExpression>
+    </variable>
+    <variable name="Sum_Coloured_Female" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{ZZ_Coloured_Female_Cnt}]]></variableExpression>
+    </variable>
+
+    <variable name="Sum_Indian_Male" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{ZZ_Indian_Male_Cnt}]]></variableExpression>
+    </variable>
+    <variable name="Sum_Indian_Female" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{ZZ_Indian_Female_Cnt}]]></variableExpression>
+    </variable>
+
+    <variable name="Sum_White_Male" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{ZZ_White_Male_Cnt}]]></variableExpression>
+    </variable>
+    <variable name="Sum_White_Female" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{ZZ_White_Female_Cnt}]]></variableExpression>
+    </variable>
+
+    <variable name="Sum_Total_Male" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{ZZ_Total_Male_Cnt}]]></variableExpression>
+    </variable>
+    <variable name="Sum_Total_Female" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{ZZ_Total_Female_Cnt}]]></variableExpression>
+    </variable>
+
+    <variable name="Sum_Disabled" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{ZZ_Disabled_Cnt}]]></variableExpression>
+    </variable>
+    <variable name="Sum_NonSA" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{ZZ_NonSA_Cnt}]]></variableExpression>
+    </variable>
+
+    <variable name="Sum_Age_U35" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{ZZ_Age_U35_Cnt}]]></variableExpression>
+    </variable>
+    <variable name="Sum_Age_35_55" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{ZZ_Age_35_55_Cnt}]]></variableExpression>
+    </variable>
+    <variable name="Sum_Age_O55" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{ZZ_Age_O55_Cnt}]]></variableExpression>
+    </variable>
+
+    <variable name="Grand_Total_Employees" class="java.lang.Integer" calculation="Nothing">
+        <variableExpression><![CDATA[
+($V{Sum_Total_Male} == null ? 0 : $V{Sum_Total_Male}.intValue())
++
+($V{Sum_Total_Female} == null ? 0 : $V{Sum_Total_Female}.intValue())
+        ]]></variableExpression>
+    </variable>
+
+    <!-- Title -->
+    <title>
+        <band height="34">
+            <staticText>
+                <reportElement x="0" y="0" width="802" height="16" style="TitleBar" uuid="c0a0a0b1-0f5a-4dd2-9b3f-7cbd2b8f6c21"/>
+                <box><pen lineWidth="0.5"/></box>
+                <text><![CDATA[Section 5: Pivotal Programme Report]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="0" y="16" width="802" height="18" style="SubTitleBar" uuid="7d88b35b-9db8-4d12-8f5e-5d3b3a9cb6b7"/>
+                <box><pen lineWidth="0.5"/></box>
+                <text><![CDATA[5.1 Summary of employee training interventions for the period 2024]]></text>
+            </staticText>
+        </band>
+    </title>
+
+    <!-- Column Header -->
+    <columnHeader>
+        <band height="46">
+
+            <!-- Column widths:
+                 Learning Type=160, Skills=250 => 410
+                 Each M/F = 24 (10 cols) => 240
+                 Disabled=28, Non-SA=28
+                 Age groups (3 cols)=32 each => 96
+                 Total = 802
+            -->
+
+            <!-- Learning Programme Type -->
+            <staticText>
+                <reportElement x="0" y="0" width="160" height="46" style="Hdr" uuid="ad1a3d6e-0be6-4f50-9bdf-0f8c9e1a2d31"/>
+                <box><pen lineWidth="0.5"/></box>
+                <text><![CDATA[Learning Programme Type]]></text>
+            </staticText>
+
+            <!-- Specify Skills Programme -->
+            <staticText>
+                <reportElement x="160" y="0" width="250" height="46" style="Hdr" uuid="d3e2b4c7-1b2c-4db7-8c10-2e5a6b7c8d90"/>
+                <box><pen lineWidth="0.5"/></box>
+                <text><![CDATA[Specify Skills Programme]]></text>
+            </staticText>
+
+            <!-- Group row 1 -->
+            <staticText><reportElement x="410" y="0" width="48" height="22" style="HdrSmall" uuid="1f3f0c2a-1a25-4c9e-9d18-2b3c4d5e6f70"/><box><pen lineWidth="0.5"/></box><text><![CDATA[African]]></text></staticText>
+            <staticText><reportElement x="458" y="0" width="48" height="22" style="HdrSmall" uuid="2a3b4c5d-6e7f-4012-8a9b-0c1d2e3f4a5b"/><box><pen lineWidth="0.5"/></box><text><![CDATA[Coloured]]></text></staticText>
+            <staticText><reportElement x="506" y="0" width="48" height="22" style="HdrSmall" uuid="3b4c5d6e-7f80-4123-9b0c-1d2e3f4a5b6c"/><box><pen lineWidth="0.5"/></box><text><![CDATA[Indian]]></text></staticText>
+            <staticText><reportElement x="554" y="0" width="48" height="22" style="HdrSmall" uuid="4c5d6e7f-8012-4234-0c1d-2e3f4a5b6c7d"/><box><pen lineWidth="0.5"/></box><text><![CDATA[White]]></text></staticText>
+            <staticText><reportElement x="602" y="0" width="48" height="22" style="HdrSmall" uuid="5d6e7f80-1234-4345-1d2e-3f4a5b6c7d8e"/><box><pen lineWidth="0.5"/></box><text><![CDATA[Total]]></text></staticText>
+
+            <staticText><reportElement x="650" y="0" width="28" height="46" style="HdrSmall" uuid="6e7f8012-3456-4456-2e3f-4a5b6c7d8e9f"/><box><pen lineWidth="0.5"/></box><text><![CDATA[Disabled]]></text></staticText>
+            <staticText><reportElement x="678" y="0" width="28" height="46" style="HdrSmall" uuid="7f801234-5678-4567-3f4a-5b6c7d8e9f01"/><box><pen lineWidth="0.5"/></box><text><![CDATA[Non-SA]]></text></staticText>
+
+            <staticText><reportElement x="706" y="0" width="96" height="22" style="HdrSmall" uuid="80123456-7890-4678-4a5b-6c7d8e9f0123"/><box><pen lineWidth="0.5"/></box><text><![CDATA[Age Groups]]></text></staticText>
+
+            <!-- Group row 2 (Male/Female + Age buckets) -->
+            <!-- African -->
+            <staticText><reportElement x="410" y="22" width="24" height="24" style="HdrSmall" uuid="a01b2c3d-4e5f-4890-9a0b-1c2d3e4f5a6b"/><box><pen lineWidth="0.5"/></box><text><![CDATA[Male]]></text></staticText>
+            <staticText><reportElement x="434" y="22" width="24" height="24" style="HdrSmall" uuid="b12c3d4e-5f60-4a01-0b1c-2d3e4f5a6b7c"/><box><pen lineWidth="0.5"/></box><text><![CDATA[Female]]></text></staticText>
+
+            <!-- Coloured -->
+            <staticText><reportElement x="458" y="22" width="24" height="24" style="HdrSmall" uuid="c23d4e5f-6071-4b12-1c2d-3e4f5a6b7c8d"/><box><pen lineWidth="0.5"/></box><text><![CDATA[Male]]></text></staticText>
+            <staticText><reportElement x="482" y="22" width="24" height="24" style="HdrSmall" uuid="d34e5f60-7182-4c23-2d3e-4f5a6b7c8d9e"/><box><pen lineWidth="0.5"/></box><text><![CDATA[Female]]></text></staticText>
+
+            <!-- Indian -->
+            <staticText><reportElement x="506" y="22" width="24" height="24" style="HdrSmall" uuid="e45f6071-8293-4d34-3e4f-5a6b7c8d9e0f"/><box><pen lineWidth="0.5"/></box><text><![CDATA[Male]]></text></staticText>
+            <staticText><reportElement x="530" y="22" width="24" height="24" style="HdrSmall" uuid="f5607182-93a4-4e45-4f5a-6b7c8d9e0f10"/><box><pen lineWidth="0.5"/></box><text><![CDATA[Female]]></text></staticText>
+
+            <!-- White -->
+            <staticText><reportElement x="554" y="22" width="24" height="24" style="HdrSmall" uuid="015a6b7c-8d9e-4f56-5a6b-7c8d9e0f1011"/><box><pen lineWidth="0.5"/></box><text><![CDATA[Male]]></text></staticText>
+            <staticText><reportElement x="578" y="22" width="24" height="24" style="HdrSmall" uuid="125b6c7d-8e9f-4067-6b7c-8d9e0f101112"/><box><pen lineWidth="0.5"/></box><text><![CDATA[Female]]></text></staticText>
+
+            <!-- Total -->
+            <staticText><reportElement x="602" y="22" width="24" height="24" style="HdrSmall" uuid="235c6d7e-9f01-4178-7c8d-9e0f10111213"/><box><pen lineWidth="0.5"/></box><text><![CDATA[Male]]></text></staticText>
+            <staticText><reportElement x="626" y="22" width="24" height="24" style="HdrSmall" uuid="345d6e7f-0123-4289-8d9e-0f1011121314"/><box><pen lineWidth="0.5"/></box><text><![CDATA[Female]]></text></staticText>
+
+            <!-- Age -->
+            <staticText><reportElement x="706" y="22" width="32" height="24" style="HdrSmall" uuid="456e7f80-1234-439a-9e0f-101112131415"/><box><pen lineWidth="0.5"/></box><text><![CDATA[<35]]></text></staticText>
+            <staticText><reportElement x="738" y="22" width="32" height="24" style="HdrSmall" uuid="567f8012-3456-44ab-0f10-111213141516"/><box><pen lineWidth="0.5"/></box><text><![CDATA[35-55]]></text></staticText>
+            <staticText><reportElement x="770" y="22" width="32" height="24" style="HdrSmall" uuid="67801234-5678-45bc-1011-121314151617"/><box><pen lineWidth="0.5"/></box><text><![CDATA[>55]]></text></staticText>
+
+        </band>
+    </columnHeader>
+
+    <!-- Detail -->
+    <detail>
+        <band height="16">
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="0" width="160" height="16" style="CellText" uuid="a0f4f7c9-bb49-4a3e-9e84-01c2d3e4f5a6"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textFieldExpression><![CDATA[$F{learning_programme_type}]]></textFieldExpression>
+            </textField>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="160" y="0" width="250" height="16" style="CellText" uuid="b1f5a8d0-cc50-4b4f-8f95-12d3e4f5a6b7"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textFieldExpression><![CDATA[$F{skills_programme}]]></textFieldExpression>
+            </textField>
+
+            <!-- African -->
+            <textField isBlankWhenNull="true"><reportElement x="410" y="0" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{ZZ_African_Male_Cnt}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement x="434" y="0" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{ZZ_African_Female_Cnt}]]></textFieldExpression></textField>
+
+            <!-- Coloured -->
+            <textField isBlankWhenNull="true"><reportElement x="458" y="0" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{ZZ_Coloured_Male_Cnt}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement x="482" y="0" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{ZZ_Coloured_Female_Cnt}]]></textFieldExpression></textField>
+
+            <!-- Indian -->
+            <textField isBlankWhenNull="true"><reportElement x="506" y="0" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{ZZ_Indian_Male_Cnt}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement x="530" y="0" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{ZZ_Indian_Female_Cnt}]]></textFieldExpression></textField>
+
+            <!-- White -->
+            <textField isBlankWhenNull="true"><reportElement x="554" y="0" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{ZZ_White_Male_Cnt}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement x="578" y="0" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{ZZ_White_Female_Cnt}]]></textFieldExpression></textField>
+
+            <!-- Total -->
+            <textField isBlankWhenNull="true"><reportElement x="602" y="0" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{ZZ_Total_Male_Cnt}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement x="626" y="0" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{ZZ_Total_Female_Cnt}]]></textFieldExpression></textField>
+
+            <!-- Disabled / Non-SA -->
+            <textField isBlankWhenNull="true"><reportElement x="650" y="0" width="28" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{ZZ_Disabled_Cnt}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement x="678" y="0" width="28" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{ZZ_NonSA_Cnt}]]></textFieldExpression></textField>
+
+            <!-- Age -->
+            <textField isBlankWhenNull="true"><reportElement x="706" y="0" width="32" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{ZZ_Age_U35_Cnt}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement x="738" y="0" width="32" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{ZZ_Age_35_55_Cnt}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement x="770" y="0" width="32" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{ZZ_Age_O55_Cnt}]]></textFieldExpression></textField>
+
+        </band>
+    </detail>
+
+    <!-- Summary -->
+    <summary>
+        <band height="32">
+
+            <!-- Line 1: Total -->
+            <staticText>
+                <reportElement x="0" y="0" width="410" height="16" style="HdrSmall"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Left" verticalAlignment="Middle"/>
+                <text><![CDATA[Total]]></text>
+            </staticText>
+
+            <!-- totals row values -->
+            <textField><reportElement x="410" y="0" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_African_Male}]]></textFieldExpression></textField>
+            <textField><reportElement x="434" y="0" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_African_Female}]]></textFieldExpression></textField>
+
+            <textField><reportElement x="458" y="0" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Coloured_Male}]]></textFieldExpression></textField>
+            <textField><reportElement x="482" y="0" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Coloured_Female}]]></textFieldExpression></textField>
+
+            <textField><reportElement x="506" y="0" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Indian_Male}]]></textFieldExpression></textField>
+            <textField><reportElement x="530" y="0" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Indian_Female}]]></textFieldExpression></textField>
+
+            <textField><reportElement x="554" y="0" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_White_Male}]]></textFieldExpression></textField>
+            <textField><reportElement x="578" y="0" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_White_Female}]]></textFieldExpression></textField>
+
+            <textField><reportElement x="602" y="0" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Total_Male}]]></textFieldExpression></textField>
+            <textField><reportElement x="626" y="0" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Total_Female}]]></textFieldExpression></textField>
+
+            <textField><reportElement x="650" y="0" width="28" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Disabled}]]></textFieldExpression></textField>
+            <textField><reportElement x="678" y="0" width="28" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_NonSA}]]></textFieldExpression></textField>
+
+            <textField><reportElement x="706" y="0" width="32" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Age_U35}]]></textFieldExpression></textField>
+            <textField><reportElement x="738" y="0" width="32" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Age_35_55}]]></textFieldExpression></textField>
+            <textField><reportElement x="770" y="0" width="32" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Age_O55}]]></textFieldExpression></textField>
+
+            <!-- Line 2: Grand Total -->
+            <textField>
+                <reportElement x="0" y="16" width="410" height="16" style="HdrSmall"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Left" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA["Grand Total (Employees): " + $V{Grand_Total_Employees}]]></textFieldExpression>
+            </textField>
+
+            <!-- repeat totals (same layout) -->
+            <textField><reportElement x="410" y="16" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_African_Male}]]></textFieldExpression></textField>
+            <textField><reportElement x="434" y="16" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_African_Female}]]></textFieldExpression></textField>
+
+            <textField><reportElement x="458" y="16" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Coloured_Male}]]></textFieldExpression></textField>
+            <textField><reportElement x="482" y="16" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Coloured_Female}]]></textFieldExpression></textField>
+
+            <textField><reportElement x="506" y="16" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Indian_Male}]]></textFieldExpression></textField>
+            <textField><reportElement x="530" y="16" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Indian_Female}]]></textFieldExpression></textField>
+
+            <textField><reportElement x="554" y="16" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_White_Male}]]></textFieldExpression></textField>
+            <textField><reportElement x="578" y="16" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_White_Female}]]></textFieldExpression></textField>
+
+            <textField><reportElement x="602" y="16" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Total_Male}]]></textFieldExpression></textField>
+            <textField><reportElement x="626" y="16" width="24" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Total_Female}]]></textFieldExpression></textField>
+
+            <textField><reportElement x="650" y="16" width="28" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Disabled}]]></textFieldExpression></textField>
+            <textField><reportElement x="678" y="16" width="28" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_NonSA}]]></textFieldExpression></textField>
+
+            <textField><reportElement x="706" y="16" width="32" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Age_U35}]]></textFieldExpression></textField>
+            <textField><reportElement x="738" y="16" width="32" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Age_35_55}]]></textFieldExpression></textField>
+            <textField><reportElement x="770" y="16" width="32" height="16" style="CellNum"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Age_O55}]]></textFieldExpression></textField>
+
+        </band>
+    </summary>
+
+</jasperReport>
