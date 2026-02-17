@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport
+    xmlns="http://jasperreports.sourceforge.net/jasperreports"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+                        http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+    name="WSP_ATR_Section_3_1_HTFV"
+    pageWidth="842"
+    pageHeight="595"
+    orientation="Landscape"
+    columnWidth="802"
+    leftMargin="20"
+    rightMargin="20"
+    topMargin="10"
+    bottomMargin="10"
+    whenNoDataType="AllSectionsNoDetail">
+
+    <style name="Hdr" fontName="SansSerif" fontSize="9" isBold="true"/>
+    <style name="Cell" fontName="SansSerif" fontSize="8"/>
+    <style name="CellCenter" fontName="SansSerif" fontSize="8"/>
+    <style name="CellWrap" fontName="SansSerif" fontSize="8"/>
+
+    <parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
+
+    <queryString>
+        <![CDATA[
+            SELECT
+                r.Row_No,
+                occ.Name AS occupation_name,
+                COALESCE(occ.Value,'') AS occupation_code,
+                sr.Name AS primary_reason,
+                fsr1.Name AS further_reason1,
+                fsr2.Name AS further_reason2,
+                r.ZZ_Scarce_Other_Reasons_Comments AS comments,
+                r.ZZ_Vacancies_EC_Cnt,
+                r.ZZ_Vacancies_FS_Cnt,
+                r.ZZ_Vacancies_GP_Cnt,
+                r.ZZ_Vacancies_KZN_Cnt,
+                r.ZZ_Vacancies_LP_Cnt,
+                r.ZZ_Vacancies_MP_Cnt,
+                r.ZZ_Vacancies_NP_Cnt,
+                r.ZZ_Vacancies_NW_Cnt,
+                r.ZZ_Vacancies_WC_Cnt
+            FROM ZZ_WSP_ATR_HTFV_Rep r
+            LEFT JOIN ZZ_Occupations_Ref   occ  ON occ.ZZ_Occupations_Ref_ID = r.ZZ_Occupations_ID
+            LEFT JOIN ZZ_Scarce_Reason_Ref sr   ON sr.ZZ_Scarce_Reason_Ref_ID = r.ZZ_Scarce_Reason_ID
+            LEFT JOIN ZZ_Scarce_Reason_Ref fsr1 ON fsr1.ZZ_Scarce_Reason_Ref_ID = r.ZZ_Further_Scarce_Reason_ID
+            LEFT JOIN ZZ_Scarce_Reason_Ref fsr2 ON fsr2.ZZ_Scarce_Reason_Ref_ID = r.ZZ_Further_Scarce_Reason2_ID
+            WHERE r.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
+            ORDER BY r.Row_No, occupation_name
+        ]]>
+    </queryString>
+
+    <field name="Row_No" class="java.lang.Integer"/>
+    <field name="occupation_name" class="java.lang.String"/>
+    <field name="occupation_code" class="java.lang.String"/>
+    <field name="primary_reason" class="java.lang.String"/>
+    <field name="further_reason1" class="java.lang.String"/>
+    <field name="further_reason2" class="java.lang.String"/>
+    <field name="comments" class="java.lang.String"/>
+
+    <field name="ZZ_Vacancies_EC_Cnt" class="java.math.BigDecimal"/>
+    <field name="ZZ_Vacancies_FS_Cnt" class="java.math.BigDecimal"/>
+    <field name="ZZ_Vacancies_GP_Cnt" class="java.math.BigDecimal"/>
+    <field name="ZZ_Vacancies_KZN_Cnt" class="java.math.BigDecimal"/>
+    <field name="ZZ_Vacancies_LP_Cnt" class="java.math.BigDecimal"/>
+    <field name="ZZ_Vacancies_MP_Cnt" class="java.math.BigDecimal"/>
+    <field name="ZZ_Vacancies_NP_Cnt" class="java.math.BigDecimal"/>
+    <field name="ZZ_Vacancies_NW_Cnt" class="java.math.BigDecimal"/>
+    <field name="ZZ_Vacancies_WC_Cnt" class="java.math.BigDecimal"/>
+
+    <!-- Column widths sum = 802 -->
+    <!-- Occ 90, Code 55, Primary 120, Further1 120, Further2 110, Comments 200 = 695 -->
+    <!-- 9 provinces * 12 = 108; total 803 -> make comments 199 to fit 802 -->
+    <columnHeader>
+        <band height="45">
+            <staticText>
+                <reportElement x="0" y="0" width="802" height="15" style="Hdr"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <text><![CDATA[3.1 Hard-To-Fill Vacancy (HTFV)]]></text>
+            </staticText>
+
+            <staticText><reportElement x="0" y="15" width="90" height="30" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Occupation]]></text></staticText>
+            <staticText><reportElement x="90" y="15" width="55" height="30" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Code]]></text></staticText>
+            <staticText><reportElement x="145" y="15" width="120" height="30" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Primary reason]]></text></staticText>
+            <staticText><reportElement x="265" y="15" width="120" height="30" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Further reason 1]]></text></staticText>
+            <staticText><reportElement x="385" y="15" width="110" height="30" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Further reason 2]]></text></staticText>
+            <staticText><reportElement x="495" y="15" width="199" height="30" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Additional Comments]]></text></staticText>
+
+            <staticText><reportElement x="694" y="15" width="108" height="15" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Vacancies per Province]]></text></staticText>
+
+            <staticText><reportElement x="694" y="30" width="12" height="15" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[EC]]></text></staticText>
+            <staticText><reportElement x="706" y="30" width="12" height="15" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[FS]]></text></staticText>
+            <staticText><reportElement x="718" y="30" width="12" height="15" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[GP]]></text></staticText>
+            <staticText><reportElement x="730" y="30" width="12" height="15" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[KZ]]></text></staticText>
+            <staticText><reportElement x="742" y="30" width="12" height="15" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[LP]]></text></staticText>
+            <staticText><reportElement x="754" y="30" width="12" height="15" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[MP]]></text></staticText>
+            <staticText><reportElement x="766" y="30" width="12" height="15" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[NP]]></text></staticText>
+            <staticText><reportElement x="778" y="30" width="12" height="15" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[NW]]></text></staticText>
+            <staticText><reportElement x="790" y="30" width="12" height="15" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[WC]]></text></staticText>
+        </band>
+    </columnHeader>
+
+    <detail>
+        <band height="55">
+            <textField isStretchWithOverflow="true">
+                <reportElement x="0" y="0" width="90" height="55" style="CellWrap"/>
+                <textElement verticalAlignment="Top"/>
+                <textFieldExpression><![CDATA[$F{occupation_name}]]></textFieldExpression>
+            </textField>
+
+            <textField isStretchWithOverflow="true">
+                <reportElement x="90" y="0" width="55" height="55" style="CellWrap"/>
+                <textElement verticalAlignment="Top"/>
+                <textFieldExpression><![CDATA[$F{occupation_code}]]></textFieldExpression>
+            </textField>
+
+            <textField isStretchWithOverflow="true">
+                <reportElement x="145" y="0" width="120" height="55" style="CellWrap"/>
+                <textElement verticalAlignment="Top"/>
+                <textFieldExpression><![CDATA[$F{primary_reason}]]></textFieldExpression>
+            </textField>
+
+            <textField isStretchWithOverflow="true">
+                <reportElement x="265" y="0" width="120" height="55" style="CellWrap"/>
+                <textElement verticalAlignment="Top"/>
+                <textFieldExpression><![CDATA[$F{further_reason1}]]></textFieldExpression>
+            </textField>
+
+            <textField isStretchWithOverflow="true">
+                <reportElement x="385" y="0" width="110" height="55" style="CellWrap"/>
+                <textElement verticalAlignment="Top"/>
+                <textFieldExpression><![CDATA[$F{further_reason2}]]></textFieldExpression>
+            </textField>
+
+            <textField isStretchWithOverflow="true">
+                <reportElement x="495" y="0" width="199" height="55" style="CellWrap"/>
+                <textElement verticalAlignment="Top"/>
+                <textFieldExpression><![CDATA[$F{comments}]]></textFieldExpression>
+            </textField>
+
+            <!-- Province counts -->
+            <textField><reportElement x="694" y="0" width="12" height="55" style="CellCenter"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_Vacancies_EC_Cnt}]]></textFieldExpression></textField>
+            <textField><reportElement x="706" y="0" width="12" height="55" style="CellCenter"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_Vacancies_FS_Cnt}]]></textFieldExpression></textField>
+            <textField><reportElement x="718" y="0" width="12" height="55" style="CellCenter"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_Vacancies_GP_Cnt}]]></textFieldExpression></textField>
+            <textField><reportElement x="730" y="0" width="12" height="55" style="CellCenter"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_Vacancies_KZN_Cnt}]]></textFieldExpression></textField>
+            <textField><reportElement x="742" y="0" width="12" height="55" style="CellCenter"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_Vacancies_LP_Cnt}]]></textFieldExpression></textField>
+            <textField><reportElement x="754" y="0" width="12" height="55" style="CellCenter"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_Vacancies_MP_Cnt}]]></textFieldExpression></textField>
+            <textField><reportElement x="766" y="0" width="12" height="55" style="CellCenter"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_Vacancies_NP_Cnt}]]></textFieldExpression></textField>
+            <textField><reportElement x="778" y="0" width="12" height="55" style="CellCenter"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_Vacancies_NW_Cnt}]]></textFieldExpression></textField>
+            <textField><reportElement x="790" y="0" width="12" height="55" style="CellCenter"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_Vacancies_WC_Cnt}]]></textFieldExpression></textField>
+        </band>
+    </detail>
+
+</jasperReport>

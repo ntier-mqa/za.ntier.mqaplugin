@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport
+    xmlns="http://jasperreports.sourceforge.net/jasperreports"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+                        http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+    name="WSP_ATR_Section_3_2_TopUp_Skills"
+    pageWidth="842"
+    pageHeight="595"
+    orientation="Landscape"
+    columnWidth="802"
+    leftMargin="20"
+    rightMargin="20"
+    topMargin="10"
+    bottomMargin="10"
+    whenNoDataType="AllSectionsNoDetail">
+
+    <style name="Hdr" fontName="SansSerif" fontSize="9" isBold="true"/>
+    <style name="Cell" fontName="SansSerif" fontSize="8"/>
+    <style name="CellCenter" fontName="SansSerif" fontSize="8"/>
+    <style name="CellWrap" fontName="SansSerif" fontSize="8"/>
+
+    <parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
+
+    <queryString>
+        <![CDATA[
+            SELECT
+                r.Row_No,
+                occ.Name AS occupation_title,
+                COALESCE(occ.Value,'') AS occupation_code,
+                s.Name AS skillset_name,
+                COALESCE(s.Description, '') AS skillset_description,
+                COALESCE(r.Comments, '') AS comments
+            FROM ZZ_WSP_ATR_TopUp_Skills_Rep r
+            LEFT JOIN ZZ_Occupations_Ref occ
+                ON occ.ZZ_Occupations_Ref_ID = r.ZZ_OFO_Specialisation_ID
+            LEFT JOIN ZZ_TopUp_Skills_Ref s
+                ON s.ZZ_TopUp_Skills_Ref_ID = r.ZZ_TopUpSkill_ID
+            WHERE r.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
+            ORDER BY r.Row_No, occupation_title, skillset_name
+        ]]>
+    </queryString>
+
+    <field name="Row_No" class="java.lang.Integer"/>
+    <field name="occupation_title" class="java.lang.String"/>
+    <field name="occupation_code" class="java.lang.String"/>
+    <field name="skillset_name" class="java.lang.String"/>
+    <field name="skillset_description" class="java.lang.String"/>
+    <field name="comments" class="java.lang.String"/>
+
+    <!-- widths sum to 802 -->
+    <!-- Title 200, Code 120, Skillset 120, Description 260, Comments 102 -->
+    <columnHeader>
+        <band height="35">
+            <staticText>
+                <reportElement x="0" y="0" width="802" height="15" style="Hdr"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"/>
+                <text><![CDATA[3.2 Generic or “Top-up” Skills Survey]]></text>
+            </staticText>
+
+            <staticText><reportElement x="0"   y="15" width="200" height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Occupation Title]]></text></staticText>
+            <staticText><reportElement x="200" y="15" width="120" height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Occupation Code]]></text></staticText>
+            <staticText><reportElement x="320" y="15" width="120" height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Skillset Name]]></text></staticText>
+            <staticText><reportElement x="440" y="15" width="260" height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Skillset Description]]></text></staticText>
+            <staticText><reportElement x="700" y="15" width="102" height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Additional comments]]></text></staticText>
+        </band>
+    </columnHeader>
+
+    <detail>
+        <band height="40">
+            <textField isStretchWithOverflow="true">
+                <reportElement x="0" y="0" width="200" height="40" style="CellWrap"/>
+                <textElement verticalAlignment="Top"/>
+                <textFieldExpression><![CDATA[$F{occupation_title}]]></textFieldExpression>
+            </textField>
+
+            <textField isStretchWithOverflow="true">
+                <reportElement x="200" y="0" width="120" height="40" style="CellWrap"/>
+                <textElement verticalAlignment="Top"/>
+                <textFieldExpression><![CDATA[$F{occupation_code}]]></textFieldExpression>
+            </textField>
+
+            <textField isStretchWithOverflow="true">
+                <reportElement x="320" y="0" width="120" height="40" style="CellWrap"/>
+                <textElement verticalAlignment="Top"/>
+                <textFieldExpression><![CDATA[$F{skillset_name}]]></textFieldExpression>
+            </textField>
+
+            <textField isStretchWithOverflow="true">
+                <reportElement x="440" y="0" width="260" height="40" style="CellWrap"/>
+                <textElement verticalAlignment="Top"/>
+                <textFieldExpression><![CDATA[$F{skillset_description}]]></textFieldExpression>
+            </textField>
+
+            <textField isStretchWithOverflow="true">
+                <reportElement x="700" y="0" width="102" height="40" style="CellWrap"/>
+                <textElement verticalAlignment="Top"/>
+                <textFieldExpression><![CDATA[$F{comments}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+
+</jasperReport>
