@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+              http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="sub_section_4_4_induct_exleave_refresher"
+              pageWidth="842" pageHeight="595" orientation="Landscape"
+              columnWidth="802" leftMargin="20" rightMargin="20" topMargin="15" bottomMargin="15"
+              uuid="a44b2b86-30fa-43b2-9b12-2fdb9b6c6b2c">
+
+    <!-- Styles -->
+    <style name="Hdr" fontName="SansSerif" fontSize="9" isBold="true"
+           hTextAlign="Center" vTextAlign="Middle"/>
+    <style name="HdrSmall" fontName="SansSerif" fontSize="8" isBold="true"
+           hTextAlign="Center" vTextAlign="Middle"/>
+    <style name="CellText" fontName="SansSerif" fontSize="8"
+           vTextAlign="Middle"/>
+    <style name="CellNum" fontName="SansSerif" fontSize="8"
+           hTextAlign="Center" vTextAlign="Middle"/>
+
+    <parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
+
+    <queryString language="SQL">
+        <![CDATA[
+SELECT
+    mg.value AS major_group_value,
+    mg.name  AS occupational_category,
+
+    COALESCE(t.ZZ_Induction_Trained_Cnt,0)::int AS induction_trained,
+    COALESCE(t.ZZ_Ex_Leave_Trained_Cnt,0)::int  AS exleave_trained,
+    COALESCE(t.ZZ_Refresher_Trained,0)::int     AS refresher_trained,
+
+    COALESCE(t.ZZ_Induction_Planned_Cnt,0)::int AS induction_planned,
+    COALESCE(t.ZZ_Ex_Leave_Planned_Cnt,0)::int  AS exleave_planned,
+    COALESCE(t.ZZ_Refresher_Planned,0)::int     AS refresher_planned
+
+FROM ZZ_WSP_ATR_Induct_Ex_Leave_Training_Rep t
+JOIN zz_wsp_atr_ofo_major_group_ref mg
+  ON mg.zz_wsp_atr_ofo_major_group_ref_id = t.ZZ_WSP_ATR_OFO_Major_Group_Ref_ID
+WHERE t.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
+  AND COALESCE(t.ZZ_Report_Section,'') = '4.4'
+ORDER BY mg.value
+        ]]>
+    </queryString>
+
+    <!-- Fields -->
+    <field name="major_group_value" class="java.lang.String"/>
+    <field name="occupational_category" class="java.lang.String"/>
+
+    <field name="induction_trained" class="java.lang.Integer"/>
+    <field name="exleave_trained" class="java.lang.Integer"/>
+    <field name="refresher_trained" class="java.lang.Integer"/>
+
+    <field name="induction_planned" class="java.lang.Integer"/>
+    <field name="exleave_planned" class="java.lang.Integer"/>
+    <field name="refresher_planned" class="java.lang.Integer"/>
+
+    <!-- Variables for Total row -->
+    <variable name="Sum_Tr_Induction" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{induction_trained}]]></variableExpression>
+    </variable>
+    <variable name="Sum_Tr_ExLeave" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{exleave_trained}]]></variableExpression>
+    </variable>
+    <variable name="Sum_Tr_Refresher" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{refresher_trained}]]></variableExpression>
+    </variable>
+
+    <variable name="Sum_Pl_Induction" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{induction_planned}]]></variableExpression>
+    </variable>
+    <variable name="Sum_Pl_ExLeave" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{exleave_planned}]]></variableExpression>
+    </variable>
+    <variable name="Sum_Pl_Refresher" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{refresher_planned}]]></variableExpression>
+    </variable>
+
+    <!-- Grand totals (sum across the 3 columns) -->
+    <variable name="Grand_Total_Trained" class="java.lang.Integer" calculation="Nothing">
+        <variableExpression><![CDATA[
+            ($V{Sum_Tr_Induction} == null ? 0 : $V{Sum_Tr_Induction}.intValue())
+          + ($V{Sum_Tr_ExLeave}   == null ? 0 : $V{Sum_Tr_ExLeave}.intValue())
+          + ($V{Sum_Tr_Refresher} == null ? 0 : $V{Sum_Tr_Refresher}.intValue())
+        ]]></variableExpression>
+    </variable>
+
+    <variable name="Grand_Total_Planned" class="java.lang.Integer" calculation="Nothing">
+        <variableExpression><![CDATA[
+            ($V{Sum_Pl_Induction} == null ? 0 : $V{Sum_Pl_Induction}.intValue())
+          + ($V{Sum_Pl_ExLeave}   == null ? 0 : $V{Sum_Pl_ExLeave}.intValue())
+          + ($V{Sum_Pl_Refresher} == null ? 0 : $V{Sum_Pl_Refresher}.intValue())
+        ]]></variableExpression>
+    </variable>
+
+    <!-- Title -->
+    <title>
+        <band height="38">
+            <staticText>
+                <reportElement x="0" y="0" width="802" height="16" uuid="b1a0a5b0-b8d2-4ef8-97c4-0b2e2a6b9c02"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[4.4 Induction, Ex-leave and Refresher training done (2024) and planned (2025)]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="0" y="18" width="802" height="16" uuid="c53a3b9c-553d-47b4-8c24-4fd1635b8ff0"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="8"/>
+                </textElement>
+                <text><![CDATA[Summary of induction / ex-leave and refresher training done and planned. Please note each person was counted once, regardless of the number of interventions]]></text>
+            </staticText>
+        </band>
+    </title>
+
+    <!-- Column Header -->
+    <columnHeader>
+        <band height="46">
+
+            <!-- Occupational Category -->
+            <staticText>
+                <reportElement x="0" y="0" width="340" height="46" style="Hdr" uuid="44f33e5a-79f2-44c1-8b63-8f4d1bdce3e9"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Left" verticalAlignment="Middle"/>
+                <text><![CDATA[Occupational Category]]></text>
+            </staticText>
+
+            <!-- Group headers -->
+            <staticText>
+                <reportElement x="340" y="0" width="231" height="22" style="HdrSmall" uuid="0a4c850a-7a20-45f2-8794-4e39db03d98a"/>
+                <box><pen lineWidth="0.5"/></box>
+                <text><![CDATA[Total Trained 2024]]></text>
+            </staticText>
+
+            <staticText>
+                <reportElement x="571" y="0" width="231" height="22" style="HdrSmall" uuid="8b61b9b6-6a2b-4b9c-8e6f-9d02a5a2b51b"/>
+                <box><pen lineWidth="0.5"/></box>
+                <text><![CDATA[Total Planned Training 2025]]></text>
+            </staticText>
+
+            <!-- Subheaders (row 2) -->
+            <staticText><reportElement x="340" y="22" width="77" height="24" style="HdrSmall" uuid="d7c1dbd4-1c67-4f19-a0bb-1d9db7d6a9af"/><box><pen lineWidth="0.5"/></box><text><![CDATA[Induction]]></text></staticText>
+            <staticText><reportElement x="417" y="22" width="77" height="24" style="HdrSmall" uuid="f566b1c7-4636-48a9-8720-8f9c7d0b0f9c"/><box><pen lineWidth="0.5"/></box><text><![CDATA[Ex-Leave]]></text></staticText>
+            <staticText><reportElement x="494" y="22" width="77" height="24" style="HdrSmall" uuid="a00635c6-1b5d-4f11-a394-1b1d6b33dc3f"/><box><pen lineWidth="0.5"/></box><text><![CDATA[Refresher]]></text></staticText>
+
+            <staticText><reportElement x="571" y="22" width="77" height="24" style="HdrSmall" uuid="b35b5f25-b2fd-4c72-9e85-4a3b6a7d2b6b"/><box><pen lineWidth="0.5"/></box><text><![CDATA[Induction]]></text></staticText>
+            <staticText><reportElement x="648" y="22" width="77" height="24" style="HdrSmall" uuid="f0b0f0b9-29f0-4f0b-9e31-3b0d8d9f2b7a"/><box><pen lineWidth="0.5"/></box><text><![CDATA[Ex-Leave]]></text></staticText>
+            <staticText><reportElement x="725" y="22" width="77" height="24" style="HdrSmall" uuid="e1d1a3db-3e0f-41e0-9fe4-8d3d9a7b1c10"/><box><pen lineWidth="0.5"/></box><text><![CDATA[Refresher]]></text></staticText>
+
+        </band>
+    </columnHeader>
+
+    <!-- Detail -->
+    <detail>
+        <band height="16">
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="0" width="340" height="16" style="CellText" uuid="58f56c58-1a6d-4ad8-9e22-5d0b5d30c5a2"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Left" verticalAlignment="Middle"/>
+                <textFieldExpression><![CDATA[$F{occupational_category}]]></textFieldExpression>
+            </textField>
+
+            <textField isBlankWhenNull="true"><reportElement x="340" y="0" width="77" height="16" style="CellNum" uuid="d9cfe6b7-0cf0-47e6-8dbf-7c9c72f3f205"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{induction_trained}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement x="417" y="0" width="77" height="16" style="CellNum" uuid="04d4570c-9401-4b92-9e4c-6fb0f8d86f0f"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{exleave_trained}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement x="494" y="0" width="77" height="16" style="CellNum" uuid="f5071aa2-2f08-4e9d-9c7c-2d8d2d6a55e0"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{refresher_trained}]]></textFieldExpression></textField>
+
+            <textField isBlankWhenNull="true"><reportElement x="571" y="0" width="77" height="16" style="CellNum" uuid="a39b0c60-2a4f-4ab1-a3fd-0b8c2c7c3b0f"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{induction_planned}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement x="648" y="0" width="77" height="16" style="CellNum" uuid="fb1dcf1b-83db-4c10-91c5-1f69e2c1df1f"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{exleave_planned}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement x="725" y="0" width="77" height="16" style="CellNum" uuid="cc6a2a2b-d04d-4f7c-b3f0-1d6d72a7d1c7"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{refresher_planned}]]></textFieldExpression></textField>
+
+        </band>
+    </detail>
+
+    <!-- Summary (Total + Grand Total like your screenshot) -->
+    <summary>
+        <band height="32">
+
+            <!-- Total row -->
+            <staticText>
+                <reportElement x="0" y="0" width="340" height="16" style="HdrSmall" uuid="s1"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Left" verticalAlignment="Middle"/>
+                <text><![CDATA[Total]]></text>
+            </staticText>
+
+            <textField><reportElement x="340" y="0" width="77" height="16" style="CellNum" uuid="s2"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Tr_Induction}]]></textFieldExpression></textField>
+            <textField><reportElement x="417" y="0" width="77" height="16" style="CellNum" uuid="s3"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Tr_ExLeave}]]></textFieldExpression></textField>
+            <textField><reportElement x="494" y="0" width="77" height="16" style="CellNum" uuid="s4"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Tr_Refresher}]]></textFieldExpression></textField>
+
+            <textField><reportElement x="571" y="0" width="77" height="16" style="CellNum" uuid="s5"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Pl_Induction}]]></textFieldExpression></textField>
+            <textField><reportElement x="648" y="0" width="77" height="16" style="CellNum" uuid="s6"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Pl_ExLeave}]]></textFieldExpression></textField>
+            <textField><reportElement x="725" y="0" width="77" height="16" style="CellNum" uuid="s7"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Sum_Pl_Refresher}]]></textFieldExpression></textField>
+
+            <!-- Grand Total row (like screenshot: totals placed in last col of each block) -->
+            <staticText>
+                <reportElement x="0" y="16" width="340" height="16" style="HdrSmall" uuid="s8"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Left" verticalAlignment="Middle"/>
+                <text><![CDATA[Grand Total]]></text>
+            </staticText>
+
+            <textField><reportElement x="340" y="16" width="77" height="16" style="CellNum" uuid="s9"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[0]]></textFieldExpression></textField>
+            <textField><reportElement x="417" y="16" width="77" height="16" style="CellNum" uuid="s10"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[0]]></textFieldExpression></textField>
+            <textField><reportElement x="494" y="16" width="77" height="16" style="CellNum" uuid="s11"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Grand_Total_Trained}]]></textFieldExpression></textField>
+
+            <textField><reportElement x="571" y="16" width="77" height="16" style="CellNum" uuid="s12"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[0]]></textFieldExpression></textField>
+            <textField><reportElement x="648" y="16" width="77" height="16" style="CellNum" uuid="s13"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[0]]></textFieldExpression></textField>
+            <textField><reportElement x="725" y="16" width="77" height="16" style="CellNum" uuid="s14"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{Grand_Total_Planned}]]></textFieldExpression></textField>
+
+        </band>
+    </summary>
+
+</jasperReport>
