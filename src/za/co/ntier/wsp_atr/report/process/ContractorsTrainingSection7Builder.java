@@ -46,7 +46,7 @@ public class ContractorsTrainingSection7Builder extends AbstractReportSectionBui
         final String sql =
               "WITH grp AS ( \n"
             + "  SELECT \n"
-            + "    c.zz_learning_programme_id AS programme_id, \n"
+            + "    c.ZZ_Learning_Programme_Type_ID AS programme_id, \n"
             + "    SUM(COALESCE(c.zz_managers_trained,0))::int          AS managers_trained, \n"
             + "    SUM(COALESCE(c.zz_professionals_trained,0))::int     AS professionals_trained, \n"
             + "    SUM(COALESCE(c.zz_technicians_trained,0))::int       AS technicians_trained, \n"

@@ -4,7 +4,7 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
                         http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
-    name="ZZ_WSP_ATR_WorkforceProfile_Master"
+    name="ZZ_WSP_ATR_Master"
     pageWidth="842"
     pageHeight="595"
     orientation="Landscape"
@@ -18,7 +18,6 @@
     <!-- ===================== -->
     <!-- STYLES (TOP ONLY)     -->
     <!-- ===================== -->
-
     <style name="Title" fontName="SansSerif" fontSize="14" isBold="true"/>
     <style name="SubTitle" fontName="SansSerif" fontSize="11" isBold="true"/>
     <style name="Normal" fontName="SansSerif" fontSize="9"/>
@@ -26,88 +25,352 @@
     <!-- ===================== -->
     <!-- PARAMETERS            -->
     <!-- ===================== -->
-
-    <!-- Passed from iDempiere process -->
     <parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
 
-    <!-- Standard iDempiere pattern: directory where .jasper subreports live -->
     <parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
         <defaultValueExpression><![CDATA[""]]></defaultValueExpression>
     </parameter>
 
-    <!-- Optional: for DB connection if you prefer to use the same connection -->
     <parameter name="REPORT_CONNECTION" class="java.sql.Connection" isForPrompting="false"/>
+
+    <!-- ===================== -->
+    <!-- QUERY (MUST RETURN 1+) -->
+    <!-- ===================== -->
+    <queryString>
+        <![CDATA[
+            SELECT 1 AS dummy
+        ]]>
+    </queryString>
+    <field name="dummy" class="java.lang.Integer"/>
 
     <!-- ===================== -->
     <!-- TITLE                 -->
     <!-- ===================== -->
-
     <title>
-        <band height="35">
+        <band height="30">
             <staticText>
                 <reportElement x="0" y="0" width="802" height="25" style="Title"/>
                 <textElement textAlignment="Left" verticalAlignment="Middle"/>
-                <text><![CDATA[Section 2: Workforce Profile]]></text>
+                <text><![CDATA[WSP/ATR Report]]></text>
             </staticText>
         </band>
     </title>
 
-    <!-- ===================== -->
-    <!-- DETAIL: SUBREPORTS     -->
-    <!-- ===================== -->
+    <!-- ===================================================== -->
+    <!-- GROUPS: ONE SUBREPORT PER GROUP HEADER (NEW PAGE EACH) -->
+    <!-- ===================================================== -->
 
+    <!-- 2.1 Workforce Employee Summary -->
+    <group name="G_2_1">
+        <groupExpression><![CDATA["2.1"]]></groupExpression>
+        <groupHeader>
+            <band height="420" splitType="Stretch">
+                <subreport>
+                    <reportElement x="0" y="0" width="802" height="420"/>
+                    <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "sub_section_2_1_workforce_emp_summary.jasper"]]></subreportExpression>
+                    <subreportParameter name="ZZ_WSP_ATR_Report_ID">
+                        <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+                    </subreportParameter>
+                    <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+                </subreport>
+            </band>
+        </groupHeader>
+    </group>
+
+    <!-- 2.2 Geo Distribution -->
+    <group name="G_2_2">
+        <groupExpression><![CDATA["2.2"]]></groupExpression>
+        <groupHeader>
+            <band height="260" splitType="Stretch" isStartNewPage="true">
+                <subreport>
+                    <reportElement x="0" y="0" width="802" height="260"/>
+                    <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "Section_2_2_Geo_Dist.jasper"]]></subreportExpression>
+                    <subreportParameter name="ZZ_WSP_ATR_Report_ID">
+                        <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+                    </subreportParameter>
+                    <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+                </subreport>
+            </band>
+        </groupHeader>
+    </group>
+
+    <!-- 2.3 Terminated Employees -->
+    <group name="G_2_3">
+        <groupExpression><![CDATA["2.3"]]></groupExpression>
+        <groupHeader>
+            <band height="260" splitType="Stretch" isStartNewPage="true">
+                <subreport>
+                    <reportElement x="0" y="0" width="802" height="260"/>
+                    <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_2_3_Terminated_Employees.jasper"]]></subreportExpression>
+                    <subreportParameter name="ZZ_WSP_ATR_Report_ID">
+                        <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+                    </subreportParameter>
+                    <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+                </subreport>
+            </band>
+        </groupHeader>
+    </group>
+
+    <!-- 2.4 Education Level -->
+    <group name="G_2_4">
+        <groupExpression><![CDATA["2.4"]]></groupExpression>
+        <groupHeader>
+            <band height="260" splitType="Stretch" isStartNewPage="true">
+                <subreport>
+                    <reportElement x="0" y="0" width="802" height="260"/>
+                    <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_2_4_Education_Level.jasper"]]></subreportExpression>
+                    <subreportParameter name="ZZ_WSP_ATR_Report_ID">
+                        <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+                    </subreportParameter>
+                    <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+                </subreport>
+            </band>
+        </groupHeader>
+    </group>
+
+    <!-- 3.1 Hard To Fill Vacancies -->
+    <group name="G_3_1">
+        <groupExpression><![CDATA["3.1"]]></groupExpression>
+        <groupHeader>
+            <band height="260" splitType="Stretch" isStartNewPage="true">
+                <subreport>
+                    <reportElement x="0" y="0" width="802" height="260"/>
+                    <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_3_1_HTFV.jasper"]]></subreportExpression>
+                    <subreportParameter name="ZZ_WSP_ATR_Report_ID">
+                        <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+                    </subreportParameter>
+                    <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+                </subreport>
+            </band>
+        </groupHeader>
+    </group>
+
+    <!-- 3.2 TopUp Skills -->
+    <group name="G_3_2">
+        <groupExpression><![CDATA["3.2"]]></groupExpression>
+        <groupHeader>
+            <band height="260" splitType="Stretch" isStartNewPage="true">
+                <subreport>
+                    <reportElement x="0" y="0" width="802" height="260"/>
+                    <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_3_2_TopUp_Skills.jasper"]]></subreportExpression>
+                    <subreportParameter name="ZZ_WSP_ATR_Report_ID">
+                        <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+                    </subreportParameter>
+                    <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+                </subreport>
+            </band>
+        </groupHeader>
+    </group>
+
+    <!-- 4.1 Employees Trained Summary -->
+    <group name="G_4_1">
+        <groupExpression><![CDATA["4.1"]]></groupExpression>
+        <groupHeader>
+            <band height="300" splitType="Stretch" isStartNewPage="true">
+                <subreport>
+                    <reportElement x="0" y="0" width="802" height="300"/>
+                    <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_4_1_Employees_Trained_Summary.jasper"]]></subreportExpression>
+                    <subreportParameter name="ZZ_WSP_ATR_Report_ID">
+                        <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+                    </subreportParameter>
+                    <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+                </subreport>
+            </band>
+        </groupHeader>
+    </group>
+
+    <!-- 4.2 Induction, Ex-Leave, Refresher -->
+    <group name="G_4_2">
+        <groupExpression><![CDATA["4.2"]]></groupExpression>
+        <groupHeader>
+            <band height="300" splitType="Stretch" isStartNewPage="true">
+                <subreport>
+                    <reportElement x="0" y="0" width="802" height="300"/>
+                    <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "ZZ_WSP_ATR_Section_4_2.jasper"]]></subreportExpression>
+                    <subreportParameter name="ZZ_WSP_ATR_Report_ID">
+                        <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+                    </subreportParameter>
+                    <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+                </subreport>
+            </band>
+        </groupHeader>
+    </group>
+
+    <!-- 4.3.1 Planned Employee Training Interventions -->
+    <group name="G_4_3_1">
+        <groupExpression><![CDATA["4.3.1"]]></groupExpression>
+        <groupHeader>
+            <band height="300" splitType="Stretch" isStartNewPage="true">
+                <subreport>
+                    <reportElement x="0" y="0" width="802" height="300"/>
+                    <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "sub_section_4_3_1_planned_emp_training_interventions.jasper"]]></subreportExpression>
+                    <subreportParameter name="ZZ_WSP_ATR_Report_ID">
+                        <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+                    </subreportParameter>
+                    <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+                </subreport>
+            </band>
+        </groupHeader>
+    </group>
+
+    <!-- 4.4 Induction/Ex-Leave/Refresher (sub) -->
+    <group name="G_4_4">
+        <groupExpression><![CDATA["4.4"]]></groupExpression>
+        <groupHeader>
+            <band height="300" splitType="Stretch" isStartNewPage="true">
+                <subreport>
+                    <reportElement x="0" y="0" width="802" height="300"/>
+                    <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "sub_section_4_4_induct_exleave_refresher.jasper"]]></subreportExpression>
+                    <subreportParameter name="ZZ_WSP_ATR_Report_ID">
+                        <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+                    </subreportParameter>
+                    <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+                </subreport>
+            </band>
+        </groupHeader>
+    </group>
+
+    <!-- 5.1 Summary Employee Training Interventions -->
+    <group name="G_5_1">
+        <groupExpression><![CDATA["5.1"]]></groupExpression>
+        <groupHeader>
+            <band height="340" splitType="Stretch" isStartNewPage="true">
+                <subreport>
+                    <reportElement x="0" y="0" width="802" height="340"/>
+                    <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_5_1_summary_emp_training_interventions.jasper"]]></subreportExpression>
+                    <subreportParameter name="ZZ_WSP_ATR_Report_ID">
+                        <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+                    </subreportParameter>
+                    <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+                </subreport>
+            </band>
+        </groupHeader>
+    </group>
+
+    <!-- 5.2.1 Planned Train per Occupational Group (sub) -->
+    <group name="G_5_2_1">
+        <groupExpression><![CDATA["5.2.1"]]></groupExpression>
+        <groupHeader>
+            <band height="320" splitType="Stretch" isStartNewPage="true">
+                <subreport>
+                    <reportElement x="0" y="0" width="802" height="320"/>
+                    <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "sub_section_5_2_1_planned_train_per_occ_group.jasper"]]></subreportExpression>
+                    <subreportParameter name="ZZ_WSP_ATR_Report_ID">
+                        <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+                    </subreportParameter>
+                    <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+                </subreport>
+            </band>
+        </groupHeader>
+    </group>
+
+    <!-- 6.1 Non-Employees AET and Bursaries -->
+    <group name="G_6_1">
+        <groupExpression><![CDATA["6.1"]]></groupExpression>
+        <groupHeader>
+            <band height="220" splitType="Stretch" isStartNewPage="true">
+                <subreport>
+                    <reportElement x="0" y="0" width="802" height="220"/>
+                    <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_6_1_non_employees_aet_bursaries.jasper"]]></subreportExpression>
+                    <subreportParameter name="ZZ_WSP_ATR_Report_ID">
+                        <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+                    </subreportParameter>
+                    <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+                </subreport>
+            </band>
+        </groupHeader>
+    </group>
+
+    <!-- 6.2 Bursaries Including HET -->
+    <group name="G_6_2">
+        <groupExpression><![CDATA["6.2"]]></groupExpression>
+        <groupHeader>
+            <band height="220" splitType="Stretch" isStartNewPage="true">
+                <subreport>
+                    <reportElement x="0" y="0" width="802" height="220"/>
+                    <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_6_2_bursaries_including_het.jasper"]]></subreportExpression>
+                    <subreportParameter name="ZZ_WSP_ATR_Report_ID">
+                        <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+                    </subreportParameter>
+                    <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+                </subreport>
+            </band>
+        </groupHeader>
+    </group>
+
+    <!-- 6.3 Non-Emp Skills Dev Done -->
+    <group name="G_6_3">
+        <groupExpression><![CDATA["6.3"]]></groupExpression>
+        <groupHeader>
+            <band height="320" splitType="Stretch" isStartNewPage="true">
+                <subreport>
+                    <reportElement x="0" y="0" width="802" height="320"/>
+                    <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_6_3_non_emp_skills_dev_done.jasper"]]></subreportExpression>
+                    <subreportParameter name="ZZ_WSP_ATR_Report_ID">
+                        <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+                    </subreportParameter>
+                    <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+                </subreport>
+            </band>
+        </groupHeader>
+    </group>
+
+    <!-- 6.4 Non-Emp Skills Dev Planned -->
+    <group name="G_6_4">
+        <groupExpression><![CDATA["6.4"]]></groupExpression>
+        <groupHeader>
+            <band height="260" splitType="Stretch" isStartNewPage="true">
+                <subreport>
+                    <reportElement x="0" y="0" width="802" height="260"/>
+                    <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_6_4_non_emp_skills_dev_planned.jasper"]]></subreportExpression>
+                    <subreportParameter name="ZZ_WSP_ATR_Report_ID">
+                        <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+                    </subreportParameter>
+                    <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+                </subreport>
+            </band>
+        </groupHeader>
+    </group>
+
+    <!-- 7 Contractors -->
+    <group name="G_7">
+        <groupExpression><![CDATA["7"]]></groupExpression>
+        <groupHeader>
+            <band height="340" splitType="Stretch" isStartNewPage="true">
+                <subreport>
+                    <reportElement x="0" y="0" width="802" height="340"/>
+                    <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_7_contractors.jasper"]]></subreportExpression>
+                    <subreportParameter name="ZZ_WSP_ATR_Report_ID">
+                        <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+                    </subreportParameter>
+                    <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+                </subreport>
+            </band>
+        </groupHeader>
+    </group>
+
+    <!-- 8 Finance & Training Compare -->
+    <group name="G_8">
+        <groupExpression><![CDATA["8"]]></groupExpression>
+        <groupHeader>
+            <band height="360" splitType="Stretch" isStartNewPage="true">
+                <subreport>
+                    <reportElement x="0" y="0" width="802" height="360"/>
+                    <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_8_finance_train_compare.jasper"]]></subreportExpression>
+                    <subreportParameter name="ZZ_WSP_ATR_Report_ID">
+                        <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+                    </subreportParameter>
+                    <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+                </subreport>
+            </band>
+        </groupHeader>
+    </group>
+
+    <!-- ===================== -->
+    <!-- DETAIL (EMPTY)        -->
+    <!-- ===================== -->
     <detail>
-        <!-- Make this tall enough to hold multiple subreports.
-             Jasper will page-break automatically if they overflow. -->
-        <band height="900" splitType="Stretch">
-
-            <!-- ===================== -->
-            <!-- Subreport: Section 2.1 -->
-            <!-- ===================== -->
-            <subreport>
-                <reportElement x="0" y="0" width="802" height="420"/>
-                <!-- If you compile to .jasper, reference the .jasper -->
-                <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_2_1_Workforce_Emp_Summ.jasper"]]></subreportExpression>
-
-                <subreportParameter name="ZZ_WSP_ATR_Report_ID">
-                    <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
-                </subreportParameter>
-
-                <!-- Use the same DB connection from the master if available -->
-                <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-            </subreport>
-
-            <!-- ===================== -->
-            <!-- Subreport: Section 2.2 -->
-            <!-- ===================== -->
-            <subreport>
-                <reportElement x="0" y="440" width="802" height="220"/>
-                <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_2_2_Geo_Dist.jasper"]]></subreportExpression>
-
-                <subreportParameter name="ZZ_WSP_ATR_Report_ID">
-                    <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
-                </subreportParameter>
-
-                <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-            </subreport>
-
-            <!-- ===================== -->
-            <!-- Placeholder for 2.3+   -->
-            <!-- Copy/paste blocks above
-                 and adjust y + file name  WSP_ATR_Section_2_3_Terminated_Employees -->
-            <!-- ===================== -->
-              <subreport>
-                <reportElement x="0" y="440" width="802" height="220"/>
-                <subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_2_3_Terminated_Employees.jasper"]]></subreportExpression>
-
-                <subreportParameter name="ZZ_WSP_ATR_Report_ID">
-                    <subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
-                </subreportParameter>
-
-                <connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-            </subreport>
-
-        </band>
+        <band height="0"/>
     </detail>
 
 </jasperReport>
