@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+              http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="section_6_4_non_emp_skills_dev_planned"
+              pageWidth="842" pageHeight="595" orientation="Landscape"
+              columnWidth="802" leftMargin="20" rightMargin="20" topMargin="15" bottomMargin="15"
+              uuid="c1c9e6e7-4ab7-4e0c-8b6a-4c51f7e8d2c1">
+
+    <style name="Hdr" fontName="SansSerif" fontSize="8" isBold="true" hTextAlign="Center" vTextAlign="Middle"/>
+    <style name="Cell" fontName="SansSerif" fontSize="8" vTextAlign="Middle"/>
+    <style name="CellNum" fontName="SansSerif" fontSize="8" hTextAlign="Center" vTextAlign="Middle"/>
+
+    <parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
+
+    <queryString language="SQL">
+        <![CDATA[
+SELECT
+    COALESCE(lpt.Name,'') AS programme_type,
+    COALESCE(lp.Name,'')  AS specify_txt,
+    COALESCE(tb.Name,'')  AS target_beneficiaries,
+    COALESCE(t.ZZ_Total_Planned,0)    AS total_planned,
+    COALESCE(t.ZZ_Disabled_Planned,0) AS disabled_total
+FROM ZZ_WSP_ATR_Non_Emp_Skills_Dev_Plan_Rep t
+LEFT JOIN ZZ_Learning_Programme_Ref lpt
+       ON lpt.ZZ_Learning_Programme_Ref_ID = t.ZZ_Learning_Programme_Type_Planned_ID
+LEFT JOIN ZZ_Qualification_Type_Details_Ref lp
+       ON lp.ZZ_Qualification_Type_Details_Ref_ID = t.ZZ_Learning_Programme_Planned_ID
+LEFT JOIN ZZ_Target_Beneficiary_Ref tb
+       ON tb.ZZ_Target_Beneficiary_Ref_ID = t.ZZ_Target_Ben_Planned_ID
+WHERE t.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
+ORDER BY programme_type, specify_txt, target_beneficiaries
+        ]]>
+    </queryString>
+
+    <field name="programme_type" class="java.lang.String"/>
+    <field name="specify_txt" class="java.lang.String"/>
+    <field name="target_beneficiaries" class="java.lang.String"/>
+    <field name="total_planned" class="java.lang.Integer"/>
+    <field name="disabled_total" class="java.lang.Integer"/>
+
+    <variable name="SumTotalPlanned" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{total_planned}]]></variableExpression>
+        <initialValueExpression><![CDATA[0]]></initialValueExpression>
+    </variable>
+    <variable name="SumDisabled" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{disabled_total}]]></variableExpression>
+        <initialValueExpression><![CDATA[0]]></initialValueExpression>
+    </variable>
+
+    <title>
+        <band height="28">
+            <staticText>
+                <reportElement x="0" y="0" width="802" height="14" uuid="t1"/>
+                <textElement verticalAlignment="Middle">
+                    <font size="9" isBold="true"/>
+                </textElement>
+                <text><![CDATA[6.4 Skills Development Related Community Social Programme Planned in 2025 (Excluding Bursary, AET & HET)]]></text>
+            </staticText>
+        </band>
+    </title>
+
+    <columnHeader>
+        <band height="18">
+            <!-- widths sum to 802: 250 + 320 + 140 + 46 + 46 = 802 -->
+            <staticText>
+                <reportElement x="0" y="0" width="250" height="18" style="Hdr" uuid="h1"/>
+                <box><pen lineWidth="0.5"/></box>
+                <text><![CDATA[Qualification / Learning Programme Type]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="250" y="0" width="320" height="18" style="Hdr" uuid="h2"/>
+                <box><pen lineWidth="0.5"/></box>
+                <text><![CDATA[Specify if Skills Programme, Learnership or NQF 5-10]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="570" y="0" width="140" height="18" style="Hdr" uuid="h3"/>
+                <box><pen lineWidth="0.5"/></box>
+                <text><![CDATA[Targeted Beneficiaries]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="710" y="0" width="46" height="18" style="Hdr" uuid="h4"/>
+                <box><pen lineWidth="0.5"/></box>
+                <text><![CDATA[Total]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="756" y="0" width="46" height="18" style="Hdr" uuid="h5"/>
+                <box><pen lineWidth="0.5"/></box>
+                <text><![CDATA[Disabled Total]]></text>
+            </staticText>
+        </band>
+    </columnHeader>
+
+    <detail>
+        <band height="14">
+            <textField>
+                <reportElement x="0" y="0" width="250" height="14" style="Cell" uuid="d1"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textFieldExpression><![CDATA[$F{programme_type}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="250" y="0" width="320" height="14" style="Cell" uuid="d2"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textFieldExpression><![CDATA[$F{specify_txt}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="570" y="0" width="140" height="14" style="Cell" uuid="d3"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textFieldExpression><![CDATA[$F{target_beneficiaries}]]></textFieldExpression>
+            </textField>
+            <textField pattern="###0">
+                <reportElement x="710" y="0" width="46" height="14" style="CellNum" uuid="d4"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textFieldExpression><![CDATA[$F{total_planned}]]></textFieldExpression>
+            </textField>
+            <textField pattern="###0">
+                <reportElement x="756" y="0" width="46" height="14" style="CellNum" uuid="d5"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textFieldExpression><![CDATA[$F{disabled_total}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+
+    <summary>
+        <band height="14">
+            <staticText>
+                <reportElement x="0" y="0" width="710" height="14" style="Hdr" uuid="s1"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Left"/>
+                <text><![CDATA[Grand Total]]></text>
+            </staticText>
+
+            <textField pattern="###0">
+                <reportElement x="710" y="0" width="46" height="14" style="CellNum" uuid="s2"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textFieldExpression><![CDATA[$V{SumTotalPlanned}]]></textFieldExpression>
+            </textField>
+
+            <textField pattern="###0">
+                <reportElement x="756" y="0" width="46" height="14" style="CellNum" uuid="s3"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textFieldExpression><![CDATA[$V{SumDisabled}]]></textFieldExpression>
+            </textField>
+        </band>
+    </summary>
+
+</jasperReport>

@@ -205,6 +205,15 @@ public interface I_ZZ_WSP_ATR_Non_Emp_Skills_Dev_Rep
 
 	public I_ZZ_WSP_Non_Employee_Status_Ref getZZ_Non_Emp_Status_Done() throws RuntimeException;
 
+    /** Column name ZZ_Report_Section */
+    public static final String COLUMNNAME_ZZ_Report_Section = "ZZ_Report_Section";
+
+	/** Set Section	  */
+	public void setZZ_Report_Section (String ZZ_Report_Section);
+
+	/** Get Section	  */
+	public String getZZ_Report_Section();
+
     /** Column name ZZ_Target_Ben_Done_ID */
     public static final String COLUMNNAME_ZZ_Target_Ben_Done_ID = "ZZ_Target_Ben_Done_ID";
 
@@ -242,6 +251,17 @@ public interface I_ZZ_WSP_ATR_Non_Emp_Skills_Dev_Rep
 
 	/** Get ZZ_WSP_ATR_Non_Emp_Skills_Dev_Rep_UU	  */
 	public String getZZ_WSP_ATR_Non_Emp_Skills_Dev_Rep_UU();
+
+    /** Column name ZZ_WSP_ATR_Report_ID */
+    public static final String COLUMNNAME_ZZ_WSP_ATR_Report_ID = "ZZ_WSP_ATR_Report_ID";
+
+	/** Set WSP ATR Report 	  */
+	public void setZZ_WSP_ATR_Report_ID (int ZZ_WSP_ATR_Report_ID);
+
+	/** Get WSP ATR Report 	  */
+	public int getZZ_WSP_ATR_Report_ID();
+
+	public I_ZZ_WSP_ATR_Report getZZ_WSP_ATR_Report() throws RuntimeException;
 
     /** Column name ZZ_WSP_ATR_Submitted_ID */
     public static final String COLUMNNAME_ZZ_WSP_ATR_Submitted_ID = "ZZ_WSP_ATR_Submitted_ID";

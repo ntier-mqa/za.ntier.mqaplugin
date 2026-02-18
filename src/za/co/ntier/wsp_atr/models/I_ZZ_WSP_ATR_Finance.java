@@ -21,18 +21,18 @@ import java.sql.Timestamp;
 import org.compiere.model.*;
 import org.compiere.util.KeyNamePair;
 
-/** Generated Interface for ZZ_WSP_ATR_Non_Emp_Burs_Rep
+/** Generated Interface for ZZ_WSP_ATR_Finance
  *  @author iDempiere (generated) 
  *  @version Release 12
  */
 @SuppressWarnings("all")
-public interface I_ZZ_WSP_ATR_Non_Emp_Burs_Rep 
+public interface I_ZZ_WSP_ATR_Finance 
 {
 
-    /** TableName=ZZ_WSP_ATR_Non_Emp_Burs_Rep */
-    public static final String Table_Name = "ZZ_WSP_ATR_Non_Emp_Burs_Rep";
+    /** TableName=ZZ_WSP_ATR_Finance */
+    public static final String Table_Name = "ZZ_WSP_ATR_Finance";
 
-    /** AD_Table_ID=1000204 */
+    /** AD_Table_ID=1000180 */
     public static final int Table_ID = MTable.getTable_ID(Table_Name);
 
     KeyNamePair Model = new KeyNamePair(Table_ID, Table_Name);
@@ -118,81 +118,63 @@ public interface I_ZZ_WSP_ATR_Non_Emp_Burs_Rep
 	  */
 	public int getUpdatedBy();
 
-    /** Column name ZZ_Learning_Programme_Done_ID */
-    public static final String COLUMNNAME_ZZ_Learning_Programme_Done_ID = "ZZ_Learning_Programme_Done_ID";
+    /** Column name ZZ_Finance_Type */
+    public static final String COLUMNNAME_ZZ_Finance_Type = "ZZ_Finance_Type";
 
-	/** Set Learning Programme Done	  */
-	public void setZZ_Learning_Programme_Done_ID (int ZZ_Learning_Programme_Done_ID);
+	/** Set Finance Type	  */
+	public void setZZ_Finance_Type (String ZZ_Finance_Type);
 
-	/** Get Learning Programme Done	  */
-	public int getZZ_Learning_Programme_Done_ID();
+	/** Get Finance Type	  */
+	public String getZZ_Finance_Type();
 
-	public I_ZZ_Qualification_Type_Details_Ref getZZ_Learning_Programme_Done() throws RuntimeException;
+    /** Column name ZZ_Finance_Value */
+    public static final String COLUMNNAME_ZZ_Finance_Value = "ZZ_Finance_Value";
 
-    /** Column name ZZ_Non_Emp_Status_Done_ID */
-    public static final String COLUMNNAME_ZZ_Non_Emp_Status_Done_ID = "ZZ_Non_Emp_Status_Done_ID";
+	/** Set Finance Value	  */
+	public void setZZ_Finance_Value (String ZZ_Finance_Value);
 
-	/** Set Non Emp Status Done	  */
-	public void setZZ_Non_Emp_Status_Done_ID (int ZZ_Non_Emp_Status_Done_ID);
+	/** Get Finance Value	  */
+	public String getZZ_Finance_Value();
 
-	/** Get Non Emp Status Done	  */
-	public int getZZ_Non_Emp_Status_Done_ID();
-
-	public I_ZZ_WSP_Non_Employee_Status_Ref getZZ_Non_Emp_Status_Done() throws RuntimeException;
-
-    /** Column name ZZ_Report_Section */
-    public static final String COLUMNNAME_ZZ_Report_Section = "ZZ_Report_Section";
+    /** Column name ZZ_Section */
+    public static final String COLUMNNAME_ZZ_Section = "ZZ_Section";
 
 	/** Set Section	  */
-	public void setZZ_Report_Section (String ZZ_Report_Section);
+	public void setZZ_Section (String ZZ_Section);
 
 	/** Get Section	  */
-	public String getZZ_Report_Section();
+	public String getZZ_Section();
 
-    /** Column name ZZ_Total_Done */
-    public static final String COLUMNNAME_ZZ_Total_Done = "ZZ_Total_Done";
+    /** Column name ZZ_WSP_ATR_Finance_ID */
+    public static final String COLUMNNAME_ZZ_WSP_ATR_Finance_ID = "ZZ_WSP_ATR_Finance_ID";
 
-	/** Set Total Done	  */
-	public void setZZ_Total_Done (int ZZ_Total_Done);
+	/** Set WSP ATR Finance	  */
+	public void setZZ_WSP_ATR_Finance_ID (int ZZ_WSP_ATR_Finance_ID);
 
-	/** Get Total Done	  */
-	public int getZZ_Total_Done();
+	/** Get WSP ATR Finance	  */
+	public int getZZ_WSP_ATR_Finance_ID();
 
-    /** Column name ZZ_Total_Planned */
-    public static final String COLUMNNAME_ZZ_Total_Planned = "ZZ_Total_Planned";
+    /** Column name ZZ_WSP_ATR_Finance_UU */
+    public static final String COLUMNNAME_ZZ_WSP_ATR_Finance_UU = "ZZ_WSP_ATR_Finance_UU";
 
-	/** Set Total Planned	  */
-	public void setZZ_Total_Planned (int ZZ_Total_Planned);
+	/** Set ZZ_WSP_ATR_Finance_UU	  */
+	public void setZZ_WSP_ATR_Finance_UU (String ZZ_WSP_ATR_Finance_UU);
 
-	/** Get Total Planned	  */
-	public int getZZ_Total_Planned();
+	/** Get ZZ_WSP_ATR_Finance_UU	  */
+	public String getZZ_WSP_ATR_Finance_UU();
 
-    /** Column name ZZ_WSP_ATR_Non_Emp_Burs_Rep_ID */
-    public static final String COLUMNNAME_ZZ_WSP_ATR_Non_Emp_Burs_Rep_ID = "ZZ_WSP_ATR_Non_Emp_Burs_Rep_ID";
+    /** Column name ZZ_WSP_ATR_Submitted_ID */
+    public static final String COLUMNNAME_ZZ_WSP_ATR_Submitted_ID = "ZZ_WSP_ATR_Submitted_ID";
 
-	/** Set Non-Employees Bursaries (Including HET)	  */
-	public void setZZ_WSP_ATR_Non_Emp_Burs_Rep_ID (int ZZ_WSP_ATR_Non_Emp_Burs_Rep_ID);
+	/** Set WSP/ATR Submitted File.
+	  * WSP/ATR Submitted File
+	  */
+	public void setZZ_WSP_ATR_Submitted_ID (int ZZ_WSP_ATR_Submitted_ID);
 
-	/** Get Non-Employees Bursaries (Including HET)	  */
-	public int getZZ_WSP_ATR_Non_Emp_Burs_Rep_ID();
+	/** Get WSP/ATR Submitted File.
+	  * WSP/ATR Submitted File
+	  */
+	public int getZZ_WSP_ATR_Submitted_ID();
 
-    /** Column name ZZ_WSP_ATR_Non_Emp_Burs_Rep_UU */
-    public static final String COLUMNNAME_ZZ_WSP_ATR_Non_Emp_Burs_Rep_UU = "ZZ_WSP_ATR_Non_Emp_Burs_Rep_UU";
-
-	/** Set ZZ_WSP_ATR_Non_Emp_Burs_Rep_UU	  */
-	public void setZZ_WSP_ATR_Non_Emp_Burs_Rep_UU (String ZZ_WSP_ATR_Non_Emp_Burs_Rep_UU);
-
-	/** Get ZZ_WSP_ATR_Non_Emp_Burs_Rep_UU	  */
-	public String getZZ_WSP_ATR_Non_Emp_Burs_Rep_UU();
-
-    /** Column name ZZ_WSP_ATR_Report_ID */
-    public static final String COLUMNNAME_ZZ_WSP_ATR_Report_ID = "ZZ_WSP_ATR_Report_ID";
-
-	/** Set WSP ATR Report 	  */
-	public void setZZ_WSP_ATR_Report_ID (int ZZ_WSP_ATR_Report_ID);
-
-	/** Get WSP ATR Report 	  */
-	public int getZZ_WSP_ATR_Report_ID();
-
-	public I_ZZ_WSP_ATR_Report getZZ_WSP_ATR_Report() throws RuntimeException;
+	public I_ZZ_WSP_ATR_Submitted getZZ_WSP_ATR_Submitted() throws RuntimeException;
 }

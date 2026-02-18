@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+              http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="section_7_contractors"
+              pageWidth="842" pageHeight="595" orientation="Landscape"
+              columnWidth="802" leftMargin="20" rightMargin="20" topMargin="15" bottomMargin="15"
+              uuid="8b4c1d8e-9d63-4a2a-9b22-31e64d3f58aa">
+
+    <!-- Styles -->
+    <style name="Hdr" fontName="SansSerif" fontSize="8" isBold="true" hTextAlign="Center" vTextAlign="Middle"/>
+    <style name="HdrRot" fontName="SansSerif" fontSize="8" isBold="true" hTextAlign="Center" vTextAlign="Middle"/>
+    <style name="Cell" fontName="SansSerif" fontSize="8" vTextAlign="Middle"/>
+    <style name="CellNum" fontName="SansSerif" fontSize="8" hTextAlign="Center" vTextAlign="Middle"/>
+
+    <parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
+
+    <queryString language="SQL">
+        <![CDATA[
+SELECT
+    COALESCE(lp.Name,'') AS programme_name,
+
+    COALESCE(t.ZZ_Managers_Trained,0)        AS managers_trained,
+    COALESCE(t.ZZ_Professionals_Trained,0)   AS professionals_trained,
+    COALESCE(t.ZZ_Technicians_Trained,0)     AS technicians_trained,
+    COALESCE(t.ZZ_Clerical_Trained,0)        AS clerical_trained,
+    COALESCE(t.ZZ_Service_Trained,0)         AS service_trained,
+    COALESCE(t.ZZ_Skilled_Workers_Trained,0) AS trade_trained,
+    COALESCE(t.ZZ_Plant_Trained,0)           AS machine_trained,
+    COALESCE(t.ZZ_Elementary_Trained,0)      AS elementary_trained,
+    COALESCE(t.ZZ_Learners_Trained,0)        AS learner_trained,
+    COALESCE(t.ZZ_Total_Trained,0)           AS total_trained,
+
+    COALESCE(t.ZZ_Managers_Planned,0)        AS managers_planned,
+    COALESCE(t.ZZ_Professionals_Planned,0)   AS professionals_planned,
+    COALESCE(t.ZZ_Technicians_Planned,0)     AS technicians_planned,
+    COALESCE(t.ZZ_Clerical_Planned,0)        AS clerical_planned,
+    COALESCE(t.ZZ_Service_Planned,0)         AS service_planned,
+    COALESCE(t.ZZ_Skilled_Workers_Planned,0) AS trade_planned,
+    COALESCE(t.ZZ_Plant_Planned,0)           AS machine_planned,
+    COALESCE(t.ZZ_Elementary_Planned,0)      AS elementary_planned,
+    COALESCE(t.ZZ_Learners_Planned,0)        AS learner_planned
+
+FROM ZZ_WSP_ATR_Contractors_Training_Rep t
+LEFT JOIN ZZ_Contractors_Learning_Programme_Ref lp
+       ON lp.ZZ_Contractors_Learning_Programme_Ref_ID = t.ZZ_Learning_Programme_Type_ID
+WHERE t.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
+  AND COALESCE(t.ZZ_Report_Section,'') = '7'
+ORDER BY programme_name
+        ]]>
+    </queryString>
+
+    <field name="programme_name" class="java.lang.String"/>
+
+    <field name="managers_trained" class="java.lang.Integer"/>
+    <field name="professionals_trained" class="java.lang.Integer"/>
+    <field name="technicians_trained" class="java.lang.Integer"/>
+    <field name="clerical_trained" class="java.lang.Integer"/>
+    <field name="service_trained" class="java.lang.Integer"/>
+    <field name="trade_trained" class="java.lang.Integer"/>
+    <field name="machine_trained" class="java.lang.Integer"/>
+    <field name="elementary_trained" class="java.lang.Integer"/>
+    <field name="learner_trained" class="java.lang.Integer"/>
+    <field name="total_trained" class="java.lang.Integer"/>
+
+    <field name="managers_planned" class="java.lang.Integer"/>
+    <field name="professionals_planned" class="java.lang.Integer"/>
+    <field name="technicians_planned" class="java.lang.Integer"/>
+    <field name="clerical_planned" class="java.lang.Integer"/>
+    <field name="service_planned" class="java.lang.Integer"/>
+    <field name="trade_planned" class="java.lang.Integer"/>
+    <field name="machine_planned" class="java.lang.Integer"/>
+    <field name="elementary_planned" class="java.lang.Integer"/>
+    <field name="learner_planned" class="java.lang.Integer"/>
+
+    <!-- planned total (computed) -->
+    <variable name="PlannedTotal" class="java.lang.Integer" calculation="Nothing">
+        <variableExpression><![CDATA[
+            ($F{managers_planned}==null?0:$F{managers_planned})
+          + ($F{professionals_planned}==null?0:$F{professionals_planned})
+          + ($F{technicians_planned}==null?0:$F{technicians_planned})
+          + ($F{clerical_planned}==null?0:$F{clerical_planned})
+          + ($F{service_planned}==null?0:$F{service_planned})
+          + ($F{trade_planned}==null?0:$F{trade_planned})
+          + ($F{machine_planned}==null?0:$F{machine_planned})
+          + ($F{elementary_planned}==null?0:$F{elementary_planned})
+          + ($F{learner_planned}==null?0:$F{learner_planned})
+        ]]></variableExpression>
+    </variable>
+
+    <!-- Grand totals -->
+    <variable name="SumTotalTrained" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$F{total_trained}]]></variableExpression>
+        <initialValueExpression><![CDATA[0]]></initialValueExpression>
+    </variable>
+
+    <variable name="SumTotalPlanned" class="java.lang.Integer" calculation="Sum">
+        <variableExpression><![CDATA[$V{PlannedTotal}]]></variableExpression>
+        <initialValueExpression><![CDATA[0]]></initialValueExpression>
+    </variable>
+
+    <title>
+        <band height="20">
+            <staticText>
+                <reportElement x="0" y="0" width="802" height="20" uuid="t1"/>
+                <textElement verticalAlignment="Middle" textAlignment="Center">
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <text><![CDATA[Section 7: Contractors]]></text>
+            </staticText>
+        </band>
+    </title>
+
+    <!-- Header is tall because of rotated labels -->
+    <columnHeader>
+        <band height="150">
+
+            <!-- Row 1 -->
+            <staticText>
+                <reportElement x="0" y="0" width="802" height="16" style="Hdr" uuid="hTop"/>
+                <box><pen lineWidth="0.5"/></box>
+                <text><![CDATA[Contractors: Received Training in 2024 and Planned Training for 2025]]></text>
+            </staticText>
+
+            <!-- Column group titles -->
+            <!-- Name of Programme -->
+            <staticText>
+                <reportElement x="0" y="16" width="190" height="134" style="Hdr" uuid="hProg"/>
+                <box><pen lineWidth="0.5"/></box>
+                <text><![CDATA[Name of Programme]]></text>
+            </staticText>
+
+            <!-- Group title: trained -->
+            <staticText>
+                <reportElement x="190" y="16" width="306" height="16" style="Hdr" uuid="hTrainGrp"/>
+                <box><pen lineWidth="0.5"/></box>
+                <text><![CDATA[Number Trained in 2024, Per Occupational Group]]></text>
+            </staticText>
+
+            <!-- Group title: planned -->
+            <staticText>
+                <reportElement x="496" y="16" width="306" height="16" style="Hdr" uuid="hPlanGrp"/>
+                <box><pen lineWidth="0.5"/></box>
+                <text><![CDATA[Planned Number to be Trained in 2025, Per Occupational Group]]></text>
+            </staticText>
+
+            <!-- Rotated headers row starts at y=32 -->
+            <!-- widths: 190 + (10*30=300) + (10*30=300) + 12? we’ll use 306 blocks: 9*30 + 36 for totals -->
+            <!-- Trained block columns -->
+            <!-- x start trained = 190 -->
+            <staticText>
+                <reportElement x="190" y="32" width="30" height="118" style="HdrRot" uuid="ht1"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement rotation="Left"/>
+                <text><![CDATA[Managers]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="220" y="32" width="30" height="118" style="HdrRot" uuid="ht2"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement rotation="Left"/>
+                <text><![CDATA[Professionals]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="250" y="32" width="30" height="118" style="HdrRot" uuid="ht3"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement rotation="Left"/>
+                <text><![CDATA[Technicians & Associates]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="280" y="32" width="30" height="118" style="HdrRot" uuid="ht4"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement rotation="Left"/>
+                <text><![CDATA[Clerical Support Workers]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="310" y="32" width="30" height="118" style="HdrRot" uuid="ht5"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement rotation="Left"/>
+                <text><![CDATA[Service and Sales Workers]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="340" y="32" width="30" height="118" style="HdrRot" uuid="ht6"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement rotation="Left"/>
+                <text><![CDATA[Trade Worker]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="370" y="32" width="30" height="118" style="HdrRot" uuid="ht7"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement rotation="Left"/>
+                <text><![CDATA[Machine Operators]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="400" y="32" width="30" height="118" style="HdrRot" uuid="ht8"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement rotation="Left"/>
+                <text><![CDATA[Elementary Occupations]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="430" y="32" width="30" height="118" style="HdrRot" uuid="ht9"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement rotation="Left"/>
+                <text><![CDATA[Learner]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="460" y="32" width="36" height="118" style="HdrRot" uuid="ht10"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement rotation="Left"/>
+                <text><![CDATA[Total Trained]]></text>
+            </staticText>
+
+            <!-- Planned block -->
+            <!-- planned start = 496 -->
+            <staticText>
+                <reportElement x="496" y="32" width="30" height="118" style="HdrRot" uuid="hp1"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement rotation="Left"/>
+                <text><![CDATA[Managers]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="526" y="32" width="30" height="118" style="HdrRot" uuid="hp2"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement rotation="Left"/>
+                <text><![CDATA[Professionals]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="556" y="32" width="30" height="118" style="HdrRot" uuid="hp3"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement rotation="Left"/>
+                <text><![CDATA[Technicians & Associates]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="586" y="32" width="30" height="118" style="HdrRot" uuid="hp4"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement rotation="Left"/>
+                <text><![CDATA[Clerical Support Workers]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="616" y="32" width="30" height="118" style="HdrRot" uuid="hp5"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement rotation="Left"/>
+                <text><![CDATA[Service and Sales Workers]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="646" y="32" width="30" height="118" style="HdrRot" uuid="hp6"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement rotation="Left"/>
+                <text><![CDATA[Trade Worker]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="676" y="32" width="30" height="118" style="HdrRot" uuid="hp7"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement rotation="Left"/>
+                <text><![CDATA[Machine Operators]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="706" y="32" width="30" height="118" style="HdrRot" uuid="hp8"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement rotation="Left"/>
+                <text><![CDATA[Elementary Occupations]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="736" y="32" width="30" height="118" style="HdrRot" uuid="hp9"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement rotation="Left"/>
+                <text><![CDATA[Learner]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="766" y="32" width="36" height="118" style="HdrRot" uuid="hp10"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement rotation="Left"/>
+                <text><![CDATA[Total to be Trained/Planned]]></text>
+            </staticText>
+
+        </band>
+    </columnHeader>
+
+    <detail>
+        <band height="14">
+
+            <textField>
+                <reportElement x="0" y="0" width="190" height="14" style="Cell" uuid="d0"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textFieldExpression><![CDATA[$F{programme_name}]]></textFieldExpression>
+            </textField>
+
+            <!-- trained -->
+            <textField pattern="###0"><reportElement x="190" y="0" width="30" height="14" style="CellNum" uuid="d1"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{managers_trained}]]></textFieldExpression></textField>
+            <textField pattern="###0"><reportElement x="220" y="0" width="30" height="14" style="CellNum" uuid="d2"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{professionals_trained}]]></textFieldExpression></textField>
+            <textField pattern="###0"><reportElement x="250" y="0" width="30" height="14" style="CellNum" uuid="d3"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{technicians_trained}]]></textFieldExpression></textField>
+            <textField pattern="###0"><reportElement x="280" y="0" width="30" height="14" style="CellNum" uuid="d4"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{clerical_trained}]]></textFieldExpression></textField>
+            <textField pattern="###0"><reportElement x="310" y="0" width="30" height="14" style="CellNum" uuid="d5"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{service_trained}]]></textFieldExpression></textField>
+            <textField pattern="###0"><reportElement x="340" y="0" width="30" height="14" style="CellNum" uuid="d6"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{trade_trained}]]></textFieldExpression></textField>
+            <textField pattern="###0"><reportElement x="370" y="0" width="30" height="14" style="CellNum" uuid="d7"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{machine_trained}]]></textFieldExpression></textField>
+            <textField pattern="###0"><reportElement x="400" y="0" width="30" height="14" style="CellNum" uuid="d8"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{elementary_trained}]]></textFieldExpression></textField>
+            <textField pattern="###0"><reportElement x="430" y="0" width="30" height="14" style="CellNum" uuid="d9"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{learner_trained}]]></textFieldExpression></textField>
+            <textField pattern="###0"><reportElement x="460" y="0" width="36" height="14" style="CellNum" uuid="d10"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{total_trained}]]></textFieldExpression></textField>
+
+            <!-- planned -->
+            <textField pattern="###0"><reportElement x="496" y="0" width="30" height="14" style="CellNum" uuid="p1"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{managers_planned}]]></textFieldExpression></textField>
+            <textField pattern="###0"><reportElement x="526" y="0" width="30" height="14" style="CellNum" uuid="p2"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{professionals_planned}]]></textFieldExpression></textField>
+            <textField pattern="###0"><reportElement x="556" y="0" width="30" height="14" style="CellNum" uuid="p3"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{technicians_planned}]]></textFieldExpression></textField>
+            <textField pattern="###0"><reportElement x="586" y="0" width="30" height="14" style="CellNum" uuid="p4"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{clerical_planned}]]></textFieldExpression></textField>
+            <textField pattern="###0"><reportElement x="616" y="0" width="30" height="14" style="CellNum" uuid="p5"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{service_planned}]]></textFieldExpression></textField>
+            <textField pattern="###0"><reportElement x="646" y="0" width="30" height="14" style="CellNum" uuid="p6"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{trade_planned}]]></textFieldExpression></textField>
+            <textField pattern="###0"><reportElement x="676" y="0" width="30" height="14" style="CellNum" uuid="p7"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{machine_planned}]]></textFieldExpression></textField>
+            <textField pattern="###0"><reportElement x="706" y="0" width="30" height="14" style="CellNum" uuid="p8"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{elementary_planned}]]></textFieldExpression></textField>
+            <textField pattern="###0"><reportElement x="736" y="0" width="30" height="14" style="CellNum" uuid="p9"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$F{learner_planned}]]></textFieldExpression></textField>
+            <textField pattern="###0"><reportElement x="766" y="0" width="36" height="14" style="CellNum" uuid="p10"/><box><pen lineWidth="0.5"/></box><textFieldExpression><![CDATA[$V{PlannedTotal}]]></textFieldExpression></textField>
+
+        </band>
+    </detail>
+
+    <summary>
+        <band height="14">
+
+            <staticText>
+                <reportElement x="0" y="0" width="190" height="14" style="Hdr" uuid="s0"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textElement textAlignment="Left"/>
+                <text><![CDATA[Total]]></text>
+            </staticText>
+
+            <!-- trained grand total -->
+            <textField pattern="###0">
+                <reportElement x="460" y="0" width="36" height="14" style="CellNum" uuid="sTrainTot"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textFieldExpression><![CDATA[$V{SumTotalTrained}]]></textFieldExpression>
+            </textField>
+
+            <!-- planned grand total -->
+            <textField pattern="###0">
+                <reportElement x="766" y="0" width="36" height="14" style="CellNum" uuid="sPlanTot"/>
+                <box><pen lineWidth="0.5"/></box>
+                <textFieldExpression><![CDATA[$V{SumTotalPlanned}]]></textFieldExpression>
+            </textField>
+
+        </band>
+    </summary>
+
+</jasperReport>

@@ -31,7 +31,7 @@ public class X_ZZ_WSP_ATR_Non_Emp_Skills_Dev_Rep extends PO implements I_ZZ_WSP_
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260214L;
+	private static final long serialVersionUID = 20260218L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Non_Emp_Skills_Dev_Rep (Properties ctx, int ZZ_WSP_ATR_Non_Emp_Skills_Dev_Rep_ID, String trxName)
@@ -305,6 +305,21 @@ public class X_ZZ_WSP_ATR_Non_Emp_Skills_Dev_Rep extends PO implements I_ZZ_WSP_
 		return ii.intValue();
 	}
 
+	/** Set Section.
+		@param ZZ_Report_Section Section
+	*/
+	public void setZZ_Report_Section (String ZZ_Report_Section)
+	{
+		set_Value (COLUMNNAME_ZZ_Report_Section, ZZ_Report_Section);
+	}
+
+	/** Get Section.
+		@return Section	  */
+	public String getZZ_Report_Section()
+	{
+		return (String)get_Value(COLUMNNAME_ZZ_Report_Section);
+	}
+
 	public I_ZZ_Target_Beneficiary_Ref getZZ_Target_Ben_Done() throws RuntimeException
 	{
 		return (I_ZZ_Target_Beneficiary_Ref)MTable.get(getCtx(), I_ZZ_Target_Beneficiary_Ref.Table_ID)
@@ -384,6 +399,33 @@ public class X_ZZ_WSP_ATR_Non_Emp_Skills_Dev_Rep extends PO implements I_ZZ_WSP_
 	public String getZZ_WSP_ATR_Non_Emp_Skills_Dev_Rep_UU()
 	{
 		return (String)get_Value(COLUMNNAME_ZZ_WSP_ATR_Non_Emp_Skills_Dev_Rep_UU);
+	}
+
+	public I_ZZ_WSP_ATR_Report getZZ_WSP_ATR_Report() throws RuntimeException
+	{
+		return (I_ZZ_WSP_ATR_Report)MTable.get(getCtx(), I_ZZ_WSP_ATR_Report.Table_ID)
+			.getPO(getZZ_WSP_ATR_Report_ID(), get_TrxName());
+	}
+
+	/** Set WSP ATR Report .
+		@param ZZ_WSP_ATR_Report_ID WSP ATR Report 
+	*/
+	public void setZZ_WSP_ATR_Report_ID (int ZZ_WSP_ATR_Report_ID)
+	{
+		if (ZZ_WSP_ATR_Report_ID < 1)
+			set_ValueNoCheck (COLUMNNAME_ZZ_WSP_ATR_Report_ID, null);
+		else
+			set_ValueNoCheck (COLUMNNAME_ZZ_WSP_ATR_Report_ID, Integer.valueOf(ZZ_WSP_ATR_Report_ID));
+	}
+
+	/** Get WSP ATR Report .
+		@return WSP ATR Report 	  */
+	public int getZZ_WSP_ATR_Report_ID()
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_ZZ_WSP_ATR_Report_ID);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
 	}
 
 	public I_ZZ_WSP_ATR_Submitted getZZ_WSP_ATR_Submitted() throws RuntimeException
