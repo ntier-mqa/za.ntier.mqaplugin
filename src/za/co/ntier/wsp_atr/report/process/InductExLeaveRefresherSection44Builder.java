@@ -91,7 +91,7 @@ public class InductExLeaveRefresherSection44Builder extends AbstractReportSectio
             + "  JOIN zz_learning_programme_ref lpr \n"
             + "    ON lpr.zz_learning_programme_ref_id = d.qualification_type_id \n"
             + "  JOIN zz_wsp_atr_biodata_detail bd \n"
-            + "    ON bd.employee_number_id = d.employee_number_id \n"
+            + "    ON bd.ZZ_WSP_Employees_ID = d.ZZ_WSP_Employees_ID \n"
             + "   AND bd.zz_wsp_atr_submitted_id = d.zz_wsp_atr_submitted_id \n"
             + "  JOIN zz_occupations_ref occ \n"
             + "    ON occ.zz_occupations_ref_id = bd.ofo_occupation_code_id \n"

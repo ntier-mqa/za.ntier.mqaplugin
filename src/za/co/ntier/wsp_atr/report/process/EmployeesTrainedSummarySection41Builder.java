@@ -72,9 +72,9 @@ public class EmployeesTrainedSummarySection41Builder extends AbstractReportSecti
             "), mg AS ( \n" +
             "  SELECT \n" +
             "    occ.*, \n" +
-            "    mgref.zz_wsp_atr_ofo_major_group_id AS major_group_id \n" +
+            "    mgref.ZZ_WSP_ATR_OFO_Major_Group_Ref_ID AS major_group_id \n" +
             "  FROM occ \n" +
-            "  LEFT JOIN zz_wsp_atr_ofo_major_group mgref \n" +
+            "  LEFT JOIN ZZ_WSP_ATR_OFO_Major_Group_Ref mgref \n" +
             "    ON mgref.value = substring(occ.ofo_value from 1 for 6) \n" +
             ") \n" +
             "SELECT \n" +
