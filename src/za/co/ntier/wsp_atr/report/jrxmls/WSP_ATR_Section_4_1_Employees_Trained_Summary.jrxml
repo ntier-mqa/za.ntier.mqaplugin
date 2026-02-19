@@ -1,38 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Section 4.1 - Employees Trained and Planned (WITH Total + Grand Total rows) -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
-	name="ZZ_WSP_ATR_Section_4_1_Employees_Trained"
-	pageWidth="842" pageHeight="595" orientation="Landscape"
-	columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20"
-	whenNoDataType="NoPages"
-	uuid="e2d2c51b-2b3a-4b13-9f29-3d50f9202c11">
-
-	<!-- =========================
-	     Styles (declare near top)
-	     ========================= -->
+<!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 6.20.2  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ZZ_WSP_ATR_Section_4_1_Employees_Trained" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="NoPages" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="e2d2c51b-2b3a-4b13-9f29-3d50f9202c11">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="mqa dev"/>
 	<style name="Base" fontName="SansSerif" fontSize="9" pdfFontName="Helvetica" isPdfEmbedded="false"/>
-	<style name="HeaderCell" style="Base" backcolor="#D9D9D9" mode="Opaque" isBold="true"/>
-	<style name="HeaderCellCenter" style="HeaderCell" hAlign="Center" vAlign="Middle"/>
+	<style name="HeaderCell" style="Base" mode="Opaque" backcolor="#D9D9D9" isBold="true"/>
+	<style name="HeaderCellCenter" style="HeaderCell" hTextAlign="Center" hImageAlign="Center" vTextAlign="Middle" vImageAlign="Middle"/>
 	<style name="Cell" style="Base" mode="Opaque" backcolor="#FFFFFF"/>
-	<style name="CellLeft" style="Cell" hAlign="Left" vAlign="Middle"/>
-	<style name="CellRight" style="Cell" hAlign="Right" vAlign="Middle"/>
+	<style name="CellLeft" style="Cell" hTextAlign="Left" hImageAlign="Left" vTextAlign="Middle" vImageAlign="Middle"/>
+	<style name="CellRight" style="Cell" hTextAlign="Right" hImageAlign="Right" vTextAlign="Middle" vImageAlign="Middle"/>
 	<style name="TotalRowLabel" style="Base" isBold="true"/>
 	<style name="TotalCellRightBold" style="CellRight" isBold="true"/>
-	<style name="GrandCellCenterBold" style="Base" isBold="true" hAlign="Center" vAlign="Middle"/>
-
-	<!-- =========================
-	     Parameter
-	     ========================= -->
+	<style name="GrandCellCenterBold" style="Base" hTextAlign="Center" hImageAlign="Center" vTextAlign="Middle" vImageAlign="Middle" isBold="true"/>
 	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
-
-	<!-- =========================
-	     Query (edit table names if needed)
-	     ========================= -->
 	<queryString>
-		<![CDATA[
-SELECT
+		<![CDATA[SELECT
   mg.name AS ofo_major_group,
   r.zz_african_male_cnt,
   r.zz_african_female_cnt,
@@ -50,18 +31,12 @@ SELECT
   r.zz_age_35_55_cnt,
   r.zz_age_o55_cnt
 FROM zz_wsp_atr_empl_trained_planned_rep r
-JOIN zz_wsp_atr_ofo_major_group mg
-  ON mg.zz_wsp_atr_ofo_major_group_id = r.zz_wsp_atr_ofo_major_group_ref_id
+JOIN zz_wsp_atr_ofo_major_group_ref mg
+  ON mg.zz_wsp_atr_ofo_major_group_ref_id = r.zz_wsp_atr_ofo_major_group_ref_id
 WHERE r.zz_wsp_atr_report_id = $P{ZZ_WSP_ATR_Report_ID}
-ORDER BY mg.name
-		]]>
+ORDER BY mg.name]]>
 	</queryString>
-
-	<!-- =========================
-	     Fields
-	     ========================= -->
 	<field name="ofo_major_group" class="java.lang.String"/>
-
 	<field name="zz_african_male_cnt" class="java.lang.Integer"/>
 	<field name="zz_african_female_cnt" class="java.lang.Integer"/>
 	<field name="zz_coloured_male_cnt" class="java.lang.Integer"/>
@@ -77,10 +52,6 @@ ORDER BY mg.name
 	<field name="zz_age_u35_cnt" class="java.lang.Integer"/>
 	<field name="zz_age_35_55_cnt" class="java.lang.Integer"/>
 	<field name="zz_age_o55_cnt" class="java.lang.Integer"/>
-
-	<!-- =========================
-	     Variables (Totals)
-	     ========================= -->
 	<variable name="SUM_AfricanMale" class="java.lang.Integer" calculation="Sum">
 		<variableExpression><![CDATA[$F{zz_african_male_cnt} == null ? 0 : $F{zz_african_male_cnt}]]></variableExpression>
 	</variable>
@@ -126,217 +97,275 @@ ORDER BY mg.name
 	<variable name="SUM_AgeO55" class="java.lang.Integer" calculation="Sum">
 		<variableExpression><![CDATA[$F{zz_age_o55_cnt} == null ? 0 : $F{zz_age_o55_cnt}]]></variableExpression>
 	</variable>
-
-	<variable name="GrandTotalEmployees" class="java.lang.Integer" calculation="Nothing">
-		<variableExpression><![CDATA[
-($V{SUM_TotalMale} == null ? 0 : $V{SUM_TotalMale}) + ($V{SUM_TotalFemale} == null ? 0 : $V{SUM_TotalFemale})
-		]]></variableExpression>
+	<variable name="GrandTotalEmployees" class="java.lang.Integer">
+		<variableExpression><![CDATA[($V{SUM_TotalMale} == null ? 0 : $V{SUM_TotalMale}) + ($V{SUM_TotalFemale} == null ? 0 : $V{SUM_TotalFemale})]]></variableExpression>
 	</variable>
-
-	<!-- =========================
-	     Title
-	     ========================= -->
 	<title>
 		<band height="22">
 			<staticText>
-				<reportElement x="0" y="0" width="802" height="22" style="HeaderCellCenter" uuid="b615c1c9-0210-4d99-9d0f-6b7c49de0011"/>
+				<reportElement style="HeaderCellCenter" x="0" y="0" width="802" height="22" uuid="b615c1c9-0210-4d99-9d0f-6b7c49de0011"/>
 				<text><![CDATA[Section 4.1: Summary of employee beneficiaries of training during the period 2024]]></text>
 			</staticText>
 		</band>
 	</title>
-
-	<!-- =========================
-	     Column Header (2-row grouped header)
-	     Column layout (x/width):
-	     OFO Major Group: 0/270
-	     African M/F:     270/30, 300/30
-	     Coloured M/F:    330/30, 360/30
-	     Indian M/F:      390/30, 420/30
-	     White M/F:       450/30, 480/30
-	     Total M/F:       510/35, 545/35
-	     Disabled:        580/35
-	     Non-SA:          615/35
-	     Age <35:         650/39
-	     Age 35-55:       689/39
-	     Age >55:         728/39
-	     ========================= -->
 	<columnHeader>
 		<band height="40">
-
-			<!-- Row 1 group headers -->
 			<staticText>
-				<reportElement x="0" y="0" width="270" height="40" style="HeaderCellCenter"/>
+				<reportElement style="HeaderCellCenter" x="0" y="0" width="270" height="40" uuid="e45993fb-1223-46c1-b8cc-9c40fcfc0899"/>
 				<text><![CDATA[OFO Major Group]]></text>
 			</staticText>
-
 			<staticText>
-				<reportElement x="270" y="0" width="60" height="20" style="HeaderCellCenter"/>
+				<reportElement style="HeaderCellCenter" x="270" y="0" width="60" height="20" uuid="8f9b0f5a-8f98-41d5-bd60-edcec5245ef5"/>
 				<text><![CDATA[African]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="330" y="0" width="60" height="20" style="HeaderCellCenter"/>
+				<reportElement style="HeaderCellCenter" x="330" y="0" width="60" height="20" uuid="1c26e902-459f-4d66-a916-51fae049e2dd"/>
 				<text><![CDATA[Coloured]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="390" y="0" width="60" height="20" style="HeaderCellCenter"/>
+				<reportElement style="HeaderCellCenter" x="390" y="0" width="60" height="20" uuid="90325f63-c220-4014-84c2-19bb57c9ba1e"/>
 				<text><![CDATA[Indian]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="450" y="0" width="60" height="20" style="HeaderCellCenter"/>
+				<reportElement style="HeaderCellCenter" x="450" y="0" width="60" height="20" uuid="bdae5e06-bc20-430c-8ccb-531409293588"/>
 				<text><![CDATA[White]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="510" y="0" width="70" height="20" style="HeaderCellCenter"/>
+				<reportElement style="HeaderCellCenter" x="510" y="0" width="70" height="20" uuid="3d891655-2a04-461c-a979-06c5a37d13a9"/>
 				<text><![CDATA[Total]]></text>
 			</staticText>
-
 			<staticText>
-				<reportElement x="580" y="0" width="35" height="40" style="HeaderCellCenter"/>
+				<reportElement style="HeaderCellCenter" x="580" y="0" width="35" height="40" uuid="00042420-6efa-417f-b672-357c4c3b111f"/>
 				<text><![CDATA[Disabled]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="615" y="0" width="35" height="40" style="HeaderCellCenter"/>
+				<reportElement style="HeaderCellCenter" x="615" y="0" width="35" height="40" uuid="8cdc465d-a868-4aba-8d21-cdb088d5fa2b"/>
 				<text><![CDATA[Non-SA]]></text>
 			</staticText>
-
 			<staticText>
-				<reportElement x="650" y="0" width="117" height="20" style="HeaderCellCenter"/>
+				<reportElement style="HeaderCellCenter" x="650" y="0" width="117" height="20" uuid="6e13be4e-02ec-4c01-874b-eb44ae31c078"/>
 				<text><![CDATA[Age Groups]]></text>
 			</staticText>
-
-			<!-- Row 2 sub headers -->
-			<staticText><reportElement x="270" y="20" width="30" height="20" style="HeaderCellCenter"/><text><![CDATA[Male]]></text></staticText>
-			<staticText><reportElement x="300" y="20" width="30" height="20" style="HeaderCellCenter"/><text><![CDATA[Female]]></text></staticText>
-
-			<staticText><reportElement x="330" y="20" width="30" height="20" style="HeaderCellCenter"/><text><![CDATA[Male]]></text></staticText>
-			<staticText><reportElement x="360" y="20" width="30" height="20" style="HeaderCellCenter"/><text><![CDATA[Female]]></text></staticText>
-
-			<staticText><reportElement x="390" y="20" width="30" height="20" style="HeaderCellCenter"/><text><![CDATA[Male]]></text></staticText>
-			<staticText><reportElement x="420" y="20" width="30" height="20" style="HeaderCellCenter"/><text><![CDATA[Female]]></text></staticText>
-
-			<staticText><reportElement x="450" y="20" width="30" height="20" style="HeaderCellCenter"/><text><![CDATA[Male]]></text></staticText>
-			<staticText><reportElement x="480" y="20" width="30" height="20" style="HeaderCellCenter"/><text><![CDATA[Female]]></text></staticText>
-
-			<staticText><reportElement x="510" y="20" width="35" height="20" style="HeaderCellCenter"/><text><![CDATA[Male]]></text></staticText>
-			<staticText><reportElement x="545" y="20" width="35" height="20" style="HeaderCellCenter"/><text><![CDATA[Female]]></text></staticText>
-
-			<staticText><reportElement x="650" y="20" width="39" height="20" style="HeaderCellCenter"/><text><![CDATA[<35]]></text></staticText>
-			<staticText><reportElement x="689" y="20" width="39" height="20" style="HeaderCellCenter"/><text><![CDATA[35-55]]></text></staticText>
-			<staticText><reportElement x="728" y="20" width="39" height="20" style="HeaderCellCenter"/><text><![CDATA[>55]]></text></staticText>
-
-			<!-- grid outline (optional but helps match table look) -->
-			<rectangle><reportElement x="0" y="0" width="802" height="40"/></rectangle>
-
+			<staticText>
+				<reportElement style="HeaderCellCenter" x="270" y="20" width="30" height="20" uuid="ad420a19-fdf9-4bda-a37d-7e29e7987d4d"/>
+				<text><![CDATA[Male]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="HeaderCellCenter" x="300" y="20" width="30" height="20" uuid="93179c2f-21f3-43e4-91f2-c3fa0fa9c896"/>
+				<text><![CDATA[Female]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="HeaderCellCenter" x="330" y="20" width="30" height="20" uuid="fe68246f-2100-4b31-95af-940c60c5809b"/>
+				<text><![CDATA[Male]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="HeaderCellCenter" x="360" y="20" width="30" height="20" uuid="d5c572a7-5b5a-4227-aa30-e3d3bf23f65e"/>
+				<text><![CDATA[Female]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="HeaderCellCenter" x="390" y="20" width="30" height="20" uuid="989a1d14-2cdd-4bc0-aade-72387c93128e"/>
+				<text><![CDATA[Male]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="HeaderCellCenter" x="420" y="20" width="30" height="20" uuid="f699bae0-2cdd-4a0e-b157-763e4c0ac61a"/>
+				<text><![CDATA[Female]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="HeaderCellCenter" x="450" y="20" width="30" height="20" uuid="25775640-9f09-4b49-a06c-ac20bdd97aef"/>
+				<text><![CDATA[Male]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="HeaderCellCenter" x="480" y="20" width="30" height="20" uuid="76916768-3d91-41ab-8400-ec62e8f6bd76"/>
+				<text><![CDATA[Female]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="HeaderCellCenter" x="510" y="20" width="35" height="20" uuid="0094f620-cb34-418c-928c-7f892f9f0cb4"/>
+				<text><![CDATA[Male]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="HeaderCellCenter" x="545" y="20" width="35" height="20" uuid="47ed8954-1bca-4ca0-af7a-18002bdd1e02"/>
+				<text><![CDATA[Female]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="HeaderCellCenter" x="650" y="20" width="39" height="20" uuid="2577ded7-07a2-4fc4-a544-1f64e10b61f2"/>
+				<text><![CDATA[<35]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="HeaderCellCenter" x="689" y="20" width="39" height="20" uuid="8cbcf158-733b-4f09-b460-09b80ffdf49f"/>
+				<text><![CDATA[35-55]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="HeaderCellCenter" x="728" y="20" width="39" height="20" uuid="2a57bded-b032-4eaf-8b1c-80168500cd64"/>
+				<text><![CDATA[>55]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="0" y="0" width="802" height="40" uuid="69a91151-040c-4101-bea6-83c70a24f4e0"/>
+			</rectangle>
 		</band>
 	</columnHeader>
-
-	<!-- =========================
-	     Detail band
-	     ========================= -->
 	<detail>
 		<band height="18">
-
-			<textField isStretchWithOverflow="true">
-				<reportElement x="0" y="0" width="270" height="18" style="CellLeft"/>
+			<textField textAdjust="StretchHeight">
+				<reportElement style="CellLeft" x="0" y="0" width="270" height="18" uuid="7718c6c8-8a8a-407d-9239-2f968fd11341"/>
 				<textFieldExpression><![CDATA[$F{ofo_major_group}]]></textFieldExpression>
 			</textField>
-
-			<textField pattern="###0"><reportElement x="270" y="0" width="30" height="18" style="CellRight"/><textFieldExpression><![CDATA[$F{zz_african_male_cnt}]]></textFieldExpression></textField>
-			<textField pattern="###0"><reportElement x="300" y="0" width="30" height="18" style="CellRight"/><textFieldExpression><![CDATA[$F{zz_african_female_cnt}]]></textFieldExpression></textField>
-
-			<textField pattern="###0"><reportElement x="330" y="0" width="30" height="18" style="CellRight"/><textFieldExpression><![CDATA[$F{zz_coloured_male_cnt}]]></textFieldExpression></textField>
-			<textField pattern="###0"><reportElement x="360" y="0" width="30" height="18" style="CellRight"/><textFieldExpression><![CDATA[$F{zz_coloured_female_cnt}]]></textFieldExpression></textField>
-
-			<textField pattern="###0"><reportElement x="390" y="0" width="30" height="18" style="CellRight"/><textFieldExpression><![CDATA[$F{zz_indian_male_cnt}]]></textFieldExpression></textField>
-			<textField pattern="###0"><reportElement x="420" y="0" width="30" height="18" style="CellRight"/><textFieldExpression><![CDATA[$F{zz_indian_female_cnt}]]></textFieldExpression></textField>
-
-			<textField pattern="###0"><reportElement x="450" y="0" width="30" height="18" style="CellRight"/><textFieldExpression><![CDATA[$F{zz_white_male_cnt}]]></textFieldExpression></textField>
-			<textField pattern="###0"><reportElement x="480" y="0" width="30" height="18" style="CellRight"/><textFieldExpression><![CDATA[$F{zz_white_female_cnt}]]></textFieldExpression></textField>
-
-			<textField pattern="###0"><reportElement x="510" y="0" width="35" height="18" style="CellRight"/><textFieldExpression><![CDATA[$F{zz_total_male_cnt}]]></textFieldExpression></textField>
-			<textField pattern="###0"><reportElement x="545" y="0" width="35" height="18" style="CellRight"/><textFieldExpression><![CDATA[$F{zz_total_female_cnt}]]></textFieldExpression></textField>
-
-			<textField pattern="###0"><reportElement x="580" y="0" width="35" height="18" style="CellRight"/><textFieldExpression><![CDATA[$F{zz_disabled_cnt}]]></textFieldExpression></textField>
-			<textField pattern="###0"><reportElement x="615" y="0" width="35" height="18" style="CellRight"/><textFieldExpression><![CDATA[$F{zz_nonsa_cnt}]]></textFieldExpression></textField>
-
-			<textField pattern="###0"><reportElement x="650" y="0" width="39" height="18" style="CellRight"/><textFieldExpression><![CDATA[$F{zz_age_u35_cnt}]]></textFieldExpression></textField>
-			<textField pattern="###0"><reportElement x="689" y="0" width="39" height="18" style="CellRight"/><textFieldExpression><![CDATA[$F{zz_age_35_55_cnt}]]></textFieldExpression></textField>
-			<textField pattern="###0"><reportElement x="728" y="0" width="39" height="18" style="CellRight"/><textFieldExpression><![CDATA[$F{zz_age_o55_cnt}]]></textFieldExpression></textField>
-
-			<!-- row border -->
-			<rectangle><reportElement x="0" y="0" width="802" height="18"/></rectangle>
-
+			<textField pattern="###0">
+				<reportElement style="CellRight" x="270" y="0" width="30" height="18" uuid="cfcf0509-7212-42d2-bd19-9aaf6140c603"/>
+				<textFieldExpression><![CDATA[$F{zz_african_male_cnt}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="CellRight" x="300" y="0" width="30" height="18" uuid="30164086-1e1b-4f18-b478-be289aa81db3"/>
+				<textFieldExpression><![CDATA[$F{zz_african_female_cnt}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="CellRight" x="330" y="0" width="30" height="18" uuid="d8608bbd-5746-4920-92a8-c7c916b41362"/>
+				<textFieldExpression><![CDATA[$F{zz_coloured_male_cnt}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="CellRight" x="360" y="0" width="30" height="18" uuid="9bdc74da-1df5-43b3-ae96-252f8ca0a6af"/>
+				<textFieldExpression><![CDATA[$F{zz_coloured_female_cnt}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="CellRight" x="390" y="0" width="30" height="18" uuid="751e2e8e-8f87-4614-817b-afa4fffab2f3"/>
+				<textFieldExpression><![CDATA[$F{zz_indian_male_cnt}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="CellRight" x="420" y="0" width="30" height="18" uuid="84df5294-bc45-4914-90b9-9b6f70405099"/>
+				<textFieldExpression><![CDATA[$F{zz_indian_female_cnt}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="CellRight" x="450" y="0" width="30" height="18" uuid="a35b3223-fae4-4e1a-b1dd-2a76526094e8"/>
+				<textFieldExpression><![CDATA[$F{zz_white_male_cnt}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="CellRight" x="480" y="0" width="30" height="18" uuid="dcec6e15-dc45-4553-b5fd-4bb41badc515"/>
+				<textFieldExpression><![CDATA[$F{zz_white_female_cnt}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="CellRight" x="510" y="0" width="35" height="18" uuid="c96bd511-5a85-4f85-9642-c0b810d270f8"/>
+				<textFieldExpression><![CDATA[$F{zz_total_male_cnt}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="CellRight" x="545" y="0" width="35" height="18" uuid="57cc695a-33db-4544-b7e0-1f1f2e75d5d4"/>
+				<textFieldExpression><![CDATA[$F{zz_total_female_cnt}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="CellRight" x="580" y="0" width="35" height="18" uuid="e36ef768-f9d6-4c90-98ce-f778cce0dfe4"/>
+				<textFieldExpression><![CDATA[$F{zz_disabled_cnt}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="CellRight" x="615" y="0" width="35" height="18" uuid="87dfc0ad-523c-4100-b432-1b713cefe6e3"/>
+				<textFieldExpression><![CDATA[$F{zz_nonsa_cnt}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="CellRight" x="650" y="0" width="39" height="18" uuid="eacbe4b4-90ce-4bd1-8abc-769f7fd703c2"/>
+				<textFieldExpression><![CDATA[$F{zz_age_u35_cnt}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="CellRight" x="689" y="0" width="39" height="18" uuid="9cd0e952-42b5-4aeb-8b09-d8a1393bec2e"/>
+				<textFieldExpression><![CDATA[$F{zz_age_35_55_cnt}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="CellRight" x="728" y="0" width="39" height="18" uuid="e5bf3aa9-4ab2-482c-820c-a67b73358747"/>
+				<textFieldExpression><![CDATA[$F{zz_age_o55_cnt}]]></textFieldExpression>
+			</textField>
+			<rectangle>
+				<reportElement x="0" y="0" width="802" height="18" uuid="fa18b7df-033a-492f-ac7f-67eff54d5402"/>
+			</rectangle>
 		</band>
 	</detail>
-
-	<!-- =========================
-	     Summary (Total + Grand Total)
-	     ========================= -->
 	<summary>
 		<band height="36">
-
-			<!-- TOTAL ROW LABEL -->
 			<textField>
-				<reportElement x="0" y="0" width="270" height="18" style="TotalRowLabel"/>
+				<reportElement style="TotalRowLabel" x="0" y="0" width="270" height="18" uuid="6530bdc2-8492-4bc3-b54d-ed4c8ea156b3"/>
 				<textFieldExpression><![CDATA["Total"]]></textFieldExpression>
 			</textField>
-
-			<!-- Total row sums (all numeric columns) -->
-			<textField pattern="###0"><reportElement x="270" y="0" width="30" height="18" style="TotalCellRightBold"/><textFieldExpression><![CDATA[$V{SUM_AfricanMale}]]></textFieldExpression></textField>
-			<textField pattern="###0"><reportElement x="300" y="0" width="30" height="18" style="TotalCellRightBold"/><textFieldExpression><![CDATA[$V{SUM_AfricanFemale}]]></textFieldExpression></textField>
-
-			<textField pattern="###0"><reportElement x="330" y="0" width="30" height="18" style="TotalCellRightBold"/><textFieldExpression><![CDATA[$V{SUM_ColouredMale}]]></textFieldExpression></textField>
-			<textField pattern="###0"><reportElement x="360" y="0" width="30" height="18" style="TotalCellRightBold"/><textFieldExpression><![CDATA[$V{SUM_ColouredFemale}]]></textFieldExpression></textField>
-
-			<textField pattern="###0"><reportElement x="390" y="0" width="30" height="18" style="TotalCellRightBold"/><textFieldExpression><![CDATA[$V{SUM_IndianMale}]]></textFieldExpression></textField>
-			<textField pattern="###0"><reportElement x="420" y="0" width="30" height="18" style="TotalCellRightBold"/><textFieldExpression><![CDATA[$V{SUM_IndianFemale}]]></textFieldExpression></textField>
-
-			<textField pattern="###0"><reportElement x="450" y="0" width="30" height="18" style="TotalCellRightBold"/><textFieldExpression><![CDATA[$V{SUM_WhiteMale}]]></textFieldExpression></textField>
-			<textField pattern="###0"><reportElement x="480" y="0" width="30" height="18" style="TotalCellRightBold"/><textFieldExpression><![CDATA[$V{SUM_WhiteFemale}]]></textFieldExpression></textField>
-
-			<textField pattern="###0"><reportElement x="510" y="0" width="35" height="18" style="TotalCellRightBold"/><textFieldExpression><![CDATA[$V{SUM_TotalMale}]]></textFieldExpression></textField>
-			<textField pattern="###0"><reportElement x="545" y="0" width="35" height="18" style="TotalCellRightBold"/><textFieldExpression><![CDATA[$V{SUM_TotalFemale}]]></textFieldExpression></textField>
-
-			<textField pattern="###0"><reportElement x="580" y="0" width="35" height="18" style="TotalCellRightBold"/><textFieldExpression><![CDATA[$V{SUM_Disabled}]]></textFieldExpression></textField>
-			<textField pattern="###0"><reportElement x="615" y="0" width="35" height="18" style="TotalCellRightBold"/><textFieldExpression><![CDATA[$V{SUM_NonSA}]]></textFieldExpression></textField>
-
-			<textField pattern="###0"><reportElement x="650" y="0" width="39" height="18" style="TotalCellRightBold"/><textFieldExpression><![CDATA[$V{SUM_AgeU35}]]></textFieldExpression></textField>
-			<textField pattern="###0"><reportElement x="689" y="0" width="39" height="18" style="TotalCellRightBold"/><textFieldExpression><![CDATA[$V{SUM_Age35_55}]]></textFieldExpression></textField>
-			<textField pattern="###0"><reportElement x="728" y="0" width="39" height="18" style="TotalCellRightBold"/><textFieldExpression><![CDATA[$V{SUM_AgeO55}]]></textFieldExpression></textField>
-
-			<!-- GRAND TOTAL ROW LABEL -->
-			<textField>
-				<reportElement x="0" y="18" width="270" height="18" style="TotalRowLabel"/>
-				<textFieldExpression><![CDATA["Grand Total"]]></textFieldExpression>
-			</textField>
-
-			<!-- Grand total employees (merged across Total Male + Total Female) -->
 			<textField pattern="###0">
-				<reportElement x="510" y="18" width="70" height="18" style="GrandCellCenterBold"/>
-				<textFieldExpression><![CDATA[$V{GrandTotalEmployees}]]></textFieldExpression>
+				<reportElement style="TotalCellRightBold" x="270" y="0" width="30" height="18" uuid="8b2a6b27-df27-4519-bdbd-a607aa5fda47"/>
+				<textFieldExpression><![CDATA[$V{SUM_AfricanMale}]]></textFieldExpression>
 			</textField>
-
-			<!-- Disabled + Non-SA totals -->
 			<textField pattern="###0">
-				<reportElement x="580" y="18" width="35" height="18" style="TotalCellRightBold"/>
+				<reportElement style="TotalCellRightBold" x="300" y="0" width="30" height="18" uuid="1c997379-b38f-47ae-b81e-c3115bcab431"/>
+				<textFieldExpression><![CDATA[$V{SUM_AfricanFemale}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="TotalCellRightBold" x="330" y="0" width="30" height="18" uuid="004cc8e5-92d0-400e-99e1-d2b180005886"/>
+				<textFieldExpression><![CDATA[$V{SUM_ColouredMale}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="TotalCellRightBold" x="360" y="0" width="30" height="18" uuid="7665d8b1-66b3-446f-bb24-0e5799278707"/>
+				<textFieldExpression><![CDATA[$V{SUM_ColouredFemale}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="TotalCellRightBold" x="390" y="0" width="30" height="18" uuid="b640ce2f-104e-4631-8b3d-821ea173fee6"/>
+				<textFieldExpression><![CDATA[$V{SUM_IndianMale}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="TotalCellRightBold" x="420" y="0" width="30" height="18" uuid="55b7bb88-aac9-4190-8634-294f618172b1"/>
+				<textFieldExpression><![CDATA[$V{SUM_IndianFemale}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="TotalCellRightBold" x="450" y="0" width="30" height="18" uuid="4a43b3c8-f249-45bb-a9c4-422adfba0b09"/>
+				<textFieldExpression><![CDATA[$V{SUM_WhiteMale}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="TotalCellRightBold" x="480" y="0" width="30" height="18" uuid="61466500-185a-4b04-9e1d-83ad4c70fdb3"/>
+				<textFieldExpression><![CDATA[$V{SUM_WhiteFemale}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="TotalCellRightBold" x="510" y="0" width="35" height="18" uuid="5f518e04-63fe-4e8c-b4df-45820323db23"/>
+				<textFieldExpression><![CDATA[$V{SUM_TotalMale}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="TotalCellRightBold" x="545" y="0" width="35" height="18" uuid="37b44537-56c9-4801-8734-6815efa2f862"/>
+				<textFieldExpression><![CDATA[$V{SUM_TotalFemale}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="TotalCellRightBold" x="580" y="0" width="35" height="18" uuid="4bc7b450-325e-4137-ac33-d62e79e2f0e2"/>
 				<textFieldExpression><![CDATA[$V{SUM_Disabled}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0">
-				<reportElement x="615" y="18" width="35" height="18" style="TotalCellRightBold"/>
+				<reportElement style="TotalCellRightBold" x="615" y="0" width="35" height="18" uuid="2a98ccfc-b0e8-47a8-8501-a6dd4d14a609"/>
 				<textFieldExpression><![CDATA[$V{SUM_NonSA}]]></textFieldExpression>
 			</textField>
-
-			<!-- Grand total employees (merged across age groups <35 + 35-55 + >55) -->
 			<textField pattern="###0">
-				<reportElement x="650" y="18" width="117" height="18" style="GrandCellCenterBold"/>
+				<reportElement style="TotalCellRightBold" x="650" y="0" width="39" height="18" uuid="d8a69777-6169-4017-907a-5329fa867016"/>
+				<textFieldExpression><![CDATA[$V{SUM_AgeU35}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="TotalCellRightBold" x="689" y="0" width="39" height="18" uuid="9bf19d19-ce47-467a-b711-1375b05c3bb7"/>
+				<textFieldExpression><![CDATA[$V{SUM_Age35_55}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="TotalCellRightBold" x="728" y="0" width="39" height="18" uuid="d2b32765-fbbb-4c95-87f3-5ed8b832d6e0"/>
+				<textFieldExpression><![CDATA[$V{SUM_AgeO55}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="TotalRowLabel" x="0" y="18" width="270" height="18" uuid="d86c2766-d4bc-497c-b367-ef0bd9cdcd27"/>
+				<textFieldExpression><![CDATA["Grand Total"]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="GrandCellCenterBold" x="510" y="18" width="70" height="18" uuid="8c4c64b4-bbe4-45cb-8a78-7468d850a16f"/>
 				<textFieldExpression><![CDATA[$V{GrandTotalEmployees}]]></textFieldExpression>
 			</textField>
-
-			<!-- Summary borders -->
-			<rectangle><reportElement x="0" y="0" width="802" height="18"/></rectangle>
-			<rectangle><reportElement x="0" y="18" width="802" height="18"/></rectangle>
-
+			<textField pattern="###0">
+				<reportElement style="TotalCellRightBold" x="580" y="18" width="35" height="18" uuid="855165ec-0e32-4501-abc3-3a792d467f0f"/>
+				<textFieldExpression><![CDATA[$V{SUM_Disabled}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="TotalCellRightBold" x="615" y="18" width="35" height="18" uuid="19b692d8-5956-4611-bc07-abacf1d2733e"/>
+				<textFieldExpression><![CDATA[$V{SUM_NonSA}]]></textFieldExpression>
+			</textField>
+			<textField pattern="###0">
+				<reportElement style="GrandCellCenterBold" x="650" y="18" width="117" height="18" uuid="67f92787-0080-4a30-91ca-02012339ce76"/>
+				<textFieldExpression><![CDATA[$V{GrandTotalEmployees}]]></textFieldExpression>
+			</textField>
+			<rectangle>
+				<reportElement x="0" y="0" width="802" height="18" uuid="e1e6a83b-90e2-4bce-ab16-39b59612a4d0"/>
+			</rectangle>
+			<rectangle>
+				<reportElement x="0" y="18" width="802" height="18" uuid="81e657a6-3148-4dad-ad82-ac5401c7c6f4"/>
+			</rectangle>
 		</band>
 	</summary>
-
 </jasperReport>

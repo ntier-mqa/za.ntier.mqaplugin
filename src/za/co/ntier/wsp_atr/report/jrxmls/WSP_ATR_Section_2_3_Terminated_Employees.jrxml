@@ -1,250 +1,387 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport
-    xmlns="http://jasperreports.sourceforge.net/jasperreports"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
-                        http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
-    name="WSP_ATR_Section_2_3_Terminated_Employees"
-    pageWidth="842"
-    pageHeight="595"
-    orientation="Landscape"
-    columnWidth="802"
-    leftMargin="20"
-    rightMargin="20"
-    topMargin="10"
-    bottomMargin="10"
-    whenNoDataType="AllSectionsNoDetail">
-
-    <!-- styles must be declared near the top -->
-    <style name="Hdr" fontName="SansSerif" fontSize="9" isBold="true"/>
-    <style name="Cell" fontName="SansSerif" fontSize="9"/>
-    <style name="CellNum" fontName="SansSerif" fontSize="9"/>
-    <style name="CellNumBold" fontName="SansSerif" fontSize="9" isBold="true"/>
-
-    <parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
-
-    <queryString>
-        <![CDATA[
-            SELECT
+<!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 6.20.2  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="WSP_ATR_Section_2_3_Terminated_Employees" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="10" bottomMargin="10" uuid="95fe98e3-e200-4ae4-8265-0a1517d0ce34">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="mqa dev"/>
+	<style name="Hdr" fontName="SansSerif" fontSize="9" isBold="true"/>
+	<style name="Cell" fontName="SansSerif" fontSize="9"/>
+	<style name="CellNum" fontName="SansSerif" fontSize="9"/>
+	<style name="CellNumBold" fontName="SansSerif" fontSize="9" isBold="true"/>
+	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
+	<queryString>
+		<![CDATA[SELECT
                 t.*,
                 ap.Name AS employment_status_name
             FROM ZZ_WSP_ATR_Term_Emp_Rep t
             LEFT JOIN ZZ_Appointment_Ref ap
                    ON ap.ZZ_Appointment_Ref_ID = t.Employment_Status_ID
             WHERE t.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
-            ORDER BY ap.Name
-        ]]>
-    </queryString>
-
-    <!-- Fields -->
-    <field name="employment_status_name" class="java.lang.String"/>
-
-    <field name="ZZ_African_Male_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_African_Female_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_Coloured_Male_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_Coloured_Female_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_Indian_Male_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_Indian_Female_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_White_Male_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_White_Female_Cnt" class="java.lang.Integer"/>
-
-    <field name="ZZ_Total_Male_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_Total_Female_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_Disabled_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_NonSA_Cnt" class="java.lang.Integer"/>
-
-    <field name="ZZ_Age_U35_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_Age_35_55_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_Age_O55_Cnt" class="java.lang.Integer"/>
-
-    <!-- Variables (totals) -->
-    <variable name="vAfrMale" class="java.lang.Integer" calculation="Sum">
-        <variableExpression><![CDATA[$F{ZZ_African_Male_Cnt}]]></variableExpression>
-    </variable>
-    <variable name="vAfrFem" class="java.lang.Integer" calculation="Sum">
-        <variableExpression><![CDATA[$F{ZZ_African_Female_Cnt}]]></variableExpression>
-    </variable>
-    <variable name="vColMale" class="java.lang.Integer" calculation="Sum">
-        <variableExpression><![CDATA[$F{ZZ_Coloured_Male_Cnt}]]></variableExpression>
-    </variable>
-    <variable name="vColFem" class="java.lang.Integer" calculation="Sum">
-        <variableExpression><![CDATA[$F{ZZ_Coloured_Female_Cnt}]]></variableExpression>
-    </variable>
-    <variable name="vIndMale" class="java.lang.Integer" calculation="Sum">
-        <variableExpression><![CDATA[$F{ZZ_Indian_Male_Cnt}]]></variableExpression>
-    </variable>
-    <variable name="vIndFem" class="java.lang.Integer" calculation="Sum">
-        <variableExpression><![CDATA[$F{ZZ_Indian_Female_Cnt}]]></variableExpression>
-    </variable>
-    <variable name="vWhMale" class="java.lang.Integer" calculation="Sum">
-        <variableExpression><![CDATA[$F{ZZ_White_Male_Cnt}]]></variableExpression>
-    </variable>
-    <variable name="vWhFem" class="java.lang.Integer" calculation="Sum">
-        <variableExpression><![CDATA[$F{ZZ_White_Female_Cnt}]]></variableExpression>
-    </variable>
-
-    <variable name="vTotMale" class="java.lang.Integer" calculation="Sum">
-        <variableExpression><![CDATA[$F{ZZ_Total_Male_Cnt}]]></variableExpression>
-    </variable>
-    <variable name="vTotFem" class="java.lang.Integer" calculation="Sum">
-        <variableExpression><![CDATA[$F{ZZ_Total_Female_Cnt}]]></variableExpression>
-    </variable>
-    <variable name="vDisabled" class="java.lang.Integer" calculation="Sum">
-        <variableExpression><![CDATA[$F{ZZ_Disabled_Cnt}]]></variableExpression>
-    </variable>
-    <variable name="vNonSA" class="java.lang.Integer" calculation="Sum">
-        <variableExpression><![CDATA[$F{ZZ_NonSA_Cnt}]]></variableExpression>
-    </variable>
-
-    <variable name="vU35" class="java.lang.Integer" calculation="Sum">
-        <variableExpression><![CDATA[$F{ZZ_Age_U35_Cnt}]]></variableExpression>
-    </variable>
-    <variable name="v3555" class="java.lang.Integer" calculation="Sum">
-        <variableExpression><![CDATA[$F{ZZ_Age_35_55_Cnt}]]></variableExpression>
-    </variable>
-    <variable name="vO55" class="java.lang.Integer" calculation="Sum">
-        <variableExpression><![CDATA[$F{ZZ_Age_O55_Cnt}]]></variableExpression>
-    </variable>
-
-    <!-- Grand total employees = total male + total female -->
-    <variable name="vGrandEmployees" class="java.lang.Integer" calculation="Nothing">
-        <variableExpression><![CDATA[
-            ($V{vTotMale} == null ? 0 : $V{vTotMale})
-          + ($V{vTotFem}  == null ? 0 : $V{vTotFem})
-        ]]></variableExpression>
-    </variable>
-
-    <!-- Layout constants:
-         Employment Status = 200px
-         Each numeric column = 40px
-         Total width used = 200 + (15 * 40) = 800 (fits inside 802)
-    -->
-
-    <columnHeader>
-        <band height="55">
-            <!-- Section title -->
-            <staticText>
-                <reportElement x="0" y="0" width="802" height="15" style="Hdr"/>
-                <textElement verticalAlignment="Middle"/>
-                <text><![CDATA[2.3 Summary of Terminated Employees]]></text>
-            </staticText>
-
-            <!-- Group headers (row 1) -->
-            <staticText><reportElement x="0"   y="15" width="200" height="20" style="Hdr"/><textElement verticalAlignment="Middle"/><text><![CDATA[Employment Status]]></text></staticText>
-
-            <staticText><reportElement x="200" y="15" width="80"  height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[African]]></text></staticText>
-            <staticText><reportElement x="280" y="15" width="80"  height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Coloured]]></text></staticText>
-            <staticText><reportElement x="360" y="15" width="80"  height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Indian]]></text></staticText>
-            <staticText><reportElement x="440" y="15" width="80"  height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[White]]></text></staticText>
-            <staticText><reportElement x="520" y="15" width="160" height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Total]]></text></staticText>
-            <staticText><reportElement x="680" y="15" width="120" height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Age Groups]]></text></staticText>
-
-            <!-- Sub headers (row 2) -->
-            <staticText><reportElement x="200" y="35" width="40" height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Male]]></text></staticText>
-            <staticText><reportElement x="240" y="35" width="40" height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Female]]></text></staticText>
-
-            <staticText><reportElement x="280" y="35" width="40" height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Male]]></text></staticText>
-            <staticText><reportElement x="320" y="35" width="40" height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Female]]></text></staticText>
-
-            <staticText><reportElement x="360" y="35" width="40" height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Male]]></text></staticText>
-            <staticText><reportElement x="400" y="35" width="40" height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Female]]></text></staticText>
-
-            <staticText><reportElement x="440" y="35" width="40" height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Male]]></text></staticText>
-            <staticText><reportElement x="480" y="35" width="40" height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Female]]></text></staticText>
-
-            <staticText><reportElement x="520" y="35" width="40" height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Male]]></text></staticText>
-            <staticText><reportElement x="560" y="35" width="40" height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Female]]></text></staticText>
-            <staticText><reportElement x="600" y="35" width="40" height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Disabled]]></text></staticText>
-            <staticText><reportElement x="640" y="35" width="40" height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[Non-SA]]></text></staticText>
-
-            <staticText><reportElement x="680" y="35" width="40" height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[<35]]></text></staticText>
-            <staticText><reportElement x="720" y="35" width="40" height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[35-55]]></text></staticText>
-            <staticText><reportElement x="760" y="35" width="40" height="20" style="Hdr"/><textElement textAlignment="Center" verticalAlignment="Middle"/><text><![CDATA[>55]]></text></staticText>
-
-        </band>
-    </columnHeader>
-
-    <detail>
-        <band height="18" splitType="Stretch">
-
-            <textField>
-                <reportElement x="0" y="0" width="200" height="18" style="Cell"/>
-                <textElement verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA[$F{employment_status_name}]]></textFieldExpression>
-            </textField>
-
-            <!-- race/gender -->
-            <textField><reportElement x="200" y="0" width="40" height="18" style="CellNum"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_African_Male_Cnt}]]></textFieldExpression></textField>
-            <textField><reportElement x="240" y="0" width="40" height="18" style="CellNum"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_African_Female_Cnt}]]></textFieldExpression></textField>
-
-            <textField><reportElement x="280" y="0" width="40" height="18" style="CellNum"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_Coloured_Male_Cnt}]]></textFieldExpression></textField>
-            <textField><reportElement x="320" y="0" width="40" height="18" style="CellNum"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_Coloured_Female_Cnt}]]></textFieldExpression></textField>
-
-            <textField><reportElement x="360" y="0" width="40" height="18" style="CellNum"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_Indian_Male_Cnt}]]></textFieldExpression></textField>
-            <textField><reportElement x="400" y="0" width="40" height="18" style="CellNum"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_Indian_Female_Cnt}]]></textFieldExpression></textField>
-
-            <textField><reportElement x="440" y="0" width="40" height="18" style="CellNum"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_White_Male_Cnt}]]></textFieldExpression></textField>
-            <textField><reportElement x="480" y="0" width="40" height="18" style="CellNum"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_White_Female_Cnt}]]></textFieldExpression></textField>
-
-            <!-- totals -->
-            <textField><reportElement x="520" y="0" width="40" height="18" style="CellNum"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_Total_Male_Cnt}]]></textFieldExpression></textField>
-            <textField><reportElement x="560" y="0" width="40" height="18" style="CellNum"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_Total_Female_Cnt}]]></textFieldExpression></textField>
-            <textField><reportElement x="600" y="0" width="40" height="18" style="CellNum"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_Disabled_Cnt}]]></textFieldExpression></textField>
-            <textField><reportElement x="640" y="0" width="40" height="18" style="CellNum"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_NonSA_Cnt}]]></textFieldExpression></textField>
-
-            <!-- age groups (3 separate cols) -->
-            <textField><reportElement x="680" y="0" width="40" height="18" style="CellNum"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_Age_U35_Cnt}]]></textFieldExpression></textField>
-            <textField><reportElement x="720" y="0" width="40" height="18" style="CellNum"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_Age_35_55_Cnt}]]></textFieldExpression></textField>
-            <textField><reportElement x="760" y="0" width="40" height="18" style="CellNum"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{ZZ_Age_O55_Cnt}]]></textFieldExpression></textField>
-
-        </band>
-    </detail>
-
-    <summary>
-        <band height="45">
-
-            <!-- Total row -->
-            <staticText><reportElement x="0" y="0" width="200" height="18" style="CellNumBold"/><textElement verticalAlignment="Middle"/><text><![CDATA[Total]]></text></staticText>
-
-            <textField><reportElement x="200" y="0" width="40" height="18" style="CellNumBold"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$V{vAfrMale}]]></textFieldExpression></textField>
-            <textField><reportElement x="240" y="0" width="40" height="18" style="CellNumBold"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$V{vAfrFem}]]></textFieldExpression></textField>
-
-            <textField><reportElement x="280" y="0" width="40" height="18" style="CellNumBold"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$V{vColMale}]]></textFieldExpression></textField>
-            <textField><reportElement x="320" y="0" width="40" height="18" style="CellNumBold"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$V{vColFem}]]></textFieldExpression></textField>
-
-            <textField><reportElement x="360" y="0" width="40" height="18" style="CellNumBold"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$V{vIndMale}]]></textFieldExpression></textField>
-            <textField><reportElement x="400" y="0" width="40" height="18" style="CellNumBold"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$V{vIndFem}]]></textFieldExpression></textField>
-
-            <textField><reportElement x="440" y="0" width="40" height="18" style="CellNumBold"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$V{vWhMale}]]></textFieldExpression></textField>
-            <textField><reportElement x="480" y="0" width="40" height="18" style="CellNumBold"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$V{vWhFem}]]></textFieldExpression></textField>
-
-            <textField><reportElement x="520" y="0" width="40" height="18" style="CellNumBold"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$V{vTotMale}]]></textFieldExpression></textField>
-            <textField><reportElement x="560" y="0" width="40" height="18" style="CellNumBold"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$V{vTotFem}]]></textFieldExpression></textField>
-            <textField><reportElement x="600" y="0" width="40" height="18" style="CellNumBold"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$V{vDisabled}]]></textFieldExpression></textField>
-            <textField><reportElement x="640" y="0" width="40" height="18" style="CellNumBold"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$V{vNonSA}]]></textFieldExpression></textField>
-
-            <textField><reportElement x="680" y="0" width="40" height="18" style="CellNumBold"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$V{vU35}]]></textFieldExpression></textField>
-            <textField><reportElement x="720" y="0" width="40" height="18" style="CellNumBold"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$V{v3555}]]></textFieldExpression></textField>
-            <textField><reportElement x="760" y="0" width="40" height="18" style="CellNumBold"/><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$V{vO55}]]></textFieldExpression></textField>
-
-            <!-- Grand Total row -->
-            <staticText><reportElement x="0" y="22" width="200" height="18" style="CellNumBold"/><textElement verticalAlignment="Middle"/><text><![CDATA[Grand Total]]></text></staticText>
-
-            <!-- Show grand total employees in Total Female cell (like your screenshot style) -->
-            <textField>
-                <reportElement x="560" y="22" width="40" height="18" style="CellNumBold"/>
-                <textElement textAlignment="Center" verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA[$V{vGrandEmployees}]]></textFieldExpression>
-            </textField>
-
-            <!-- Repeat in >55 cell so it also equals "total of all age groups / all employees" -->
-            <textField>
-                <reportElement x="760" y="22" width="40" height="18" style="CellNumBold"/>
-                <textElement textAlignment="Center" verticalAlignment="Middle"/>
-                <textFieldExpression><![CDATA[$V{vGrandEmployees}]]></textFieldExpression>
-            </textField>
-
-        </band>
-    </summary>
-
+            ORDER BY ap.Name]]>
+	</queryString>
+	<field name="employment_status_name" class="java.lang.String"/>
+	<field name="ZZ_African_Male_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_African_Female_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_Coloured_Male_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_Coloured_Female_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_Indian_Male_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_Indian_Female_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_White_Male_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_White_Female_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_Total_Male_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_Total_Female_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_Disabled_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_NonSA_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_Age_U35_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_Age_35_55_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_Age_O55_Cnt" class="java.lang.Integer"/>
+	<variable name="vAfrMale" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{ZZ_African_Male_Cnt}]]></variableExpression>
+	</variable>
+	<variable name="vAfrFem" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{ZZ_African_Female_Cnt}]]></variableExpression>
+	</variable>
+	<variable name="vColMale" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{ZZ_Coloured_Male_Cnt}]]></variableExpression>
+	</variable>
+	<variable name="vColFem" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{ZZ_Coloured_Female_Cnt}]]></variableExpression>
+	</variable>
+	<variable name="vIndMale" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{ZZ_Indian_Male_Cnt}]]></variableExpression>
+	</variable>
+	<variable name="vIndFem" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{ZZ_Indian_Female_Cnt}]]></variableExpression>
+	</variable>
+	<variable name="vWhMale" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{ZZ_White_Male_Cnt}]]></variableExpression>
+	</variable>
+	<variable name="vWhFem" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{ZZ_White_Female_Cnt}]]></variableExpression>
+	</variable>
+	<variable name="vTotMale" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{ZZ_Total_Male_Cnt}]]></variableExpression>
+	</variable>
+	<variable name="vTotFem" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{ZZ_Total_Female_Cnt}]]></variableExpression>
+	</variable>
+	<variable name="vDisabled" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{ZZ_Disabled_Cnt}]]></variableExpression>
+	</variable>
+	<variable name="vNonSA" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{ZZ_NonSA_Cnt}]]></variableExpression>
+	</variable>
+	<variable name="vU35" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{ZZ_Age_U35_Cnt}]]></variableExpression>
+	</variable>
+	<variable name="v3555" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{ZZ_Age_35_55_Cnt}]]></variableExpression>
+	</variable>
+	<variable name="vO55" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{ZZ_Age_O55_Cnt}]]></variableExpression>
+	</variable>
+	<variable name="vGrandEmployees" class="java.lang.Integer">
+		<variableExpression><![CDATA[($V{vTotMale} == null ? 0 : $V{vTotMale})
+          + ($V{vTotFem}  == null ? 0 : $V{vTotFem})]]></variableExpression>
+	</variable>
+	<columnHeader>
+		<band height="55">
+			<staticText>
+				<reportElement style="Hdr" x="0" y="0" width="802" height="15" uuid="f32bec0d-e124-4aaf-ba87-085a4eaacb39"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[2.3 Summary of Terminated Employees]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="0" y="15" width="200" height="20" uuid="bfc203c0-4f96-4556-9b4b-92a93e5843bb"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Employment Status]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="200" y="15" width="80" height="20" uuid="2ec2b7bc-f6fc-4f89-aec9-b6f8b7555ea4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[African]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="280" y="15" width="80" height="20" uuid="64fdd35f-4f7b-46e1-985d-4c73d7716397"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Coloured]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="360" y="15" width="80" height="20" uuid="ac53805f-d286-4121-8308-53a67aeebc60"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Indian]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="440" y="15" width="80" height="20" uuid="3712cc6e-0c66-4013-8756-7037e96a6b0c"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[White]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="520" y="15" width="160" height="20" uuid="84c6502b-781b-4e0b-a0d5-ef738b64244a"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Total]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="680" y="15" width="120" height="20" uuid="795bf459-3d0c-4c2e-b0c3-cbfe1663f758"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Age Groups]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="200" y="35" width="40" height="20" uuid="2ee2bc5c-b1e5-43f9-a53b-b896d3c2b448"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Male]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="240" y="35" width="40" height="20" uuid="a4803705-e087-4dc0-89bd-30b873c3540b"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Female]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="280" y="35" width="40" height="20" uuid="32dddb56-9fa5-495e-8695-6553fc7f8e46"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Male]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="320" y="35" width="40" height="20" uuid="aca0b6da-6f03-48f9-9e86-e83b36405290"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Female]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="360" y="35" width="40" height="20" uuid="69c15385-fd3f-418c-99d8-950462dab2cc"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Male]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="400" y="35" width="40" height="20" uuid="44e52df4-79dc-4d5d-b171-c579cea8bf1d"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Female]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="440" y="35" width="40" height="20" uuid="c89d5d17-98bf-49cd-a219-61bd1db7c553"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Male]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="480" y="35" width="40" height="20" uuid="710f83bd-f0dc-4343-bdf4-65f7ffe4273a"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Female]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="520" y="35" width="40" height="20" uuid="fa7a1dcb-6a99-4c3c-a2b5-84be6c9dd34f"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Male]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="560" y="35" width="40" height="20" uuid="0b5ca77b-3d49-49d9-abc1-f273a5499f9d"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Female]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="600" y="35" width="40" height="20" uuid="f94daa28-5d8f-4edb-8bbb-39683ad278fa"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Disabled]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="640" y="35" width="40" height="20" uuid="d2bf2029-fd13-4d38-9967-3e12d4a82062"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Non-SA]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="680" y="35" width="40" height="20" uuid="7bc29c32-1cd7-4b5d-8993-ffee5cd98639"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[<35]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="720" y="35" width="40" height="20" uuid="6963a07d-09fc-4a17-9aac-5fb8fd1c394b"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[35-55]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="760" y="35" width="40" height="20" uuid="1778ac02-4cbd-4d44-bf48-75536c3693ca"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[>55]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="18" splitType="Stretch">
+			<textField>
+				<reportElement style="Cell" x="0" y="0" width="200" height="18" uuid="69705aa5-f859-4f2a-9d39-8066b9fbee38"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{employment_status_name}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNum" x="200" y="0" width="40" height="18" uuid="b1f52d53-2e2b-4f46-806e-ef2b1912d746"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ZZ_African_Male_Cnt}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNum" x="240" y="0" width="40" height="18" uuid="07685de2-79c8-4ae1-bf56-b6ec8aa80a82"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ZZ_African_Female_Cnt}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNum" x="280" y="0" width="40" height="18" uuid="e7ff55d6-b998-4b49-a847-d1614625312b"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ZZ_Coloured_Male_Cnt}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNum" x="320" y="0" width="40" height="18" uuid="b74069d3-ba5b-4a18-a5ba-4b5acda169dc"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ZZ_Coloured_Female_Cnt}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNum" x="360" y="0" width="40" height="18" uuid="7521ec25-07d3-43c9-8e79-c40178cee64a"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ZZ_Indian_Male_Cnt}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNum" x="400" y="0" width="40" height="18" uuid="15dbf820-719a-4f5d-be72-c918ca165632"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ZZ_Indian_Female_Cnt}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNum" x="440" y="0" width="40" height="18" uuid="30f32f0a-fdc6-45d1-9211-6e06da5c9a84"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ZZ_White_Male_Cnt}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNum" x="480" y="0" width="40" height="18" uuid="a317604f-2ac5-49e3-8ed5-94e90b1dbf93"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ZZ_White_Female_Cnt}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNum" x="520" y="0" width="40" height="18" uuid="dacae990-3320-4ff9-bddd-44bb9a4cd2e9"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ZZ_Total_Male_Cnt}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNum" x="560" y="0" width="40" height="18" uuid="a358feca-0665-4332-b26b-6ebb831f7bee"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ZZ_Total_Female_Cnt}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNum" x="600" y="0" width="40" height="18" uuid="102011f0-e091-4f68-8f91-8a858299271a"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ZZ_Disabled_Cnt}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNum" x="640" y="0" width="40" height="18" uuid="c0b734d3-639a-4f36-9a47-9b479be364c7"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ZZ_NonSA_Cnt}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNum" x="680" y="0" width="40" height="18" uuid="22a34174-da99-444e-8b38-9a72af8fdaa4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ZZ_Age_U35_Cnt}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNum" x="720" y="0" width="40" height="18" uuid="055fc9f6-35d2-4634-a030-d49a70f817ba"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ZZ_Age_35_55_Cnt}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNum" x="760" y="0" width="40" height="18" uuid="eeb2fa0b-0e8c-46fb-8a5a-1afb41411838"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ZZ_Age_O55_Cnt}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<summary>
+		<band height="45">
+			<staticText>
+				<reportElement style="CellNumBold" x="0" y="0" width="200" height="18" uuid="ef0af208-f3da-4b0d-9700-53b7f90f8149"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Total]]></text>
+			</staticText>
+			<textField>
+				<reportElement style="CellNumBold" x="200" y="0" width="40" height="18" uuid="fab5925d-31a1-4423-af2a-4c1a3162921c"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{vAfrMale}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNumBold" x="240" y="0" width="40" height="18" uuid="0341c0dc-8650-4837-bd8f-fd08d22cded9"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{vAfrFem}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNumBold" x="280" y="0" width="40" height="18" uuid="c27412bf-4bc4-4833-b576-e7456728c6f9"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{vColMale}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNumBold" x="320" y="0" width="40" height="18" uuid="184ca447-aba8-48d8-b58b-ef78f19a631d"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{vColFem}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNumBold" x="360" y="0" width="40" height="18" uuid="370084fa-fb28-4b38-b3a4-b3124608592b"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{vIndMale}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNumBold" x="400" y="0" width="40" height="18" uuid="bf5f44f0-2748-4e39-8d90-1045c83dfce5"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{vIndFem}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNumBold" x="440" y="0" width="40" height="18" uuid="e885cc48-1d5b-4e94-b045-55a27e1b199d"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{vWhMale}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNumBold" x="480" y="0" width="40" height="18" uuid="208fa086-b34c-428c-b2ce-a75308196738"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{vWhFem}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNumBold" x="520" y="0" width="40" height="18" uuid="6fb37918-ae39-453a-b9dd-e63ad4cf09e7"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{vTotMale}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNumBold" x="560" y="0" width="40" height="18" uuid="3b95875f-7501-4e53-b60a-40cf3d3ad359"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{vTotFem}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNumBold" x="600" y="0" width="40" height="18" uuid="189161d0-6d9c-4fc8-a942-02df2ce6baae"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{vDisabled}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNumBold" x="640" y="0" width="40" height="18" uuid="9fffd93c-0f95-4752-8ec8-6f0e5f7e23f0"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{vNonSA}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNumBold" x="680" y="0" width="40" height="18" uuid="276662e2-55c1-407b-ac62-ccce5f377d3c"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{vU35}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNumBold" x="720" y="0" width="40" height="18" uuid="9e63fe36-08fd-43bb-81e5-8f2d22df4292"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{v3555}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNumBold" x="760" y="0" width="40" height="18" uuid="70dcf0bd-d788-4c16-99c5-5f522517e332"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{vO55}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement style="CellNumBold" x="0" y="22" width="200" height="18" uuid="d4ee6689-ccab-4c1b-9a1d-fd8796b719e4"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Grand Total]]></text>
+			</staticText>
+			<textField>
+				<reportElement style="CellNumBold" x="560" y="22" width="40" height="18" uuid="f2c0abe9-4875-4980-b90a-b10e6f141533"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{vGrandEmployees}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNumBold" x="760" y="22" width="40" height="18" uuid="fccbd627-d0b9-4d51-afb4-9a8a4d9ce7ae"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{vGrandEmployees}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
 </jasperReport>

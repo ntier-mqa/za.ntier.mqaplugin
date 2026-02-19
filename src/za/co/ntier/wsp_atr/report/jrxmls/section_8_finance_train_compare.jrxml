@@ -1,94 +1,74 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
-              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
-              http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
-              name="section_8_finance_train_compare"
-              pageWidth="842" pageHeight="595" orientation="Landscape"
-              columnWidth="802" leftMargin="20" rightMargin="20" topMargin="15" bottomMargin="15"
-              uuid="2a4a73f7-2e21-4b6d-9aa3-6a82c6e4b1a2">
-
-    <!-- Styles -->
-    <style name="HdrBar" fontName="SansSerif" fontSize="10" isBold="true" hTextAlign="Center" vTextAlign="Middle"/>
-    <style name="SectionBar" fontName="SansSerif" fontSize="9" isBold="true" hTextAlign="Left" vTextAlign="Middle"/>
-    <style name="CellLeft" fontName="SansSerif" fontSize="9" hTextAlign="Left" vTextAlign="Middle"/>
-    <style name="CellRight" fontName="SansSerif" fontSize="9" hTextAlign="Center" vTextAlign="Middle"/>
-
-    <parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
-
-    <queryString language="SQL">
-        <![CDATA[
-SELECT
+<!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 6.20.2  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="section_8_finance_train_compare" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="15" bottomMargin="15" uuid="2a4a73f7-2e21-4b6d-9aa3-6a82c6e4b1a2">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="mqa dev"/>
+	<style name="HdrBar" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="10" isBold="true"/>
+	<style name="SectionBar" hTextAlign="Left" vTextAlign="Middle" fontName="SansSerif" fontSize="9" isBold="true"/>
+	<style name="CellLeft" hTextAlign="Left" vTextAlign="Middle" fontName="SansSerif" fontSize="9"/>
+	<style name="CellRight" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="9"/>
+	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
+	<queryString language="SQL">
+		<![CDATA[SELECT
   COALESCE(t.Row_No,0)            AS row_no,
   COALESCE(t.ZZ_Section,'')       AS zz_section,
   COALESCE(t.ZZ_Finance_Type,'')  AS finance_type,
   COALESCE(t.ZZ_Finance_Value,'') AS finance_value
 FROM ZZ_WSP_ATR_Finance_Train_Compare_Rep t
 WHERE t.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
-  AND COALESCE(t.ZZ_Report_Section,'') = '8'
-ORDER BY COALESCE(t.Row_No,0), t.ZZ_WSP_ATR_Finance_Train_Compare_Rep_ID
-        ]]>
-    </queryString>
-
-    <field name="row_no" class="java.lang.Integer"/>
-    <field name="zz_section" class="java.lang.String"/>
-    <field name="finance_type" class="java.lang.String"/>
-    <field name="finance_value" class="java.lang.String"/>
-
-    <!-- Group by ZZ_Section -->
-    <group name="GrpSection">
-        <groupExpression><![CDATA[$F{zz_section}]]></groupExpression>
-        <groupHeader>
-            <band height="16">
-                <staticText>
-                    <reportElement x="0" y="0" width="802" height="16" style="SectionBar" uuid="g1">
-                        <!-- grey bar look -->
-                    </reportElement>
-                    <box>
-                        <pen lineWidth="0.5"/>
-                    </box>
-                    <text><![CDATA[]]></text>
-                </staticText>
-
-                <textField>
-                    <reportElement x="0" y="0" width="802" height="16" style="SectionBar" uuid="g2"/>
-                    <box>
-                        <pen lineWidth="0.5"/>
-                    </box>
-                    <textFieldExpression><![CDATA[$F{zz_section}]]></textFieldExpression>
-                </textField>
-            </band>
-        </groupHeader>
-    </group>
-
-    <title>
-        <band height="20">
-            <staticText>
-                <reportElement x="0" y="0" width="802" height="20" style="HdrBar" uuid="t1"/>
-                <box><pen lineWidth="0.5"/></box>
-                <text><![CDATA[Section 8: Finance and Training Comparison]]></text>
-            </staticText>
-        </band>
-    </title>
-
-    <detail>
-        <band height="16">
-
-            <!-- Left column: label -->
-            <textField isStretchWithOverflow="true">
-                <reportElement x="0" y="0" width="520" height="16" style="CellLeft" uuid="d1"/>
-                <box><pen lineWidth="0.5"/></box>
-                <textFieldExpression><![CDATA[$F{finance_type}]]></textFieldExpression>
-            </textField>
-
-            <!-- Right column: value -->
-            <textField isStretchWithOverflow="true">
-                <reportElement x="520" y="0" width="282" height="16" style="CellRight" uuid="d2"/>
-                <box><pen lineWidth="0.5"/></box>
-                <textFieldExpression><![CDATA[$F{finance_value}]]></textFieldExpression>
-            </textField>
-
-        </band>
-    </detail>
-
+ORDER BY COALESCE(t.Row_No,0), t.ZZ_WSP_ATR_Finance_Train_Compare_Rep_ID]]>
+	</queryString>
+	<field name="row_no" class="java.lang.Integer"/>
+	<field name="zz_section" class="java.lang.String"/>
+	<field name="finance_type" class="java.lang.String"/>
+	<field name="finance_value" class="java.lang.String"/>
+	<group name="GrpSection">
+		<groupExpression><![CDATA[$F{zz_section}]]></groupExpression>
+		<groupHeader>
+			<band height="16">
+				<staticText>
+					<reportElement style="SectionBar" x="0" y="0" width="802" height="16" uuid="3033995a-1f57-4dca-adba-e60798708c61"/>
+					<box>
+						<pen lineWidth="0.5"/>
+					</box>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<textField>
+					<reportElement style="SectionBar" x="0" y="0" width="802" height="16" uuid="45cbab87-5fae-4276-b89e-4c1bcbb22abe"/>
+					<box>
+						<pen lineWidth="0.5"/>
+					</box>
+					<textFieldExpression><![CDATA[$F{zz_section}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+	</group>
+	<title>
+		<band height="20">
+			<staticText>
+				<reportElement style="HdrBar" x="0" y="0" width="802" height="20" uuid="72f1d4fa-baf7-4973-8667-19626b238ba9"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<text><![CDATA[Section 8: Finance and Training Comparison]]></text>
+			</staticText>
+		</band>
+	</title>
+	<detail>
+		<band height="16">
+			<textField textAdjust="StretchHeight">
+				<reportElement style="CellLeft" x="0" y="0" width="520" height="16" uuid="f8d16a6c-4c40-47de-ab55-69776a3e4e6c"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textFieldExpression><![CDATA[$F{finance_type}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight">
+				<reportElement style="CellRight" x="520" y="0" width="282" height="16" uuid="7ba9e53f-7cbe-424b-8f3a-896316ef1b5a"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textFieldExpression><![CDATA[$F{finance_value}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
 </jasperReport>
