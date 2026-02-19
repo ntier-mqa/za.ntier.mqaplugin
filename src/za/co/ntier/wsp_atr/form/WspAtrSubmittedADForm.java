@@ -62,6 +62,7 @@ import org.zkoss.zul.Vlayout;
 
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
+import za.ntier.models.MZZWSPATRSubmitted;
 
 @org.idempiere.ui.zk.annotation.Form(name = "za.co.ntier.wsp_atr.form.WspAtrSubmittedADForm")
 public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event> {
@@ -300,10 +301,10 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	        // 1) Find existing record for org (if any)
 	        int existingId = findExistingSubmittedIdForOrg(org.zzSdfOrganisationId, trxName);
 
-	        X_ZZ_WSP_ATR_Submitted submitted;
+	        MZZWSPATRSubmitted  submitted;
 	        if (existingId > 0) {
 	            // REUSE
-	            submitted = new X_ZZ_WSP_ATR_Submitted(Env.getCtx(), existingId, trxName);
+	            submitted = new MZZWSPATRSubmitted(Env.getCtx(), existingId, trxName);
 
 	            // 2) Clear old attachments + related records
 	            deleteAllAttachmentsForSubmitted(existingId, trxName);
@@ -321,7 +322,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	            submittedId = existingId;
 	        } else {
 	            // CREATE NEW
-	            submitted = new X_ZZ_WSP_ATR_Submitted(Env.getCtx(), 0, trxName);
+	            submitted = new MZZWSPATRSubmitted(Env.getCtx(), 0, trxName);
 	            submitted.setName("WSP/ATR " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
 	            submitted.setSubmittedDate(new Timestamp(System.currentTimeMillis()));
 	            submitted.setFileName(filename);
