@@ -1,382 +1,224 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 6.20.1  -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ZZ_WSP_ATR_Master" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="40363b6b-aed8-4291-886c-502464a8ed06">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ZZ_WSP_ATR_WorkforceProfile_Master" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="472ff82e-dc3d-4e3b-ae25-6f4167465492">
 	<style name="Title" fontName="SansSerif" fontSize="14" isBold="true"/>
 	<style name="SubTitle" fontName="SansSerif" fontSize="11" isBold="true"/>
 	<style name="Normal" fontName="SansSerif" fontSize="9"/>
-	<style name="LabelBold" fontName="SansSerif" fontSize="10" isBold="true"/>
 	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
 	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
 		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
 	</parameter>
-	<parameter name="RESOURCE_DIR" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="RESOURCE_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
+	</parameter>
 	<queryString>
 		<![CDATA[SELECT 1 AS dummy]]>
 	</queryString>
 	<field name="dummy" class="java.lang.Integer"/>
-	<group name="G_COVER">
-		<groupExpression><![CDATA["COVER"]]></groupExpression>
-		<groupHeader>
-			<band height="555" splitType="Stretch">
-				<image>
-					<reportElement x="316" y="10" width="170" height="170" uuid="e785504e-eb9c-487c-a9e4-60055cfb2f1e"/>
-					<imageExpression><![CDATA[$P{RESOURCE_DIR} + "header-logo.png"]]></imageExpression>
-				</image>
-				<staticText>
-					<reportElement style="SubTitle" x="0" y="190" width="802" height="22" uuid="3c699ad1-b654-4e97-b6ee-0fc05eb3aaa3"/>
-					<textElement textAlignment="Center"/>
-					<text><![CDATA[WORKPLACE SKILLS PLAN AND ANNUAL TRAINING REPORT]]></text>
-				</staticText>
-				<staticText>
-					<reportElement style="SubTitle" x="0" y="214" width="802" height="18" uuid="463ac4b7-0ca5-4cb9-9ebe-124db90d25a0"/>
-					<textElement textAlignment="Center"/>
-					<text><![CDATA["Submitted to the Mining Qualifications Authority"]]></text>
-				</staticText>
-				<staticText>
-					<reportElement style="SubTitle" x="0" y="240" width="802" height="18" uuid="9574dad6-4e18-457e-adb1-12170c075003"/>
-					<textElement textAlignment="Center"/>
-					<text><![CDATA[This submission serves as an application for]]></text>
-				</staticText>
-				<staticText>
-					<reportElement style="SubTitle" x="0" y="262" width="802" height="18" uuid="19821547-f182-4032-8af7-af5b9624c367"/>
-					<textElement textAlignment="Center"/>
-					<text><![CDATA[Mandatory Grant]]></text>
-				</staticText>
-				<rectangle>
-					<reportElement x="40" y="305" width="722" height="95" uuid="d761d152-9498-4ae3-a034-ad1e5b700f48"/>
-				</rectangle>
-				<line>
-					<reportElement x="40" y="329" width="722" height="1" uuid="245d5922-ce60-401c-8f99-c14c4be86621"/>
-				</line>
-				<line>
-					<reportElement x="40" y="353" width="722" height="1" uuid="44df36d4-f48d-4a1c-bf99-1c5bcc9d937a"/>
-				</line>
-				<line>
-					<reportElement x="40" y="377" width="722" height="1" uuid="bd9e888b-9814-4c06-ad1e-450dd6f74fca"/>
-				</line>
-				<line>
-					<reportElement x="401" y="305" width="1" height="95" uuid="7c005a28-cad6-4696-8b4f-3fff8871b35a"/>
-				</line>
-				<staticText>
-					<reportElement style="LabelBold" x="45" y="309" width="350" height="18" uuid="198a08e7-882b-4eb5-9fb6-5dd51eab77f0"/>
-					<text><![CDATA[Organisation Name]]></text>
-				</staticText>
-				<staticText>
-					<reportElement style="LabelBold" x="45" y="333" width="350" height="18" uuid="bf7e84be-0da7-428b-bd58-1c64298b977f"/>
-					<text><![CDATA[Trading Name]]></text>
-				</staticText>
-				<staticText>
-					<reportElement style="LabelBold" x="45" y="357" width="350" height="18" uuid="3ef4ac34-1de1-4bc6-a696-4e7f4beed05c"/>
-					<text><![CDATA[Levy Number]]></text>
-				</staticText>
-				<staticText>
-					<reportElement style="LabelBold" x="45" y="381" width="350" height="18" uuid="acd705d9-525f-4e70-9d58-6bb4edd2ad0c"/>
-					<text><![CDATA[Date Document Generated]]></text>
-				</staticText>
-				<staticText>
-					<reportElement style="Normal" x="410" y="309" width="345" height="18" uuid="bd9390a1-09be-45ca-bdd7-db7a9126c052"/>
-					<text><![CDATA[<Organisation Name>]]></text>
-				</staticText>
-				<staticText>
-					<reportElement style="Normal" x="410" y="333" width="345" height="18" uuid="9458d667-7f36-4d56-a82e-a7333dca6119"/>
-					<text><![CDATA[<Trading Name>]]></text>
-				</staticText>
-				<staticText>
-					<reportElement style="Normal" x="410" y="357" width="345" height="18" uuid="c05a282d-e2ad-4fb7-8592-4b66c9951682"/>
-					<text><![CDATA[<Levy Number>]]></text>
-				</staticText>
-				<staticText>
-					<reportElement style="Normal" x="410" y="381" width="345" height="18" uuid="f3106f8e-317d-4714-afbe-3187c5261340"/>
-					<text><![CDATA[<Date Document Generated>]]></text>
-				</staticText>
-				<staticText>
-					<reportElement style="LabelBold" x="40" y="430" width="300" height="18" uuid="23367b3a-a435-4dcd-934c-70c080b58abc"/>
-					<text><![CDATA[PLEASE NOTE:]]></text>
-				</staticText>
-				<textField textAdjust="StretchHeight">
-					<reportElement style="Normal" x="40" y="452" width="722" height="80" uuid="f62a6097-aa4f-4034-88a5-d9947545df96"/>
-					<textFieldExpression><![CDATA["The WSP-ATR must be submitted to MQA by 30 April 2025. "
-	+ "Please note that your submission is incomplete unless the signature and declaration pages "
-	+ "(with all the required signatures) are completed. "
-	+ "Organisations with less than 50 employees do not have to submit signatures of consulted parties."]]></textFieldExpression>
-				</textField>
-			</band>
-		</groupHeader>
-	</group>
-	<group name="G_2_1" isStartNewPage="true">
-		<groupExpression><![CDATA["2.1"]]></groupExpression>
-		<groupHeader>
-			<band height="420" splitType="Stretch">
-				<subreport>
-					<reportElement x="0" y="0" width="802" height="420" uuid="0b1ca33e-b1b2-4014-baef-87c255e0831d"/>
-					<subreportParameter name="ZZ_WSP_ATR_Report_ID">
-						<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
-					</subreportParameter>
-					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-					<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "sub_section_2_1_workforce_emp_summary.jasper"]]></subreportExpression>
-				</subreport>
-			</band>
-		</groupHeader>
-	</group>
-	<group name="G_2_2" isStartNewPage="true">
-		<groupExpression><![CDATA["2.2"]]></groupExpression>
-		<groupHeader>
-			<band height="260" splitType="Stretch">
-				<subreport>
-					<reportElement x="0" y="0" width="802" height="260" uuid="9bc99e03-cf25-43ce-8e6d-ff5dc8306e8a"/>
-					<subreportParameter name="ZZ_WSP_ATR_Report_ID">
-						<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
-					</subreportParameter>
-					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-					<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "Section_2_2_Geo_Dist.jasper"]]></subreportExpression>
-				</subreport>
-			</band>
-		</groupHeader>
-	</group>
-	<group name="G_2_3" isStartNewPage="true">
-		<groupExpression><![CDATA["2.3"]]></groupExpression>
-		<groupHeader>
-			<band height="260" splitType="Stretch">
-				<subreport>
-					<reportElement x="0" y="0" width="802" height="260" uuid="85658d24-c969-4507-a10c-97e0773ada35"/>
-					<subreportParameter name="ZZ_WSP_ATR_Report_ID">
-						<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
-					</subreportParameter>
-					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-					<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_2_3_Terminated_Employees.jasper"]]></subreportExpression>
-				</subreport>
-			</band>
-		</groupHeader>
-	</group>
-	<group name="G_2_4" isStartNewPage="true">
-		<groupExpression><![CDATA["2.4"]]></groupExpression>
-		<groupHeader>
-			<band height="260" splitType="Stretch">
-				<subreport>
-					<reportElement x="0" y="0" width="802" height="260" uuid="548e8faa-00ad-4a01-a605-420beac2db37"/>
-					<subreportParameter name="ZZ_WSP_ATR_Report_ID">
-						<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
-					</subreportParameter>
-					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-					<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_2_4_Education_Level.jasper"]]></subreportExpression>
-				</subreport>
-			</band>
-		</groupHeader>
-	</group>
-	<group name="G_3_1" isStartNewPage="true">
-		<groupExpression><![CDATA["3.1"]]></groupExpression>
-		<groupHeader>
-			<band height="260" splitType="Stretch">
-				<subreport>
-					<reportElement x="0" y="0" width="802" height="260" uuid="9c24b9f0-1efb-40e1-95ea-94e23c7543d3"/>
-					<subreportParameter name="ZZ_WSP_ATR_Report_ID">
-						<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
-					</subreportParameter>
-					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-					<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_3_1_HTFV.jasper"]]></subreportExpression>
-				</subreport>
-			</band>
-		</groupHeader>
-	</group>
-	<group name="G_3_2" isStartNewPage="true">
-		<groupExpression><![CDATA["3.2"]]></groupExpression>
-		<groupHeader>
-			<band height="260" splitType="Stretch">
-				<subreport>
-					<reportElement x="0" y="0" width="802" height="260" uuid="7e4343c3-6ade-4a79-a886-908e8e678bf9"/>
-					<subreportParameter name="ZZ_WSP_ATR_Report_ID">
-						<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
-					</subreportParameter>
-					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-					<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_3_2_TopUp_Skills.jasper"]]></subreportExpression>
-				</subreport>
-			</band>
-		</groupHeader>
-	</group>
-	<group name="G_4_1" isStartNewPage="true">
-		<groupExpression><![CDATA["4.1"]]></groupExpression>
-		<groupHeader>
-			<band height="300" splitType="Stretch">
-				<subreport>
-					<reportElement x="0" y="0" width="802" height="300" uuid="b825c9f0-b9fb-4b14-9c68-9f80a594456e"/>
-					<subreportParameter name="ZZ_WSP_ATR_Report_ID">
-						<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
-					</subreportParameter>
-					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-					<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_4_1_Employees_Trained_Summary.jasper"]]></subreportExpression>
-				</subreport>
-			</band>
-		</groupHeader>
-	</group>
-	<group name="G_4_2" isStartNewPage="true">
-		<groupExpression><![CDATA["4.2"]]></groupExpression>
-		<groupHeader>
-			<band height="300" splitType="Stretch">
-				<subreport>
-					<reportElement x="0" y="0" width="802" height="300" uuid="dc58c414-87f9-40ba-afaf-f45237f3f970"/>
-					<subreportParameter name="ZZ_WSP_ATR_Report_ID">
-						<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
-					</subreportParameter>
-					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-					<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "ZZ_WSP_ATR_Section_4_2.jasper"]]></subreportExpression>
-				</subreport>
-			</band>
-		</groupHeader>
-	</group>
-	<group name="G_4_3_1" isStartNewPage="true">
-		<groupExpression><![CDATA["4.3.1"]]></groupExpression>
-		<groupHeader>
-			<band height="300" splitType="Stretch">
-				<subreport>
-					<reportElement x="0" y="0" width="802" height="300" uuid="0209dd3e-fd9a-4ca7-9207-83e8055deb6a"/>
-					<subreportParameter name="ZZ_WSP_ATR_Report_ID">
-						<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
-					</subreportParameter>
-					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-					<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "sub_section_4_3_1_planned_emp_training_interventions.jasper"]]></subreportExpression>
-				</subreport>
-			</band>
-		</groupHeader>
-	</group>
-	<group name="G_4_4" isStartNewPage="true">
-		<groupExpression><![CDATA["4.4"]]></groupExpression>
-		<groupHeader>
-			<band height="300" splitType="Stretch">
-				<subreport>
-					<reportElement x="0" y="0" width="802" height="300" uuid="62a4e12b-2541-42d1-922d-33b1436001a9"/>
-					<subreportParameter name="ZZ_WSP_ATR_Report_ID">
-						<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
-					</subreportParameter>
-					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-					<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "sub_section_4_4_induct_exleave_refresher.jasper"]]></subreportExpression>
-				</subreport>
-			</band>
-		</groupHeader>
-	</group>
-	<group name="G_5_1" isStartNewPage="true">
-		<groupExpression><![CDATA["5.1"]]></groupExpression>
-		<groupHeader>
-			<band height="340" splitType="Stretch">
-				<subreport>
-					<reportElement x="0" y="0" width="802" height="340" uuid="598a6c07-4a38-4cd3-bfdf-4d20332a49de"/>
-					<subreportParameter name="ZZ_WSP_ATR_Report_ID">
-						<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
-					</subreportParameter>
-					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-					<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_5_1_summary_emp_training_interventions.jasper"]]></subreportExpression>
-				</subreport>
-			</band>
-		</groupHeader>
-	</group>
-	<group name="G_5_2_1" isStartNewPage="true">
-		<groupExpression><![CDATA["5.2.1"]]></groupExpression>
-		<groupHeader>
-			<band height="320" splitType="Stretch">
-				<subreport>
-					<reportElement x="0" y="0" width="802" height="320" uuid="2b996a93-8f65-49c4-9a20-981704693611"/>
-					<subreportParameter name="ZZ_WSP_ATR_Report_ID">
-						<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
-					</subreportParameter>
-					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-					<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "sub_section_5_2_1_planned_train_per_occ_group.jasper"]]></subreportExpression>
-				</subreport>
-			</band>
-		</groupHeader>
-	</group>
-	<group name="G_6_1" isStartNewPage="true">
-		<groupExpression><![CDATA["6.1"]]></groupExpression>
-		<groupHeader>
-			<band height="220" splitType="Stretch">
-				<subreport>
-					<reportElement x="0" y="0" width="802" height="220" uuid="bbf00e68-f74d-4e6c-94a5-bc638a1be582"/>
-					<subreportParameter name="ZZ_WSP_ATR_Report_ID">
-						<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
-					</subreportParameter>
-					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-					<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_6_1_non_employees_aet_bursaries.jasper"]]></subreportExpression>
-				</subreport>
-			</band>
-		</groupHeader>
-	</group>
-	<group name="G_6_2" isStartNewPage="true">
-		<groupExpression><![CDATA["6.2"]]></groupExpression>
-		<groupHeader>
-			<band height="220" splitType="Stretch">
-				<subreport>
-					<reportElement x="0" y="0" width="802" height="220" uuid="af980094-2e3f-4ea9-b6f7-30478666dd28"/>
-					<subreportParameter name="ZZ_WSP_ATR_Report_ID">
-						<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
-					</subreportParameter>
-					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-					<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_6_2_bursaries_including_het.jasper"]]></subreportExpression>
-				</subreport>
-			</band>
-		</groupHeader>
-	</group>
-	<group name="G_6_3" isStartNewPage="true">
-		<groupExpression><![CDATA["6.3"]]></groupExpression>
-		<groupHeader>
-			<band height="320" splitType="Stretch">
-				<subreport>
-					<reportElement x="0" y="0" width="802" height="320" uuid="547ecb60-7791-4654-9f94-d94ae89de0d1"/>
-					<subreportParameter name="ZZ_WSP_ATR_Report_ID">
-						<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
-					</subreportParameter>
-					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-					<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_6_3_non_emp_skills_dev_done.jasper"]]></subreportExpression>
-				</subreport>
-			</band>
-		</groupHeader>
-	</group>
-	<group name="G_6_4" isStartNewPage="true">
-		<groupExpression><![CDATA["6.4"]]></groupExpression>
-		<groupHeader>
-			<band height="260" splitType="Stretch">
-				<subreport>
-					<reportElement x="0" y="0" width="802" height="260" uuid="14cc579e-2ae8-441c-b140-e4762a690456"/>
-					<subreportParameter name="ZZ_WSP_ATR_Report_ID">
-						<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
-					</subreportParameter>
-					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-					<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_6_4_non_emp_skills_dev_planned.jasper"]]></subreportExpression>
-				</subreport>
-			</band>
-		</groupHeader>
-	</group>
-	<group name="G_7" isStartNewPage="true">
-		<groupExpression><![CDATA["7"]]></groupExpression>
-		<groupHeader>
-			<band height="340" splitType="Stretch">
-				<subreport>
-					<reportElement x="0" y="0" width="802" height="340" uuid="f700d9fb-075d-4c2a-81d9-fac808617664"/>
-					<subreportParameter name="ZZ_WSP_ATR_Report_ID">
-						<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
-					</subreportParameter>
-					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-					<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_7_contractors.jasper"]]></subreportExpression>
-				</subreport>
-			</band>
-		</groupHeader>
-	</group>
-	<group name="G_8" isStartNewPage="true">
-		<groupExpression><![CDATA["8"]]></groupExpression>
-		<groupHeader>
-			<band height="360" splitType="Stretch">
-				<subreport>
-					<reportElement x="0" y="0" width="802" height="360" uuid="8645f0f4-1318-4fce-93aa-042dd1feea4b"/>
-					<subreportParameter name="ZZ_WSP_ATR_Report_ID">
-						<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
-					</subreportParameter>
-					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-					<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_8_finance_train_compare.jasper"]]></subreportExpression>
-				</subreport>
-			</band>
-		</groupHeader>
-	</group>
 	<title>
-		<band/>
+		<band height="555" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="802" height="555" uuid="5482ebe0-85c7-4711-89cb-12b8488967ff"/>
+				<subreportParameter name="RESOURCE_DIR">
+					<subreportParameterExpression><![CDATA[$P{RESOURCE_DIR}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="P_ORGANISATION_NAME">
+					<subreportParameterExpression><![CDATA["<Organisation Name>"]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="P_TRADING_NAME">
+					<subreportParameterExpression><![CDATA["<Trading Name>"]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="P_LEVY_NUMBER">
+					<subreportParameterExpression><![CDATA["<Levy Number>"]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="P_DATE_GENERATED">
+					<subreportParameterExpression><![CDATA["<Date Document Generated>"]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Cover_Page.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
 	</title>
 	<detail>
-		<band/>
+		<band height="555" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="802" height="555" uuid="0934bd42-d42a-48e4-bdca-31a16a49d3b5"/>
+				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
+					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "sub_section_2_1_workforce_emp_summary.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+		<band height="555" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="802" height="555" uuid="aaeaa189-3bfe-4d86-bf3a-921e6b12806a"/>
+				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
+					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "Section_2_2_Geo_Dist.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+		<band height="555" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="802" height="555" uuid="a2f56ce7-a776-4918-8859-df8c9dab567a"/>
+				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
+					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_2_3_Terminated_Employees.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+		<band height="555" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="802" height="555" uuid="98a3bca2-8b1f-488e-aabf-7470ffed3603"/>
+				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
+					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_2_4_Education_Level.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+		<band height="555" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="802" height="555" uuid="b6b560cd-b1ab-4f24-94f2-cfc65615a664"/>
+				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
+					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_3_1_HTFV.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+		<band height="555" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="802" height="555" uuid="b3631eab-705f-4087-8fdb-c76cee340eec"/>
+				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
+					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_3_2_TopUp_Skills.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+		<band height="555" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="802" height="555" uuid="313e0063-7489-4583-a8a4-c52c739d1262"/>
+				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
+					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_4_1_Employees_Trained_Summary.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+		<band height="555" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="802" height="555" uuid="8c6f8e01-6253-484b-bae2-c3e2a88202b5"/>
+				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
+					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "ZZ_WSP_ATR_Section_4_2.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+		<band height="555" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="802" height="555" uuid="9b16f0a4-17fc-43af-b479-8860ec47706e"/>
+				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
+					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "sub_section_4_3_1_planned_emp_training_interventions.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+		<band height="555" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="802" height="555" uuid="a1823477-1bba-43c4-b7de-07d56eb8aa1b"/>
+				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
+					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "sub_section_4_4_induct_exleave_refresher.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+		<band height="555" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="802" height="555" uuid="c417d8e7-ac62-4edd-ac21-64ed84bfbe71"/>
+				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
+					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_5_1_summary_emp_training_interventions.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+		<band height="555" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="802" height="555" uuid="a3f3a14e-9db0-4445-94ef-9202e3c9c819"/>
+				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
+					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "sub_section_5_2_1_planned_train_per_occ_group.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+		<band height="555" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="802" height="555" uuid="c6787faa-e54f-47c8-9ea7-f0c684bf4b9f"/>
+				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
+					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_6_1_non_employees_aet_bursaries.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+		<band height="555" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="802" height="555" uuid="988cfdf2-a21e-4f0f-8248-73a4939181be"/>
+				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
+					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_6_2_bursaries_including_het.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+		<band height="555" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="802" height="555" uuid="88fd087e-35ea-4e32-9973-1f45e1048e60"/>
+				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
+					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_6_3_non_emp_skills_dev_done.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+		<band height="555" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="802" height="555" uuid="bad8eb6f-f1d9-4a40-9c25-f92ad22568e5"/>
+				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
+					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_6_4_non_emp_skills_dev_planned.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+		<band height="555" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="802" height="555" uuid="aedf721b-7312-41e1-98b7-7010e1289ed6"/>
+				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
+					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_7_contractors.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+		<band height="555" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="802" height="555" uuid="75db9dfd-8319-40ee-969c-0fd20b4aa292"/>
+				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
+					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_8_finance_train_compare.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
 	</detail>
 </jasperReport>

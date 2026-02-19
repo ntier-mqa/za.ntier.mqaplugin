@@ -26,7 +26,6 @@
 	<field name="dummy" class="java.lang.Integer"/>
 	<title>
 		<band height="500" splitType="Stretch">
-			<property name="com.jaspersoft.studio.unit.height" value="px"/>
 			<image>
 				<reportElement x="320" y="10" width="170" height="170" uuid="556b71c7-1762-4f3e-8e96-65d607a81ac8"/>
 				<imageExpression><![CDATA[$P{RESOURCE_DIR} + "login-logo.png"]]></imageExpression>
@@ -52,67 +51,67 @@
 				<text><![CDATA[Mandatory Grant]]></text>
 			</staticText>
 			<rectangle>
-				<reportElement x="40" y="294" width="722" height="95" uuid="646ffe47-b4b6-403e-86ea-70781c9fc122"/>
+				<reportElement x="40" y="305" width="722" height="95" uuid="646ffe47-b4b6-403e-86ea-70781c9fc122"/>
 			</rectangle>
 			<line>
-				<reportElement x="40" y="318" width="722" height="1" uuid="e8efb4d6-38c5-4043-bf03-a8fdbe84ce00"/>
+				<reportElement x="40" y="329" width="722" height="1" uuid="e8efb4d6-38c5-4043-bf03-a8fdbe84ce00"/>
 			</line>
 			<line>
-				<reportElement x="40" y="342" width="722" height="1" uuid="f9b3ccf8-4d08-436f-9ad9-b8153624abaa"/>
+				<reportElement x="40" y="353" width="722" height="1" uuid="f9b3ccf8-4d08-436f-9ad9-b8153624abaa"/>
 			</line>
 			<line>
-				<reportElement x="40" y="366" width="722" height="1" uuid="841e862f-5833-4cb6-9e0c-ece4c69c1d46"/>
+				<reportElement x="40" y="377" width="722" height="1" uuid="841e862f-5833-4cb6-9e0c-ece4c69c1d46"/>
 			</line>
 			<line>
-				<reportElement x="401" y="294" width="1" height="95" uuid="a18526b9-93b5-491d-8135-832dd3efee67"/>
+				<reportElement x="401" y="305" width="1" height="95" uuid="a18526b9-93b5-491d-8135-832dd3efee67"/>
 			</line>
 			<staticText>
-				<reportElement style="LabelBold" x="45" y="298" width="350" height="18" uuid="6a7bedda-3e70-4cfb-9dd3-b2dbcb2f7812"/>
+				<reportElement style="LabelBold" x="45" y="309" width="350" height="18" uuid="6a7bedda-3e70-4cfb-9dd3-b2dbcb2f7812"/>
 				<textElement verticalAlignment="Middle"/>
 				<text><![CDATA[Organisation Name]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="LabelBold" x="45" y="322" width="350" height="18" uuid="800b0ec0-2ec5-46fe-8b94-789426feca6f"/>
+				<reportElement style="LabelBold" x="45" y="333" width="350" height="18" uuid="800b0ec0-2ec5-46fe-8b94-789426feca6f"/>
 				<textElement verticalAlignment="Middle"/>
 				<text><![CDATA[Trading Name]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="LabelBold" x="45" y="346" width="350" height="18" uuid="e7b5767f-7280-40f8-8007-a034db96083f"/>
+				<reportElement style="LabelBold" x="45" y="357" width="350" height="18" uuid="e7b5767f-7280-40f8-8007-a034db96083f"/>
 				<textElement verticalAlignment="Middle"/>
 				<text><![CDATA[Levy Number]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="LabelBold" x="45" y="370" width="350" height="18" uuid="b3a1340b-382b-459e-9dcc-df577a3fbfe3"/>
+				<reportElement style="LabelBold" x="45" y="381" width="350" height="18" uuid="b3a1340b-382b-459e-9dcc-df577a3fbfe3"/>
 				<textElement verticalAlignment="Middle"/>
 				<text><![CDATA[Date Document Generated]]></text>
 			</staticText>
 			<textField>
-				<reportElement style="Normal" x="410" y="298" width="345" height="18" uuid="668513f2-0a97-4c74-a2cc-2f8fc1828979"/>
+				<reportElement style="Normal" x="410" y="309" width="345" height="18" uuid="668513f2-0a97-4c74-a2cc-2f8fc1828979"/>
 				<textElement verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$P{P_ORGANISATION_NAME}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="Normal" x="410" y="322" width="345" height="18" uuid="5745da78-434b-4881-b8a0-c172b28aa371"/>
+				<reportElement style="Normal" x="410" y="333" width="345" height="18" uuid="5745da78-434b-4881-b8a0-c172b28aa371"/>
 				<textElement verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$P{P_TRADING_NAME}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="Normal" x="410" y="346" width="345" height="18" uuid="ca8aab09-c45c-4862-a316-2ee3de3f7a43"/>
+				<reportElement style="Normal" x="410" y="357" width="345" height="18" uuid="ca8aab09-c45c-4862-a316-2ee3de3f7a43"/>
 				<textElement verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$P{P_LEVY_NUMBER}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="Normal" x="410" y="370" width="345" height="18" uuid="94004874-27e4-4fce-a253-bf110f5d9538"/>
+				<reportElement style="Normal" x="410" y="381" width="345" height="18" uuid="94004874-27e4-4fce-a253-bf110f5d9538"/>
 				<textElement verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$P{P_DATE_GENERATED}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement style="LabelBold" x="40" y="406" width="300" height="18" uuid="3b1d1024-05ab-46a6-a284-66cf1f209e3d"/>
+				<reportElement style="LabelBold" x="40" y="430" width="300" height="18" uuid="3b1d1024-05ab-46a6-a284-66cf1f209e3d"/>
 				<textElement verticalAlignment="Middle"/>
 				<text><![CDATA[PLEASE NOTE:]]></text>
 			</staticText>
 			<textField textAdjust="StretchHeight">
-				<reportElement style="Normal" x="40" y="444" width="722" height="48" uuid="1ad89576-6436-41ef-a8f8-6824b5a6b728"/>
+				<reportElement style="Normal" x="40" y="452" width="722" height="38" uuid="1ad89576-6436-41ef-a8f8-6824b5a6b728"/>
 				<textElement verticalAlignment="Top"/>
 				<textFieldExpression><![CDATA["The WSP-ATR must be submitted to MQA by 30 April 2025. Please note that your submission is incomplete unless the signature and declaration pages (with all the required signatures) are completed.\n"
 + "Organisations with less than 50 employees do not have to submit signatures of consulted parties."]]></textFieldExpression>
