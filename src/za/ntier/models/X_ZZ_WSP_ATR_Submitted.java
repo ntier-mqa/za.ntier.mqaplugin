@@ -32,7 +32,7 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260213L;
+	private static final long serialVersionUID = 20260218L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Submitted (Properties ctx, int ZZ_WSP_ATR_Submitted_ID, String trxName)
@@ -40,6 +40,8 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
       super (ctx, ZZ_WSP_ATR_Submitted_ID, trxName);
       /** if (ZZ_WSP_ATR_Submitted_ID == 0)
         {
+			setZZ_IsQuery (false);
+// N
 			setZZ_WSP_ATR_Submitted_ID (0);
         } */
     }
@@ -50,6 +52,8 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
       super (ctx, ZZ_WSP_ATR_Submitted_ID, trxName, virtualColumns);
       /** if (ZZ_WSP_ATR_Submitted_ID == 0)
         {
+			setZZ_IsQuery (false);
+// N
 			setZZ_WSP_ATR_Submitted_ID (0);
         } */
     }
@@ -60,6 +64,8 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
       super (ctx, ZZ_WSP_ATR_Submitted_UU, trxName);
       /** if (ZZ_WSP_ATR_Submitted_UU == null)
         {
+			setZZ_IsQuery (false);
+// N
 			setZZ_WSP_ATR_Submitted_ID (0);
         } */
     }
@@ -70,6 +76,8 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
       super (ctx, ZZ_WSP_ATR_Submitted_UU, trxName, virtualColumns);
       /** if (ZZ_WSP_ATR_Submitted_UU == null)
         {
+			setZZ_IsQuery (false);
+// N
 			setZZ_WSP_ATR_Submitted_ID (0);
         } */
     }
@@ -414,6 +422,8 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	public static final String ZZ_DOCSTATUS_SubmittedToITAdmin = "ST";
 	/** Submitted = SU */
 	public static final String ZZ_DOCSTATUS_Submitted = "SU";
+	/** Delinked = UnSdfOrg */
+	public static final String ZZ_DOCSTATUS_Delinked = "UnSdfOrg";
 	/** Set Document Status.
 		@param ZZ_DocStatus Document Status
 	*/
@@ -514,6 +524,21 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 		return (Timestamp)get_Value(COLUMNNAME_ZZ_EvaluatedDate);
 	}
 
+	/** Set Generate WSP ATR Report.
+		@param ZZ_Generate_WSP_ATR_Report Generate WSP ATR Report
+	*/
+	public void setZZ_Generate_WSP_ATR_Report (String ZZ_Generate_WSP_ATR_Report)
+	{
+		set_Value (COLUMNNAME_ZZ_Generate_WSP_ATR_Report, ZZ_Generate_WSP_ATR_Report);
+	}
+
+	/** Get Generate WSP ATR Report.
+		@return Generate WSP ATR Report	  */
+	public String getZZ_Generate_WSP_ATR_Report()
+	{
+		return (String)get_Value(COLUMNNAME_ZZ_Generate_WSP_ATR_Report);
+	}
+
 	/** Set Import Submitted Data.
 		@param ZZ_Import_Submitted_Data Import Submitted Data
 	*/
@@ -527,6 +552,28 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	public String getZZ_Import_Submitted_Data()
 	{
 		return (String)get_Value(COLUMNNAME_ZZ_Import_Submitted_Data);
+	}
+
+	/** Set Is Query.
+		@param ZZ_IsQuery Is Query
+	*/
+	public void setZZ_IsQuery (boolean ZZ_IsQuery)
+	{
+		set_Value (COLUMNNAME_ZZ_IsQuery, Boolean.valueOf(ZZ_IsQuery));
+	}
+
+	/** Get Is Query.
+		@return Is Query	  */
+	public boolean isZZ_IsQuery()
+	{
+		Object oo = get_Value(COLUMNNAME_ZZ_IsQuery);
+		if (oo != null)
+		{
+			 if (oo instanceof Boolean)
+				 return ((Boolean)oo).booleanValue();
+			return "Y".equals(oo);
+		}
+		return false;
 	}
 
 	/** Set Query Comment.

@@ -1,12 +1,31 @@
 package za.ntier.models;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import org.compiere.model.PO;  // Required for getAllIDs
 import java.util.Properties;
 import java.util.List;
 import org.compiere.model.Query;
+import org.compiere.model.MMailText;
+import java.io.File;
+import java.io.FileOutputStream;
+import com.lowagie.text.Document;
+import com.lowagie.text.pdf.PdfWriter;
+import com.lowagie.text.html.simpleparser.HTMLWorker;
+import java.io.StringReader;
+
+import org.compiere.util.DB;
+import org.compiere.util.EMail;
+import org.compiere.util.Env;
+import org.compiere.model.MUser;
+import org.compiere.model.MClient;
+
+
 
 public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
+	
+    // Your fixed mail template UUID
+    private static final String WSP_ATRQuery_TEMPLATE_UUID = "c981b4f2-a103-4e62-a79f-f7401620bebe";
 
 	public MZZWSPATRSubmitted(Properties ctx, int ZZ_WSP_ATR_Submitted_ID, String trxName) {
 		super(ctx, ZZ_WSP_ATR_Submitted_ID, trxName);
@@ -25,7 +44,8 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 	public MZZWSPATRSubmitted(Properties ctx, String ZZ_WSP_ATR_Submitted_UU, String trxName,
 			String... virtualColumns) {
-		super(ctx, ZZ_WSP_ATR_Submitted_UU, trxName, virtualColumns);
+		super(ctx, ZZ_WSP_ATR_Submitted_UU, trxName, virtualColumns);    
+	    
 		// TODO Auto-generated constructor stub
 	}
 
@@ -50,6 +70,14 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	    if (ok && newRecord)
 	        createVerificationChecklist();
 
+	 // If user ticked IsQuery = true, generate PDF and send email
+	    if (ok && is_ValueChanged("ZZ_IsQuery") && isZZ_IsQuery()) {
+	        try {
+	            sendQueryEmailWithPDF();
+	        } catch (Exception e) {
+	            log.severe("Failed to send query email: " + e.getMessage());
+	        }
+	    }
 	    return ok;
 	}
 	
@@ -80,6 +108,153 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 		}
 	}
 	
+    /**
+     * FROM adempiere.zzsdforganisation orglink
+     * JOIN adempiere.zzsdf sdf ON orglink.zzsdf_id = sdf.zzsdf_id
+     * JOIN adempiere.ad_user usr ON sdf.ad_user_id = usr.ad_user_id
+     */
+    public int getSdfUserId() {
+        String sql =
+                "SELECT u.ad_user_id " +
+                "FROM adempiere.zzsdforganisation orglink " +
+                "JOIN adempiere.zzsdf sdf ON orglink.zzsdf_id = sdf.zzsdf_id " +
+                "JOIN adempiere.ad_user u ON sdf.ad_user_id = u.ad_user_id " +
+                "WHERE orglink.zzsdforganisation_id = ?";
+
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            pstmt = DB.prepareStatement(sql, get_TrxName());
+            pstmt.setInt(1, getZZSdfOrganisation_ID());
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            log.severe("Error getting SDF AD_User_ID: " + e.getMessage());
+        } finally {
+            DB.close(rs, pstmt);
+        }
+        return 0;
+    }
 	
+	
+	private void sendQueryEmailWithPDF() throws Exception {
+
+	    int adUserId = getSdfUserId();
+
+	    if (adUserId <= 0) {
+	        log.warning("No recipient AD_User found");
+	        return;
+	    }
+
+	    MUser toUser = MUser.get(getCtx(), adUserId);
+
+	    if (toUser.getEMail() == null || toUser.getEMail().isEmpty()) {
+	        log.warning("Recipient has no email address");
+	        return;
+	    }
+
+	    // Load template
+	    MMailText mailText =
+	        new MMailText(getCtx(), WSP_ATRQuery_TEMPLATE_UUID, get_TrxName());
+
+	    if (mailText.get_ID() <= 0) {
+	        log.severe("Mail template not found");
+	        return;
+	    }
+
+	    try {
+	        mailText.setPO(this, true);
+	    } catch (Throwable t) {
+	        mailText.setPO(this);
+	    }
+
+	    String reasons = buildQueryReasons();
+	    String html = mailText.getMailText(true)
+	            .replace("@QueryReasons@", reasons);
+
+	    String subject = mailText.getMailHeader();
+	    if (subject == null || subject.trim().isEmpty())
+	        subject = "WSP-ATR Query Notification";
+
+	    File pdf = createPDF(html);
+
+	    // Sender
+	    MUser fromUser =
+	        MUser.get(getCtx(), Env.getAD_User_ID(getCtx()));
+
+	    MClient client = MClient.get(getCtx());
+
+	    boolean sent =
+	        client.sendEMail(fromUser, toUser, subject, html, pdf, true);
+
+	    if (!sent)
+	        log.severe("Failed to send query email");
+	    else
+	        log.info("Query email sent successfully");
+	}
+
+
+
+	
+	private String buildQueryReasons()
+	{
+	    StringBuilder reasons = new StringBuilder();
+
+	    List<MZZWSPATRVeriChecklist> list =
+	        new Query(getCtx(),
+	                  MZZWSPATRVeriChecklist.Table_Name,
+	                  "ZZ_WSP_ATR_Submitted_ID=? AND ZZ_Information_Completed='N'",
+	                  get_TrxName())
+	        .setParameters(get_ID())
+	        .list();
+
+	    for (MZZWSPATRVeriChecklist c : list)
+	        reasons.append(c.getName()).append("<br/>");
+
+	    return reasons.toString();
+	}
+	
+	private File createPDF(String html) throws Exception
+	{
+	    File pdfFile = File.createTempFile("QueryLetter_", ".pdf");
+
+	    Document document = new Document();
+	    PdfWriter.getInstance(document, new FileOutputStream(pdfFile));
+
+	    document.open();
+
+	    HTMLWorker worker = new HTMLWorker(document);
+	    worker.parse(new StringReader(html));
+
+	    document.close();
+
+	    return pdfFile;
+	}
+
+
+	
+	private File createQueryPDF() throws Exception
+	{
+        // 2) Load mail text by UU
+        MMailText mailText = new MMailText(getCtx(), WSP_ATRQuery_TEMPLATE_UUID, get_TrxName());
+
+
+	    mailText.setPO(this);
+
+	    String reasons = buildQueryReasons();
+	    if (reasons.isEmpty())
+	        reasons = "No specific checklist items recorded.";
+
+
+	    String html =
+	        mailText.getMailText(true)
+	                .replace("@QueryReasons@", reasons);
+
+	    return createPDF(html);
+	}
+
+
 
 }

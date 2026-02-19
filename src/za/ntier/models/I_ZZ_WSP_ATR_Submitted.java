@@ -279,6 +279,15 @@ public interface I_ZZ_WSP_ATR_Submitted
 	/** Get Evaluated Date	  */
 	public Timestamp getZZ_EvaluatedDate();
 
+    /** Column name ZZ_Generate_WSP_ATR_Report */
+    public static final String COLUMNNAME_ZZ_Generate_WSP_ATR_Report = "ZZ_Generate_WSP_ATR_Report";
+
+	/** Set Generate WSP ATR Report	  */
+	public void setZZ_Generate_WSP_ATR_Report (String ZZ_Generate_WSP_ATR_Report);
+
+	/** Get Generate WSP ATR Report	  */
+	public String getZZ_Generate_WSP_ATR_Report();
+
     /** Column name ZZ_Import_Submitted_Data */
     public static final String COLUMNNAME_ZZ_Import_Submitted_Data = "ZZ_Import_Submitted_Data";
 
@@ -287,6 +296,15 @@ public interface I_ZZ_WSP_ATR_Submitted
 
 	/** Get Import Submitted Data	  */
 	public String getZZ_Import_Submitted_Data();
+
+    /** Column name ZZ_IsQuery */
+    public static final String COLUMNNAME_ZZ_IsQuery = "ZZ_IsQuery";
+
+	/** Set Is Query	  */
+	public void setZZ_IsQuery (boolean ZZ_IsQuery);
+
+	/** Get Is Query	  */
+	public boolean isZZ_IsQuery();
 
     /** Column name ZZ_QueryComment */
     public static final String COLUMNNAME_ZZ_QueryComment = "ZZ_QueryComment";
