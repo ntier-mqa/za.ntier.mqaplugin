@@ -101,7 +101,7 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
                     marker.markError(wb, sheet, row, meta.columnIndex, msg);
                     errorLog.appendError(
                         wb,
-                        sheet.getSheetName(),
+                        mappingHeader.getZZ_Tab_Name(),
                         meta.headerName,
                         row.getRowNum(),
                         meta.columnIndex,
@@ -129,7 +129,7 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
                 	    marker.markError(wb, sheet, row, meta.columnIndex, msg);
                 	    errorLog.appendError(
                 	        wb,
-                	        sheet.getSheetName(),
+                	        mappingHeader.getZZ_Tab_Name(),
                 	        meta.headerName,
                 	        row.getRowNum(),
                 	        meta.columnIndex,
