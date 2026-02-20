@@ -1,5 +1,7 @@
 package za.co.ntier.wsp_atr.process;
 
+import java.util.IdentityHashMap;
+import java.util.Map;
 
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.*;
@@ -18,13 +20,16 @@ public class ExcelErrorLogSheet {
     private static final int COL_LINK     = 4; // hyperlink to the bad cell
     private static final int COL_MESSAGE  = 5;
 
+    // Cache styles per workbook instance
+    private static final Map<Workbook, CellStyle> HEADER_STYLE_CACHE = new IdentityHashMap<>();
+    private static final Map<Workbook, CellStyle> LINK_STYLE_CACHE   = new IdentityHashMap<>();
+
     public Sheet getOrCreateErrorsSheet(Workbook wb) {
         Sheet s = wb.getSheet(SHEET_NAME);
         if (s == null) {
             s = wb.createSheet(SHEET_NAME);
             createHeaderRow(s, wb);
         } else {
-            // ensure header exists (optional safety)
             if (s.getPhysicalNumberOfRows() == 0) {
                 createHeaderRow(s, wb);
             }
@@ -42,11 +47,7 @@ public class ExcelErrorLogSheet {
         hr.createCell(COL_LINK).setCellValue("Link");
         hr.createCell(COL_MESSAGE).setCellValue("Message");
 
-        // Basic bold style
-        Font f = wb.createFont();
-        f.setBold(true);
-        CellStyle bold = wb.createCellStyle();
-        bold.setFont(f);
+        CellStyle bold = getOrCreateHeaderStyle(wb);
 
         for (int i = 0; i <= COL_MESSAGE; i++) {
             hr.getCell(i).setCellStyle(bold);
@@ -71,39 +72,67 @@ public class ExcelErrorLogSheet {
 
         Sheet errSheet = getOrCreateErrorsSheet(wb);
         int nextRow = errSheet.getLastRowNum() + 1;
-        if (nextRow == 0) nextRow = 1; // if only header existed and lastRowNum=0, next is 1
+        if (nextRow == 0) nextRow = 1;
 
         Row r = errSheet.createRow(nextRow);
 
-        r.createCell(COL_TAB).setCellValue(Util.isEmpty(tabName, true) ? "" : tabName);
+        String safeTab = Util.isEmpty(tabName, true) ? "" : tabName;
+
+        r.createCell(COL_TAB).setCellValue(safeTab);
         r.createCell(COL_HEADER).setCellValue(Util.isEmpty(headerName, true) ? "" : headerName);
 
-        int excelRow1 = sheetRowIndex0 + 1; // 1-based for user display
+        int excelRow1 = sheetRowIndex0 + 1; // 1-based for display
         String excelColLetter = CellReference.convertNumToColString(sheetColIndex0);
 
         r.createCell(COL_ROW).setCellValue(excelRow1);
         r.createCell(COL_COL).setCellValue(excelColLetter);
 
         // Hyperlink to the exact cell (internal link)
-        String addr = "'" + tabName.replace("'", "''") + "'!" + excelColLetter + excelRow1;
+        String addr = "'" + safeTab.replace("'", "''") + "'!" + excelColLetter + excelRow1;
 
         Cell linkCell = r.createCell(COL_LINK);
         linkCell.setCellValue(addr);
 
         CreationHelper ch = wb.getCreationHelper();
         Hyperlink link = ch.createHyperlink(HyperlinkType.DOCUMENT);
-        link.setAddress(addr);
+
+        // IMPORTANT: prefix with # for internal document links (Google Sheets-friendly)
+        link.setAddress("#" + addr);
+
         linkCell.setHyperlink(link);
 
-        // hyperlink style
-        CellStyle hstyle = wb.createCellStyle();
-        Font hf = wb.createFont();
-        hf.setUnderline(Font.U_SINGLE);
-        hf.setColor(IndexedColors.BLUE.getIndex());
-        hstyle.setFont(hf);
-        linkCell.setCellStyle(hstyle);
+        // Apply cached hyperlink style
+        linkCell.setCellStyle(getOrCreateLinkStyle(wb));
 
         r.createCell(COL_MESSAGE).setCellValue(Util.isEmpty(message, true) ? "" : message);
     }
-}
 
+    private CellStyle getOrCreateHeaderStyle(Workbook wb) {
+        CellStyle cached = HEADER_STYLE_CACHE.get(wb);
+        if (cached != null) return cached;
+
+        Font f = wb.createFont();
+        f.setBold(true);
+
+        CellStyle bold = wb.createCellStyle();
+        bold.setFont(f);
+
+        HEADER_STYLE_CACHE.put(wb, bold);
+        return bold;
+    }
+
+    private CellStyle getOrCreateLinkStyle(Workbook wb) {
+        CellStyle cached = LINK_STYLE_CACHE.get(wb);
+        if (cached != null) return cached;
+
+        Font hf = wb.createFont();
+        hf.setUnderline(Font.U_SINGLE);
+        hf.setColor(IndexedColors.BLUE.getIndex());
+
+        CellStyle hstyle = wb.createCellStyle();
+        hstyle.setFont(hf);
+
+        LINK_STYLE_CACHE.put(wb, hstyle);
+        return hstyle;
+    }
+}

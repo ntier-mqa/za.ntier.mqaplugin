@@ -1,6 +1,6 @@
 package za.co.ntier.wsp_atr.process;
 
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 
 import org.apache.poi.ss.usermodel.*;
@@ -8,8 +8,11 @@ import org.apache.poi.xssf.usermodel.*;
 
 public class ExcelErrorMarker {
 
-    // cache: originalStyleIndex -> derivedErrorStyle
-    private final Map<Short, CellStyle> errorStylesByOriginal = new HashMap<>();
+    // cache: original style idx -> derived error style
+    private final Map<Short, CellStyle> errorStylesByOriginal = new IdentityHashMap<>();
+
+    // cache: sheet -> drawing patriarch (IMPORTANT!)
+    private final Map<XSSFSheet, Drawing<?>> drawingCache = new IdentityHashMap<>();
 
     public void markError(Workbook wb, Sheet sheet, Row row, int colIndex, String message) {
         if (row == null) return;
@@ -19,13 +22,13 @@ public class ExcelErrorMarker {
 
         short origStyleIdx = cell.getCellStyle() != null ? cell.getCellStyle().getIndex() : 0;
 
-        CellStyle style = getOrCreateErrorStyle(wb, origStyleIdx);
-        cell.setCellStyle(style);
+        cell.setCellStyle(getOrCreateErrorStyle(wb, origStyleIdx));
 
         addOrReplaceComment(wb, sheet, cell,
-                ExcelValidationCleaner.COMMENT_PREFIX
-                        + "origStyle=" + origStyleIdx + "\n"
-                        + "Invalid:\n" + message);
+            ExcelValidationCleaner.COMMENT_PREFIX
+                + "origStyle=" + origStyleIdx + "\n"
+                + "Invalid:\n" + message
+        );
     }
 
     private CellStyle getOrCreateErrorStyle(Workbook wb, short originalStyleIdx) {
@@ -33,16 +36,13 @@ public class ExcelErrorMarker {
         if (cached != null) return cached;
 
         CellStyle base = wb.getCellStyleAt(originalStyleIdx);
-        CellStyle cs = wb.createCellStyle();
-        if (base != null) {
-            cs.cloneStyleFrom(base);
-        }
 
-        // Fill light red
+        CellStyle cs = wb.createCellStyle();
+        if (base != null) cs.cloneStyleFrom(base);
+
         cs.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         cs.setFillForegroundColor(IndexedColors.ROSE.getIndex());
 
-        // Red font (clone base font if possible)
         Font baseFont = (base != null) ? wb.getFontAt(base.getFontIndexAsInt()) : null;
         Font f = wb.createFont();
         if (baseFont != null) {
@@ -55,7 +55,6 @@ public class ExcelErrorMarker {
         f.setColor(IndexedColors.RED.getIndex());
         cs.setFont(f);
 
-        // Border
         cs.setBorderBottom(BorderStyle.THIN);
         cs.setBorderTop(BorderStyle.THIN);
         cs.setBorderLeft(BorderStyle.THIN);
@@ -82,7 +81,7 @@ public class ExcelErrorMarker {
             return;
         }
 
-        Drawing<?> drawing = xsheet.createDrawingPatriarch();
+        Drawing<?> drawing = drawingCache.computeIfAbsent(xsheet, s -> s.createDrawingPatriarch());
 
         ClientAnchor anchor = factory.createClientAnchor();
         anchor.setCol1(cell.getColumnIndex());
