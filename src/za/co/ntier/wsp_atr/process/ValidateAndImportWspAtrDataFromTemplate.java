@@ -71,7 +71,9 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 			if (headers == null || headers.isEmpty())
 				throw new AdempiereException("No WSP/ATR mapping header records defined");
 
-
+			// before looping headers / validating
+			ExcelValidationCleaner cleaner = new ExcelValidationCleaner();
+			cleaner.resetWorkbookBeforeValidation(wb);
 
 			for (X_ZZ_WSP_ATR_Lookup_Mapping mapHeader : headers) {
 				if (mapHeader.getAD_Table_ID() <= 0) continue;

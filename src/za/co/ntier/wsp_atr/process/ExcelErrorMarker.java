@@ -1,25 +1,15 @@
 package za.co.ntier.wsp_atr.process;
 
-import org.apache.poi.ss.usermodel.BorderStyle;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.ClientAnchor;
-import org.apache.poi.ss.usermodel.Comment;
-import org.apache.poi.ss.usermodel.CreationHelper;
-import org.apache.poi.ss.usermodel.Drawing;
-import org.apache.poi.ss.usermodel.FillPatternType;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.IndexedColors;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.*;
 
 public class ExcelErrorMarker {
 
-    private CellStyle errorStyle; // cached per workbook
+    // cache: originalStyleIndex -> derivedErrorStyle
+    private final Map<Short, CellStyle> errorStylesByOriginal = new HashMap<>();
 
     public void markError(Workbook wb, Sheet sheet, Row row, int colIndex, String message) {
         if (row == null) return;
@@ -27,41 +17,55 @@ public class ExcelErrorMarker {
         Cell cell = row.getCell(colIndex);
         if (cell == null) cell = row.createCell(colIndex);
 
-        // style
-        CellStyle style = getOrCreateErrorStyle(wb);
+        short origStyleIdx = cell.getCellStyle() != null ? cell.getCellStyle().getIndex() : 0;
+
+        CellStyle style = getOrCreateErrorStyle(wb, origStyleIdx);
         cell.setCellStyle(style);
 
-        // comment (Excel popup)
-        addOrReplaceComment(wb, sheet, cell, "Invalid:\n" + message);
+        addOrReplaceComment(wb, sheet, cell,
+                ExcelValidationCleaner.COMMENT_PREFIX
+                        + "origStyle=" + origStyleIdx + "\n"
+                        + "Invalid:\n" + message);
     }
 
-    private CellStyle getOrCreateErrorStyle(Workbook wb) {
-        if (errorStyle != null) return errorStyle;
+    private CellStyle getOrCreateErrorStyle(Workbook wb, short originalStyleIdx) {
+        CellStyle cached = errorStylesByOriginal.get(originalStyleIdx);
+        if (cached != null) return cached;
 
+        CellStyle base = wb.getCellStyleAt(originalStyleIdx);
         CellStyle cs = wb.createCellStyle();
-        cs.cloneStyleFrom(wb.createCellStyle());
+        if (base != null) {
+            cs.cloneStyleFrom(base);
+        }
 
         // Fill light red
         cs.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         cs.setFillForegroundColor(IndexedColors.ROSE.getIndex());
 
-        // Optional: red font
+        // Red font (clone base font if possible)
+        Font baseFont = (base != null) ? wb.getFontAt(base.getFontIndexAsInt()) : null;
         Font f = wb.createFont();
+        if (baseFont != null) {
+            f.setBold(baseFont.getBold());
+            f.setItalic(baseFont.getItalic());
+            f.setFontHeight(baseFont.getFontHeight());
+            f.setFontName(baseFont.getFontName());
+            f.setUnderline(baseFont.getUnderline());
+        }
         f.setColor(IndexedColors.RED.getIndex());
         cs.setFont(f);
 
-        // Optional: border
+        // Border
         cs.setBorderBottom(BorderStyle.THIN);
         cs.setBorderTop(BorderStyle.THIN);
         cs.setBorderLeft(BorderStyle.THIN);
         cs.setBorderRight(BorderStyle.THIN);
 
-        errorStyle = cs;
-        return errorStyle;
+        errorStylesByOriginal.put(originalStyleIdx, cs);
+        return cs;
     }
 
     private void addOrReplaceComment(Workbook wb, Sheet sheet, Cell cell, String text) {
-        // .xlsm is XSSF-based; keep it safe
         if (!(wb instanceof XSSFWorkbook) || !(sheet instanceof XSSFSheet) || !(cell instanceof XSSFCell)) {
             return;
         }
@@ -71,7 +75,6 @@ public class ExcelErrorMarker {
 
         CreationHelper factory = wb.getCreationHelper();
 
-        // If comment already exists, just update it (no orphaning)
         Comment existing = xcell.getCellComment();
         if (existing != null) {
             existing.setString(factory.createRichTextString(text));
@@ -79,7 +82,6 @@ public class ExcelErrorMarker {
             return;
         }
 
-        // Create a new comment
         Drawing<?> drawing = xsheet.createDrawingPatriarch();
 
         ClientAnchor anchor = factory.createClientAnchor();
@@ -95,4 +97,3 @@ public class ExcelErrorMarker {
         xcell.setCellComment(comment);
     }
 }
-
