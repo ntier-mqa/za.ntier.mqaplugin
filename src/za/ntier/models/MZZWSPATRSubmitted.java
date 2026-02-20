@@ -240,9 +240,8 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	        mailText.setPO(this);
 	    }
 
-	    String reasons = getQueryReasons();
-	    String html = mailText.getMailText(true)
-	            .replace("@QueryReasons@", reasons);
+	    String html = mailText.getMailText(true);
+	            
 	   // html = html.replace("@Logo@", getLogoBase64());
 
 	    String subject = mailText.getMailHeader();
@@ -270,7 +269,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 
 	
-	private String getQueryReasons()
+	public String getQueryReasons()
 	{
 	    StringBuilder reasons = new StringBuilder();
 
@@ -301,6 +300,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	    worker.parse(new StringReader(html));
 
 	    document.close();
+	    worker.close();
 
 	    return pdfFile;
 	}
