@@ -95,10 +95,7 @@ public class ExcelErrorLogSheet {
 
         CreationHelper ch = wb.getCreationHelper();
         Hyperlink link = ch.createHyperlink(HyperlinkType.DOCUMENT);
-
-        // IMPORTANT: prefix with # for internal document links (Google Sheets-friendly)
-        link.setAddress("#" + addr);
-
+        link.setAddress(addr);
         linkCell.setHyperlink(link);
 
         // Apply cached hyperlink style
