@@ -109,8 +109,36 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 		org.zkoss.zk.ui.util.Clients.evalJavaScript(
 			    "var s=document.createElement('style');" +
 			    "s.innerHTML=`" +
-			    ".wsp-edit-purple{background:#2f2d8f!important;border-color:#2f2d8f!important;color:#fff!important;}" +
-			    ".wsp-edit-purple:hover{background:#262372!important;border-color:#262372!important;color:#fff!important;}" +
+
+			    /* Normal */
+			    ".wsp-edit-purple{" +
+			    "background:#2f2d8f!important;" +
+			    "border-color:#2f2d8f!important;" +
+			    "color:#fff!important;" +
+			    "transition:all .15s ease-in-out;" +
+			    "}" +
+
+			    /* Hover */
+			    ".wsp-edit-purple:hover{" +
+			    "background:#3d3ab0!important;" +
+			    "border-color:#3d3ab0!important;" +
+			    "color:#fff!important;" +
+			    "}" +
+
+			    /* Pressed (mouse down) */
+			    ".wsp-edit-purple:active{" +
+			    "background:#ffffff!important;" +
+			    "border-color:#2f2d8f!important;" +
+			    "color:#2f2d8f!important;" +
+			    "box-shadow:inset 0 2px 6px rgba(0,0,0,.25)!important;" +
+			    "}" +
+
+			    /* Focus */
+			    ".wsp-edit-purple:focus{" +
+			    "outline:none!important;" +
+			    "box-shadow:0 0 0 2px rgba(47,45,143,.4)!important;" +
+			    "}" +
+
 			    "`;" +
 			    "document.head.appendChild(s);"
 			);
@@ -118,6 +146,8 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	}
 
 	private void buildNorth() {
+		btnUpload.setSclass("btn btn-sm btn-primary wsp-edit-purple");
+		btnRefresh.setSclass("btn btn-sm btn-primary wsp-edit-purple");
 	    north.setSplittable(false);
 	    north.setCollapsible(false);
 	    north.setSize("110px"); // a bit taller
@@ -212,7 +242,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	private void promptForOrganisationThenUpload() {
 
 	    List<SdfOrgRow> orgs = getSdfOrganisationsForUser();
-	    if (orgs.isEmpty())
+	    if (orgs == null || orgs.isEmpty())
 	        throw new AdempiereException("No organisations are linked to your user.");
 
 	    Window win = new Window();
@@ -632,12 +662,14 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 	    List<List<Object>> rows =
 	            org.compiere.util.DB.getSQLArrayObjectsEx(null, sql, adUserId);
-
-	    return rows.stream()
-	    	    .map(r -> new SdfOrgRow(
-	    	            ((Number) r.get(0)).intValue(),
-	    	            (String) r.get(1)))
-	    	    .collect(Collectors.toList());
+	    if (rows != null) {
+		    return rows.stream()
+		    	    .map(r -> new SdfOrgRow(
+		    	            ((Number) r.get(0)).intValue(),
+		    	            (String) r.get(1)))
+		    	    .collect(Collectors.toList());
+	    } 
+	    return null;
 
 	}
 
