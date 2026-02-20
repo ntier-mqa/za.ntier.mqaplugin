@@ -18,7 +18,10 @@ import org.compiere.util.DB;
 import org.compiere.util.EMail;
 import org.compiere.util.Env;
 import org.compiere.model.MUser;
+import org.compiere.model.MBPartner;
 import org.compiere.model.MClient;
+import org.compiere.model.MImage;
+import java.util.Base64;
 
 
 
@@ -137,6 +140,73 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
         }
         return 0;
     }
+    
+    public String getSdfUserName() {
+
+        String sql =
+            "SELECT u.name " +
+            "FROM adempiere.zzsdforganisation orglink " +
+            "JOIN adempiere.zzsdf sdf ON orglink.zzsdf_id = sdf.zzsdf_id " +
+            "JOIN adempiere.ad_user u ON sdf.ad_user_id = u.ad_user_id " +
+            "WHERE orglink.zzsdforganisation_id = ?";
+
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            pstmt = DB.prepareStatement(sql, get_TrxName());
+            pstmt.setInt(1, getZZSdfOrganisation_ID());
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString(1);
+            }
+        } catch (Exception e) {
+            log.severe("Error getting SDF Name: " + e.getMessage());
+        } finally {
+            DB.close(rs, pstmt);
+        }
+        return null;
+    }
+    
+    public String getTradingAs() {
+
+        MBPartner bp = getBusinessPartner(); // reuse helper
+        if (bp == null)
+            return null;
+
+        return bp.getName2();
+    }
+
+    private MZZSdfOrganisation getSdfOrganisation() {
+
+        int orgId = getZZSdfOrganisation_ID();
+        if (orgId <= 0)
+            return null;
+
+        return new MZZSdfOrganisation(getCtx(), orgId, get_TrxName());
+    }
+    
+    private MBPartner getBusinessPartner() {
+
+        MZZSdfOrganisation sdfOrg = getSdfOrganisation();
+        if (sdfOrg == null)
+            return null;
+
+        int bpId = sdfOrg.getC_BPartner_ID();
+        if (bpId <= 0)
+            return null;
+
+        return new MBPartner(getCtx(), bpId, get_TrxName());
+    }
+    
+    public String getOrganisationName() {
+        MBPartner bp = getBusinessPartner();
+        return bp != null ? bp.getName() : null;
+    }
+
+    public String getSdlNumber() {
+        MBPartner bp = getBusinessPartner();
+        return bp != null ? bp.getValue() : null;
+    }
 	
 	
 	private void sendQueryEmailWithPDF() throws Exception {
@@ -170,14 +240,16 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	        mailText.setPO(this);
 	    }
 
-	    String reasons = buildQueryReasons();
+	    String reasons = getQueryReasons();
 	    String html = mailText.getMailText(true)
 	            .replace("@QueryReasons@", reasons);
+	   // html = html.replace("@Logo@", getLogoBase64());
 
 	    String subject = mailText.getMailHeader();
 	    if (subject == null || subject.trim().isEmpty())
 	        subject = "WSP-ATR Query Notification";
 
+	    
 	    File pdf = createPDF(html);
 
 	    // Sender
@@ -198,7 +270,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 
 	
-	private String buildQueryReasons()
+	private String getQueryReasons()
 	{
 	    StringBuilder reasons = new StringBuilder();
 
@@ -235,26 +307,33 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 
 	
-	private File createQueryPDF() throws Exception
+	private String getLogoBase64()
 	{
-        // 2) Load mail text by UU
-        MMailText mailText = new MMailText(getCtx(), WSP_ATRQuery_TEMPLATE_UUID, get_TrxName());
+	    String IMAGE_UUID = "bfdc53c3-bb63-4047-874f-ff8802d629c2";
 
+	    MImage image = new Query(getCtx(),
+	            MImage.Table_Name,
+	            "AD_Image_UU=?",
+	            get_TrxName())
+	            .setParameters(IMAGE_UUID)
+	            .first();
 
-	    mailText.setPO(this);
+	    if (image == null)
+	    {
+	        log.warning("Logo image not found for UUID=" + IMAGE_UUID);
+	        return "";
+	    }
 
-	    String reasons = buildQueryReasons();
-	    if (reasons.isEmpty())
-	        reasons = "No specific checklist items recorded.";
+	    byte[] data = image.getData();
+	    if (data == null || data.length == 0)
+	        return "";
 
+	    String base64 = Base64.getEncoder().encodeToString(data);
 
-	    String html =
-	        mailText.getMailText(true)
-	                .replace("@QueryReasons@", reasons);
-
-	    return createPDF(html);
+	    return "data:image/jpeg;base64," + base64;
 	}
 
+	
 
 
 }
