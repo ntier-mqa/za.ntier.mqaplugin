@@ -332,7 +332,15 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 	    return "data:image/jpeg;base64," + base64;
 	}
+	
+	
+	public String getSentDateTime()
+	{
+	    java.text.SimpleDateFormat sdf =
+	        new java.text.SimpleDateFormat("dd MMM yyyy HH:mm");
 
+	    return sdf.format(new java.util.Date());
+	}
 	
 
 
