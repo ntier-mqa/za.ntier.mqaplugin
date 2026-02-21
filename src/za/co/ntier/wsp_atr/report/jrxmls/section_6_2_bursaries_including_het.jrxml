@@ -1,22 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
-              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
-              http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
-              name="section_6_2_bursaries_including_het"
-              pageWidth="842" pageHeight="595" orientation="Landscape"
-              columnWidth="802" leftMargin="20" rightMargin="20" topMargin="15" bottomMargin="15"
-              uuid="b81a0d8f-6c8a-49de-94f8-3cbb89c31c22">
-
-    <style name="Hdr" fontName="SansSerif" fontSize="9" isBold="true" hTextAlign="Center" vTextAlign="Middle"/>
-    <style name="Cell" fontName="SansSerif" fontSize="9" vTextAlign="Middle"/>
-    <style name="CellNum" fontName="SansSerif" fontSize="9" hTextAlign="Center" vTextAlign="Middle"/>
-
-    <parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
-
-    <queryString language="SQL">
-        <![CDATA[
-SELECT
+<!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 6.20.2  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="section_6_2_bursaries_including_het" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="15" bottomMargin="15" uuid="b81a0d8f-6c8a-49de-94f8-3cbb89c31c22">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="mqa dev"/>
+	<style name="Hdr" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="9" isBold="true"/>
+	<style name="Cell" vTextAlign="Middle" fontName="SansSerif" fontSize="9"/>
+	<style name="CellNum" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="9"/>
+	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
+	<queryString language="SQL">
+		<![CDATA[SELECT
     t.Row_No,
     qd.Name AS programme_name,
     st.Name AS non_emp_status,
@@ -29,111 +20,118 @@ LEFT JOIN ZZ_WSP_Non_Employee_Status_Ref st
        ON st.ZZ_WSP_Non_Employee_Status_Ref_ID = t.ZZ_Non_Emp_Status_Done_ID
 WHERE t.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
   AND COALESCE(t.ZZ_Report_Section,'') = '6.2'
-ORDER BY t.Row_No
-        ]]>
-    </queryString>
-
-    <field name="Row_No" class="java.lang.Integer"/>
-    <field name="programme_name" class="java.lang.String"/>
-    <field name="non_emp_status" class="java.lang.String"/>
-    <field name="total_done_2024" class="java.math.BigDecimal"/>
-    <field name="total_planned_2025" class="java.math.BigDecimal"/>
-
-    <variable name="Sum_Done" class="java.math.BigDecimal" calculation="Sum">
-        <variableExpression><![CDATA[$F{total_done_2024}]]></variableExpression>
-    </variable>
-    <variable name="Sum_Planned" class="java.math.BigDecimal" calculation="Sum">
-        <variableExpression><![CDATA[$F{total_planned_2025}]]></variableExpression>
-    </variable>
-
-    <title>
-        <band height="26">
-            <staticText>
-                <reportElement x="0" y="0" width="802" height="14" uuid="52d1f0a2-6e7b-4f33-9d08-ef6b4f64b2b1"/>
-                <textElement verticalAlignment="Middle">
-                    <font size="10" isBold="true"/>
-                </textElement>
-                <text><![CDATA[6.2 Bursaries (Including HET)]]></text>
-            </staticText>
-        </band>
-    </title>
-
-    <columnHeader>
-        <band height="18">
-            <!-- widths sum = 802 -->
-            <!-- Programme 260 | Status 260 | Done 141 | Planned 141 -->
-            <staticText>
-                <reportElement x="0" y="0" width="260" height="18" style="Hdr" uuid="0c5bcae4-0d68-4db2-8bfb-e1c8f3b2c111"/>
-                <box><pen lineWidth="0.5"/></box>
-                <text><![CDATA[Name of Programme]]></text>
-            </staticText>
-            <staticText>
-                <reportElement x="260" y="0" width="260" height="18" style="Hdr" uuid="b4a2df6c-1b8c-4ee6-9b7c-2c2c3c3c3c01"/>
-                <box><pen lineWidth="0.5"/></box>
-                <text><![CDATA[Non-Employee Status]]></text>
-            </staticText>
-            <staticText>
-                <reportElement x="520" y="0" width="141" height="18" style="Hdr" uuid="c8a7a4d2-6cba-4b08-91d9-9d9f9e9e9e01"/>
-                <box><pen lineWidth="0.5"/></box>
-                <text><![CDATA[Total Trained 2024]]></text>
-            </staticText>
-            <staticText>
-                <reportElement x="661" y="0" width="141" height="18" style="Hdr" uuid="a7b6c5d4-e3f2-4a11-8b22-334455667788"/>
-                <box><pen lineWidth="0.5"/></box>
-                <text><![CDATA[Total to be Trained/Planned 2025]]></text>
-            </staticText>
-        </band>
-    </columnHeader>
-
-    <detail>
-        <band height="16">
-            <textField isBlankWhenNull="true">
-                <reportElement x="0" y="0" width="260" height="16" style="Cell" uuid="d1111111-2222-3333-4444-555555555555"/>
-                <box><pen lineWidth="0.5"/></box>
-                <textFieldExpression><![CDATA[$F{programme_name}]]></textFieldExpression>
-            </textField>
-
-            <textField isBlankWhenNull="true">
-                <reportElement x="260" y="0" width="260" height="16" style="Cell" uuid="e1111111-2222-3333-4444-666666666666"/>
-                <box><pen lineWidth="0.5"/></box>
-                <textFieldExpression><![CDATA[$F{non_emp_status}]]></textFieldExpression>
-            </textField>
-
-            <textField>
-                <reportElement x="520" y="0" width="141" height="16" style="CellNum" uuid="f1111111-2222-3333-4444-777777777777"/>
-                <box><pen lineWidth="0.5"/></box>
-                <textFieldExpression><![CDATA[$F{total_done_2024}]]></textFieldExpression>
-            </textField>
-
-            <textField>
-                <reportElement x="661" y="0" width="141" height="16" style="CellNum" uuid="01111111-2222-3333-4444-888888888888"/>
-                <box><pen lineWidth="0.5"/></box>
-                <textFieldExpression><![CDATA[$F{total_planned_2025}]]></textFieldExpression>
-            </textField>
-        </band>
-    </detail>
-
-    <summary>
-        <band height="16">
-            <staticText>
-                <reportElement x="0" y="0" width="520" height="16" style="Hdr" uuid="11111111-aaaa-bbbb-cccc-999999999999"/>
-                <box><pen lineWidth="0.5"/></box>
-                <textElement textAlignment="Left" verticalAlignment="Middle"/>
-                <text><![CDATA[Grand Total]]></text>
-            </staticText>
-
-            <textField>
-                <reportElement x="520" y="0" width="141" height="16" style="CellNum" uuid="22222222-aaaa-bbbb-cccc-999999999999"/>
-                <box><pen lineWidth="0.5"/></box>
-                <textFieldExpression><![CDATA[$V{Sum_Done}]]></textFieldExpression>
-            </textField>
-
-            <textField>
-                <reportElement x="661" y="0" width="141" height="16" style="CellNum" uuid="33333333-aaaa-bbbb-cccc-999999999999"/>
-                <box><pen lineWidth="0.5"/></box>
-                <textFieldExpression><![CDATA[$V{Sum_Planned}]]></textFieldExpression>
-            </textField>
-        </band>
-    </summary>
-
+ORDER BY t.Row_No]]>
+	</queryString>
+	<field name="Row_No" class="java.lang.Integer"/>
+	<field name="programme_name" class="java.lang.String"/>
+	<field name="non_emp_status" class="java.lang.String"/>
+	<field name="total_done_2024" class="java.math.BigDecimal"/>
+	<field name="total_planned_2025" class="java.math.BigDecimal"/>
+	<variable name="Sum_Done" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{total_done_2024}]]></variableExpression>
+	</variable>
+	<variable name="Sum_Planned" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{total_planned_2025}]]></variableExpression>
+	</variable>
+	<title>
+		<band height="26">
+			<staticText>
+				<reportElement x="0" y="0" width="802" height="14" uuid="52d1f0a2-6e7b-4f33-9d08-ef6b4f64b2b1"/>
+				<textElement verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[6.2 Bursaries (Including HET)]]></text>
+			</staticText>
+		</band>
+	</title>
+	<columnHeader>
+		<band height="18">
+			<staticText>
+				<reportElement style="Hdr" x="0" y="0" width="260" height="18" uuid="0c5bcae4-0d68-4db2-8bfb-e1c8f3b2c111"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<text><![CDATA[Name of Programme]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="260" y="0" width="260" height="18" uuid="b4a2df6c-1b8c-4ee6-9b7c-2c2c3c3c3c01"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<text><![CDATA[Non-Employee Status]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="520" y="0" width="141" height="18" uuid="c8a7a4d2-6cba-4b08-91d9-9d9f9e9e9e01"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<text><![CDATA[Total Trained 2024]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Hdr" x="661" y="0" width="141" height="18" uuid="a7b6c5d4-e3f2-4a11-8b22-334455667788"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<text><![CDATA[Total to be Trained/Planned 2025]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="16">
+			<textField isBlankWhenNull="true">
+				<reportElement style="Cell" x="0" y="0" width="260" height="16" uuid="d1111111-2222-3333-4444-555555555555"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textFieldExpression><![CDATA[$F{programme_name}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement style="Cell" x="260" y="0" width="260" height="16" uuid="e1111111-2222-3333-4444-666666666666"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textFieldExpression><![CDATA[$F{non_emp_status}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNum" x="520" y="0" width="141" height="16" uuid="f1111111-2222-3333-4444-777777777777"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textFieldExpression><![CDATA[$F{total_done_2024}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNum" x="661" y="0" width="141" height="16" uuid="01111111-2222-3333-4444-888888888888"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textFieldExpression><![CDATA[$F{total_planned_2025}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<summary>
+		<band height="16">
+			<staticText>
+				<reportElement style="Hdr" x="0" y="0" width="520" height="16" uuid="11111111-aaaa-bbbb-cccc-999999999999"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[Grand Total]]></text>
+			</staticText>
+			<textField>
+				<reportElement style="CellNum" x="520" y="0" width="141" height="16" uuid="22222222-aaaa-bbbb-cccc-999999999999"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textFieldExpression><![CDATA[$V{Sum_Done}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNum" x="661" y="0" width="141" height="16" uuid="33333333-aaaa-bbbb-cccc-999999999999"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textFieldExpression><![CDATA[$V{Sum_Planned}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
 </jasperReport>

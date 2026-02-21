@@ -71,7 +71,9 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 			if (headers == null || headers.isEmpty())
 				throw new AdempiereException("No WSP/ATR mapping header records defined");
 
-
+			// before looping headers / validating
+			ExcelValidationCleaner cleaner = new ExcelValidationCleaner();
+			cleaner.resetWorkbookBeforeValidation(wb);
 
 			for (X_ZZ_WSP_ATR_Lookup_Mapping mapHeader : headers) {
 				if (mapHeader.getAD_Table_ID() <= 0) continue;
@@ -130,17 +132,35 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 	// implement: loadWorkbook(submitted) same as you already have
 	// implement: attachErrorWorkbook(submitted, wb, filename) -> MAttachment.addEntry(...)
 
+		
 	private void attachErrorWorkbook(X_ZZ_WSP_ATR_Submitted submitted, Workbook wb, String fileName) throws Exception {
-		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		wb.write(bos);
-		bos.flush();
-		byte[] data = bos.toByteArray();
+	    byte[] data;
+	    try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+	        wb.write(bos);
+	        bos.flush();
+	        data = bos.toByteArray();
+	    }
 
-		MAttachment att = MAttachment.get(Env.getCtx(), X_ZZ_WSP_ATR_Submitted.Table_ID, submitted.get_ID());
-		if (att == null) att = new MAttachment(Env.getCtx(), X_ZZ_WSP_ATR_Submitted.Table_ID, submitted.get_ID(), null, get_TrxName());
+	    String trxName = Trx.createTrxName("WSPATR_ERRFILE");
+	    Trx trx = Trx.get(trxName, true);
+	    try {
+	        MAttachment att = MAttachment.get(Env.getCtx(), X_ZZ_WSP_ATR_Submitted.Table_ID, submitted.get_ID());
+	        if (att == null) {
+	            att = new MAttachment(Env.getCtx(), X_ZZ_WSP_ATR_Submitted.Table_ID, submitted.get_ID(), null, trxName);
+	        } else {
+	            att.set_TrxName(trxName);
+	        }
 
-		att.addEntry(fileName, data);
-		att.saveEx();
+	        att.addEntry(fileName, data);
+	        att.saveEx(trxName);
+
+	        trx.commit(true);
+	    } catch (Exception e) {
+	        trx.rollback();
+	        throw e;
+	    } finally {
+	        trx.close();
+	    }
 	}
 
 	private Workbook loadWorkbook(X_ZZ_WSP_ATR_Submitted submitted) throws Exception {
