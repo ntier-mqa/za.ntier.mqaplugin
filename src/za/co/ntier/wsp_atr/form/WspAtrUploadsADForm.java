@@ -23,6 +23,7 @@ import org.compiere.model.MAttachment;
 import org.compiere.model.MPInstance;
 import org.compiere.model.MPInstancePara;
 import org.compiere.model.MProcess;
+import org.compiere.model.MTable;
 import org.compiere.process.ProcessInfo;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
@@ -282,29 +283,43 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
         ProcessInfo pi = new ProcessInfo(proc.getName(), proc.getAD_Process_ID());
         pi.setAD_User_ID(Env.getAD_User_ID(ctx));
         pi.setAD_Client_ID(Env.getAD_Client_ID(ctx));
+        pi.setTable_ID(MTable.getTable_ID(X_ZZ_WSP_ATR_Report.Table_Name));
         pi.setRecord_ID(recordIdForInstance);
         pi.setAD_Process_UU(proc.getAD_Process_UU());
+        
 
         MPInstance instance = new MPInstance(ctx, proc.getAD_Process_ID(), 0, recordIdForInstance, null);
         instance.setIsRunAsJob(true);
         instance.setNotificationType(MPInstance.NOTIFICATIONTYPE_EMailPlusNotice);
         instance.saveEx();
 
+        /*
         // Save parameter (int)
         MPInstancePara para = new MPInstancePara(instance, 10);
         para.setParameterName(paramName);
         para.setP_Number(paramValue);
         para.saveEx();
+        */
 
         pi.setAD_PInstance_ID(instance.getAD_PInstance_ID());
 
-        Callback<Integer> cb = id -> { /* params already saved */ };
+       // Callback<Integer> cb = id -> { /* params already saved */ };
+        // This callback will be called in Background job
+        Callback<Integer> createInstanceParaCallback = id -> {
+			if (id > 0) {
+				MPInstance instanceLater = new MPInstance(Env.getCtx(),id,null);
+				MPInstancePara para = new MPInstancePara(instanceLater, 10);
+		        para.setParameterName(paramName);
+		        para.setP_Number(paramValue);
+		        para.saveEx();
+			}
+		};
 
         BackgroundJob.create(pi)
             .withContext(ctx)
             .withNotificationType(instance.getNotificationType())
             .withInitialDelay(250)
-            .run(cb);
+            .run(createInstanceParaCallback);
     }
 
     // ---------------- UPLOADS ----------------
