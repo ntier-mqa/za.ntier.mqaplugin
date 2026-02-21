@@ -287,7 +287,7 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
 
         MPInstance instance = new MPInstance(ctx, proc.getAD_Process_ID(), 0, recordIdForInstance, null);
         instance.setIsRunAsJob(true);
-        instance.setNotificationType(MPInstance.NOTIFICATIONTYPE_Notice);
+        instance.setNotificationType(MPInstance.NOTIFICATIONTYPE_EMailPlusNotice);
         instance.saveEx();
 
         // Save parameter (int)
