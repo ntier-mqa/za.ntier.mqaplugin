@@ -69,6 +69,8 @@ public class ExcelErrorLogSheet {
                             int sheetRowIndex0,
                             int sheetColIndex0,
                             String message) {
+    	
+    	
 
         Sheet errSheet = getOrCreateErrorsSheet(wb);
         int nextRow = errSheet.getLastRowNum() + 1;
@@ -87,16 +89,27 @@ public class ExcelErrorLogSheet {
         r.createCell(COL_ROW).setCellValue(excelRow1);
         r.createCell(COL_COL).setCellValue(excelColLetter);
 
-        // Hyperlink to the exact cell (internal link)
-        String addr = "'" + safeTab.replace("'", "''") + "'!" + excelColLetter + excelRow1;
+       
+        
+        
 
         Cell linkCell = r.createCell(COL_LINK);
-        linkCell.setCellValue(addr);
-
+        Sheet target = wb.getSheet(safeTab);
         CreationHelper ch = wb.getCreationHelper();
-        Hyperlink link = ch.createHyperlink(HyperlinkType.DOCUMENT);
-        link.setAddress(addr);
-        linkCell.setHyperlink(link);
+        if (target == null) {
+            // write text only, no hyperlink
+            linkCell.setCellValue(excelColLetter + excelRow1);
+        } else {
+            String realName = target.getSheetName();
+            String addr = "'" + realName.replace("'", "''") + "'!" + excelColLetter + excelRow1;
+            linkCell.setCellValue(addr);
+
+            Hyperlink link = ch.createHyperlink(HyperlinkType.DOCUMENT);
+            link.setAddress(addr);
+            linkCell.setHyperlink(link);
+            linkCell.setCellStyle(getOrCreateLinkStyle(wb));
+        }
+
 
         // Apply cached hyperlink style
         linkCell.setCellStyle(getOrCreateLinkStyle(wb));

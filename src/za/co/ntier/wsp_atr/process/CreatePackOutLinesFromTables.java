@@ -25,7 +25,7 @@ import org.compiere.util.Util;
 public class CreatePackOutLinesFromTables extends SvrProcess {
 
     // hard-linked header as per request
-    private static final int PACKOUT_HEADER_ID = 1000077;
+    private static final int PACKOUT_HEADER_ID = 1000085;
 
     // Parameter name in AD_Process_Para
     private static final String PARAM_TABLE_LIST = "TableList";
@@ -111,8 +111,8 @@ public class CreatePackOutLinesFromTables extends SvrProcess {
 
             // Recommended defaults (match typical packout usage)
             d.setDBType(X_AD_Package_Exp_Detail.DBTYPE_AllDatabaseTypes);   // "ALL"
-            d.setType(X_AD_Package_Exp_Detail.TYPE_DataSingle);             // "DS"
-            d.setSQLStatement(sql);
+            d.setType(X_AD_Package_Exp_Detail.TYPE_Table);             // "DS"
+          //  d.setSQLStatement(sql);
 
             // Optional but useful
             d.setAD_Table_ID(adTableId);
