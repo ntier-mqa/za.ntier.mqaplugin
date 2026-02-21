@@ -307,7 +307,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 
 	
-	private String getLogoBase64()
+	public String getLogo()
 	{
 	    String IMAGE_UUID = "bfdc53c3-bb63-4047-874f-ff8802d629c2";
 
@@ -332,7 +332,15 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 	    return "data:image/jpeg;base64," + base64;
 	}
+	
+	
+	public String getSentDateTime()
+	{
+	    java.text.SimpleDateFormat sdf =
+	        new java.text.SimpleDateFormat("dd MMM yyyy HH:mm");
 
+	    return sdf.format(new java.util.Date());
+	}
 	
 
 
