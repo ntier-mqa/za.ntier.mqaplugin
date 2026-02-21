@@ -149,11 +149,18 @@ public class X_ZZ_WSP_ATR_Uploads extends PO implements I_ZZ_WSP_ATR_Uploads, I_
 		return ii.intValue();
 	}
 
+	/** Upload Attendance Register  = A */
+	public static final String ZZ_WSP_ATR_UPLOAD_TYPE_UploadAttendanceRegister = "A";
+	/** Upload WSP-ATR Report = R */
+	public static final String ZZ_WSP_ATR_UPLOAD_TYPE_UploadWSP_ATRReport = "R";
+	/** Upload Signed Minutes = S */
+	public static final String ZZ_WSP_ATR_UPLOAD_TYPE_UploadSignedMinutes = "S";
 	/** Set Upload Type.
 		@param ZZ_WSP_ATR_Upload_Type Upload Type
 	*/
 	public void setZZ_WSP_ATR_Upload_Type (String ZZ_WSP_ATR_Upload_Type)
 	{
+
 		set_Value (COLUMNNAME_ZZ_WSP_ATR_Upload_Type, ZZ_WSP_ATR_Upload_Type);
 	}
 
