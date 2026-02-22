@@ -371,7 +371,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 	    if (ver != null)
 	    {
-	        ver.set_ValueOfColumn("ZZ_TotalNo", total);
+	        ver.set_ValueOfColumn("ZZ_Total", total);
 	        ver.saveEx();
 	    }
 	    else
