@@ -33,7 +33,7 @@ public class X_ZZ_WSP_ATR_HTVF extends PO implements I_ZZ_WSP_ATR_HTVF, I_Persis
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260114L;
+	private static final long serialVersionUID = 20260222L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_HTVF (Properties ctx, int ZZ_WSP_ATR_HTVF_ID, String trxName)
