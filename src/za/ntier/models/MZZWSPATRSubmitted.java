@@ -1,28 +1,28 @@
 package za.ntier.models;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import org.compiere.model.PO;  // Required for getAllIDs
-import java.util.Properties;
-import java.util.List;
-import org.compiere.model.Query;
-import org.compiere.model.MMailText;
 import java.io.File;
 import java.io.FileOutputStream;
-import com.lowagie.text.Document;
-import com.lowagie.text.pdf.PdfWriter;
-import com.lowagie.text.html.simpleparser.HTMLWorker;
 import java.io.StringReader;
 import java.math.BigDecimal;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.Base64;
+import java.util.List;
+import java.util.Properties;
 
-import org.compiere.util.DB;
-import org.compiere.util.EMail;
-import org.compiere.util.Env;
-import org.compiere.model.MUser;
 import org.compiere.model.MBPartner;
 import org.compiere.model.MClient;
 import org.compiere.model.MImage;
-import java.util.Base64;
+import org.compiere.model.MMailText;
+import org.compiere.model.MUser;
+import org.compiere.model.PO;  // Required for getAllIDs
+import org.compiere.model.Query;
+import org.compiere.util.DB;
+import org.compiere.util.Env;
+
+import com.lowagie.text.Document;
+import com.lowagie.text.html.simpleparser.HTMLWorker;
+import com.lowagie.text.pdf.PdfWriter;
 
 
 
