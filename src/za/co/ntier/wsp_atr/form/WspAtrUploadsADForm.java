@@ -32,11 +32,11 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
 
     private static final long serialVersionUID = 1L;
 
-    private static final String PROCESS_PRINT_REPORT_UU = "0875c375-6e37-49fb-a5c0-798529189260";
+    private static final String PROCESS_GENERATE_REPORT_UU = "2760c2cf-56ad-405e-92fe-86b873b81025";
 
     private final Properties ctx = Env.getCtx();
     private final WspAtrUploadsRepository repo = new WspAtrUploadsRepository(ctx);
-    private final WspAtrUploadsService service = new WspAtrUploadsService(ctx, repo, PROCESS_PRINT_REPORT_UU);
+    private final WspAtrUploadsService service = new WspAtrUploadsService(ctx, repo, PROCESS_GENERATE_REPORT_UU);
     private final WspAtrRowUiBuilder ui = new WspAtrRowUiBuilder(this, repo, service);
 
     private Borderlayout layout = new Borderlayout();

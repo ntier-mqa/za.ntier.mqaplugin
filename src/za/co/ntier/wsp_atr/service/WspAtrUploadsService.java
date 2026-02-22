@@ -27,12 +27,12 @@ public class WspAtrUploadsService {
 
     private final Properties ctx;
     private final WspAtrUploadsRepository repo;
-    private final String printProcessUU;
+    private final String generateReportProcessUU;
 
-    public WspAtrUploadsService(Properties ctx, WspAtrUploadsRepository repo, String printProcessUU) {
+    public WspAtrUploadsService(Properties ctx, WspAtrUploadsRepository repo, String generateReportProcessUU) {
         this.ctx = ctx;
         this.repo = repo;
-        this.printProcessUU = printProcessUU;
+        this.generateReportProcessUU = generateReportProcessUU;
     }
 
     public void uploadReplace(int submittedId, String uploadType, Media media) throws Exception {
@@ -84,7 +84,7 @@ public class WspAtrUploadsService {
         int reportId = repo.findLatestReportIdForSubmitted(submittedId);
         if (reportId <= 0) throw new AdempiereException("No ZZ_WSP_ATR_Report found for Submitted ID " + submittedId);
 
-        runProcessInBackgroundWithIntParam(printProcessUU, "ZZ_WSP_ATR_Report_ID", reportId, submittedId);
+        runProcessInBackgroundWithIntParam(generateReportProcessUU, "ZZ_WSP_ATR_Report_ID", reportId, submittedId);
     }
 
     private void runProcessInBackgroundWithIntParam(String adProcessUU, String paramName, int paramValue, int recordIdForInstance) {
