@@ -22,6 +22,8 @@ import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Lookup_Mapping;
 import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Lookup_Mapping_Detail;
 import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Submitted;
 import za.co.ntier.wsp_atr.models.I_ZZ_WSP_Employees;
+import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_WSP;
+import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_ATR_Detail;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Biodata_Detail;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping_Detail;
@@ -53,9 +55,9 @@ public class MyModelFactory implements IModelFactory {
 
     static {
         // Register all your tables + model classes here
-    	//register(I_ZZ_WSP_ATR_HTVF.Table_Name,          MZZWSPATRHTVF.class);
-    	//register(I_ZZ_WSP_ATR_WSP.Table_Name,          MZZWSPATRWSP.class);
-    	//register(I_ZZ_WSP_ATR_ATR_Detail.Table_Name,          MZZWSPATRATRDetail.class);
+    	register(I_ZZ_WSP_ATR_HTVF.Table_Name,          MZZWSPATRHTVF.class);
+    	register(I_ZZ_WSP_ATR_WSP.Table_Name,          MZZWSPATRWSP.class);
+    	register(I_ZZ_WSP_ATR_ATR_Detail.Table_Name,          MZZWSPATRATRDetail.class);
     	register(I_ZZ_WSP_ATR_Veri_Checklist.Table_Name,          MZZWSPATRVeriChecklist.class);
     	register(I_ZZ_WSP_ATR_Submitted.Table_Name,          MZZWSPATRSubmitted.class);
     	register(I_ZZ_SDR_Temp_Org.Table_Name,          MZZSDR_Temp_Org.class);
