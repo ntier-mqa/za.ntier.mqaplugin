@@ -151,6 +151,9 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
             case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Importing: return "Importing";
             case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Imported: return "Imported";
             case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_ErrorImporting: return "Error Importing";
+            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Submitted: return "Submitted";
+            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Uploaded: return "Uploaded";
+            
             default: return code;
         }
     }

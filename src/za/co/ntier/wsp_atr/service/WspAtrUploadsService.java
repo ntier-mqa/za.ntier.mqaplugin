@@ -188,7 +188,7 @@ public class WspAtrUploadsService {
 			Object[] params = {Env.getAD_User_ID(ctx),submittedId};
 			DB.executeUpdateEx(
 					"UPDATE zz_wsp_atr_submitted " +
-							"SET zz_wsp_atr_status='Submitted', updated=now(), updatedby=? " +
+							"SET zz_wsp_atr_status='SU',ZZ_DocAction = 'S1', updated=now(), updatedby=? " +
 							"WHERE zz_wsp_atr_submitted_id=?",
 							params,
 							trxName
@@ -196,6 +196,9 @@ public class WspAtrUploadsService {
 
 			// OPTIONAL: action log
 			// repo.insertActionLog(submittedId, "SUBMIT", null, trxName);
+			MZZWSPATRSubmitted submitted =
+			        MZZWSPATRSubmitted.getSubmitted(ctx, submittedId,trxName );
+			submitted.sendSuccessfulSubmissionEmail();
 
 			trx.commit(true);
 		} catch (Exception e) {

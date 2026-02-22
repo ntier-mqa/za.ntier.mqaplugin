@@ -14,11 +14,11 @@ import org.compiere.model.MBPartner;
 import org.compiere.model.MClient;
 import org.compiere.model.MImage;
 import org.compiere.model.MMailText;
+import org.compiere.model.MSysConfig;
 import org.compiere.model.MUser;
 import org.compiere.model.PO;  // Required for getAllIDs
 import org.compiere.model.Query;
 import org.compiere.util.DB;
-import org.compiere.util.Env;
 
 import com.lowagie.text.Document;
 import com.lowagie.text.html.simpleparser.HTMLWorker;
@@ -28,6 +28,7 @@ import com.lowagie.text.pdf.PdfWriter;
 
 public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	
+	private static final long serialVersionUID = 1L;
 	// Checklist reference search keys
 	public static final String CL_HTVF = "9";
 	public static final String CL_WSP_TOTAL = "10";
@@ -38,6 +39,8 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	
     // Your fixed mail template UUID
     private static final String WSP_ATRQuery_TEMPLATE_UUID = "c981b4f2-a103-4e62-a79f-f7401620bebe";
+    private static final String WSP_ATR_Successful_Submission_TEMPLATE_UUID = "8763dcdc-4b83-44e5-b84a-c54e6a5beafe";
+    public static final int FROM_EMAIL_USER_ID = MSysConfig.getIntValue("FROM_EMAIL_USER_ID",1000011);
     
     public static MZZWSPATRSubmitted getSubmitted(Properties ctx,
             int submittedId,
@@ -269,7 +272,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 	    // Sender
 	    MUser fromUser =
-	        MUser.get(getCtx(), Env.getAD_User_ID(getCtx()));
+	        MUser.get(getCtx(), FROM_EMAIL_USER_ID);
 
 	    MClient client = MClient.get(getCtx());
 
@@ -280,6 +283,63 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	        log.severe("Failed to send query email");
 	    else
 	        log.info("Query email sent successfully");
+	}
+	
+	
+	public void sendSuccessfulSubmissionEmail() throws Exception {
+
+	    int adUserId = getSdfUserId();
+
+	    if (adUserId <= 0) {
+	        log.warning("No recipient AD_User found");
+	        return;
+	    }
+
+	    MUser toUser = MUser.get(getCtx(), adUserId);
+
+	    if (toUser.getEMail() == null || toUser.getEMail().isEmpty()) {
+	        log.warning("Recipient has no email address");
+	        return;
+	    }
+
+	    // Load template
+	    MMailText mailText =
+	        new MMailText(getCtx(), WSP_ATR_Successful_Submission_TEMPLATE_UUID, get_TrxName());
+
+	    if (mailText.get_ID() <= 0) {
+	        log.severe("Mail template not found");
+	        return;
+	    }
+
+	    try {
+	        mailText.setPO(this, true);
+	    } catch (Throwable t) {
+	        mailText.setPO(this);
+	    }
+
+	    String html = mailText.getMailText(true);
+	            
+	   // html = html.replace("@Logo@", getLogoBase64());
+
+	    String subject = mailText.getMailHeader();
+	    if (subject == null || subject.trim().isEmpty())
+	        subject = "Successful WSP-ATR Submission";
+
+	        
+
+	    // Sender
+	    MUser fromUser =
+	        MUser.get(getCtx(), FROM_EMAIL_USER_ID);
+
+	    MClient client = MClient.get(getCtx());
+
+	    boolean sent =
+	        client.sendEMail(fromUser, toUser, subject, html, null, true);
+
+	    if (!sent)
+	        log.severe("Failed to send Successful Submission email");
+	    else
+	        log.info("Successfule Submission email sent successfully");
 	}
 
 
