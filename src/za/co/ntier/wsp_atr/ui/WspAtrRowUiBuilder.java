@@ -90,4 +90,34 @@ public class WspAtrRowUiBuilder {
         hb.appendChild(lblFile);
         return hb;
     }
+    
+    public org.zkoss.zul.Hbox buildSubmitLine(int submittedId) {
+        org.zkoss.zul.Hbox hb = new org.zkoss.zul.Hbox();
+        hb.setSpacing("10px");
+        hb.setAlign("center");
+
+        boolean eligible = service.isEligibleToSubmit(submittedId);
+
+        org.adempiere.webui.component.Button btn = new org.adempiere.webui.component.Button("Submit WSP-ATR");
+        btn.setSclass("btn btn-sm btn-primary wsp-edit-purple");
+        btn.setDisabled(!eligible);
+
+        org.adempiere.webui.component.Label lblMsg =
+            new org.adempiere.webui.component.Label(eligible ? "" : "Not in submission window / missing uploads");
+        lblMsg.setStyle("margin-left:6px; color:#555;");
+
+        btn.addEventListener(Events.ON_CLICK, (EventListener<Event>) e -> {
+            service.submitWspAtr(submittedId);
+
+            btn.setLabel("Submitted");
+            btn.setDisabled(true);
+            lblMsg.setValue("Submitted successfully");
+
+            Clients.showNotification("WSP-ATR Submitted", "info", btn, "top_center", 2500);
+        });
+
+        hb.appendChild(btn);
+        hb.appendChild(lblMsg);
+        return hb;
+    }
 }

@@ -80,6 +80,15 @@ public interface I_ZZ_WSP_ATR_Uploads
 	  */
 	public int getCreatedBy();
 
+    /** Column name Date_Uploaded */
+    public static final String COLUMNNAME_Date_Uploaded = "Date_Uploaded";
+
+	/** Set Date Uploaded	  */
+	public void setDate_Uploaded (Timestamp Date_Uploaded);
+
+	/** Get Date Uploaded	  */
+	public Timestamp getDate_Uploaded();
+
     /** Column name IsActive */
     public static final String COLUMNNAME_IsActive = "IsActive";
 

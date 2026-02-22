@@ -18,6 +18,7 @@
 package za.co.ntier.wsp_atr.models;
 
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.util.Properties;
 import org.compiere.model.*;
 
@@ -31,7 +32,7 @@ public class X_ZZ_WSP_ATR_Report extends PO implements I_ZZ_WSP_ATR_Report, I_Pe
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260214L;
+	private static final long serialVersionUID = 20260222L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Report (Properties ctx, int ZZ_WSP_ATR_Report_ID, String trxName)
@@ -105,6 +106,22 @@ public class X_ZZ_WSP_ATR_Report extends PO implements I_ZZ_WSP_ATR_Report, I_Pe
       return sb.toString();
     }
 
+	/** Set Date Printed.
+		@param DatePrinted Date the document was printed.
+	*/
+	public void setDatePrinted (Timestamp DatePrinted)
+	{
+		set_ValueNoCheck (COLUMNNAME_DatePrinted, DatePrinted);
+	}
+
+	/** Get Date Printed.
+		@return Date the document was printed.
+	  */
+	public Timestamp getDatePrinted()
+	{
+		return (Timestamp)get_Value(COLUMNNAME_DatePrinted);
+	}
+
 	/** Set Description.
 		@param Description Optional short description of the record
 	*/
@@ -135,6 +152,21 @@ public class X_ZZ_WSP_ATR_Report extends PO implements I_ZZ_WSP_ATR_Report, I_Pe
 	public String getName()
 	{
 		return (String)get_Value(COLUMNNAME_Name);
+	}
+
+	/** Set Generate WSP ATR Report.
+		@param ZZ_Generate_WSP_ATR_Report Generate WSP ATR Report
+	*/
+	public void setZZ_Generate_WSP_ATR_Report (String ZZ_Generate_WSP_ATR_Report)
+	{
+		set_Value (COLUMNNAME_ZZ_Generate_WSP_ATR_Report, ZZ_Generate_WSP_ATR_Report);
+	}
+
+	/** Get Generate WSP ATR Report.
+		@return Generate WSP ATR Report	  */
+	public String getZZ_Generate_WSP_ATR_Report()
+	{
+		return (String)get_Value(COLUMNNAME_ZZ_Generate_WSP_ATR_Report);
 	}
 
 	/** Set WSP ATR Report .

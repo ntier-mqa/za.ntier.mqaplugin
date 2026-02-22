@@ -18,6 +18,7 @@
 package za.co.ntier.wsp_atr.models;
 
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.util.Properties;
 import org.compiere.model.*;
 
@@ -31,7 +32,7 @@ public class X_ZZ_WSP_ATR_Uploads extends PO implements I_ZZ_WSP_ATR_Uploads, I_
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260221L;
+	private static final long serialVersionUID = 20260222L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Uploads (Properties ctx, int ZZ_WSP_ATR_Uploads_ID, String trxName)
@@ -104,6 +105,21 @@ public class X_ZZ_WSP_ATR_Uploads extends PO implements I_ZZ_WSP_ATR_Uploads, I_
         .append(get_ID()).append(",Name=").append(getName()).append("]");
       return sb.toString();
     }
+
+	/** Set Date Uploaded.
+		@param Date_Uploaded Date Uploaded
+	*/
+	public void setDate_Uploaded (Timestamp Date_Uploaded)
+	{
+		set_Value (COLUMNNAME_Date_Uploaded, Date_Uploaded);
+	}
+
+	/** Get Date Uploaded.
+		@return Date Uploaded	  */
+	public Timestamp getDate_Uploaded()
+	{
+		return (Timestamp)get_Value(COLUMNNAME_Date_Uploaded);
+	}
 
 	/** Set Name.
 		@param Name Alphanumeric identifier of the entity

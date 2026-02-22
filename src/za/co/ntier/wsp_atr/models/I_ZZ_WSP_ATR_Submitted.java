@@ -170,6 +170,124 @@ public interface I_ZZ_WSP_ATR_Submitted
 	  */
 	public int getZZSdfOrganisation_ID();
 
+    /** Column name ZZ_AppRejectedBy_ID */
+    public static final String COLUMNNAME_ZZ_AppRejectedBy_ID = "ZZ_AppRejectedBy_ID";
+
+	/** Set App Rejected By	  */
+	public void setZZ_AppRejectedBy_ID (int ZZ_AppRejectedBy_ID);
+
+	/** Get App Rejected By	  */
+	public int getZZ_AppRejectedBy_ID();
+
+	public org.compiere.model.I_AD_User getZZ_AppRejectedBy() throws RuntimeException;
+
+    /** Column name ZZ_AppRejectedDate */
+    public static final String COLUMNNAME_ZZ_AppRejectedDate = "ZZ_AppRejectedDate";
+
+	/** Set App Rejected Date	  */
+	public void setZZ_AppRejectedDate (Timestamp ZZ_AppRejectedDate);
+
+	/** Get App Rejected Date	  */
+	public Timestamp getZZ_AppRejectedDate();
+
+    /** Column name ZZ_ApprovedBy_ID */
+    public static final String COLUMNNAME_ZZ_ApprovedBy_ID = "ZZ_ApprovedBy_ID";
+
+	/** Set Approved By	  */
+	public void setZZ_ApprovedBy_ID (int ZZ_ApprovedBy_ID);
+
+	/** Get Approved By	  */
+	public int getZZ_ApprovedBy_ID();
+
+	public org.compiere.model.I_AD_User getZZ_ApprovedBy() throws RuntimeException;
+
+    /** Column name ZZ_ApprovedDate */
+    public static final String COLUMNNAME_ZZ_ApprovedDate = "ZZ_ApprovedDate";
+
+	/** Set Approved Date	  */
+	public void setZZ_ApprovedDate (Timestamp ZZ_ApprovedDate);
+
+	/** Get Approved Date	  */
+	public Timestamp getZZ_ApprovedDate();
+
+    /** Column name ZZ_Approved_ID */
+    public static final String COLUMNNAME_ZZ_Approved_ID = "ZZ_Approved_ID";
+
+	/** Set Approved By	  */
+	public void setZZ_Approved_ID (int ZZ_Approved_ID);
+
+	/** Get Approved By	  */
+	public int getZZ_Approved_ID();
+
+	public org.compiere.model.I_AD_User getZZ_Approved() throws RuntimeException;
+
+    /** Column name ZZ_DocAction */
+    public static final String COLUMNNAME_ZZ_DocAction = "ZZ_DocAction";
+
+	/** Set Document Action	  */
+	public void setZZ_DocAction (String ZZ_DocAction);
+
+	/** Get Document Action	  */
+	public String getZZ_DocAction();
+
+    /** Column name ZZ_DocStatus */
+    public static final String COLUMNNAME_ZZ_DocStatus = "ZZ_DocStatus";
+
+	/** Set Document Status	  */
+	public void setZZ_DocStatus (String ZZ_DocStatus);
+
+	/** Get Document Status	  */
+	public String getZZ_DocStatus();
+
+    /** Column name ZZ_EvalRejectedBy_ID */
+    public static final String COLUMNNAME_ZZ_EvalRejectedBy_ID = "ZZ_EvalRejectedBy_ID";
+
+	/** Set Eval Rejected By	  */
+	public void setZZ_EvalRejectedBy_ID (int ZZ_EvalRejectedBy_ID);
+
+	/** Get Eval Rejected By	  */
+	public int getZZ_EvalRejectedBy_ID();
+
+	public org.compiere.model.I_AD_User getZZ_EvalRejectedBy() throws RuntimeException;
+
+    /** Column name ZZ_EvalRejectedDate */
+    public static final String COLUMNNAME_ZZ_EvalRejectedDate = "ZZ_EvalRejectedDate";
+
+	/** Set Eval Rejected Date	  */
+	public void setZZ_EvalRejectedDate (Timestamp ZZ_EvalRejectedDate);
+
+	/** Get Eval Rejected Date	  */
+	public Timestamp getZZ_EvalRejectedDate();
+
+    /** Column name ZZ_EvaluatedBy_ID */
+    public static final String COLUMNNAME_ZZ_EvaluatedBy_ID = "ZZ_EvaluatedBy_ID";
+
+	/** Set Evaluated By	  */
+	public void setZZ_EvaluatedBy_ID (int ZZ_EvaluatedBy_ID);
+
+	/** Get Evaluated By	  */
+	public int getZZ_EvaluatedBy_ID();
+
+	public org.compiere.model.I_AD_User getZZ_EvaluatedBy() throws RuntimeException;
+
+    /** Column name ZZ_EvaluatedDate */
+    public static final String COLUMNNAME_ZZ_EvaluatedDate = "ZZ_EvaluatedDate";
+
+	/** Set Evaluated Date	  */
+	public void setZZ_EvaluatedDate (Timestamp ZZ_EvaluatedDate);
+
+	/** Get Evaluated Date	  */
+	public Timestamp getZZ_EvaluatedDate();
+
+    /** Column name ZZ_Generate_WSP_ATR_Report */
+    public static final String COLUMNNAME_ZZ_Generate_WSP_ATR_Report = "ZZ_Generate_WSP_ATR_Report";
+
+	/** Set Generate WSP ATR Report	  */
+	public void setZZ_Generate_WSP_ATR_Report (String ZZ_Generate_WSP_ATR_Report);
+
+	/** Get Generate WSP ATR Report	  */
+	public String getZZ_Generate_WSP_ATR_Report();
+
     /** Column name ZZ_Import_Submitted_Data */
     public static final String COLUMNNAME_ZZ_Import_Submitted_Data = "ZZ_Import_Submitted_Data";
 
@@ -178,6 +296,64 @@ public interface I_ZZ_WSP_ATR_Submitted
 
 	/** Get Import Submitted Data	  */
 	public String getZZ_Import_Submitted_Data();
+
+    /** Column name ZZ_IsQuery */
+    public static final String COLUMNNAME_ZZ_IsQuery = "ZZ_IsQuery";
+
+	/** Set Is Query	  */
+	public void setZZ_IsQuery (boolean ZZ_IsQuery);
+
+	/** Get Is Query	  */
+	public boolean isZZ_IsQuery();
+
+    /** Column name ZZ_QueryComment */
+    public static final String COLUMNNAME_ZZ_QueryComment = "ZZ_QueryComment";
+
+	/** Set Query Comment	  */
+	public void setZZ_QueryComment (String ZZ_QueryComment);
+
+	/** Get Query Comment	  */
+	public String getZZ_QueryComment();
+
+    /** Column name ZZ_RecRejectedBy_ID */
+    public static final String COLUMNNAME_ZZ_RecRejectedBy_ID = "ZZ_RecRejectedBy_ID";
+
+	/** Set Rec Rejected By	  */
+	public void setZZ_RecRejectedBy_ID (int ZZ_RecRejectedBy_ID);
+
+	/** Get Rec Rejected By	  */
+	public int getZZ_RecRejectedBy_ID();
+
+	public org.compiere.model.I_AD_User getZZ_RecRejectedBy() throws RuntimeException;
+
+    /** Column name ZZ_RecRejectedDate */
+    public static final String COLUMNNAME_ZZ_RecRejectedDate = "ZZ_RecRejectedDate";
+
+	/** Set Rec Rejected Date	  */
+	public void setZZ_RecRejectedDate (Timestamp ZZ_RecRejectedDate);
+
+	/** Get Rec Rejected Date	  */
+	public Timestamp getZZ_RecRejectedDate();
+
+    /** Column name ZZ_RecommendedBy_ID */
+    public static final String COLUMNNAME_ZZ_RecommendedBy_ID = "ZZ_RecommendedBy_ID";
+
+	/** Set Recommended By	  */
+	public void setZZ_RecommendedBy_ID (int ZZ_RecommendedBy_ID);
+
+	/** Get Recommended By	  */
+	public int getZZ_RecommendedBy_ID();
+
+	public org.compiere.model.I_AD_User getZZ_RecommendedBy() throws RuntimeException;
+
+    /** Column name ZZ_RecommendedDate */
+    public static final String COLUMNNAME_ZZ_RecommendedDate = "ZZ_RecommendedDate";
+
+	/** Set Recommended Date	  */
+	public void setZZ_RecommendedDate (Timestamp ZZ_RecommendedDate);
+
+	/** Get Recommended Date	  */
+	public Timestamp getZZ_RecommendedDate();
 
     /** Column name ZZ_WSP_ATR_Status */
     public static final String COLUMNNAME_ZZ_WSP_ATR_Status = "ZZ_WSP_ATR_Status";

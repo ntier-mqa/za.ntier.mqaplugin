@@ -172,6 +172,7 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
         v.appendChild(ui.buildUploadLine(submittedId, UploadTypeDef.WSP_ATR_REPORT));
         v.appendChild(ui.buildUploadLine(submittedId, UploadTypeDef.SIGNED_MINUTES));
         v.appendChild(ui.buildUploadLine(submittedId, UploadTypeDef.ATTENDANCE_REGISTER));
+        v.appendChild(ui.buildSubmitLine(submittedId));
 
         actionsCell.appendChild(v);
         item.appendChild(actionsCell);

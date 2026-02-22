@@ -80,6 +80,19 @@ public interface I_ZZ_WSP_ATR_Report
 	  */
 	public int getCreatedBy();
 
+    /** Column name DatePrinted */
+    public static final String COLUMNNAME_DatePrinted = "DatePrinted";
+
+	/** Set Date Printed.
+	  * Date the document was printed.
+	  */
+	public void setDatePrinted (Timestamp DatePrinted);
+
+	/** Get Date Printed.
+	  * Date the document was printed.
+	  */
+	public Timestamp getDatePrinted();
+
     /** Column name Description */
     public static final String COLUMNNAME_Description = "Description";
 
@@ -134,6 +147,15 @@ public interface I_ZZ_WSP_ATR_Report
 	  * User who updated this records
 	  */
 	public int getUpdatedBy();
+
+    /** Column name ZZ_Generate_WSP_ATR_Report */
+    public static final String COLUMNNAME_ZZ_Generate_WSP_ATR_Report = "ZZ_Generate_WSP_ATR_Report";
+
+	/** Set Generate WSP ATR Report	  */
+	public void setZZ_Generate_WSP_ATR_Report (String ZZ_Generate_WSP_ATR_Report);
+
+	/** Get Generate WSP ATR Report	  */
+	public String getZZ_Generate_WSP_ATR_Report();
 
     /** Column name ZZ_WSP_ATR_Report_ID */
     public static final String COLUMNNAME_ZZ_WSP_ATR_Report_ID = "ZZ_WSP_ATR_Report_ID";
