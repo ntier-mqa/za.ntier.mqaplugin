@@ -13,6 +13,7 @@ import com.lowagie.text.Document;
 import com.lowagie.text.pdf.PdfWriter;
 import com.lowagie.text.html.simpleparser.HTMLWorker;
 import java.io.StringReader;
+import java.math.BigDecimal;
 
 import org.compiere.util.DB;
 import org.compiere.util.EMail;
@@ -27,8 +28,23 @@ import java.util.Base64;
 
 public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	
+	// Checklist reference search keys
+	public static final String CL_HTVF = "9";
+	public static final String CL_WSP_TOTAL = "10";
+	public static final String CL_ATR_TOTAL = "11";
+	public static final String CL_DEVIATION_PCT = "12";
+	public static final String CL_COMPARE = "13";
+	public static final String CL_DEVIATION = "14";
+	
     // Your fixed mail template UUID
     private static final String WSP_ATRQuery_TEMPLATE_UUID = "c981b4f2-a103-4e62-a79f-f7401620bebe";
+    
+    public static MZZWSPATRSubmitted getSubmitted(Properties ctx,
+            int submittedId,
+            String trxName)
+    	{
+    		return new MZZWSPATRSubmitted(ctx, submittedId, trxName);
+		}
 
 	public MZZWSPATRSubmitted(Properties ctx, int ZZ_WSP_ATR_Submitted_ID, String trxName) {
 		super(ctx, ZZ_WSP_ATR_Submitted_ID, trxName);
@@ -342,6 +358,27 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	    return sdf.format(new java.util.Date());
 	}
 	
+	
+	public void updateChecklistTotal(String checklistValue, BigDecimal total)
+	{
+	    MZZWSPATRVeriChecklist ver =
+	        new Query(getCtx(),
+	            MZZWSPATRVeriChecklist.Table_Name,
+	            "ZZ_WSP_ATR_Submitted_ID=? AND Value=?",
+	            get_TrxName())
+	        .setParameters(getZZ_WSP_ATR_Submitted_ID(), checklistValue)
+	        .first();
+
+	    if (ver != null)
+	    {
+	        ver.set_ValueOfColumn("ZZ_TotalNo", total);
+	        ver.saveEx();
+	    }
+	    else
+	    {
+	        log.warning("Checklist row not found for value=" + checklistValue);
+	    }
+	}
 
 
 }

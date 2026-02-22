@@ -49,65 +49,56 @@ public class MZZWSPATRATRDetail extends X_ZZ_WSP_ATR_ATR_Detail {
 	protected boolean afterSave(boolean newRecord, boolean success) {
 		// TODO Auto-generated method stub
 		if (!success)
-			return success;
+			return false;
 		
-		updateVerificationTotals();
+		updateATRAndDeviation();
 		
-		return true;
+		return super.afterSave(newRecord, success);
 	}
 	
-	private void updateVerificationTotals()
+	
+	
+	private void updateATRAndDeviation()
 	{
 	    int submittedId = getZZ_WSP_ATR_Submitted_ID();
 
-	    // --- WSP TOTAL ---
-	    String wspSql =
-	        "SELECT COALESCE(SUM(MaleCount),0) + " +
-	        "       COALESCE(SUM(FemaleCount),0) " +
-	        "FROM ZZ_WSP_ATR_ATR_Detail WHERE ZZ_WSP_ATR_Submitted_ID=?";
-
-	    int wspTotal = DB.getSQLValue(get_TrxName(), wspSql, submittedId);
-
-	    // --- ATR TOTAL ---
 	    String atrSql =
-	        "SELECT COUNT(*) FROM ZZ_WSP_ATR_WSP " +
+	        "SELECT COUNT(*) " +
+	        "FROM ZZ_WSP_ATR_ATR_DETAIL " +
 	        "WHERE ZZ_WSP_ATR_Submitted_ID=?";
 
 	    int atrTotal = DB.getSQLValue(get_TrxName(), atrSql, submittedId);
 
-	    // --- HTVF TOTAL ---
-	    String htvfSql =
-	        "SELECT COUNT(*) FROM ZZ_WSP_ATR_HTVF " +
+	    String wspSql =
+	        "SELECT COALESCE(SUM(zz_male + zz_female),0) " +
+	        "FROM ZZ_WSP_ATR_WSP " +
 	        "WHERE ZZ_WSP_ATR_Submitted_ID=?";
 
-	    int htvfTotal = DB.getSQLValue(get_TrxName(), htvfSql, submittedId);
+	    BigDecimal wspTotal =
+	        DB.getSQLValueBD(get_TrxName(), wspSql, submittedId);
 
-	    // --- Percentage ---
-	    BigDecimal pct = Env.ZERO;
-	    if (wspTotal > 0)
+	    BigDecimal atrBD = BigDecimal.valueOf(atrTotal);
+
+	    BigDecimal deviation = BigDecimal.ZERO;
+
+	    if (wspTotal != null && wspTotal.signum() > 0)
 	    {
-	        pct = new BigDecimal(atrTotal)
-	                .divide(new BigDecimal(wspTotal), 4, RoundingMode.HALF_UP)
-	                .multiply(new BigDecimal(100));
+	        deviation = atrBD
+	            .divide(wspTotal, 4, RoundingMode.HALF_UP)
+	            .multiply(new BigDecimal("100"));
 	    }
 
-	    // --- Update verification row ---
-	    MZZWSPATRVeriChecklist ver = new Query(getCtx(),
-	    		MZZWSPATRVeriChecklist.Table_Name,
-	            "ZZ_WSP_ATR_Submitted_ID=?",
-	            get_TrxName())
-	            .setParameters(submittedId)
-	            .first();
+	    MZZWSPATRSubmitted submitted =
+	        MZZWSPATRSubmitted.getSubmitted(getCtx(), submittedId, get_TrxName());
 
-	    if (ver != null)
-	    {
-	        ver.set_ValueOfColumn("ZZ_TotalNo", htvfTotal);
-	        ver.set_ValueOfColumn("ZZ_WSPTotal", wspTotal);
-	        ver.set_ValueOfColumn("ZZ_ATRTotal", atrTotal);
-	        ver.set_ValueOfColumn("ZZ_ATRvsWSPPct", pct);
+	    submitted.updateChecklistTotal(
+	        MZZWSPATRSubmitted.CL_ATR_TOTAL,
+	        atrBD);
 
-	        ver.saveEx();
-	    }
+	    submitted.updateChecklistTotal(
+	        MZZWSPATRSubmitted.CL_DEVIATION_PCT,
+	        deviation);
 	}
+
 
 }
