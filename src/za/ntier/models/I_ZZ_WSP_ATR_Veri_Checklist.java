@@ -187,6 +187,24 @@ public interface I_ZZ_WSP_ATR_Veri_Checklist
 	  */
 	public String getValue();
 
+    /** Column name ZZ_ATRTotal */
+    public static final String COLUMNNAME_ZZ_ATRTotal = "ZZ_ATRTotal";
+
+	/** Set ATR Total	  */
+	public void setZZ_ATRTotal (int ZZ_ATRTotal);
+
+	/** Get ATR Total	  */
+	public int getZZ_ATRTotal();
+
+    /** Column name ZZ_ATRvsWSPPct */
+    public static final String COLUMNNAME_ZZ_ATRvsWSPPct = "ZZ_ATRvsWSPPct";
+
+	/** Set ATR vs WSP Pct	  */
+	public void setZZ_ATRvsWSPPct (BigDecimal ZZ_ATRvsWSPPct);
+
+	/** Get ATR vs WSP Pct	  */
+	public BigDecimal getZZ_ATRvsWSPPct();
+
     /** Column name ZZ_Checklist_No */
     public static final String COLUMNNAME_ZZ_Checklist_No = "ZZ_Checklist_No";
 
@@ -204,6 +222,24 @@ public interface I_ZZ_WSP_ATR_Veri_Checklist
 
 	/** Get Information Completed	  */
 	public boolean isZZ_Information_Completed();
+
+    /** Column name ZZ_TotalNo */
+    public static final String COLUMNNAME_ZZ_TotalNo = "ZZ_TotalNo";
+
+	/** Set Total No	  */
+	public void setZZ_TotalNo (int ZZ_TotalNo);
+
+	/** Get Total No	  */
+	public int getZZ_TotalNo();
+
+    /** Column name ZZ_WSPTotal */
+    public static final String COLUMNNAME_ZZ_WSPTotal = "ZZ_WSPTotal";
+
+	/** Set WSP Total	  */
+	public void setZZ_WSPTotal (int ZZ_WSPTotal);
+
+	/** Get WSP Total	  */
+	public int getZZ_WSPTotal();
 
     /** Column name ZZ_WSP_ATR_Submitted_ID */
     public static final String COLUMNNAME_ZZ_WSP_ATR_Submitted_ID = "ZZ_WSP_ATR_Submitted_ID";
