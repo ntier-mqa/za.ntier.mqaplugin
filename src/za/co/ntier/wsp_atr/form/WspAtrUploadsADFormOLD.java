@@ -42,7 +42,7 @@ import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Uploads;
 import za.ntier.models.MZZWSPATRSubmitted;
 
-@org.idempiere.ui.zk.annotation.Form(name = "za.co.ntier.wsp_atr.form.WspAtrUploadsADForm")
+@org.idempiere.ui.zk.annotation.Form(name = "za.co.ntier.wsp_atr.form.WspAtrUploadsADFormOLD")
 public class WspAtrUploadsADFormOLD extends ADForm implements EventListener<Event> {
 
     private static final long serialVersionUID = 1L;
