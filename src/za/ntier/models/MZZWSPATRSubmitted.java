@@ -101,33 +101,46 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	        }
 	    }
 	    return ok;
-	}
+	}	
 	
 	
 	private void createVerificationChecklist() {
-	    // Load checklist template rows in numeric order of Value
-		List<PO> poList = new Query(getCtx(),
-		        X_ZZ_WSP_ATR_Checklist_Ref.Table_Name,
-		        X_ZZ_WSP_ATR_Checklist_Ref.COLUMNNAME_IsActive + "='Y'",
-		        get_TrxName())
-		    .setOrderBy("CAST(Value AS integer)")
-		    .list();   // <-- returns List<PO>
+	    List<PO> poList = new Query(getCtx(),
+	            X_ZZ_WSP_ATR_Checklist_Ref.Table_Name,
+	            X_ZZ_WSP_ATR_Checklist_Ref.COLUMNNAME_IsActive + "='Y'",
+	            get_TrxName())
+	        .setOrderBy("CAST(Value AS integer)")
+	        .list();
 
-		int lineNo = 10;
-		for (PO po : poList) {
-		    X_ZZ_WSP_ATR_Checklist_Ref ref = 
-		        new X_ZZ_WSP_ATR_Checklist_Ref(po.getCtx(), po.get_ID(), po.get_TrxName());
+	    int submittedId = getZZ_WSP_ATR_Submitted_ID();
+	    int lineNo = 10;
 
-		    MZZWSPATRVeriChecklist line = new MZZWSPATRVeriChecklist(getCtx(), 0, get_TrxName());
-		    line.setZZ_WSP_ATR_Submitted_ID(getZZ_WSP_ATR_Submitted_ID());
-		    line.setzz_wsp_atr_checklist_ref_ID(ref.getzz_wsp_atr_checklist_ref_ID());
-		    line.setLineNo(lineNo);
-		    lineNo += 10;
-		    line.setZZ_Checklist_No(ref.getValue());
-		    line.setName(ref.getName());
-		    line.setZZ_Information_Completed(false);
-		    line.saveEx();
-		}
+	    for (PO po : poList) {
+	        X_ZZ_WSP_ATR_Checklist_Ref ref =
+	            new X_ZZ_WSP_ATR_Checklist_Ref(po.getCtx(), po.get_ID(), po.get_TrxName());
+
+	        // Skip if already created for this submitted record
+	        boolean exists = new Query(getCtx(),
+	                MZZWSPATRVeriChecklist.Table_Name,
+	                "ZZ_WSP_ATR_Submitted_ID=? AND ZZ_Checklist_No=?",
+	                get_TrxName())
+	            .setParameters(submittedId, ref.getValue())
+	            .match();
+
+	        if (exists) {
+	            continue;
+	        }
+
+	        MZZWSPATRVeriChecklist line = new MZZWSPATRVeriChecklist(getCtx(), 0, get_TrxName());
+	        line.setZZ_WSP_ATR_Submitted_ID(submittedId);
+	        line.setzz_wsp_atr_checklist_ref_ID(ref.getzz_wsp_atr_checklist_ref_ID());
+	        line.setLineNo(lineNo);
+	        lineNo += 10;
+	        line.setZZ_Checklist_No(ref.getValue());
+	        line.setName(ref.getName());
+	        line.setZZ_Information_Completed(false);
+	        line.saveEx();
+	    }
 	}
 	
     /**
@@ -424,7 +437,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	    MZZWSPATRVeriChecklist ver =
 	        new Query(getCtx(),
 	            MZZWSPATRVeriChecklist.Table_Name,
-	            "ZZ_WSP_ATR_Submitted_ID=? AND Value=?",
+	            "ZZ_WSP_ATR_Submitted_ID=? AND zz_checklist_no=?",
 	            get_TrxName())
 	        .setParameters(getZZ_WSP_ATR_Submitted_ID(), checklistValue)
 	        .first();
