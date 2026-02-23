@@ -84,7 +84,7 @@ public class WspAtrUploadsService {
 
 	public void printLatestReportInBackground(int submittedId) {
 		int reportId = repo.findLatestReportIdForSubmitted(submittedId);
-		if (reportId <= 0) throw new AdempiereException("No ZZ_WSP_ATR_Report found for Submitted ID " + submittedId);
+		//if (reportId <= 0) throw new AdempiereException("No ZZ_WSP_ATR_Report found for Submitted ID " + submittedId);
 
 		runProcessInBackgroundWithIntParam(generateReportProcessUU, "ZZ_WSP_ATR_Report_ID", reportId, submittedId);
 	}
