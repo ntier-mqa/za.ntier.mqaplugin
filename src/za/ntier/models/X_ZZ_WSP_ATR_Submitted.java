@@ -32,7 +32,7 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260218L;
+	private static final long serialVersionUID = 20260223L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Submitted (Properties ctx, int ZZ_WSP_ATR_Submitted_ID, String trxName)
@@ -675,6 +675,174 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 		return (Timestamp)get_Value(COLUMNNAME_ZZ_RecommendedDate);
 	}
 
+	public org.compiere.model.I_AD_User getZZ_ResubmitRejectedBy() throws RuntimeException
+	{
+		return (org.compiere.model.I_AD_User)MTable.get(getCtx(), org.compiere.model.I_AD_User.Table_ID)
+			.getPO(getZZ_ResubmitRejectedBy_ID(), get_TrxName());
+	}
+
+	/** Set Resubmit Rejected By.
+		@param ZZ_ResubmitRejectedBy_ID Resubmit Rejected By
+	*/
+	public void setZZ_ResubmitRejectedBy_ID (int ZZ_ResubmitRejectedBy_ID)
+	{
+		if (ZZ_ResubmitRejectedBy_ID < 1)
+			set_Value (COLUMNNAME_ZZ_ResubmitRejectedBy_ID, null);
+		else
+			set_Value (COLUMNNAME_ZZ_ResubmitRejectedBy_ID, Integer.valueOf(ZZ_ResubmitRejectedBy_ID));
+	}
+
+	/** Get Resubmit Rejected By.
+		@return Resubmit Rejected By	  */
+	public int getZZ_ResubmitRejectedBy_ID()
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_ZZ_ResubmitRejectedBy_ID);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
+	}
+
+	/** Set Resubmit Rejected Date.
+		@param ZZ_ResubmitRejectedDate Resubmit Rejected Date
+	*/
+	public void setZZ_ResubmitRejectedDate (Timestamp ZZ_ResubmitRejectedDate)
+	{
+		set_Value (COLUMNNAME_ZZ_ResubmitRejectedDate, ZZ_ResubmitRejectedDate);
+	}
+
+	/** Get Resubmit Rejected Date.
+		@return Resubmit Rejected Date	  */
+	public Timestamp getZZ_ResubmitRejectedDate()
+	{
+		return (Timestamp)get_Value(COLUMNNAME_ZZ_ResubmitRejectedDate);
+	}
+
+	public org.compiere.model.I_AD_User getZZ_ResubmittedBy() throws RuntimeException
+	{
+		return (org.compiere.model.I_AD_User)MTable.get(getCtx(), org.compiere.model.I_AD_User.Table_ID)
+			.getPO(getZZ_ResubmittedBy_ID(), get_TrxName());
+	}
+
+	/** Set Resubmitted By.
+		@param ZZ_ResubmittedBy_ID Resubmitted By
+	*/
+	public void setZZ_ResubmittedBy_ID (int ZZ_ResubmittedBy_ID)
+	{
+		if (ZZ_ResubmittedBy_ID < 1)
+			set_Value (COLUMNNAME_ZZ_ResubmittedBy_ID, null);
+		else
+			set_Value (COLUMNNAME_ZZ_ResubmittedBy_ID, Integer.valueOf(ZZ_ResubmittedBy_ID));
+	}
+
+	/** Get Resubmitted By.
+		@return Resubmitted By	  */
+	public int getZZ_ResubmittedBy_ID()
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_ZZ_ResubmittedBy_ID);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
+	}
+
+	/** Set Resubmitted Date.
+		@param ZZ_ResubmittedDate Resubmitted Date
+	*/
+	public void setZZ_ResubmittedDate (Timestamp ZZ_ResubmittedDate)
+	{
+		set_Value (COLUMNNAME_ZZ_ResubmittedDate, ZZ_ResubmittedDate);
+	}
+
+	/** Get Resubmitted Date.
+		@return Resubmitted Date	  */
+	public Timestamp getZZ_ResubmittedDate()
+	{
+		return (Timestamp)get_Value(COLUMNNAME_ZZ_ResubmittedDate);
+	}
+
+	public org.compiere.model.I_AD_User getZZ_SubmitRejectedBy() throws RuntimeException
+	{
+		return (org.compiere.model.I_AD_User)MTable.get(getCtx(), org.compiere.model.I_AD_User.Table_ID)
+			.getPO(getZZ_SubmitRejectedBy_ID(), get_TrxName());
+	}
+
+	/** Set Submit Rejected By.
+		@param ZZ_SubmitRejectedBy_ID Submit Rejected By
+	*/
+	public void setZZ_SubmitRejectedBy_ID (int ZZ_SubmitRejectedBy_ID)
+	{
+		if (ZZ_SubmitRejectedBy_ID < 1)
+			set_Value (COLUMNNAME_ZZ_SubmitRejectedBy_ID, null);
+		else
+			set_Value (COLUMNNAME_ZZ_SubmitRejectedBy_ID, Integer.valueOf(ZZ_SubmitRejectedBy_ID));
+	}
+
+	/** Get Submit Rejected By.
+		@return Submit Rejected By	  */
+	public int getZZ_SubmitRejectedBy_ID()
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_ZZ_SubmitRejectedBy_ID);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
+	}
+
+	/** Set Submit Rejected Date.
+		@param ZZ_SubmitRejectedDate Submit Rejected Date
+	*/
+	public void setZZ_SubmitRejectedDate (Timestamp ZZ_SubmitRejectedDate)
+	{
+		set_Value (COLUMNNAME_ZZ_SubmitRejectedDate, ZZ_SubmitRejectedDate);
+	}
+
+	/** Get Submit Rejected Date.
+		@return Submit Rejected Date	  */
+	public Timestamp getZZ_SubmitRejectedDate()
+	{
+		return (Timestamp)get_Value(COLUMNNAME_ZZ_SubmitRejectedDate);
+	}
+
+	public org.compiere.model.I_AD_User getZZ_SubmittedBy() throws RuntimeException
+	{
+		return (org.compiere.model.I_AD_User)MTable.get(getCtx(), org.compiere.model.I_AD_User.Table_ID)
+			.getPO(getZZ_SubmittedBy_ID(), get_TrxName());
+	}
+
+	/** Set Submitted By.
+		@param ZZ_SubmittedBy_ID Submitted By
+	*/
+	public void setZZ_SubmittedBy_ID (int ZZ_SubmittedBy_ID)
+	{
+		if (ZZ_SubmittedBy_ID < 1)
+			set_Value (COLUMNNAME_ZZ_SubmittedBy_ID, null);
+		else
+			set_Value (COLUMNNAME_ZZ_SubmittedBy_ID, Integer.valueOf(ZZ_SubmittedBy_ID));
+	}
+
+	/** Get Submitted By.
+		@return Submitted By	  */
+	public int getZZ_SubmittedBy_ID()
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_ZZ_SubmittedBy_ID);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
+	}
+
+	/** Set Submitted Date.
+		@param ZZ_SubmittedDate Submitted Date
+	*/
+	public void setZZ_SubmittedDate (Timestamp ZZ_SubmittedDate)
+	{
+		set_Value (COLUMNNAME_ZZ_SubmittedDate, ZZ_SubmittedDate);
+	}
+
+	/** Get Submitted Date.
+		@return Submitted Date	  */
+	public Timestamp getZZ_SubmittedDate()
+	{
+		return (Timestamp)get_Value(COLUMNNAME_ZZ_SubmittedDate);
+	}
+
 	/** Draft = DR */
 	public static final String ZZ_WSP_ATR_STATUS_Draft = "DR";
 	/** Error Importing = EE */
@@ -685,6 +853,10 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	public static final String ZZ_WSP_ATR_STATUS_Imported = "IM";
 	/** Importing = IP */
 	public static final String ZZ_WSP_ATR_STATUS_Importing = "IP";
+	/** Submitted = SU */
+	public static final String ZZ_WSP_ATR_STATUS_Submitted = "SU";
+	/** Uploaded = UP */
+	public static final String ZZ_WSP_ATR_STATUS_Uploaded = "UP";
 	/** Validating = VA */
 	public static final String ZZ_WSP_ATR_STATUS_Validating = "VA";
 	/** Set Status.
