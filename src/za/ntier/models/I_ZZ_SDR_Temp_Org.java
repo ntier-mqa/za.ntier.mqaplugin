@@ -211,6 +211,15 @@ public interface I_ZZ_SDR_Temp_Org
 	  */
 	public String getValue();
 
+    /** Column name ZZ_DocAction */
+    public static final String COLUMNNAME_ZZ_DocAction = "ZZ_DocAction";
+
+	/** Set Document Action	  */
+	public void setZZ_DocAction (String ZZ_DocAction);
+
+	/** Get Document Action	  */
+	public String getZZ_DocAction();
+
     /** Column name ZZ_DocStatus */
     public static final String COLUMNNAME_ZZ_DocStatus = "ZZ_DocStatus";
 
@@ -250,10 +259,10 @@ public interface I_ZZ_SDR_Temp_Org
     /** Column name ZZ_SDL_No */
     public static final String COLUMNNAME_ZZ_SDL_No = "ZZ_SDL_No";
 
-	/** Set Unconfirmed SDL No	  */
+	/** Set SDL Number	  */
 	public void setZZ_SDL_No (String ZZ_SDL_No);
 
-	/** Get Unconfirmed SDL No	  */
+	/** Get SDL Number	  */
 	public String getZZ_SDL_No();
 
     /** Column name ZZ_SDR_Temp_Org_ID */
