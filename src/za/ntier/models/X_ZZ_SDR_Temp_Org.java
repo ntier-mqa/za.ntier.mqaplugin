@@ -31,7 +31,7 @@ public class X_ZZ_SDR_Temp_Org extends PO implements I_ZZ_SDR_Temp_Org, I_Persis
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260112L;
+	private static final long serialVersionUID = 20260224L;
 
     /** Standard Constructor */
     public X_ZZ_SDR_Temp_Org (Properties ctx, int ZZ_SDR_Temp_Org_ID, String trxName)
@@ -39,10 +39,17 @@ public class X_ZZ_SDR_Temp_Org extends PO implements I_ZZ_SDR_Temp_Org, I_Persis
       super (ctx, ZZ_SDR_Temp_Org_ID, trxName);
       /** if (ZZ_SDR_Temp_Org_ID == 0)
         {
-			setName (null);
+			setCellphonenumber (null);
+			setContactName (null);
+			setEMail (null);
 			setZZ_DocStatus (null);
 // DR
+			setZZ_Landline_No (null);
+			setZZ_Organisation_Name (null);
+			setZZ_Organisation_Reg_No (null);
+			setZZ_SDL_No (null);
 			setZZ_SDR_Temp_Org_ID (0);
+			setZZ_TradingAs (null);
         } */
     }
 
@@ -52,10 +59,17 @@ public class X_ZZ_SDR_Temp_Org extends PO implements I_ZZ_SDR_Temp_Org, I_Persis
       super (ctx, ZZ_SDR_Temp_Org_ID, trxName, virtualColumns);
       /** if (ZZ_SDR_Temp_Org_ID == 0)
         {
-			setName (null);
+			setCellphonenumber (null);
+			setContactName (null);
+			setEMail (null);
 			setZZ_DocStatus (null);
 // DR
+			setZZ_Landline_No (null);
+			setZZ_Organisation_Name (null);
+			setZZ_Organisation_Reg_No (null);
+			setZZ_SDL_No (null);
 			setZZ_SDR_Temp_Org_ID (0);
+			setZZ_TradingAs (null);
         } */
     }
 
@@ -65,10 +79,17 @@ public class X_ZZ_SDR_Temp_Org extends PO implements I_ZZ_SDR_Temp_Org, I_Persis
       super (ctx, ZZ_SDR_Temp_Org_UU, trxName);
       /** if (ZZ_SDR_Temp_Org_UU == null)
         {
-			setName (null);
+			setCellphonenumber (null);
+			setContactName (null);
+			setEMail (null);
 			setZZ_DocStatus (null);
 // DR
+			setZZ_Landline_No (null);
+			setZZ_Organisation_Name (null);
+			setZZ_Organisation_Reg_No (null);
+			setZZ_SDL_No (null);
 			setZZ_SDR_Temp_Org_ID (0);
+			setZZ_TradingAs (null);
         } */
     }
 
@@ -78,10 +99,17 @@ public class X_ZZ_SDR_Temp_Org extends PO implements I_ZZ_SDR_Temp_Org, I_Persis
       super (ctx, ZZ_SDR_Temp_Org_UU, trxName, virtualColumns);
       /** if (ZZ_SDR_Temp_Org_UU == null)
         {
-			setName (null);
+			setCellphonenumber (null);
+			setContactName (null);
+			setEMail (null);
 			setZZ_DocStatus (null);
 // DR
+			setZZ_Landline_No (null);
+			setZZ_Organisation_Name (null);
+			setZZ_Organisation_Reg_No (null);
+			setZZ_SDL_No (null);
 			setZZ_SDR_Temp_Org_ID (0);
+			setZZ_TradingAs (null);
         } */
     }
 
@@ -252,6 +280,58 @@ public class X_ZZ_SDR_Temp_Org extends PO implements I_ZZ_SDR_Temp_Org, I_Persis
 		return (String)get_Value(COLUMNNAME_Value);
 	}
 
+	/** Exec Approve = AE */
+	public static final String ZZ_DOCACTION_ExecApprove = "AE";
+	/** Approve/Do Not Approve = AP */
+	public static final String ZZ_DOCACTION_ApproveDoNotApprove = "AP";
+	/** Complete = CO */
+	public static final String ZZ_DOCACTION_Complete = "CO";
+	/** Evaluate = EV */
+	public static final String ZZ_DOCACTION_Evaluate = "EV";
+	/** Final Approval/Do not Approve = FA */
+	public static final String ZZ_DOCACTION_FinalApprovalDoNotApprove = "FA";
+	/** Recommend = RE */
+	public static final String ZZ_DOCACTION_Recommend = "RE";
+	/** Re-Submit = RS */
+	public static final String ZZ_DOCACTION_Re_Submit = "RS";
+	/** Submit = S1 */
+	public static final String ZZ_DOCACTION_Submit = "S1";
+	/** System Only (No manual action) = S2 */
+	public static final String ZZ_DOCACTION_SystemOnlyNoManualAction = "S2";
+	/** Submit to Manager Finance Consumables = SC */
+	public static final String ZZ_DOCACTION_SubmitToManagerFinanceConsumables = "SC";
+	/** Submit to SDL Finance Mgr = SD */
+	public static final String ZZ_DOCACTION_SubmitToSDLFinanceMgr = "SD";
+	/** Submit to Snr Mgr LP = SL */
+	public static final String ZZ_DOCACTION_SubmitToSnrMgrLP = "SL";
+	/** Submit to Snr Mgr Ops = SO */
+	public static final String ZZ_DOCACTION_SubmitToSnrMgrOps = "SO";
+	/** Submit to Snr Mgr Projects = SP */
+	public static final String ZZ_DOCACTION_SubmitToSnrMgrProjects = "SP";
+	/** Submit to Snr Mgr QA = SQ */
+	public static final String ZZ_DOCACTION_SubmitToSnrMgrQA = "SQ";
+	/** Submit to Recommender = SR */
+	public static final String ZZ_DOCACTION_SubmitToRecommender = "SR";
+	/** Submit to Snr Mgr SRU = SS */
+	public static final String ZZ_DOCACTION_SubmitToSnrMgrSRU = "SS";
+	/** Submit to Line Manager = SU */
+	public static final String ZZ_DOCACTION_SubmitToLineManager = "SU";
+	/** Set Document Action.
+		@param ZZ_DocAction Document Action
+	*/
+	public void setZZ_DocAction (String ZZ_DocAction)
+	{
+
+		set_Value (COLUMNNAME_ZZ_DocAction, ZZ_DocAction);
+	}
+
+	/** Get Document Action.
+		@return Document Action	  */
+	public String getZZ_DocAction()
+	{
+		return (String)get_Value(COLUMNNAME_ZZ_DocAction);
+	}
+
 	/** Approved By Manager Finance Consumables = AC */
 	public static final String ZZ_DOCSTATUS_ApprovedByManagerFinanceConsumables = "AC";
 	/** Approved = AP */
@@ -260,6 +340,8 @@ public class X_ZZ_SDR_Temp_Org extends PO implements I_ZZ_SDR_Temp_Org, I_Persis
 	public static final String ZZ_DOCSTATUS_Completed = "CO";
 	/** Draft = DR */
 	public static final String ZZ_DOCSTATUS_Draft = "DR";
+	/** Evaluated = EV */
+	public static final String ZZ_DOCSTATUS_Evaluated = "EV";
 	/** In Progress = IP */
 	public static final String ZZ_DOCSTATUS_InProgress = "IP";
 	/** Not Recommended By Senior Mgr SDR = N1 */
@@ -288,16 +370,22 @@ public class X_ZZ_SDR_Temp_Org extends PO implements I_ZZ_SDR_Temp_Org, I_Persis
 	public static final String ZZ_DOCSTATUS_NotApprovedBySnrAdminFinance = "NS";
 	/** Pending = PE */
 	public static final String ZZ_DOCSTATUS_Pending = "PE";
+	/** Query = QR */
+	public static final String ZZ_DOCSTATUS_Query = "QR";
 	/** Recommended By Senior Mgr Finance = R1 */
 	public static final String ZZ_DOCSTATUS_RecommendedBySeniorMgrFinance = "R1";
 	/** Recommended By COO = R2 */
 	public static final String ZZ_DOCSTATUS_RecommendedByCOO = "R2";
 	/** Recommended By CFO = R3 */
 	public static final String ZZ_DOCSTATUS_RecommendedByCFO = "R3";
+	/** Recommended for Approval = RA */
+	public static final String ZZ_DOCSTATUS_RecommendedForApproval = "RA";
 	/** Recommended = RC */
 	public static final String ZZ_DOCSTATUS_Recommended = "RC";
 	/** Recommended By Senior Mgr SDR = RD */
 	public static final String ZZ_DOCSTATUS_RecommendedBySeniorMgrSDR = "RD";
+	/** Recommended for Evaluation = RE */
+	public static final String ZZ_DOCSTATUS_RecommendedForEvaluation = "RE";
 	/** Submitted to Manager Finance Consumables = SC */
 	public static final String ZZ_DOCSTATUS_SubmittedToManagerFinanceConsumables = "SC";
 	/** Submitted To SDL Finance Mgr = SD */
@@ -308,6 +396,8 @@ public class X_ZZ_SDR_Temp_Org extends PO implements I_ZZ_SDR_Temp_Org, I_Persis
 	public static final String ZZ_DOCSTATUS_SubmittedToITAdmin = "ST";
 	/** Submitted = SU */
 	public static final String ZZ_DOCSTATUS_Submitted = "SU";
+	/** Delinked = UnSdfOrg */
+	public static final String ZZ_DOCSTATUS_Delinked = "UnSdfOrg";
 	/** Set Document Status.
 		@param ZZ_DocStatus Document Status
 	*/
@@ -369,16 +459,16 @@ public class X_ZZ_SDR_Temp_Org extends PO implements I_ZZ_SDR_Temp_Org, I_Persis
 		return (String)get_Value(COLUMNNAME_ZZ_Organisation_Reg_No);
 	}
 
-	/** Set Unconfirmed SDL No.
-		@param ZZ_SDL_No Unconfirmed SDL No
+	/** Set SDL Number.
+		@param ZZ_SDL_No SDL Number
 	*/
 	public void setZZ_SDL_No (String ZZ_SDL_No)
 	{
 		set_Value (COLUMNNAME_ZZ_SDL_No, ZZ_SDL_No);
 	}
 
-	/** Get Unconfirmed SDL No.
-		@return Unconfirmed SDL No	  */
+	/** Get SDL Number.
+		@return SDL Number	  */
 	public String getZZ_SDL_No()
 	{
 		return (String)get_Value(COLUMNNAME_ZZ_SDL_No);

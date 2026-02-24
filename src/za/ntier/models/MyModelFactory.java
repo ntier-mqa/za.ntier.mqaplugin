@@ -55,6 +55,8 @@ public class MyModelFactory implements IModelFactory {
 
     static {
         // Register all your tables + model classes here
+    	
+    	register(X_ZZ_SDR_Temp_Branch.Table_Name,          MZZSDRTempBranch.class);
     	register(I_ZZ_WSP_ATR_HTVF.Table_Name,          MZZWSPATRHTVF.class);
     	register(I_ZZ_WSP_ATR_WSP.Table_Name,          MZZWSPATRWSP.class);
     	register(I_ZZ_WSP_ATR_ATR_Detail.Table_Name,          MZZWSPATRATRDetail.class);
