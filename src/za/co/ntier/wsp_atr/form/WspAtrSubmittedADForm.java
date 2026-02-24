@@ -385,26 +385,6 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	    runValidateImportInBackground(submittedId);
 	    
 	}
-	
-
-/*
-	private void doSubmitSelected() {
-		Integer id = getSelectedId();
-		if (id == null)
-			throw new AdempiereException("Please select a record first");
-
-		runValidateImportInBackground(id);
-		lblInfo.setValue("Validation/Import started for ID " + id);
-	}
-	
-
-	private Integer getSelectedId() {
-		ListItem sel = list.getSelectedItem();
-		if (sel == null)
-			return null;
-		return (Integer) sel.getValue();
-	}
-	*/
 
 		
 	private void refreshList() {
@@ -785,10 +765,12 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 	        for (DelJob job : remaining) {
 	            try {
-	                DB.executeUpdateEx(
+	            	Object [] parms = {submittedId};
+	            	DB.executeUpdateEx(
 	                    "DELETE FROM " + job.tableName + " WHERE ZZ_WSP_ATR_Submitted_ID=?",
+	                    parms,
 	                    trxName,
-	                    submittedId
+	                    0
 	                );
 	            } catch (Exception ex) {
 	                failed.add(job);

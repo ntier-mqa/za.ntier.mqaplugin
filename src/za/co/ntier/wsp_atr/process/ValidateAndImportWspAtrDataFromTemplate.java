@@ -6,8 +6,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.adempiere.exceptions.AdempiereException;
+import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -209,23 +212,97 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 		if (selectedEntry == null && entries.length > 0) {
 			selectedEntry = entries[0];
 		}
-
-		if (selectedEntry == null) {
-			throw new AdempiereException("No valid (non-error) attachment found.");
-		}
+		
 
 		if (selectedEntry == null) {
 			throw new AdempiereException("Attachment has no valid entries.");
 		}
 
+		/*
 		try (InputStream is = selectedEntry.getInputStream()) {
-			if (is == null) {
-				throw new AdempiereException(
-						"Could not open attachment stream for file " + selectedEntry.getName());
-			}
-			IOUtils.setByteArrayMaxOverride(200 * 1024 * 1024);
-			return WorkbookFactory.create(is);
+		    if (is == null) {
+		        throw new AdempiereException(
+		            "Could not open attachment stream for file " + selectedEntry.getName());
+		    }
+
+		    // POI zip-bomb protection (xlsm/xlsx are ZIPs)
+		    ZipSecureFile.setMinInflateRatio(0.001); // default 0.01; this is safer but less strict
+		    ZipSecureFile.setMaxEntrySize(200L * 1024L * 1024L); // optional
+		    ZipSecureFile.setMaxTextSize(50L * 1024L * 1024L);   // optional
+
+		    // Still keep your byte[] limit override (good for large sheets)
+		    IOUtils.setByteArrayMaxOverride(200 * 1024 * 1024);
+
+		    return WorkbookFactory.create(is);
 		}
+		*/
+		
+		try (InputStream is = selectedEntry.getInputStream()) {
+		    if (is == null) {
+		        throw new AdempiereException("Could not open attachment stream for file " + selectedEntry.getName());
+		    }
+
+		    byte[] bytes = org.apache.commons.io.IOUtils.toByteArray(is);
+
+		    // pre-check using a fresh stream
+		    preCheckXlsmStyleBloat(new java.io.ByteArrayInputStream(bytes), selectedEntry.getName());
+
+		    // now load workbook using another fresh stream
+		    ZipSecureFile.setMinInflateRatio(0.001); // default 0.01; this is safer but less strict
+		    ZipSecureFile.setMaxEntrySize(200L * 1024L * 1024L); // optional
+		    ZipSecureFile.setMaxTextSize(50L * 1024L * 1024L);   // optional
+		    IOUtils.setByteArrayMaxOverride(200 * 1024 * 1024);
+
+		    return WorkbookFactory.create(new java.io.ByteArrayInputStream(bytes));
+		} catch (AdempiereException ex) {
+	        throw ex;
+		}
+	}
+	
+	private void preCheckXlsmStyleBloat(InputStream rawIs, String fileName) {
+	    // thresholds - tune for your templates
+	    final long MAX_STYLES_UNCOMPRESSED = 10L * 1024L * 1024L; // 10MB
+	    final double MAX_STYLES_RATIO = 120.0; // uncompressed/compressed
+
+	    try (ZipInputStream zis = new ZipInputStream(rawIs)) {
+	        ZipEntry e;
+	        while ((e = zis.getNextEntry()) != null) {
+	            if (!"xl/styles.xml".equalsIgnoreCase(e.getName())) {
+	                continue;
+	            }
+
+	            long comp = e.getCompressedSize(); // may be -1 for streams; often present
+	            long uncomp = e.getSize();         // may be -1; often present
+
+	            // If sizes are available, do an early warning
+	            if (uncomp > 0 && uncomp >= MAX_STYLES_UNCOMPRESSED) {
+	                throw new AdempiereException(
+	                    "Your template appears to contain excessive formatting (styles). " +
+	                    "Please open it in Excel and do a 'Save As' to a new file, then upload again. " +
+	                    "Problem area: xl/styles.xml size=" + (uncomp / 1024) + " KB. File: " + fileName
+	                );
+	            }
+
+	            if (uncomp > 0 && comp > 0) {
+	                double ratio = (double) uncomp / (double) comp;
+	                if (ratio >= MAX_STYLES_RATIO) {
+	                    throw new AdempiereException(
+	                        "Your template appears to be format/style bloated (high compression ratio). " +
+	                        "Please open it in Excel and do a 'Save As' to a new file, then upload again. " +
+	                        "Problem area: xl/styles.xml ratio=" + String.format("%.1f", ratio) + ". File: " + fileName
+	                    );
+	                }
+	            }
+
+	            // If we found styles.xml and it doesn't trip thresholds, we can stop
+	            break;
+	        }
+	    } catch (AdempiereException ex) {
+	        throw ex;
+	    } catch (Exception ex) {
+	        // If pre-check fails for any reason, don't block import; just continue
+	        // (Optional: log at FINE level)
+	    }
 	}
 
 	private String safeFileName(X_ZZ_WSP_ATR_Submitted submitted) {
