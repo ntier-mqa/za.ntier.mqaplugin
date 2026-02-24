@@ -60,6 +60,7 @@ import org.zkoss.zul.Separator;
 import org.zkoss.zul.Toolbarbutton;
 import org.zkoss.zul.Vlayout;
 
+import za.co.ntier.api.model.X_ZZSdfOrganisation;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
 import za.ntier.models.MZZWSPATRSubmitted;
@@ -657,7 +658,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	        "FROM adempiere.zzsdforganisation_v " +
 	        "WHERE ad_user_id = ? " +
 	        "AND isactive = 'Y' " +
-	        "AND zzreplacingprimarysdf = 'Y'" +
+	        "AND zzsdfroletype = '" + X_ZZSdfOrganisation.ZZSDFROLETYPE_Primary + "' " +
 	        "ORDER BY orgname";
 
 	    List<List<Object>> rows =

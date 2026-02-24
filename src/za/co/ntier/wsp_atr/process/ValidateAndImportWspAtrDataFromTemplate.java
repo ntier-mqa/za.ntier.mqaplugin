@@ -120,7 +120,8 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 			ImportWspAtrDataFromTemplate importProc = new ImportWspAtrDataFromTemplate();
 			importProc.startProcess(getCtx(), getProcessInfo(), Trx.get(get_TrxName(), false)); // OR refactor import into a service and call it directly
 			updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID, X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Imported);
-			return "Validation passed. Import completed.";
+			return "";
+			//return "Validation passed. Import completed.";
 		} catch (Exception ex) {
 			updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID,X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_ErrorImporting );
 			throw ex;

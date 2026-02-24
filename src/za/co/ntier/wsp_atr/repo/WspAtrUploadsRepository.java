@@ -27,6 +27,8 @@ public class WspAtrUploadsRepository {
             "FROM ZZ_WSP_ATR_Submitted s " +
             "LEFT JOIN adempiere.zzsdforganisation_v v ON v.zzsdforganisation_v_id = s.ZZSDFOrganisation_ID " +
             "WHERE v.ad_user_id = ? " +
+            " And s.zz_wsp_atr_status in ('" + X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Imported + "'"
+            		+ ",'" + X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Uploaded + "') " +
             "ORDER BY s.ZZ_WSP_ATR_Submitted_ID DESC";
 
         return DB.getSQLArrayObjectsEx(null, sql, adUserId);

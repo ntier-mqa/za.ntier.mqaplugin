@@ -18,6 +18,7 @@ import org.compiere.util.Env;
 
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
+import za.ntier.models.MZZWSPATRSubmitted;
 
 @org.adempiere.base.annotation.Process(
 		name = "za.co.ntier.wsp_atr.process.ImportWspAtrDataFromTemplate")
@@ -84,7 +85,9 @@ public class ImportWspAtrDataFromTemplate extends SvrProcess {
 			totalImported += count;
 
 		}
+		MZZWSPATRSubmitted mZZWSPATRSubmitted = new MZZWSPATRSubmitted(ctx, p_ZZ_WSP_ATR_Submitted_ID, trxName);
 
+		addLog("The WSP-ATR import for " + mZZWSPATRSubmitted.getOrganisationName() + " with SDL Number " + mZZWSPATRSubmitted.getSdlNumber() + " was successful.");  // will be sent via emails
 		return "Imported " + totalImported + " records from all mapped tabs";
 	}
 

@@ -147,7 +147,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 
 			if (isMissingMandatory(row, colIndexToMeta.values(), formatter,process)) {
 				// optional log
-				process.addLog("Skipping row " + (r + 1) + " - mandatory column missing (tab " + mappingHeader.getZZ_Tab_Name() + ")");
+			//	process.addLog("Skipping row " + (r + 1) + " - mandatory column missing (tab " + mappingHeader.getZZ_Tab_Name() + ")");
 				continue;
 			}
 
@@ -214,8 +214,8 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 				} 
 			}catch (SkipRowException e) {
 				skipRow = true;
-				process.addLog("Skipping row " + (r + 1) + " - " + e.getMessage()
-				+ " (tab " + mappingHeader.getZZ_Tab_Name() + ")");
+		//		process.addLog("Skipping row " + (r + 1) + " - " + e.getMessage()
+		//		+ " (tab " + mappingHeader.getZZ_Tab_Name() + ")");
 			}
 
 			if (skipRow) {
@@ -228,14 +228,14 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 			// Commit in batches to avoid huge transactions
 			if (commitEvery > 0 && (imported % commitEvery) == 0) {
 				DB.commit(true, trxName);
-				process.addLog("Committed after " + imported + " inserts (tab " + mappingHeader.getZZ_Tab_Name() + ")");
+			//	process.addLog("Committed after " + imported + " inserts (tab " + mappingHeader.getZZ_Tab_Name() + ")");
 			}
 		}
 
 		// Final commit at end (safe)
 		DB.commit(true,trxName);
 
-		process.addLog("Imported " + imported + " rows from tab " + mappingHeader.getZZ_Tab_Name());
+	//	process.addLog("Imported " + imported + " rows from tab " + mappingHeader.getZZ_Tab_Name());
 		return imported;
 	}
 
@@ -395,9 +395,9 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 						+ column.getColumnName());
 			}
 			if (svrProcess != null) {
-				svrProcess.addLog("Skipping create in " + refTableName
-						+ " for column " + column.getColumnName()
-						+ " - Name column is configured but empty. Sheet value='" + (mainText != null ? mainText : "") + "'");
+				//svrProcess.addLog("Skipping create in " + refTableName
+					//	+ " for column " + column.getColumnName()
+					//	+ " - Name column is configured but empty. Sheet value='" + (mainText != null ? mainText : "") + "'");
 			}
 			return;
 		}

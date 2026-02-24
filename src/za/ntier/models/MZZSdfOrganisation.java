@@ -12,7 +12,8 @@ import org.compiere.model.MUser;
 import org.compiere.util.CLogger;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
-import org.compiere.util.Util;
+
+import za.co.ntier.api.model.X_ZZSdfOrganisation;
 
 public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
 
