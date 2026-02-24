@@ -102,7 +102,7 @@ public class WspAtrUploadsService {
 
 		MPInstance instance = new MPInstance(ctx, proc.getAD_Process_ID(), 0, recordIdForInstance, null);
 		instance.setIsRunAsJob(true);
-		instance.setNotificationType(MPInstance.NOTIFICATIONTYPE_EMailPlusNotice);
+		instance.setNotificationType(MPInstance.NOTIFICATIONTYPE_None);
 		instance.saveEx();
 
 		pi.setAD_PInstance_ID(instance.getAD_PInstance_ID());

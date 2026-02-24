@@ -585,43 +585,7 @@ public class GenerateWspAtrTablesFromTemplate extends SvrProcess {
 
 
 
-	/** Return true if the header fragment looks like it came from an Excel formula. */
-	private boolean isFormulaLike(String s) {
-		if (s == null)
-			return false;
-
-		String up = s.toUpperCase(Locale.ROOT);
-
-		// Starts with = like a normal Excel formula
-		if (up.startsWith("="))
-			return true;
-
-		// Contains typical Excel function names
-		if (up.contains("SUM(")
-				|| up.contains("SUMPRODUCT(")
-				|| up.contains("COUNTIF(")
-				|| up.contains("COUNTA(")
-				|| up.contains("CONCATENATE(")
-				|| up.contains("IF(")
-				|| up.contains("VLOOKUP(")
-				|| up.contains("HLOOKUP(")
-				|| up.contains("INDEX(")
-				|| up.contains("MATCH(")) {
-			return true;
-		}
-
-		// Lots of cell reference noise like A7:A63820, N7:N59820, etc.
-		// Very rough, but good enough for header rows.
-		if (up.matches(".*[A-Z]+\\d+.*:\\s*[A-Z]+\\d+.*"))
-			return true;
-
-		// Very long, messy strings are likely formula-debug text, not human labels
-		if (up.length() > 120 && up.contains("_"))
-			return true;
-
-		return false;
-	}
-
+	
 	/**
 	 * Combine up to 3 header fragments (e.g. from three rows) into a single header,
 	 * ignoring generic words and formula-like fragments.
