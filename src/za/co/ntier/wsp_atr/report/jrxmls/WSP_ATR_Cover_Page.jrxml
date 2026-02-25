@@ -1,56 +1,126 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 6.20.2  -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="WSP_ATR_Cover_Page" pageWidth="842" pageHeight="550" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="e8155181-50b2-42c9-b35e-2b7d95e7669b">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+	name="WSP_ATR_Cover_Page"
+	pageWidth="842" pageHeight="550" orientation="Landscape"
+	whenNoDataType="AllSectionsNoDetail"
+	columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20"
+	uuid="e8155181-50b2-42c9-b35e-2b7d95e7669b">
+
 	<style name="Title" fontName="SansSerif" fontSize="16" isBold="true"/>
 	<style name="SubTitle" fontName="SansSerif" fontSize="11" isBold="false"/>
 	<style name="LabelBold" fontName="SansSerif" fontSize="10" isBold="true"/>
 	<style name="Normal" fontName="SansSerif" fontSize="10"/>
+
+	<!-- Passed in from iDempiere -->
+	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
+
 	<parameter name="RESOURCE_DIR" class="java.lang.String" isForPrompting="false">
 		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
 	</parameter>
-	<parameter name="P_ORGANISATION_NAME" class="java.lang.String" isForPrompting="false">
-		<defaultValueExpression><![CDATA["<Organisation Name>"]]></defaultValueExpression>
-	</parameter>
-	<parameter name="P_TRADING_NAME" class="java.lang.String" isForPrompting="false">
-		<defaultValueExpression><![CDATA["<Trading Name>"]]></defaultValueExpression>
-	</parameter>
-	<parameter name="P_LEVY_NUMBER" class="java.lang.String" isForPrompting="false">
-		<defaultValueExpression><![CDATA["<Levy Number>"]]></defaultValueExpression>
-	</parameter>
-	<parameter name="P_DATE_GENERATED" class="java.lang.String" isForPrompting="false">
-		<defaultValueExpression><![CDATA["<Date Document Generated>"]]></defaultValueExpression>
-	</parameter>
+
+	<!-- SQL-driven dataset -->
 	<queryString>
-		<![CDATA[SELECT 1 AS dummy]]>
+		<![CDATA[
+SELECT
+    v.orgname                                  AS organisation_name,
+    v.orgname                                  AS trading_name,
+    v.zz_sdl_no                                AS levy_number,
+    to_char(r.created, 'DD FMMonth YYYY')      AS date_generated,
+
+    to_char(
+      CASE
+        WHEN COALESCE(ext.within_ext_window, 0) = 1 THEN ext.ext_end_date
+        ELSE cfg.sub_end
+      END,
+      'DD FMMonth YYYY'
+    ) AS submit_deadline_text
+
+FROM adempiere.zz_wsp_atr_report r
+LEFT JOIN adempiere.zz_wsp_atr_submitted s
+       ON s.zz_wsp_atr_submitted_id = r.zz_wsp_atr_submitted_id
+LEFT JOIN adempiere.zzsdforganisation_v v
+       ON v.zzsdforganisation_id = s.zzsdforganisation_id
+
+-- Latest active SDR config per client (matches your Java query)
+LEFT JOIN LATERAL (
+    SELECT
+        c.zz_wsp_atr_sub_start_date AS sub_start,
+        c.zz_wsp_atr_sub_end_date   AS sub_end,
+        c.zz_wsp_atr_ext_start_date AS ext_start,
+        c.zz_wsp_atr_ext_end_date   AS ext_end
+    FROM adempiere.zz_sdr_configuration c
+    WHERE c.ad_client_id = r.ad_client_id
+      AND c.isactive='Y'
+    ORDER BY c.updated DESC
+    LIMIT 1
+) cfg ON true
+
+-- Extension check: matches isOrgInApprovedWspAtrExtensionBatch()
+LEFT JOIN LATERAL (
+    SELECT
+        CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS within_ext_window,
+        MAX(b.zz_wsp_atr_ext_end_date)           AS ext_end_date
+    FROM adempiere.c_bpartner bp
+    JOIN adempiere.zz_wsp_atr_extension e
+      ON e.zz_sdl_no = bp.value
+    JOIN adempiere.zz_wsp_atr_extension_batch b
+      ON b.zz_wsp_atr_extension_batch_id = e.zz_wsp_atr_extension_batch_id
+    WHERE bp.c_bpartner_id = v.c_bpartner_id
+      AND bp.isactive = 'Y'
+      AND e.isactive = 'Y'
+      AND b.isactive = 'Y'
+      AND b.zz_docstatus IN ('AP')
+      AND b.zz_wsp_atr_ext_start_date IS NOT NULL
+      AND b.zz_wsp_atr_ext_end_date IS NOT NULL
+      AND CURRENT_TIMESTAMP BETWEEN b.zz_wsp_atr_ext_start_date AND b.zz_wsp_atr_ext_end_date
+) ext ON true
+
+WHERE r.zz_wsp_atr_report_id = $P{ZZ_WSP_ATR_Report_ID};
+]]>
 	</queryString>
-	<field name="dummy" class="java.lang.Integer"/>
+
+	<field name="organisation_name" class="java.lang.String"/>
+	<field name="trading_name" class="java.lang.String"/>
+	<field name="levy_number" class="java.lang.String"/>
+	<field name="date_generated" class="java.lang.String"/>
+	<field name="submit_deadline_text" class="java.lang.String"/>
+
 	<title>
 		<band height="500" splitType="Stretch">
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+
 			<image>
 				<reportElement x="320" y="10" width="170" height="170" uuid="556b71c7-1762-4f3e-8e96-65d607a81ac8"/>
 				<imageExpression><![CDATA[$P{RESOURCE_DIR} + "login-logo.png"]]></imageExpression>
 			</image>
+
 			<staticText>
 				<reportElement style="SubTitle" x="0" y="190" width="802" height="22" uuid="3e4aaee1-b8c7-4faa-9975-f82f4bae9048"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<text><![CDATA[WORKPLACE SKILLS PLAN AND ANNUAL TRAINING REPORT]]></text>
 			</staticText>
+
 			<staticText>
 				<reportElement style="SubTitle" x="0" y="214" width="802" height="18" uuid="7e49871c-fa84-4c88-8186-a3c52337a623"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<text><![CDATA["Submitted to the Mining Qualifications Authority"]]></text>
 			</staticText>
+
 			<staticText>
 				<reportElement style="SubTitle" x="0" y="240" width="802" height="18" uuid="e2651170-4126-461e-8cb0-4d39cf19fde1"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<text><![CDATA[This submission serves as an application for]]></text>
 			</staticText>
+
 			<staticText>
 				<reportElement style="SubTitle" x="0" y="262" width="802" height="18" uuid="c97a0962-0168-4573-a24e-5fde902029b4"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<text><![CDATA[Mandatory Grant]]></text>
 			</staticText>
+
 			<rectangle>
 				<reportElement x="40" y="294" width="722" height="95" uuid="646ffe47-b4b6-403e-86ea-70781c9fc122"/>
 			</rectangle>
@@ -66,6 +136,7 @@
 			<line>
 				<reportElement x="401" y="294" width="1" height="95" uuid="a18526b9-93b5-491d-8135-832dd3efee67"/>
 			</line>
+
 			<staticText>
 				<reportElement style="LabelBold" x="45" y="298" width="350" height="18" uuid="6a7bedda-3e70-4cfb-9dd3-b2dbcb2f7812"/>
 				<textElement verticalAlignment="Middle"/>
@@ -86,40 +157,50 @@
 				<textElement verticalAlignment="Middle"/>
 				<text><![CDATA[Date Document Generated]]></text>
 			</staticText>
+
+			<!-- SQL fields -->
 			<textField>
 				<reportElement style="Normal" x="410" y="298" width="345" height="18" uuid="668513f2-0a97-4c74-a2cc-2f8fc1828979"/>
 				<textElement verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[$P{P_ORGANISATION_NAME}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{organisation_name}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement style="Normal" x="410" y="322" width="345" height="18" uuid="5745da78-434b-4881-b8a0-c172b28aa371"/>
 				<textElement verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[$P{P_TRADING_NAME}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{trading_name}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement style="Normal" x="410" y="346" width="345" height="18" uuid="ca8aab09-c45c-4862-a316-2ee3de3f7a43"/>
 				<textElement verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[$P{P_LEVY_NUMBER}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{levy_number}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement style="Normal" x="410" y="370" width="345" height="18" uuid="94004874-27e4-4fce-a253-bf110f5d9538"/>
 				<textElement verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[$P{P_DATE_GENERATED}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{date_generated}]]></textFieldExpression>
 			</textField>
+
 			<staticText>
 				<reportElement style="LabelBold" x="40" y="406" width="300" height="18" uuid="3b1d1024-05ab-46a6-a284-66cf1f209e3d"/>
 				<textElement verticalAlignment="Middle"/>
 				<text><![CDATA[PLEASE NOTE:]]></text>
 			</staticText>
+
 			<textField textAdjust="StretchHeight">
 				<reportElement style="Normal" x="40" y="444" width="722" height="48" uuid="1ad89576-6436-41ef-a8f8-6824b5a6b728"/>
 				<textElement verticalAlignment="Top"/>
-				<textFieldExpression><![CDATA["The WSP-ATR must be submitted to MQA by 30 April 2025. Please note that your submission is incomplete unless the signature and declaration pages (with all the required signatures) are completed.\n"
-+ "Organisations with less than 50 employees do not have to submit signatures of consulted parties."]]></textFieldExpression>
+				<textFieldExpression><![CDATA[
+"PLEASE NOTE:\n"
++ "The WSP-ATR must be submitted to MQA by " + $F{submit_deadline_text} + ". Please note that your submission is incomplete unless the signature and declaration pages (with all the required signatures) are completed.\n"
++ "Organisations with less than 50 employees do not have to submit signatures of consulted parties."
+]]></textFieldExpression>
 			</textField>
+
 		</band>
 	</title>
+
 	<detail>
 		<band/>
 	</detail>
+
 </jasperReport>
