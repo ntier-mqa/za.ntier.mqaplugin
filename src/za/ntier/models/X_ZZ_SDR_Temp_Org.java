@@ -31,7 +31,7 @@ public class X_ZZ_SDR_Temp_Org extends PO implements I_ZZ_SDR_Temp_Org, I_Persis
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260224L;
+	private static final long serialVersionUID = 20260225L;
 
     /** Standard Constructor */
     public X_ZZ_SDR_Temp_Org (Properties ctx, int ZZ_SDR_Temp_Org_ID, String trxName)
