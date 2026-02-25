@@ -18,6 +18,7 @@
 package za.ntier.models;
 
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.util.Properties;
 import org.compiere.model.*;
 
@@ -278,6 +279,48 @@ public class X_ZZ_SDR_Temp_Org extends PO implements I_ZZ_SDR_Temp_Org, I_Persis
 	public String getValue()
 	{
 		return (String)get_Value(COLUMNNAME_Value);
+	}
+
+	public org.compiere.model.I_AD_User getZZ_Completed() throws RuntimeException
+	{
+		return (org.compiere.model.I_AD_User)MTable.get(getCtx(), org.compiere.model.I_AD_User.Table_ID)
+			.getPO(getZZ_Completed_ID(), get_TrxName());
+	}
+
+	/** Set Completed By.
+		@param ZZ_Completed_ID Completed By
+	*/
+	public void setZZ_Completed_ID (int ZZ_Completed_ID)
+	{
+		if (ZZ_Completed_ID < 1)
+			set_Value (COLUMNNAME_ZZ_Completed_ID, null);
+		else
+			set_Value (COLUMNNAME_ZZ_Completed_ID, Integer.valueOf(ZZ_Completed_ID));
+	}
+
+	/** Get Completed By.
+		@return Completed By	  */
+	public int getZZ_Completed_ID()
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_ZZ_Completed_ID);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
+	}
+
+	/** Set Date Completed.
+		@param ZZ_Date_Completed Date Completed
+	*/
+	public void setZZ_Date_Completed (Timestamp ZZ_Date_Completed)
+	{
+		set_Value (COLUMNNAME_ZZ_Date_Completed, ZZ_Date_Completed);
+	}
+
+	/** Get Date Completed.
+		@return Date Completed	  */
+	public Timestamp getZZ_Date_Completed()
+	{
+		return (Timestamp)get_Value(COLUMNNAME_ZZ_Date_Completed);
 	}
 
 	/** Exec Approve = AE */

@@ -211,6 +211,26 @@ public interface I_ZZ_SDR_Temp_Org
 	  */
 	public String getValue();
 
+    /** Column name ZZ_Completed_ID */
+    public static final String COLUMNNAME_ZZ_Completed_ID = "ZZ_Completed_ID";
+
+	/** Set Completed By	  */
+	public void setZZ_Completed_ID (int ZZ_Completed_ID);
+
+	/** Get Completed By	  */
+	public int getZZ_Completed_ID();
+
+	public org.compiere.model.I_AD_User getZZ_Completed() throws RuntimeException;
+
+    /** Column name ZZ_Date_Completed */
+    public static final String COLUMNNAME_ZZ_Date_Completed = "ZZ_Date_Completed";
+
+	/** Set Date Completed	  */
+	public void setZZ_Date_Completed (Timestamp ZZ_Date_Completed);
+
+	/** Get Date Completed	  */
+	public Timestamp getZZ_Date_Completed();
+
     /** Column name ZZ_DocAction */
     public static final String COLUMNNAME_ZZ_DocAction = "ZZ_DocAction";
 
