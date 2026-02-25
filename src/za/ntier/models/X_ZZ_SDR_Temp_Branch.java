@@ -31,7 +31,7 @@ public class X_ZZ_SDR_Temp_Branch extends PO implements I_ZZ_SDR_Temp_Branch, I_
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260224L;
+	private static final long serialVersionUID = 20260225L;
 
     /** Standard Constructor */
     public X_ZZ_SDR_Temp_Branch (Properties ctx, int ZZ_SDR_Temp_Branch_ID, String trxName)
