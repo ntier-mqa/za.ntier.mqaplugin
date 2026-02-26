@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 6.20.2  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="WSP_ATR_Section_11_Comments" pageWidth="842" pageHeight="550" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="f3e5c541-443c-45d3-9838-4c157e4abbde">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="mqa dev"/>
+	<style name="HdrCenter" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" fontName="SansSerif" fontSize="9" isBold="true">
+		<box topPadding="0" leftPadding="6" bottomPadding="0" rightPadding="6">
+			<topPen lineWidth="0.75"/>
+			<leftPen lineWidth="0.75"/>
+			<bottomPen lineWidth="0.75"/>
+			<rightPen lineWidth="0.75"/>
+		</box>
+	</style>
+	<style name="TxtCell" mode="Opaque" forecolor="#000000" backcolor="#FFFFFF" fontName="SansSerif" fontSize="8">
+		<box topPadding="0" leftPadding="6" bottomPadding="0" rightPadding="6">
+			<topPen lineWidth="0.75"/>
+			<leftPen lineWidth="0.75"/>
+			<bottomPen lineWidth="0.75"/>
+			<rightPen lineWidth="0.75"/>
+		</box>
+	</style>
+	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
+	<queryString>
+		<![CDATA[SELECT 1 AS dummy]]>
+	</queryString>
+	<field name="dummy" class="java.lang.Integer"/>
+	<title>
+		<band height="505" splitType="Stretch">
+			<rectangle>
+				<reportElement x="0" y="0" width="802" height="505" uuid="74d2db15-598e-4185-9a23-7b1b6a8d9c86"/>
+				<graphicElement>
+					<pen lineWidth="0.75"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement style="HdrCenter" x="0" y="0" width="802" height="16" uuid="5fa24164-c14c-4c6a-bde6-1e54445fdf16"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Section 11: Comments (Sign, Scan & Upload)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TxtCell" x="0" y="16" width="802" height="14" uuid="65994685-9395-4eee-99bc-7a3af6b31d14"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[Please provide any comments relating to the WSP/ATR Mandatory Grant you may wish to bring under the attention of the MQA]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="0" y="30" width="802" height="475" uuid="a724876e-1fce-4182-965a-213736b4b421"/>
+				<graphicElement>
+					<pen lineWidth="0.75"/>
+				</graphicElement>
+			</rectangle>
+		</band>
+	</title>
+	<detail>
+		<band/>
+	</detail>
+</jasperReport>

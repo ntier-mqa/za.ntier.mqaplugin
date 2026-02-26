@@ -188,7 +188,7 @@ public class WspAtrUploadsService {
 			Object[] params = {Env.getAD_User_ID(ctx),submittedId};
 			DB.executeUpdateEx(
 					"UPDATE zz_wsp_atr_submitted " +
-							"SET zz_wsp_atr_status='SU',ZZ_DocAction = 'S1', updated=now(), updatedby=? " +
+							"SET zz_wsp_atr_status='DR',ZZ_DocAction = 'VE', updated=now(), updatedby=? " +
 							"WHERE zz_wsp_atr_submitted_id=?",
 							params,
 							trxName

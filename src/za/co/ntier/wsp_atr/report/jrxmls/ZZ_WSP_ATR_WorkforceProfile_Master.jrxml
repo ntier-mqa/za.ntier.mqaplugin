@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 6.20.1  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ZZ_WSP_ATR_WorkforceProfile_Master" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="472ff82e-dc3d-4e3b-ae25-6f4167465492">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="mqa dev"/>
 	<style name="Title" fontName="SansSerif" fontSize="14" isBold="true"/>
 	<style name="SubTitle" fontName="SansSerif" fontSize="11" isBold="true"/>
 	<style name="Normal" fontName="SansSerif" fontSize="9"/>
@@ -19,20 +20,8 @@
 		<band height="555" splitType="Stretch">
 			<subreport>
 				<reportElement x="0" y="0" width="802" height="555" uuid="5482ebe0-85c7-4711-89cb-12b8488967ff"/>
-				<subreportParameter name="RESOURCE_DIR">
-					<subreportParameterExpression><![CDATA[$P{RESOURCE_DIR}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="P_ORGANISATION_NAME">
-					<subreportParameterExpression><![CDATA["<Organisation Name>"]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="P_TRADING_NAME">
-					<subreportParameterExpression><![CDATA["<Trading Name>"]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="P_LEVY_NUMBER">
-					<subreportParameterExpression><![CDATA["<Levy Number>"]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="P_DATE_GENERATED">
-					<subreportParameterExpression><![CDATA["<Date Document Generated>"]]></subreportParameterExpression>
+				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
+					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Cover_Page.jasper"]]></subreportExpression>
@@ -40,6 +29,16 @@
 		</band>
 	</title>
 	<detail>
+		<band height="555" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="802" height="555" uuid="0934bd42-d42a-48e4-bdca-31a16a49d3b5"/>
+				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
+					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_1_Admin_Details.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
 		<band height="555" splitType="Stretch">
 			<subreport>
 				<reportElement x="0" y="0" width="802" height="555" uuid="0934bd42-d42a-48e4-bdca-31a16a49d3b5"/>

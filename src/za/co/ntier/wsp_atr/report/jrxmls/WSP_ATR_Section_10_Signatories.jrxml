@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 6.20.2  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="WSP_ATR_Section_10_Signatories" pageWidth="842" pageHeight="550" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="99e65bd8-6984-41ce-bccc-338ced00a3e1">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="mqa dev"/>
+	<style name="HdrCenter" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" fontName="SansSerif" fontSize="9" isBold="true">
+		<box topPadding="0" leftPadding="6" bottomPadding="0" rightPadding="6">
+			<topPen lineWidth="0.75"/>
+			<leftPen lineWidth="0.75"/>
+			<bottomPen lineWidth="0.75"/>
+			<rightPen lineWidth="0.75"/>
+		</box>
+	</style>
+	<style name="LblCell" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" fontName="SansSerif" fontSize="8" isBold="true">
+		<box topPadding="0" leftPadding="6" bottomPadding="0" rightPadding="4">
+			<topPen lineWidth="0.75"/>
+			<leftPen lineWidth="0.75"/>
+			<bottomPen lineWidth="0.75"/>
+			<rightPen lineWidth="0.75"/>
+		</box>
+	</style>
+	<style name="ValCell" mode="Opaque" forecolor="#000000" backcolor="#FFFFFF" fontName="SansSerif" fontSize="8">
+		<box topPadding="0" leftPadding="6" bottomPadding="0" rightPadding="4">
+			<topPen lineWidth="0.75"/>
+			<leftPen lineWidth="0.75"/>
+			<bottomPen lineWidth="0.75"/>
+			<rightPen lineWidth="0.75"/>
+		</box>
+	</style>
+	<style name="TxtCell" mode="Opaque" forecolor="#000000" backcolor="#FFFFFF" fontName="SansSerif" fontSize="8">
+		<box topPadding="0" leftPadding="6" bottomPadding="0" rightPadding="4">
+			<topPen lineWidth="0.75"/>
+			<leftPen lineWidth="0.75"/>
+			<bottomPen lineWidth="0.75"/>
+			<rightPen lineWidth="0.75"/>
+		</box>
+	</style>
+	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
+	<queryString>
+		<![CDATA[SELECT 1 AS dummy]]>
+	</queryString>
+	<field name="dummy" class="java.lang.Integer"/>
+	<title>
+		<band height="510" splitType="Stretch">
+			<rectangle>
+				<reportElement x="0" y="0" width="802" height="502" uuid="f88c4f05-939b-4729-b0f8-6f663e09a6d1"/>
+				<graphicElement>
+					<pen lineWidth="0.75"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement style="HdrCenter" x="0" y="0" width="802" height="16" uuid="9f08392c-1fd9-4d59-b7ae-e0f385b6ec59"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Section 10: Authorisation and Signatories (Sign, Scan & Upload)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="16" width="110" height="32" uuid="b6a1a659-e7b8-46de-ae9d-f60176bbb13f"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[Declaration]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TxtCell" x="110" y="16" width="692" height="32" uuid="61927674-e5b7-4e24-bd9e-f6a3fb2f5ebc"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[We the undersigned, submit this information in compliance with the Mandatory Grant requirements of the Skills Development legislation and Regulations. We declare that, to the best of our knowledge, the information contained in this Actual Training Report and Workplace Skills Plan is accurate and up to date.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="HdrCenter" x="0" y="48" width="802" height="14" uuid="fbf478ed-1da2-4b88-96bf-9531a4b496f7"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Signatories]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="HdrCenter" x="0" y="62" width="802" height="14" uuid="8d0cfef3-934a-44dd-8f2f-a7d76c01b9ab"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Senior Organisation Representative as duly authorised / Chief Executive Officer]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="76" width="90" height="16" uuid="5d7ade5e-ca86-4abc-bb05-e1cd035198e2"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[Name(s)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="76" width="712" height="16" uuid="b3d5ad2f-8e1d-4eaa-8ce3-b4441b75f316"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="92" width="90" height="16" uuid="933f25a7-53a3-4385-98c4-e81bb92b00e2"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[Job Title]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="92" width="712" height="16" uuid="28d32e1a-85d6-4759-9769-a331cb76214b"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="108" width="90" height="16" uuid="9628030c-f60d-4397-8baa-ebb456ac5f32"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[Signature]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="108" width="712" height="16" uuid="17f604f3-c1a9-4f3b-b758-928437ad08cd"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="124" width="90" height="16" uuid="7c424172-5a39-4f6d-8a41-ddaebc4a7f5d"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[Date]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="124" width="712" height="16" uuid="f77cca4d-eb70-4f84-bbf6-15936ef86d80"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="HdrCenter" x="0" y="140" width="802" height="14" uuid="f6495861-a716-4c8e-a296-0b82abc63efe"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Skills Development Facilitator]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="154" width="90" height="16" uuid="c2c874d0-8cf7-489a-9f8c-e3c430275ecd"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[Name(s)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="154" width="712" height="16" uuid="68c76abe-0ede-44e3-bce8-7864adbffefd"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="170" width="90" height="16" uuid="d603cfc7-034e-400c-934b-7d80629b2b9e"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[Job Title]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="170" width="712" height="16" uuid="f3304b7f-3e1d-4f5d-b76f-c7de2457495f"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="186" width="90" height="16" uuid="7718e818-0933-4bbf-951e-8f2a65f761e3"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[Signature]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="186" width="712" height="16" uuid="bb84ee7f-d4c6-48af-86af-c1bbb95549e9"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="202" width="90" height="16" uuid="a71bbfeb-99dc-4107-a2f4-c45fa787c1ee"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[Date]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="202" width="712" height="16" uuid="4fe3d305-017b-4f0d-90e2-c2900e763743"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="HdrCenter" x="0" y="218" width="802" height="16" uuid="9d9a035c-abe6-4dd7-91fa-4ef6d439a95e"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[We the undersigned, confirm the organised labour/employee representatives were consulted by the employer on the WSP and the ATR.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="HdrCenter" x="0" y="234" width="802" height="14" uuid="34a6d362-3fea-484e-a019-934de8e9ddb2"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[For Trade Unions]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="248" width="110" height="16" uuid="cfedfa82-1346-4fd2-a1ba-13063d381144"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Union Name]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="110" y="248" width="231" height="16" uuid="a4dfb1df-93fc-47e7-83ea-b73954964398"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="341" y="248" width="231" height="16" uuid="8f134bd6-1ce5-4bf7-8f28-6c84ee81f578"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="572" y="248" width="230" height="16" uuid="22e856a1-eada-4947-b094-46dd81118f1b"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="264" width="110" height="16" uuid="dd173947-bc85-470b-8f1b-5db7d497dbb6"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Union Office Held]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="110" y="264" width="231" height="16" uuid="0075a3c2-5488-4c80-8cd9-4db825393bce"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="341" y="264" width="231" height="16" uuid="287e0ac0-70fd-4673-a85b-7bf427e0f7d4"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="572" y="264" width="230" height="16" uuid="8aed32c4-4c7c-4999-b9fa-941cfbffba94"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="280" width="110" height="16" uuid="47b1829c-1fb9-430d-a860-7c32753b8f46"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Signature]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="110" y="280" width="231" height="16" uuid="7ba67fe8-15f1-4616-bfad-78ff468939ef"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="341" y="280" width="231" height="16" uuid="3ee32f35-94d7-4d8b-96e4-b57a21a33e6e"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="572" y="280" width="230" height="16" uuid="27cb0952-b79e-41e3-a1e2-d5a7c5d49e6a"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="HdrCenter" x="0" y="296" width="802" height="14" uuid="e38e4e5d-a268-46eb-aa55-aefec1248b66"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Employee Representatives]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="310" width="90" height="12" uuid="21d6a3f8-312b-4a2e-b8b4-1874b8248a9d"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Name(s)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="310" width="712" height="12" uuid="5e058491-851e-4cbe-84d0-f1c52902208d"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="322" width="90" height="12" uuid="7155f964-598a-4ab0-b71b-9c47c73c9c6d"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Job Title]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="322" width="712" height="12" uuid="92dcbfaf-9d7b-4a7c-98ce-24bbd691c86e"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="334" width="90" height="12" uuid="65484b07-205c-4a10-9e79-89ee6f72b20b"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Signature]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="334" width="712" height="12" uuid="88d7372f-b126-4e6d-8456-bea6ad50e912"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="346" width="90" height="12" uuid="e0201400-d187-4d62-92fb-9f696c79c14e"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Date]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="346" width="712" height="12" uuid="93d676ba-2509-401c-8757-d184fb5a15fc"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="358" width="90" height="12" uuid="ce3b72ec-1e08-49da-b9d6-451c54d8a94f"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Name(s)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="358" width="712" height="12" uuid="0f8928b1-d51c-4eaf-b37f-2c76eb38e25f"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="370" width="90" height="12" uuid="1160d58e-b89c-4ae9-a3c6-bf5822df0db0"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Job Title]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="370" width="712" height="12" uuid="077d8e14-0e70-4953-b33c-07d79a4cc53e"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="382" width="90" height="12" uuid="f21c30c2-ad68-4070-b94f-f8f227b49705"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Signature]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="382" width="712" height="12" uuid="485adabc-d4ea-4a29-bf2a-abea4883bafa"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="394" width="90" height="12" uuid="68d6c62c-7094-460c-bf66-f8c98920a65b"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Date]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="394" width="712" height="12" uuid="3a2585d1-2f91-4f39-b54a-c96ade3e6d87"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="406" width="90" height="12" uuid="258c3262-33ba-482c-a2aa-33fcfbbff5f6"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Name(s)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="406" width="712" height="12" uuid="6cf9bded-fe94-4b47-9faf-31829f04053d"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="418" width="90" height="12" uuid="fe49f8cb-17f3-40ca-9e8f-d47457ddfd58"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Job Title]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="418" width="712" height="12" uuid="842d008a-a0f7-46f0-a549-148f6f528a69"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="430" width="90" height="12" uuid="f6f4cdf8-8070-4c52-968a-c58e297c4038"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Signature]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="430" width="712" height="12" uuid="ef01edab-c1c1-45ce-9222-b84a9890fc58"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="442" width="90" height="12" uuid="23772a09-38d1-45d9-b93f-f542f3dd4f99"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Date]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="442" width="712" height="12" uuid="248798de-424e-43e1-a5f1-8e77b62d8e92"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="454" width="90" height="12" uuid="35aac9e8-369b-4a8f-87ab-a5173b4b5386"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Name(s)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="454" width="712" height="12" uuid="28a44de1-6f4e-4740-accb-e0409d13bc75"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="466" width="90" height="12" uuid="4129e2b8-e3c9-4cb2-8c82-0c6190ad1694"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Job Title]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="466" width="712" height="12" uuid="d0289cb2-47bb-46c8-93ac-7f521701535d"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="478" width="90" height="12" uuid="d4026622-837a-4a09-ab1f-477f613a2700"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Signature]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="478" width="712" height="12" uuid="b0e1d5ee-deb1-4826-a3c3-0fe4f12ba1b7"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="LblCell" x="0" y="490" width="90" height="12" uuid="506b1825-aa09-430c-926c-aba97b7a89bb"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Date]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="ValCell" x="90" y="490" width="712" height="12" uuid="b845e8fb-fbc7-4402-bed9-2aca65845c63"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+		</band>
+	</title>
+	<detail>
+		<band/>
+	</detail>
+</jasperReport>

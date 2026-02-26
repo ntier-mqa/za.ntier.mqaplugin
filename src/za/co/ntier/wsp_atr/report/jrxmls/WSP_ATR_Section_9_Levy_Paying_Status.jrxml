@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 6.20.2  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="WSP_ATR_Section_9_Levy_Paying_Status" pageWidth="842" pageHeight="550" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="63cea4bd-d18a-4416-b37b-91350b88c472">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="mqa dev"/>
+	<style name="SectionTitle" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" fontName="SansSerif" fontSize="10" isBold="true">
+		<box topPadding="2" leftPadding="3" bottomPadding="2" rightPadding="3">
+			<topPen lineWidth="0.75"/>
+			<leftPen lineWidth="0.75"/>
+			<bottomPen lineWidth="0.75"/>
+			<rightPen lineWidth="0.75"/>
+		</box>
+	</style>
+	<style name="Instr" mode="Opaque" forecolor="#000000" backcolor="#FFFFFF" fontName="SansSerif" fontSize="8" isBold="true">
+		<box topPadding="2" leftPadding="3" bottomPadding="2" rightPadding="3">
+			<topPen lineWidth="0.75"/>
+			<leftPen lineWidth="0.75"/>
+			<bottomPen lineWidth="0.75"/>
+			<rightPen lineWidth="0.75"/>
+		</box>
+	</style>
+	<style name="TblHdr" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" fontName="SansSerif" fontSize="9" isBold="true">
+		<box topPadding="2" leftPadding="4" bottomPadding="2" rightPadding="3">
+			<topPen lineWidth="0.75"/>
+			<leftPen lineWidth="0.75"/>
+			<bottomPen lineWidth="0.75"/>
+			<rightPen lineWidth="0.75"/>
+		</box>
+	</style>
+	<style name="TblLbl" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" fontName="SansSerif" fontSize="8" isBold="true">
+		<box topPadding="2" leftPadding="4" bottomPadding="2" rightPadding="3">
+			<topPen lineWidth="0.75"/>
+			<leftPen lineWidth="0.75"/>
+			<bottomPen lineWidth="0.75"/>
+			<rightPen lineWidth="0.75"/>
+		</box>
+	</style>
+	<style name="TblVal" mode="Opaque" forecolor="#000000" backcolor="#FFFFFF" fontName="SansSerif" fontSize="8">
+		<box topPadding="2" leftPadding="4" bottomPadding="2" rightPadding="3">
+			<topPen lineWidth="0.75"/>
+			<leftPen lineWidth="0.75"/>
+			<bottomPen lineWidth="0.75"/>
+			<rightPen lineWidth="0.75"/>
+		</box>
+	</style>
+	<style name="CfoHdr" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" fontName="SansSerif" fontSize="9" isBold="true">
+		<box topPadding="2" leftPadding="4" bottomPadding="2" rightPadding="3">
+			<topPen lineWidth="0.75"/>
+			<leftPen lineWidth="0.75"/>
+			<bottomPen lineWidth="0.75"/>
+			<rightPen lineWidth="0.75"/>
+		</box>
+	</style>
+	<style name="CfoLbl" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" fontName="SansSerif" fontSize="8" isBold="true">
+		<box topPadding="2" leftPadding="6" bottomPadding="2" rightPadding="3">
+			<topPen lineWidth="0.75"/>
+			<leftPen lineWidth="0.75"/>
+			<bottomPen lineWidth="0.75"/>
+			<rightPen lineWidth="0.75"/>
+		</box>
+	</style>
+	<style name="CfoInput" mode="Opaque" forecolor="#000000" backcolor="#FFFFFF" fontName="SansSerif" fontSize="8">
+		<box topPadding="2" leftPadding="4" bottomPadding="2" rightPadding="3">
+			<topPen lineWidth="0.75"/>
+			<leftPen lineWidth="0.75"/>
+			<bottomPen lineWidth="0.75"/>
+			<rightPen lineWidth="0.75"/>
+		</box>
+	</style>
+	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
+	<queryString>
+		<![CDATA[SELECT
+    COALESCE(v.orgname, '<Organisation>') AS organisation,
+    COALESCE(v.zz_sdl_no, '<SDL Number>') AS sdl_number,
+    ''::varchar AS comment
+FROM adempiere.zz_wsp_atr_report r
+JOIN adempiere.zz_wsp_atr_submitted s
+  ON s.zz_wsp_atr_submitted_id = r.zz_wsp_atr_submitted_id
+LEFT JOIN adempiere.zzsdforganisation_v v
+  ON v.zzsdforganisation_id = s.zzsdforganisation_id
+WHERE r.zz_wsp_atr_report_id = $P{ZZ_WSP_ATR_Report_ID}
+FETCH FIRST 1 ROWS ONLY]]>
+	</queryString>
+	<field name="organisation" class="java.lang.String"/>
+	<field name="sdl_number" class="java.lang.String"/>
+	<field name="comment" class="java.lang.String"/>
+	<title>
+		<band height="300" splitType="Stretch">
+			<rectangle>
+				<reportElement x="0" y="0" width="802" height="300" uuid="8fc08d4b-51db-40ba-9f5e-b683d66ee639"/>
+			</rectangle>
+			<staticText>
+				<reportElement style="SectionTitle" x="0" y="0" width="802" height="18" uuid="c4130932-cc96-47b5-8ac5-7be374c57fac"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Section 9: Declaration on Levy Paying Status (Sign, Scan & Upload)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Instr" x="0" y="18" width="802" height="18" uuid="d91135c9-2ad5-4eba-9bc3-43c46617ad70"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[This is to confirm that this organisation is up to date with the levy payments to the Commissioner of South African Revenue Services for the following levy numbers. (If "NO" please provide a reason)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TblHdr" x="0" y="36" width="90" height="18" uuid="b240af8c-f607-43ce-8eb9-d2353b524035"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TblHdr" x="90" y="36" width="352" height="18" uuid="55ff2d8a-ff28-449c-8777-3b90a225a6a4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Organisation]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TblHdr" x="442" y="36" width="180" height="18" uuid="72f21b5d-2f76-4605-8d63-b8930a987d54"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[SDL Number]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TblHdr" x="622" y="36" width="180" height="18" uuid="ca9a2fef-5271-477b-8ca6-a00f487636f5"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Comment]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TblLbl" x="0" y="54" width="90" height="18" uuid="45fc9390-74f2-4c42-8e64-127a9bdf33b7"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Main SDL No]]></text>
+			</staticText>
+			<textField>
+				<reportElement style="TblVal" x="90" y="54" width="352" height="18" uuid="f33e7808-3d54-4a36-a9b6-9e78a59efb41"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{organisation}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="TblVal" x="442" y="54" width="180" height="18" uuid="b580fba8-a20e-48ee-914a-e132d7123851"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{sdl_number}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="TblVal" x="622" y="54" width="180" height="18" uuid="cda6a36b-9da5-436c-b3e9-013f26ec44dd"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{comment}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement style="TblLbl" x="0" y="72" width="90" height="18" uuid="4b3ecff1-d5a7-4293-b5db-cb85cd59a5d3"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Sub Levy]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TblHdr" x="90" y="72" width="240" height="18" uuid="5570b4f2-f009-4bf3-ba96-63fdbec02c82"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[SDL Number]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TblHdr" x="330" y="72" width="200" height="18" uuid="47e60d13-2103-4535-9816-d07201c29363"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[SIC Code]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TblHdr" x="530" y="72" width="272" height="18" uuid="ae22b41b-5431-4a97-ad3b-799d3b01cb55"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Separate WSP-ATR?]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TblVal" x="0" y="90" width="90" height="18" uuid="ba37afa1-1981-4eef-9b35-38ce8acbe2cc"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TblVal" x="90" y="90" width="240" height="18" uuid="689bd438-2247-47a0-85b8-33aba8bcde76"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TblVal" x="330" y="90" width="200" height="18" uuid="27219f93-41cb-4408-ba1f-2bef42507896"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TblVal" x="530" y="90" width="272" height="18" uuid="59376804-88a4-467a-84f2-15475fcbfab7"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="CfoHdr" x="0" y="116" width="802" height="18" uuid="6c4caac2-99a7-4da7-842c-e5f3558eedda"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Senior Financial Officer as duly authorised / Chief Financial Officer]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="CfoLbl" x="0" y="134" width="520" height="18" uuid="458ebfdb-eafb-4484-b727-2a9531dda43f"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[First Name(s)]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="CfoInput" x="520" y="134" width="282" height="18" uuid="9793d3cb-4ca8-44f8-95b6-c926d3dd2e8f"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="CfoLbl" x="0" y="152" width="520" height="18" uuid="012f017c-8d29-45f9-8f42-54b4d5214685"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Surname]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="CfoInput" x="520" y="152" width="282" height="18" uuid="b298e90d-4fbb-417c-80a8-5be5d5e6fcd3"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="CfoLbl" x="0" y="170" width="520" height="18" uuid="6be9c775-dabc-4ce8-bcd4-fdbf0afe419d"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Contact Tel No]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="CfoInput" x="520" y="170" width="282" height="18" uuid="b243036c-6d4c-4f62-bc2e-cbece569d04d"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="CfoLbl" x="0" y="188" width="520" height="18" uuid="f2de8af8-87e7-47a4-9f30-6dbc5a7e7f21"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Date]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="CfoInput" x="520" y="188" width="282" height="18" uuid="0208c378-9b6c-497b-8d62-e03fb6dfa8bf"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="CfoLbl" x="0" y="206" width="520" height="18" uuid="45bedd41-4bef-41b7-aeb5-7a55b24b7c99"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[Signature]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="CfoInput" x="520" y="206" width="282" height="18" uuid="6ac2eec7-4a4e-4663-9beb-07d0e9c47e4e"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="0" y="224" width="802" height="76" uuid="b9826221-40e5-4b05-88b6-8eeed1888e8c"/>
+			</rectangle>
+		</band>
+	</title>
+	<detail>
+		<band/>
+	</detail>
+</jasperReport>
