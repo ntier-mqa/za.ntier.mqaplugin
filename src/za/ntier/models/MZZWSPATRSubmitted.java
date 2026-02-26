@@ -40,6 +40,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
     // Your fixed mail template UUID
     private static final String WSP_ATRQuery_TEMPLATE_UUID = "c981b4f2-a103-4e62-a79f-f7401620bebe";
     private static final String WSP_ATR_Successful_Submission_TEMPLATE_UUID = "8763dcdc-4b83-44e5-b84a-c54e6a5beafe";
+    private static final String WSP_ATR_FINAL_APPROVAL_TEMPLATE_UUID = "6a3d10f8-8f15-4106-a491-e365dff4a7b2";
     public static final int FROM_EMAIL_USER_ID = MSysConfig.getIntValue("FROM_EMAIL_USER_ID",1000011);
     
     public static MZZWSPATRSubmitted getSubmitted(Properties ctx,
@@ -95,9 +96,16 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	 // If user ticked IsQuery = true, generate PDF and send email
 	    if (ok && is_ValueChanged("ZZ_IsQuery") && isZZ_IsQuery()) {
 	        try {
-	            sendQueryEmailWithPDF();
+	            sendQueryEmailWithPDF(WSP_ATRQuery_TEMPLATE_UUID);
 	        } catch (Exception e) {
 	            log.severe("Failed to send query email: " + e.getMessage());
+	        }
+	    }
+	    if (ok && is_ValueChanged(COLUMNNAME_ZZ_DocStatus) && getZZ_DocStatus() != null && getZZ_DocStatus().equals("AP") ) {  // Approved
+	    	try {
+	            sendQueryEmailWithPDF(WSP_ATR_FINAL_APPROVAL_TEMPLATE_UUID);
+	        } catch (Exception e) {
+	            log.severe("Failed to send approval email: " + e.getMessage());
 	        }
 	    }
 	    return ok;
@@ -241,7 +249,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
     }
 	
 	
-	private void sendQueryEmailWithPDF() throws Exception {
+	private void sendQueryEmailWithPDF(String templateUUID) throws Exception {
 
 	    int adUserId = getSdfUserId();
 
@@ -259,7 +267,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 	    // Load template
 	    MMailText mailText =
-	        new MMailText(getCtx(), WSP_ATRQuery_TEMPLATE_UUID, get_TrxName());
+	        new MMailText(getCtx(), templateUUID, get_TrxName());
 
 	    if (mailText.get_ID() <= 0) {
 	        log.severe("Mail template not found");
