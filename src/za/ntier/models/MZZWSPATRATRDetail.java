@@ -68,7 +68,7 @@ public class MZZWSPATRATRDetail extends X_ZZ_WSP_ATR_ATR_Detail {
 	    int atrTotal = DB.getSQLValue(get_TrxName(), atrSql, submittedId);
 
 	    String wspSql =
-	        "SELECT COALESCE(SUM(zz_male + zz_female),0) " +
+	        "SELECT COALESCE(SUM(coalesce(zz_male,0) + coalesce(zz_female,0)),0)  " +
 	        "FROM ZZ_WSP_ATR_WSP " +
 	        "WHERE ZZ_WSP_ATR_Submitted_ID=?";
 

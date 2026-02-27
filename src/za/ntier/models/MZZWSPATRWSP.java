@@ -56,7 +56,7 @@ public class MZZWSPATRWSP extends X_ZZ_WSP_ATR_WSP {
 	    int submittedId = getZZ_WSP_ATR_Submitted_ID();
 
 	    String sql =
-	        "SELECT COALESCE(SUM(zz_male + zz_female),0) " +
+	        "SELECT COALESCE(SUM(coalesce(zz_male,0) + coalesce(zz_female,0)),0)  " +
 	        "FROM ZZ_WSP_ATR_WSP " +
 	        "WHERE ZZ_WSP_ATR_Submitted_ID=?";
 
