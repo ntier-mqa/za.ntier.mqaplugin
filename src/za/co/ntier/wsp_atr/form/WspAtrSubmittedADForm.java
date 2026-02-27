@@ -562,8 +562,10 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	        return;
 	    }
 
-	    int queueId = DB.getSQLValueEx(null,
-	        "SELECT nextid('zz_bg_job_queue')", new Object[] {});
+	  //  int queueId = DB.getSQLValueEx(null,
+	  //      "SELECT nextid('zz_bg_job_queue')", new Object[] {});
+	    int queueId = DB.getNextID(Env.getAD_Client_ID(ctx), "ZZ_BG_Job_Queue", null);
+	 // or: DB.getNextID(ctx, "ZZ_BG_Job_Queue", null);
 	    DB.executeUpdateEx(
 	        "INSERT INTO zz_bg_job_queue (zz_bg_job_queue_id, ad_client_id, ad_org_id, ad_user_id, ad_process_id, record_id, status, createdby, updatedby) " +
 	        "VALUES (?, ?, ?, ?, ?, ?, 'Q', ?, ?)",
