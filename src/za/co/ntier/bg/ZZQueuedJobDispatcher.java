@@ -1,5 +1,9 @@
 package za.co.ntier.bg;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ScheduledFuture;
@@ -38,12 +42,18 @@ public class ZZQueuedJobDispatcher {
 
 		final Properties ctx = Env.getCtx();
 
-		// cluster-safe: only one dispatcher at a time for (client,process)
-		if (!tryAdvisoryLock(adClientId, adProcessId)) {
-			return;
-		}
-
+		Connection conn = null;
 		try {
+			conn = DB.getConnection(); // pooled connection
+			if (!tryAdvisoryLock(conn, adClientId, adProcessId)) {
+				return;
+			}
+			// cluster-safe: only one dispatcher at a time for (client,process)
+			//if (!tryAdvisoryLock(adClientId, adProcessId)) {
+			//	return;
+			//}
+
+
 			// If a job is already running for this process/client, do nothing.
 			if (isProcessRunning(ctx, adProcessId, adClientId)) {
 				return;
@@ -100,10 +110,19 @@ public class ZZQueuedJobDispatcher {
 							200,
 							TimeUnit.MILLISECONDS
 							);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (conn != null) {
+				try { advisoryUnlock(conn, adClientId, adProcessId); } catch (Exception ignore) {}
+				try { conn.close(); } catch (Exception ignore) {}
+			}
+		}
 
+		/*
 		} finally {
 			advisoryUnlock(adClientId, adProcessId);
-		}
+		}*/
 	}
 
 	private static boolean isProcessRunning(Properties ctx, int adProcessId, int adClientId) {
@@ -118,27 +137,38 @@ public class ZZQueuedJobDispatcher {
 	private static Integer claimOldestQueued(int adClientId, int adProcessId) {
 		// FIFO claim, safe with concurrency
 		String sql =
-				"WITH next AS ( " +
-						"  SELECT zz_bg_job_queue_id " +
-						"  FROM zz_bg_job_queue " +
-						"  WHERE ad_client_id=? AND ad_process_id=? AND status='Q' AND isactive='Y' " +
-						"  ORDER BY created " +
-						"  FOR UPDATE SKIP LOCKED " +
-						"  LIMIT 1 " +
-						") " +
-						"UPDATE zz_bg_job_queue q " +
-						"SET status='R', updated=now() " +
-						"FROM next " +
-						"WHERE q.zz_bg_job_queue_id = next.zz_bg_job_queue_id " +
-						"RETURNING q.zz_bg_job_queue_id";
+		        "WITH next AS ( " +
+		        "  SELECT zz_bg_job_queue_id " +
+		        "  FROM zz_bg_job_queue " +
+		        "  WHERE ad_client_id=? AND ad_process_id=? AND status='Q' AND isactive='Y' " +
+		        "  ORDER BY created " +
+		        "  FOR UPDATE SKIP LOCKED " +
+		        "  LIMIT 1 " +
+		        ") " +
+		        "UPDATE zz_bg_job_queue q " +
+		        "SET status='R', updated=now() " +
+		        "FROM next " +
+		        "WHERE q.zz_bg_job_queue_id = next.zz_bg_job_queue_id " +
+		        "RETURNING q.zz_bg_job_queue_id";
 
-		try {
-			return DB.getSQLValueEx(null, sql, adClientId, adProcessId);
-		} catch (Exception e) {
-			return null;
-		}
+		    PreparedStatement ps = null;
+		    ResultSet rs = null;
+
+		    try {
+		        ps = DB.prepareStatement(sql, null);  // <-- read/write
+		        DB.setParameters(ps, new Object[]{adClientId, adProcessId});
+		        rs = ps.executeQuery();               // UPDATE ... RETURNING returns ResultSet
+		        if (rs.next())
+		            return rs.getInt(1);
+		        return null;
+		    } catch (Exception e) {
+		        throw new org.adempiere.exceptions.DBException(e);
+		    } finally {
+		        DB.close(rs, ps);
+		    }
+		
 	}
-
+	/*
 	private static boolean tryAdvisoryLock(int adClientId, int adProcessId) {
 		// non-blocking cluster lock
 		return DB.getSQLValueEx(null,
@@ -149,4 +179,26 @@ public class ZZQueuedJobDispatcher {
 	private static void advisoryUnlock(int adClientId, int adProcessId) {
 		DB.getSQLValueEx(null, "SELECT pg_advisory_unlock(?, ?)", adClientId, adProcessId);
 	}
+	 */
+
+	private static boolean tryAdvisoryLock(Connection conn, int adClientId, int adProcessId) throws SQLException {
+		try (PreparedStatement ps = conn.prepareStatement("SELECT pg_try_advisory_lock(?, ?)")) {
+			ps.setInt(1, adClientId);
+			ps.setInt(2, adProcessId);
+			try (ResultSet rs = ps.executeQuery()) {
+				return rs.next() && rs.getBoolean(1);
+			}
+		}
+	}
+
+	private static void advisoryUnlock(Connection conn, int adClientId, int adProcessId) throws SQLException {
+		try (PreparedStatement ps = conn.prepareStatement("SELECT pg_advisory_unlock(?, ?)")) {
+			ps.setInt(1, adClientId);
+			ps.setInt(2, adProcessId);
+			ps.executeQuery();
+		}
+	}
+
+
+
 }
