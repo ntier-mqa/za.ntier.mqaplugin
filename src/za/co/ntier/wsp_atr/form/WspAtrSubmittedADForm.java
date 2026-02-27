@@ -347,7 +347,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	            submitted.setName("WSP/ATR " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
 	            submitted.setZZ_Import_Submitted_Data("N");
 	            submitted.setZZSdfOrganisation_ID(org.zzSdfOrganisationId);
-	            submitted.setZZ_WSP_ATR_Status(X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Validating);
+	            submitted.setZZ_DocStatus(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating);
 	            submitted.saveEx();
 
 	            submittedId = existingId;
@@ -359,7 +359,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	            submitted.setFileName(filename);
 	            submitted.setZZ_Import_Submitted_Data("N");
 	            submitted.setZZSdfOrganisation_ID(org.zzSdfOrganisationId);
-	            submitted.setZZ_WSP_ATR_Status(X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Validating);
+	            submitted.setZZ_DocStatus(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating);
 	            submitted.saveEx();
 
 	            submittedId = submitted.get_ID();
@@ -394,7 +394,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 	    String sql =
 	        "SELECT s.ZZ_WSP_ATR_Submitted_ID, s.SubmittedDate, s.FileName, " +
-	        "       s.ZZ_Import_Submitted_Data, v.orgname, s.ZZ_WSP_ATR_Status " +
+	        "       s.ZZ_Import_Submitted_Data, v.orgname, s.ZZ_DocStatus " +
 
 	        "FROM ZZ_WSP_ATR_Submitted s " +
 	        "LEFT JOIN adempiere.zzsdforganisation_v v " +
@@ -427,12 +427,12 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	private String statusLabel(String code) {
 	    if (Util.isEmpty(code, true)) return "Draft";
 	    switch (code) {
-	        case X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Draft: return "Draft";
-	        case X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Validating: return "Validating";
-	        case X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_ValidationError: return "Validation Error";
-	        case X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Importing: return "Importing";
-	        case X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Imported: return "Imported";
-	        case X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_ErrorImporting: return "Error Importing";
+	        case X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Draft: return "Draft";
+	        case X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating: return "Validating";
+	        case X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_ValidationError: return "Validation Error";
+	        case X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Importing: return "Importing";
+	        case X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported: return "Imported";
+	        case X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_ErrorImporting: return "Error Importing";
 	        default:   return code;
 	    }
 	}

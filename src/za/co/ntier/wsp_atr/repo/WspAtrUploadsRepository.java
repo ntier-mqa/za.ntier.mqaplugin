@@ -23,12 +23,12 @@ public class WspAtrUploadsRepository {
 
     public List<List<Object>> rawSubmittedRowsForUser(int adUserId) {
         String sql =
-            "SELECT s.ZZ_WSP_ATR_Submitted_ID, s.SubmittedDate, v.orgname, s.ZZ_WSP_ATR_Status " +
+            "SELECT s.ZZ_WSP_ATR_Submitted_ID, s.SubmittedDate, v.orgname, s.ZZ_DocStatus " +
             "FROM ZZ_WSP_ATR_Submitted s " +
             "LEFT JOIN adempiere.zzsdforganisation_v v ON v.zzsdforganisation_v_id = s.ZZSDFOrganisation_ID " +
             "WHERE v.ad_user_id = ? " +
-            " And s.zz_wsp_atr_status in ('" + X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Imported + "'"
-            		+ ",'" + X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Uploaded + "') " +
+            " And s.zz_docstatus in ('" + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported + "'"
+            		+ ",'" + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Uploaded + "') " +
             "ORDER BY s.ZZ_WSP_ATR_Submitted_ID DESC";
 
         return DB.getSQLArrayObjectsEx(null, sql, adUserId);
@@ -207,11 +207,11 @@ public class WspAtrUploadsRepository {
      */
     public boolean isSubmissionStatusUploaded(int submittedId) {
         String status = DB.getSQLValueStringEx(null,
-            "SELECT zz_wsp_atr_status FROM zz_wsp_atr_submitted WHERE zz_wsp_atr_submitted_id=?",
+            "SELECT ZZ_DocStatus FROM zz_wsp_atr_submitted WHERE zz_wsp_atr_submitted_id=?",
             submittedId);
 
         // TODO: change to your real value for “Uploaded”
-        return X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Uploaded.equalsIgnoreCase(status);
+        return X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Uploaded.equalsIgnoreCase(status);
     }
 
     // small DTO inside repo package

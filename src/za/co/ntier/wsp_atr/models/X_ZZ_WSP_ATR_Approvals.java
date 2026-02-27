@@ -32,7 +32,7 @@ public class X_ZZ_WSP_ATR_Approvals extends PO implements I_ZZ_WSP_ATR_Approvals
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260114L;
+	private static final long serialVersionUID = 20260227L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Approvals (Properties ctx, int ZZ_WSP_ATR_Approvals_ID, String trxName)

@@ -26,7 +26,7 @@ import org.compiere.process.SvrProcess;
 import org.compiere.util.DB;
 
 import za.co.ntier.api.model.MBPartner_New;
-import za.ntier.models.X_ZZ_WSP_ATR_Approvals;
+import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Approvals;
 
 
 @org.adempiere.base.annotation.Process(name="za.ntier.process.ImportWSPATRData")

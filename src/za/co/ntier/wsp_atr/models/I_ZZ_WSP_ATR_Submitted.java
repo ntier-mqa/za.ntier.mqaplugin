@@ -93,6 +93,19 @@ public interface I_ZZ_WSP_ATR_Submitted
 	  */
 	public String getDescription();
 
+    /** Column name DocumentNo */
+    public static final String COLUMNNAME_DocumentNo = "DocumentNo";
+
+	/** Set Document No.
+	  * Document sequence number of the document
+	  */
+	public void setDocumentNo (String DocumentNo);
+
+	/** Get Document No.
+	  * Document sequence number of the document
+	  */
+	public String getDocumentNo();
+
     /** Column name FileName */
     public static final String COLUMNNAME_FileName = "FileName";
 
@@ -220,6 +233,15 @@ public interface I_ZZ_WSP_ATR_Submitted
 	public int getZZ_Approved_ID();
 
 	public org.compiere.model.I_AD_User getZZ_Approved() throws RuntimeException;
+
+    /** Column name ZZ_Date_File_Imported */
+    public static final String COLUMNNAME_ZZ_Date_File_Imported = "ZZ_Date_File_Imported";
+
+	/** Set Date File Imported	  */
+	public void setZZ_Date_File_Imported (Timestamp ZZ_Date_File_Imported);
+
+	/** Get Date File Imported	  */
+	public Timestamp getZZ_Date_File_Imported();
 
     /** Column name ZZ_DocAction */
     public static final String COLUMNNAME_ZZ_DocAction = "ZZ_DocAction";
@@ -354,6 +376,86 @@ public interface I_ZZ_WSP_ATR_Submitted
 
 	/** Get Recommended Date	  */
 	public Timestamp getZZ_RecommendedDate();
+
+    /** Column name ZZ_ResubmitRejectedBy_ID */
+    public static final String COLUMNNAME_ZZ_ResubmitRejectedBy_ID = "ZZ_ResubmitRejectedBy_ID";
+
+	/** Set Resubmit Rejected By	  */
+	public void setZZ_ResubmitRejectedBy_ID (int ZZ_ResubmitRejectedBy_ID);
+
+	/** Get Resubmit Rejected By	  */
+	public int getZZ_ResubmitRejectedBy_ID();
+
+	public org.compiere.model.I_AD_User getZZ_ResubmitRejectedBy() throws RuntimeException;
+
+    /** Column name ZZ_ResubmitRejectedDate */
+    public static final String COLUMNNAME_ZZ_ResubmitRejectedDate = "ZZ_ResubmitRejectedDate";
+
+	/** Set Resubmit Rejected Date	  */
+	public void setZZ_ResubmitRejectedDate (Timestamp ZZ_ResubmitRejectedDate);
+
+	/** Get Resubmit Rejected Date	  */
+	public Timestamp getZZ_ResubmitRejectedDate();
+
+    /** Column name ZZ_ResubmittedBy_ID */
+    public static final String COLUMNNAME_ZZ_ResubmittedBy_ID = "ZZ_ResubmittedBy_ID";
+
+	/** Set Resubmitted By	  */
+	public void setZZ_ResubmittedBy_ID (int ZZ_ResubmittedBy_ID);
+
+	/** Get Resubmitted By	  */
+	public int getZZ_ResubmittedBy_ID();
+
+	public org.compiere.model.I_AD_User getZZ_ResubmittedBy() throws RuntimeException;
+
+    /** Column name ZZ_ResubmittedDate */
+    public static final String COLUMNNAME_ZZ_ResubmittedDate = "ZZ_ResubmittedDate";
+
+	/** Set Resubmitted Date	  */
+	public void setZZ_ResubmittedDate (Timestamp ZZ_ResubmittedDate);
+
+	/** Get Resubmitted Date	  */
+	public Timestamp getZZ_ResubmittedDate();
+
+    /** Column name ZZ_SubmitRejectedBy_ID */
+    public static final String COLUMNNAME_ZZ_SubmitRejectedBy_ID = "ZZ_SubmitRejectedBy_ID";
+
+	/** Set Submit Rejected By	  */
+	public void setZZ_SubmitRejectedBy_ID (int ZZ_SubmitRejectedBy_ID);
+
+	/** Get Submit Rejected By	  */
+	public int getZZ_SubmitRejectedBy_ID();
+
+	public org.compiere.model.I_AD_User getZZ_SubmitRejectedBy() throws RuntimeException;
+
+    /** Column name ZZ_SubmitRejectedDate */
+    public static final String COLUMNNAME_ZZ_SubmitRejectedDate = "ZZ_SubmitRejectedDate";
+
+	/** Set Submit Rejected Date	  */
+	public void setZZ_SubmitRejectedDate (Timestamp ZZ_SubmitRejectedDate);
+
+	/** Get Submit Rejected Date	  */
+	public Timestamp getZZ_SubmitRejectedDate();
+
+    /** Column name ZZ_SubmittedBy_ID */
+    public static final String COLUMNNAME_ZZ_SubmittedBy_ID = "ZZ_SubmittedBy_ID";
+
+	/** Set Submitted By	  */
+	public void setZZ_SubmittedBy_ID (int ZZ_SubmittedBy_ID);
+
+	/** Get Submitted By	  */
+	public int getZZ_SubmittedBy_ID();
+
+	public org.compiere.model.I_AD_User getZZ_SubmittedBy() throws RuntimeException;
+
+    /** Column name ZZ_SubmittedDate */
+    public static final String COLUMNNAME_ZZ_SubmittedDate = "ZZ_SubmittedDate";
+
+	/** Set Submitted Date	  */
+	public void setZZ_SubmittedDate (Timestamp ZZ_SubmittedDate);
+
+	/** Get Submitted Date	  */
+	public Timestamp getZZ_SubmittedDate();
 
     /** Column name ZZ_WSP_ATR_Status */
     public static final String COLUMNNAME_ZZ_WSP_ATR_Status = "ZZ_WSP_ATR_Status";

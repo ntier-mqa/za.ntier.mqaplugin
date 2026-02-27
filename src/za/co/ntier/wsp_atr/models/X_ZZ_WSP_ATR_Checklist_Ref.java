@@ -15,7 +15,7 @@
  * or via info@compiere.org or http://www.compiere.org/license.html           *
  *****************************************************************************/
 /** Generated Model - DO NOT CHANGE */
-package za.ntier.models;
+package za.co.ntier.wsp_atr.models;
 
 import java.sql.ResultSet;
 import java.util.Properties;
@@ -31,7 +31,7 @@ public class X_ZZ_WSP_ATR_Checklist_Ref extends PO implements I_ZZ_WSP_ATR_Check
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260204L;
+	private static final long serialVersionUID = 20260227L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Checklist_Ref (Properties ctx, int ZZ_WSP_ATR_Checklist_Ref_ID, String trxName)

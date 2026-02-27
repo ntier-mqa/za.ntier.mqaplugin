@@ -15,7 +15,7 @@
  * or via info@compiere.org or http://www.compiere.org/license.html           *
  *****************************************************************************/
 /** Generated Model - DO NOT CHANGE */
-package za.ntier.models;
+package za.co.ntier.wsp_atr.models;
 
 import java.math.BigDecimal;
 import java.sql.ResultSet;
@@ -33,7 +33,7 @@ public class X_ZZ_WSP_ATR_Veri_Checklist extends PO implements I_ZZ_WSP_ATR_Veri
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260221L;
+	private static final long serialVersionUID = 20260227L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Veri_Checklist (Properties ctx, int ZZ_WSP_ATR_Veri_Checklist_ID, String trxName)
@@ -214,24 +214,6 @@ public class X_ZZ_WSP_ATR_Veri_Checklist extends PO implements I_ZZ_WSP_ATR_Veri
 		return (String)get_Value(COLUMNNAME_Value);
 	}
 
-	/** Set ATR Total.
-		@param ZZ_ATRTotal ATR Total
-	*/
-	public void setZZ_ATRTotal (int ZZ_ATRTotal)
-	{
-		set_Value (COLUMNNAME_ZZ_ATRTotal, Integer.valueOf(ZZ_ATRTotal));
-	}
-
-	/** Get ATR Total.
-		@return ATR Total	  */
-	public int getZZ_ATRTotal()
-	{
-		Integer ii = (Integer)get_Value(COLUMNNAME_ZZ_ATRTotal);
-		if (ii == null)
-			 return 0;
-		return ii.intValue();
-	}
-
 	/** Set ATR vs WSP Pct.
 		@param ZZ_ATRvsWSPPct ATR vs WSP Pct
 	*/
@@ -290,37 +272,19 @@ public class X_ZZ_WSP_ATR_Veri_Checklist extends PO implements I_ZZ_WSP_ATR_Veri
 	/** Set Total No.
 		@param ZZ_TotalNo Total No
 	*/
-	public void setZZ_TotalNo (int ZZ_TotalNo)
+	public void setZZ_TotalNo (BigDecimal ZZ_TotalNo)
 	{
-		set_Value (COLUMNNAME_ZZ_TotalNo, Integer.valueOf(ZZ_TotalNo));
+		set_Value (COLUMNNAME_ZZ_TotalNo, ZZ_TotalNo);
 	}
 
 	/** Get Total No.
 		@return Total No	  */
-	public int getZZ_TotalNo()
+	public BigDecimal getZZ_TotalNo()
 	{
-		Integer ii = (Integer)get_Value(COLUMNNAME_ZZ_TotalNo);
-		if (ii == null)
-			 return 0;
-		return ii.intValue();
-	}
-
-	/** Set WSP Total.
-		@param ZZ_WSPTotal WSP Total
-	*/
-	public void setZZ_WSPTotal (int ZZ_WSPTotal)
-	{
-		set_Value (COLUMNNAME_ZZ_WSPTotal, Integer.valueOf(ZZ_WSPTotal));
-	}
-
-	/** Get WSP Total.
-		@return WSP Total	  */
-	public int getZZ_WSPTotal()
-	{
-		Integer ii = (Integer)get_Value(COLUMNNAME_ZZ_WSPTotal);
-		if (ii == null)
-			 return 0;
-		return ii.intValue();
+		BigDecimal bd = (BigDecimal)get_Value(COLUMNNAME_ZZ_TotalNo);
+		if (bd == null)
+			 return Env.ZERO;
+		return bd;
 	}
 
 	public I_ZZ_WSP_ATR_Submitted getZZ_WSP_ATR_Submitted() throws RuntimeException

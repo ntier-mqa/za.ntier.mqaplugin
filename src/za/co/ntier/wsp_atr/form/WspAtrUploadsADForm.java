@@ -145,14 +145,14 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
     private String statusLabel(String code) {
         if (Util.isEmpty(code, true)) return "Draft";
         switch (code) {
-            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Draft: return "Draft";
-            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Validating: return "Validating";
-            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_ValidationError: return "Validation Error";
-            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Importing: return "Importing";
-            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Imported: return "Imported";
-            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_ErrorImporting: return "Error Importing";
-            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Submitted: return "Submitted";
-            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Uploaded: return "Uploaded";
+            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Draft: return "Draft";
+            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating: return "Validating";
+            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_ValidationError: return "Validation Error";
+            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Importing: return "Importing";
+            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported: return "Imported";
+            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_ErrorImporting: return "Error Importing";
+            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Submitted: return "Submitted";
+            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Uploaded: return "Uploaded";
             
             default: return code;
         }

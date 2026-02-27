@@ -3,6 +3,8 @@ package za.ntier.models;
 import java.sql.ResultSet;
 import java.util.Properties;
 
+import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Veri_Checklist;
+
 public class MZZWSPATRVeriChecklist extends X_ZZ_WSP_ATR_Veri_Checklist {
 
 	public MZZWSPATRVeriChecklist(Properties ctx, int ZZ_WSP_ATR_Veri_Checklist_ID, String trxName) {

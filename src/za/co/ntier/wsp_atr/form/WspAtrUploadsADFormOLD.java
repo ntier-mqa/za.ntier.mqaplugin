@@ -177,7 +177,7 @@ public class WspAtrUploadsADFormOLD extends ADForm implements EventListener<Even
         int adUserId = Env.getAD_User_ID(Env.getCtx());
 
         String sql =
-            "SELECT s.ZZ_WSP_ATR_Submitted_ID, s.SubmittedDate, v.orgname, s.ZZ_WSP_ATR_Status " +
+            "SELECT s.ZZ_WSP_ATR_Submitted_ID, s.SubmittedDate, v.orgname, s.ZZ_DocStatus " +
             "FROM ZZ_WSP_ATR_Submitted s " +
             "LEFT JOIN adempiere.zzsdforganisation_v v ON v.zzsdforganisation_v_id = s.ZZSDFOrganisation_ID " +
             "WHERE v.ad_user_id = ? " +
@@ -204,12 +204,12 @@ public class WspAtrUploadsADFormOLD extends ADForm implements EventListener<Even
     private String statusLabel(String code) {
         if (Util.isEmpty(code, true)) return "Draft";
         switch (code) {
-            case X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Draft: return "Draft";
-            case X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Validating: return "Validating";
-            case X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_ValidationError: return "Validation Error";
-            case X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Importing: return "Importing";
-            case X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Imported: return "Imported";
-            case X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_ErrorImporting: return "Error Importing";
+            case X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Draft: return "Draft";
+            case X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating: return "Validating";
+            case X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_ValidationError: return "Validation Error";
+            case X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Importing: return "Importing";
+            case X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported: return "Imported";
+            case X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_ErrorImporting: return "Error Importing";
             default: return code;
         }
     }

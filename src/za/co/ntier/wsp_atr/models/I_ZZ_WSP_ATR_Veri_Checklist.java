@@ -14,7 +14,7 @@
  * ComPiere, Inc., 2620 Augustine Dr. #245, Santa Clara, CA 95054, USA        *
  * or via info@compiere.org or http://www.compiere.org/license.html           *
  *****************************************************************************/
-package za.ntier.models;
+package za.co.ntier.wsp_atr.models;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -187,15 +187,6 @@ public interface I_ZZ_WSP_ATR_Veri_Checklist
 	  */
 	public String getValue();
 
-    /** Column name ZZ_ATRTotal */
-    public static final String COLUMNNAME_ZZ_ATRTotal = "ZZ_ATRTotal";
-
-	/** Set ATR Total	  */
-	public void setZZ_ATRTotal (int ZZ_ATRTotal);
-
-	/** Get ATR Total	  */
-	public int getZZ_ATRTotal();
-
     /** Column name ZZ_ATRvsWSPPct */
     public static final String COLUMNNAME_ZZ_ATRvsWSPPct = "ZZ_ATRvsWSPPct";
 
@@ -227,19 +218,10 @@ public interface I_ZZ_WSP_ATR_Veri_Checklist
     public static final String COLUMNNAME_ZZ_TotalNo = "ZZ_TotalNo";
 
 	/** Set Total No	  */
-	public void setZZ_TotalNo (int ZZ_TotalNo);
+	public void setZZ_TotalNo (BigDecimal ZZ_TotalNo);
 
 	/** Get Total No	  */
-	public int getZZ_TotalNo();
-
-    /** Column name ZZ_WSPTotal */
-    public static final String COLUMNNAME_ZZ_WSPTotal = "ZZ_WSPTotal";
-
-	/** Set WSP Total	  */
-	public void setZZ_WSPTotal (int ZZ_WSPTotal);
-
-	/** Get WSP Total	  */
-	public int getZZ_WSPTotal();
+	public BigDecimal getZZ_TotalNo();
 
     /** Column name ZZ_WSP_ATR_Submitted_ID */
     public static final String COLUMNNAME_ZZ_WSP_ATR_Submitted_ID = "ZZ_WSP_ATR_Submitted_ID";

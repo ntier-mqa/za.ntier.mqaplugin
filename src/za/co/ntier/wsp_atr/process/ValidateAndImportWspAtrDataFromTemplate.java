@@ -48,7 +48,7 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 			if (p_ZZ_WSP_ATR_Submitted_ID <= 0)
 				throw new AdempiereException("No WSP/ATR Submitted record selected");
 
-			updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID, X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Validating);
+			updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID, X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating);
 
 
 			Properties ctx = Env.getCtx();
@@ -95,7 +95,7 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 				// write workbook to bytes + attach as error file
 				String errName = buildErrorFileName(submitted);
 				attachErrorWorkbook(submitted, wb, errName);
-				updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID,X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_ValidationError );
+				updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID,X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_ValidationError );
 
 
 				// attachErrorWorkbook(submitted, wb, "ERROR_" + safeFileName(submitted) + ".xlsm");
@@ -104,11 +104,11 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 						+ " validation errors. Download the attached error file from the Upload Dashboard, fix highlighted cells, and try again.");
 			}
 
-			updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID, X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Importing);
+			updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID, X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Importing);
 		} catch (Exception ex) {
 			if (!validationCompletedWithErrors) {
 				// ✅ This is the missing piece: sheet missing / workbook load / any unexpected validation error
-				updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID,X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_ErrorImporting);
+				updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID,X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_ErrorImporting);
 
 				// Optional: store message somewhere if you have a column (recommended)
 				// updateSubmittedErrorCommitted(p_ZZ_WSP_ATR_Submitted_ID, ex.getMessage());
@@ -122,11 +122,11 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 		try {
 			ImportWspAtrDataFromTemplate importProc = new ImportWspAtrDataFromTemplate();
 			importProc.startProcess(getCtx(), getProcessInfo(), Trx.get(get_TrxName(), false)); // OR refactor import into a service and call it directly
-			updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID, X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_Imported);
+			updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID, X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported);
 			return "";
 			//return "Validation passed. Import completed.";
 		} catch (Exception ex) {
-			updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID,X_ZZ_WSP_ATR_Submitted.ZZ_WSP_ATR_STATUS_ErrorImporting );
+			updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID,X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_ErrorImporting );
 			throw ex;
 		}
 
@@ -354,7 +354,7 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 		Trx trx = Trx.get(trxName, true);
 		try {
 			DB.executeUpdateEx(
-					"UPDATE ZZ_WSP_ATR_Submitted SET ZZ_WSP_ATR_Status=? WHERE ZZ_WSP_ATR_Submitted_ID=?",
+					"UPDATE ZZ_WSP_ATR_Submitted SET ZZ_DocStatus=? WHERE ZZ_WSP_ATR_Submitted_ID=?",
 					new Object[] { status, submittedId },
 					trxName
 					);

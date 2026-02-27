@@ -14,15 +14,18 @@ import org.osgi.service.component.annotations.Component;
 
 import za.co.ntier.api.model.I_ZZSdfOrganisation;
 import za.co.ntier.api.model.I_ZZ_Program_Master_Data;
+import za.co.ntier.api.model.X_ZZ_WSP_ATR_Approvals;
 import za.co.ntier.wf.model.MZZWFHeader;
 import za.co.ntier.wf.model.MZZWFLineRole;
 import za.co.ntier.wf.model.MZZWFLines;
 import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_ATR_Detail;
+import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Approvals;
 import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Biodata_Detail;
 import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_HTVF;
 import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Lookup_Mapping;
 import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Lookup_Mapping_Detail;
 import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Submitted;
+import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Veri_Checklist;
 import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_WSP;
 import za.co.ntier.wsp_atr.models.I_ZZ_WSP_Employees;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Biodata_Detail;
@@ -60,7 +63,7 @@ public class MyModelFactory implements IModelFactory {
     	register(I_ZZ_WSP_ATR_HTVF.Table_Name,          MZZWSPATRHTVF.class);
     	register(I_ZZ_WSP_ATR_WSP.Table_Name,          MZZWSPATRWSP.class);
     	register(I_ZZ_WSP_ATR_ATR_Detail.Table_Name,          MZZWSPATRATRDetail.class);
-    	register(I_ZZ_WSP_ATR_Veri_Checklist.Table_Name,          MZZWSPATRVeriChecklist.class);
+    	register(I_ZZ_WSP_ATR_Veri_Checklist.Table_Name,MZZWSPATRVeriChecklist.class);
     	register(I_ZZ_WSP_ATR_Submitted.Table_Name,          MZZWSPATRSubmitted.class);
     	register(I_ZZ_SDR_Temp_Org.Table_Name,          MZZSDR_Temp_Org.class);
     	register(I_ZZSdfOrganisation.Table_Name,          MZZSdfOrganisation.class);
@@ -88,7 +91,6 @@ public class MyModelFactory implements IModelFactory {
         register(I_ZZ_WSP_ATR_Lookup_Mapping_Detail.Table_Name,     X_ZZ_WSP_ATR_Lookup_Mapping_Detail.class);
         register(I_ZZ_WSP_ATR_Biodata_Detail.Table_Name,X_ZZ_WSP_ATR_Biodata_Detail.class);
         register(I_ZZ_WSP_Employees.Table_Name,X_ZZ_WSP_Employees.class);
-        //register(I_ZZ_WSP_ATR_Submitted.Table_Name,X_ZZ_WSP_ATR_Submitted.class);
     }
 
     private static void register(String tableName, Class<? extends PO> modelClass) {

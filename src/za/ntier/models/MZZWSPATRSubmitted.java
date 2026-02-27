@@ -6,6 +6,8 @@ import java.io.StringReader;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
 import java.util.Properties;
@@ -23,6 +25,9 @@ import org.compiere.util.DB;
 import com.lowagie.text.Document;
 import com.lowagie.text.html.simpleparser.HTMLWorker;
 import com.lowagie.text.pdf.PdfWriter;
+
+import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Checklist_Ref;
+import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
 
 
 
@@ -459,6 +464,15 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	    {
 	        log.warning("Checklist row not found for value=" + checklistValue);
 	    }
+	}
+	
+	public static String getWspYear(Timestamp created) {
+	    if (created == null) {
+	        return null; // or return "" if you prefer empty string
+	    }
+
+	    LocalDateTime ldt = created.toLocalDateTime();
+	    return String.valueOf(ldt.getYear());
 	}
 
 

@@ -14,7 +14,7 @@
  * ComPiere, Inc., 2620 Augustine Dr. #245, Santa Clara, CA 95054, USA        *
  * or via info@compiere.org or http://www.compiere.org/license.html           *
  *****************************************************************************/
-package za.ntier.models;
+package za.co.ntier.wsp_atr.models;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
