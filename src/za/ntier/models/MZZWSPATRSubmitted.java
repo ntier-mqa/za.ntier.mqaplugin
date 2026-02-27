@@ -306,7 +306,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	        client.sendEMail(fromUser, toUser, subject, html, pdf, true);
 
 	    if (!sent)
-	        log.severe("Failed to send query email");
+	        log.severe("Failed to send query  email");
 	    else
 	        log.info("Query email sent successfully");
 	}
