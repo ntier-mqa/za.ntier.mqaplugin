@@ -425,16 +425,19 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	}
 	
 	private String statusLabel(String code) {
-	    if (Util.isEmpty(code, true)) return "Draft";
+	    if (Util.isEmpty(code, true)) return "Draft";	  
 	    switch (code) {
-	        case X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Draft: return "Draft";
-	        case X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating: return "Validating";
-	        case X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_ValidationError: return "Validation Error";
-	        case X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Importing: return "Importing";
-	        case X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported: return "Imported";
-	        case X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_ErrorImporting: return "Error Importing";
-	        default:   return code;
-	    }
+        case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Draft: return "Draft";
+        case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating: return "Validating";
+        case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_ValidationError: return "Validation Error";
+        case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Importing: return "Importing";
+        case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported: return "Imported";
+        case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_ErrorImporting: return "Error Importing";
+        case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Submitted: return "Submitted";
+        case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Uploaded: return "Uploaded";
+        
+        default: return code;
+    }
 	}
 
 
@@ -639,6 +642,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	        "WHERE ad_user_id = ? " +
 	        "AND isactive = 'Y' " +
 	        "AND zzsdfroletype = '" + X_ZZSdfOrganisation.ZZSDFROLETYPE_Primary + "' " +
+	        " AND ZZ_DOCStatus <> 'DR' and ZZ_DOCStatus <> 'UnSdfOrg'" + 
 	        "ORDER BY orgname";
 
 	    List<List<Object>> rows =
