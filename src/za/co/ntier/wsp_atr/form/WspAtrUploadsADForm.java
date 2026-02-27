@@ -1,6 +1,7 @@
 package za.co.ntier.wsp_atr.form;
 
 import java.sql.Timestamp;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Properties;
 
@@ -42,6 +43,9 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
     private Borderlayout layout = new Borderlayout();
     private Center center = new Center();
     private Listbox list = new Listbox();
+    
+    private static final DateTimeFormatter TS_FORMAT =
+	        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
     protected void initForm() {
@@ -161,9 +165,13 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
     private void addRow(int submittedId, String orgName, Timestamp submittedDate, String status) {
         ListItem item = new ListItem();
         item.setValue(Integer.valueOf(submittedId));
+        String formattedDate = "";
+	    if (submittedDate != null) {
+	        formattedDate = submittedDate.toLocalDateTime().format(TS_FORMAT);
+	    }
 
         item.appendChild(new ListCell(orgName));
-        item.appendChild(new ListCell(submittedDate != null ? submittedDate.toString() : ""));
+        item.appendChild(new ListCell(submittedDate != null ? formattedDate : ""));
         item.appendChild(new ListCell(status));
 
         ListCell actionsCell = new ListCell();

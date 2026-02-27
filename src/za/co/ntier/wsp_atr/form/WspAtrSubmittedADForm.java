@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -91,6 +92,9 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 
 	private Listbox list = new Listbox();
+	
+	private static final DateTimeFormatter TS_FORMAT =
+	        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
 	@Override
 	protected void initForm() {
@@ -446,9 +450,14 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 	    ListItem item = new ListItem();
 	    item.setValue(Integer.valueOf(id)); // keep ID as row value for actions
+	    
+	    String formattedDate = "";
+	    if (submittedDate != null) {
+	        formattedDate = submittedDate.toLocalDateTime().format(TS_FORMAT);
+	    }
 
 	    item.appendChild(new ListCell(!Util.isEmpty(orgName, true) ? orgName : ""));
-	    item.appendChild(new ListCell(submittedDate != null ? submittedDate.toString() : ""));
+	    item.appendChild(new ListCell(submittedDate != null ? formattedDate : ""));
 	    item.appendChild(new ListCell(uploaded != null ? uploaded : ""));
 	    item.appendChild(new ListCell(latestError != null ? latestError : ""));
 	    item.appendChild(new ListCell(status));
@@ -642,7 +651,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	        "WHERE ad_user_id = ? " +
 	        "AND isactive = 'Y' " +
 	        "AND zzsdfroletype = '" + X_ZZSdfOrganisation.ZZSDFROLETYPE_Primary + "' " +
-	        " AND ZZ_DOCStatus <> 'DR' and ZZ_DOCStatus <> 'UnSdfOrg'" + 
+	        " AND ZZ_DOCStatus <> 'DR' and ZZ_DOCStatus <> 'UnSdfOrg' " + 
 	        "ORDER BY orgname";
 
 	    List<List<Object>> rows =
