@@ -10,7 +10,7 @@ public class MyProcessFactory extends AnnotationBasedProcessFactory {
 	@Override
 	protected String[] getPackages() {
 		return new String[] {"za.ntier.process","za.ntier.report.fin","za.co.ntier.wf.process"
-				,"za.co.ntier.wsp_atr.process","za.co.ntier.wsp_atr.report.process"};
+				,"za.co.ntier.wsp_atr.process","za.co.ntier.wsp_atr.report.process","za.co.ntier.bg"};
 	}
 
 }

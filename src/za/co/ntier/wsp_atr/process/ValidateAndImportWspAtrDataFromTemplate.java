@@ -3,9 +3,13 @@ package za.co.ntier.wsp_atr.process;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
+import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -18,6 +22,7 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.util.IOUtils;
 import org.compiere.model.MAttachment;
 import org.compiere.model.MAttachmentEntry;
+import org.compiere.model.MTable;
 import org.compiere.model.Query;
 import org.compiere.process.SvrProcess;
 import org.compiere.util.DB;
@@ -49,10 +54,12 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 				throw new AdempiereException("No WSP/ATR Submitted record selected");
 
 			updateSubmittedStatusCommitted(p_ZZ_WSP_ATR_Submitted_ID, X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating);
+			deleteRecordsCommitted(p_ZZ_WSP_ATR_Submitted_ID);
 
 
 			Properties ctx = Env.getCtx();
 			String trxName = get_TrxName();
+			
 
 			X_ZZ_WSP_ATR_Submitted submitted =
 					new X_ZZ_WSP_ATR_Submitted(ctx, p_ZZ_WSP_ATR_Submitted_ID, trxName);
@@ -365,6 +372,117 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 		} finally {
 			trx.close();
 		}
+	}
+	
+	
+	private void deleteRecordsCommitted(int submittedId) throws Exception {
+		String trxName = Trx.createTrxName("WSPATR_STATUS2");
+		Trx trx = Trx.get(trxName, true);
+		try {			
+			deleteRelatedRecordsBeforeProcessing(submittedId, trxName);
+			trx.commit(true);
+		} catch (Exception e) {
+			trx.rollback();
+			throw e;
+		} finally {
+			trx.close();
+		}
+	}
+	private void deleteRelatedRecordsBeforeProcessing(int submittedId, String trxName) {
+
+	    // 1) Load mapped tables
+	    List<X_ZZ_WSP_ATR_Lookup_Mapping> headers = new Query(
+	            Env.getCtx(),
+	            X_ZZ_WSP_ATR_Lookup_Mapping.Table_Name,
+	            null,
+	            trxName)
+	        .setOnlyActiveRecords(true)
+	        .list();
+
+	    if (headers == null || headers.isEmpty())
+	        return; // nothing to delete
+
+	    // 2) Build unique table list
+	    Set<Integer> tableIds = new HashSet<>();
+	    for (X_ZZ_WSP_ATR_Lookup_Mapping h : headers) {
+	        if (h.getAD_Table_ID() > 0)
+	            tableIds.add(h.getAD_Table_ID());
+	    }
+
+	    // 3) Create delete jobs for tables that have ZZ_WSP_ATR_Submitted_ID
+	    class DelJob {
+	        final String tableName;
+	        DelJob(String t) { tableName = t; }
+	    }
+
+	    List<DelJob> jobs = new ArrayList<>();
+
+	    for (Integer adTableId : tableIds) {
+	        MTable t = MTable.get(Env.getCtx(), adTableId);
+	        if (t == null) continue;
+
+	        String tableName = t.getTableName();
+	        if (Util.isEmpty(tableName, true))
+	            continue;
+
+	        // Safety: never delete from these
+	        if (X_ZZ_WSP_ATR_Submitted.Table_Name.equalsIgnoreCase(tableName)
+	                || X_ZZ_WSP_ATR_Lookup_Mapping.Table_Name.equalsIgnoreCase(tableName))
+	            continue;
+
+	        // Only delete if table is designed to link back to submittedId
+	        if (columnExists(tableName, "ZZ_WSP_ATR_Submitted_ID", trxName)) {
+	            jobs.add(new DelJob(tableName));
+	        }
+	    }
+
+	    if (jobs.isEmpty())
+	        return;
+
+	    // 4) Run deletes in retry passes to handle FK order
+	    List<DelJob> remaining = new ArrayList<>(jobs);
+
+	    for (int pass = 1; pass <= 4 && !remaining.isEmpty(); pass++) {
+	        List<DelJob> failed = new ArrayList<>();
+
+	        for (DelJob job : remaining) {
+	            try {
+	            	Object [] parms = {submittedId};
+	            	DB.executeUpdateEx(
+	                    "DELETE FROM " + job.tableName + " WHERE ZZ_WSP_ATR_Submitted_ID=?",
+	                    parms,
+	                    trxName,
+	                    0
+	                );
+	            } catch (Exception ex) {
+	                failed.add(job);
+	            }
+	        }
+
+	        remaining = failed;
+	    }
+
+	    // If some still remain, log them (usually means those tables link differently)
+	    if (!remaining.isEmpty()) {
+	        for (DelJob job : remaining) {
+	            log.log(Level.WARNING,
+	                "Could not delete from mapped table " + job.tableName +
+	                " for ZZ_WSP_ATR_Submitted_ID=" + submittedId +
+	                " (likely FK order or different link column).");
+	        }
+	    }
+	}
+	
+	private boolean columnExists(String tableName, String columnName, String trxName) {
+	    int cnt = DB.getSQLValueEx(
+	        trxName,
+	        "SELECT COUNT(1) " +
+	        "FROM AD_Column c " +
+	        "JOIN AD_Table t ON t.AD_Table_ID=c.AD_Table_ID " +
+	        "WHERE t.TableName=? AND c.ColumnName=? AND c.IsActive='Y'",
+	        tableName, columnName
+	    );
+	    return cnt > 0;
 	}
 
 

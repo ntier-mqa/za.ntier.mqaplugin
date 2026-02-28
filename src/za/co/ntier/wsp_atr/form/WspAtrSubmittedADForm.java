@@ -18,9 +18,11 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import org.adempiere.exceptions.AdempiereException;
+import org.adempiere.util.Callback;
 import org.adempiere.webui.AdempiereWebUI;
 import org.adempiere.webui.ISupportMask;
 import org.adempiere.webui.LayoutUtils;
+import org.adempiere.webui.apps.BackgroundJob;
 import org.adempiere.webui.component.Borderlayout;
 import org.adempiere.webui.component.Label;
 import org.adempiere.webui.component.ListCell;
@@ -34,9 +36,11 @@ import org.adempiere.webui.panel.ADForm;
 import org.adempiere.webui.util.ZKUpdateUtil;
 import org.compiere.model.MAttachment;
 import org.compiere.model.MAttachmentEntry;
+import org.compiere.model.MPInstance;
 import org.compiere.model.MProcess;
 import org.compiere.model.MTable;
 import org.compiere.model.Query;
+import org.compiere.process.ProcessInfo;
 import org.compiere.util.CLogger;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
@@ -58,7 +62,6 @@ import org.zkoss.zul.Toolbarbutton;
 import org.zkoss.zul.Vlayout;
 
 import za.co.ntier.api.model.X_ZZSdfOrganisation;
-import za.co.ntier.bg.ZZQueuedJobDispatcher;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
 import za.ntier.models.MZZWSPATRSubmitted;
@@ -340,7 +343,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 	            // 2) Clear old attachments + related records
 	            deleteAllAttachmentsForSubmitted(existingId, trxName);
-	            deleteRelatedRecordsBeforeProcessing(existingId, trxName);
+	           // deleteRelatedRecordsBeforeProcessing(existingId, trxName);
 
 	            // 3) Update the row fields (optional but recommended)
 	            submitted.setSubmittedDate(new Timestamp(System.currentTimeMillis()));
@@ -383,9 +386,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	    lblSelectedOrg.setValue("Organisation: " + org.orgName);
 	    lblInfo.setValue("Uploaded: " + filename + " (ID " + submittedId + ")");
 	    refreshList();
-	    //runValidateImportInBackground(submittedId);
-	    queueValidateImport(submittedId);
-	    
+	    runValidateImportInBackground(submittedId);
 	    
 	}
 
@@ -542,9 +543,20 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	    lblInfo.setValue("Background job queued for Submitted ID " + submittedId);
 	}
 	
+	private boolean hasRunningJob(int adProcessId, int recordId, String trxName) {
+	    // AD_PInstance.IsProcessing='Y' is the usual “still running”
+	    int cnt = DB.getSQLValueEx(trxName,
+	        "SELECT COUNT(1) " +
+	        "FROM AD_PInstance " +
+	        "WHERE AD_Process_ID=? " +
+	        "AND Record_ID=? " +
+	        "AND IsProcessing='Y'",
+	        adProcessId, recordId);
+	    return cnt > 0;
+	}
 	*/
 	
-	private void queueValidateImport(final int submittedId) {
+	private void runValidateImportInBackground(final int submittedId) {
 	    final Properties ctx = Env.getCtx();
 
 	    final MProcess proc = MProcess.get(ctx, PROCESS_VALIDATE_IMPORT_UU);
@@ -552,42 +564,50 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	        throw new AdempiereException("Validate/Import process not found (UU=" + PROCESS_VALIDATE_IMPORT_UU + ")");
 	    }
 
-	    // Optional: prevent same record being queued multiple times
-	    int dup = DB.getSQLValueEx(null,
-	        "SELECT COUNT(*) FROM zz_bg_job_queue " +
-	        "WHERE ad_client_id=? AND ad_process_id=? AND record_id=? AND status IN ('Q','R')",
-	        Env.getAD_Client_ID(ctx), proc.getAD_Process_ID(), submittedId);
-	    if (dup > 0) {
+	    // Optional: prevent duplicate QUEUED for same record/process
+	    int exists = DB.getSQLValue(null,
+	            "SELECT COUNT(*) FROM zz_bg_job_queue " +
+	            "WHERE ad_client_id=? AND ad_process_id=? AND record_id=? " +
+	            "AND status IN ('Q','R') AND isactive='Y'",
+	            Env.getAD_Client_ID(ctx), proc.getAD_Process_ID(), submittedId);
+
+	    if (exists > 0) {
 	        lblInfo.setValue("Already queued/running for Submitted ID " + submittedId);
 	        return;
 	    }
 
-	  //  int queueId = DB.getSQLValueEx(null,
-	  //      "SELECT nextid('zz_bg_job_queue')", new Object[] {});
-	    int queueId = DB.getNextID(Env.getAD_Client_ID(ctx), "ZZ_BG_Job_Queue", null);
-	 // or: DB.getNextID(ctx, "ZZ_BG_Job_Queue", null);
-	    int no = DB.executeUpdateEx(
-	        "INSERT INTO zz_bg_job_queue (zz_bg_job_queue_id, ad_client_id, ad_org_id, ad_user_id, ad_process_id, record_id, status, createdby, updatedby) " +
-	        "VALUES (?, ?, ?, ?, ?, ?, 'Q', ?, ?)",
-	        new Object[] {
-	            queueId,
-	            Env.getAD_Client_ID(ctx),
-	            Env.getAD_Org_ID(ctx),
-	            Env.getAD_User_ID(ctx),
-	            proc.getAD_Process_ID(),
-	            submittedId,
-	            Env.getAD_User_ID(ctx),
-	            Env.getAD_User_ID(ctx)
-	        },
-	        null
+	    // Create queue record (Status='Q')
+	    int queueId = DB.getNextID(ctx, "ZZ_BG_Job_Queue", null);
+
+	    int adClientId = Env.getAD_Client_ID(ctx);
+	    int adOrgId    = Env.getAD_Org_ID(ctx);
+	    int adUserId   = Env.getAD_User_ID(ctx);
+
+	    DB.executeUpdateEx(
+	            "INSERT INTO zz_bg_job_queue " +
+	            "(zz_bg_job_queue_id, ad_client_id, ad_org_id, ad_user_id, ad_process_id, record_id, status, " +
+	            " created, createdby, updated, updatedby, isactive, ad_table_id, zz_bg_job_queue_uu) " +
+	            "VALUES (?, ?, ?, ?, ?, ?, 'Q', now(), ?, now(), ?, 'Y', ?, generate_uuid())",
+	            new Object[] {
+	                    queueId,
+	                    adClientId,
+	                    adOrgId,
+	                    adUserId,
+	                    proc.getAD_Process_ID(),
+	                    submittedId,
+	                    adUserId,         // createdby
+	                    adUserId,         // updatedby
+	                    0                 // ad_table_id (optional) - set if you want
+	            },
+	            null
 	    );
 
-	    ZZQueuedJobDispatcher.kick(proc.getAD_Process_ID(), Env.getAD_Client_ID(ctx));
-
-	    lblInfo.setValue("Queued job (Queue ID " + queueId + ") for Submitted ID " + submittedId);
+	    lblInfo.setValue("Queued Validate/Import for Submitted ID " + submittedId +
+	            " (Queue ID " + queueId + "). It will run on the next scheduler cycle.");
 	}
-	
-	
+
+
+
 	// ---------------- Download Error ----------------
 
 	private void downloadLatestError(int submittedId) {
