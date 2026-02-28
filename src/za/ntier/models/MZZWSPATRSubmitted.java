@@ -95,8 +95,11 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	    boolean ok = super.afterSave(newRecord, success);
 
 	    // Only create checklist on new record
-	    if (ok && newRecord)
-	        createVerificationChecklist();
+	    //if (ok && newRecord)
+	    //    createVerificationChecklist();
+	    
+	    // Ensure checklist exists (new OR existing record) , if it was not created before.
+	    ensureVerificationChecklist();
 
 	 // If user ticked IsQuery = true, generate PDF and send email
 	    if (ok && is_ValueChanged("ZZ_IsQuery") && isZZ_IsQuery()) {
@@ -116,6 +119,23 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	    return ok;
 	}	
 	
+	private void ensureVerificationChecklist() {
+	    int submittedId = getZZ_WSP_ATR_Submitted_ID();
+	    if (submittedId <= 0)
+	        return;
+
+	    // Do we already have at least one checklist line for this submitted record?
+	    boolean hasAny = new Query(getCtx(),
+	            MZZWSPATRVeriChecklist.Table_Name,
+	            "ZZ_WSP_ATR_Submitted_ID=?",
+	            get_TrxName())
+	        .setParameters(submittedId)
+	        .match();
+
+	    if (!hasAny) {
+	        createVerificationChecklist();
+	    }
+	}
 	
 	private void createVerificationChecklist() {
 	    List<PO> poList = new Query(getCtx(),
