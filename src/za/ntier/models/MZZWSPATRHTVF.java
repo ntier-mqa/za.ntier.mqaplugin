@@ -10,6 +10,8 @@ import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_HTVF;
 
 public class MZZWSPATRHTVF extends X_ZZ_WSP_ATR_HTVF {
 
+	private static final long serialVersionUID = 8438982424075753322L;
+
 	public MZZWSPATRHTVF(Properties ctx, int ZZ_WSP_ATR_HTVF_ID, String trxName) {
 		super(ctx, ZZ_WSP_ATR_HTVF_ID, trxName);
 		// TODO Auto-generated constructor stub
@@ -47,24 +49,24 @@ public class MZZWSPATRHTVF extends X_ZZ_WSP_ATR_HTVF {
 		if (!success)
 			return false;
 		
-		updateHTVFTotal();
+		//updateHTVFTotal();
 		
 		return super.afterSave(newRecord, success);
 	}
 
-	private void updateHTVFTotal()
+	public static void updateHTVFTotal(Properties ctx,int submittedId,String trxName)
 	{
-	    int submittedId = getZZ_WSP_ATR_Submitted_ID();
+	    //int submittedId = getZZ_WSP_ATR_Submitted_ID();
 
 	    String sql =
 	        "SELECT COUNT(*) " +
 	        "FROM ZZ_WSP_ATR_HTVF " +
 	        "WHERE ZZ_WSP_ATR_Submitted_ID=?";
 
-	    int total = DB.getSQLValue(get_TrxName(), sql, submittedId);
+	    int total = DB.getSQLValue(trxName, sql, submittedId);
 
 	    MZZWSPATRSubmitted submitted =
-	        MZZWSPATRSubmitted.getSubmitted(getCtx(), submittedId, get_TrxName());
+	        MZZWSPATRSubmitted.getSubmitted(ctx, submittedId, trxName);
 
 	    submitted.updateChecklistTotal(
 	        MZZWSPATRSubmitted.CL_HTVF,

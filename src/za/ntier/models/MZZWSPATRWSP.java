@@ -10,6 +10,8 @@ import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_WSP;
 
 public class MZZWSPATRWSP extends X_ZZ_WSP_ATR_WSP {
 
+	private static final long serialVersionUID = 4432833175023389516L;
+	
 	public MZZWSPATRWSP(Properties ctx, int ZZ_WSP_ATR_WSP_ID, String trxName) {
 		super(ctx, ZZ_WSP_ATR_WSP_ID, trxName);
 		// TODO Auto-generated constructor stub
@@ -47,13 +49,13 @@ public class MZZWSPATRWSP extends X_ZZ_WSP_ATR_WSP {
 		if (!success)
 			return false;
 		
-		updateWSPTotal();
+		//updateWSPTotal();
 		
 		return super.afterSave(newRecord, success);
 	}
-	private void updateWSPTotal()
+	public static void updateWSPTotal(Properties ctx,int submittedId,String trxName)
 	{
-	    int submittedId = getZZ_WSP_ATR_Submitted_ID();
+	    //int submittedId = getZZ_WSP_ATR_Submitted_ID();
 
 	    String sql =
 	        "SELECT COALESCE(SUM(coalesce(zz_male,0) + coalesce(zz_female,0)),0)  " +
@@ -61,10 +63,10 @@ public class MZZWSPATRWSP extends X_ZZ_WSP_ATR_WSP {
 	        "WHERE ZZ_WSP_ATR_Submitted_ID=?";
 
 	    BigDecimal total =
-	        DB.getSQLValueBD(get_TrxName(), sql, submittedId);
+	        DB.getSQLValueBD(trxName, sql, submittedId);
 
 	    MZZWSPATRSubmitted submitted =
-	        MZZWSPATRSubmitted.getSubmitted(getCtx(), submittedId, get_TrxName());
+	        MZZWSPATRSubmitted.getSubmitted(ctx, submittedId, trxName);
 
 	    submitted.updateChecklistTotal(
 	        MZZWSPATRSubmitted.CL_WSP_TOTAL,

@@ -11,6 +11,10 @@ import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_ATR_Detail;
 
 public class MZZWSPATRATRDetail extends X_ZZ_WSP_ATR_ATR_Detail {
 
+	private static final long serialVersionUID = 1L;
+
+
+
 	public MZZWSPATRATRDetail(Properties ctx, int ZZ_WSP_ATR_ATR_Detail_ID, String trxName) {
 		super(ctx, ZZ_WSP_ATR_ATR_Detail_ID, trxName);
 		// TODO Auto-generated constructor stub
@@ -49,23 +53,23 @@ public class MZZWSPATRATRDetail extends X_ZZ_WSP_ATR_ATR_Detail {
 		if (!success)
 			return false;
 		
-		updateATRAndDeviation();
+	//	updateATRAndDeviation();
 		
 		return super.afterSave(newRecord, success);
 	}
 	
 	
 	
-	private void updateATRAndDeviation()
+	public static void updateATRAndDeviation(Properties ctx,int submittedId, String trxName)
 	{
-	    int submittedId = getZZ_WSP_ATR_Submitted_ID();
+	  //  int submittedId = getZZ_WSP_ATR_Submitted_ID();
 
 	    String atrSql =
 	        "SELECT COUNT(*) " +
 	        "FROM ZZ_WSP_ATR_ATR_DETAIL " +
 	        "WHERE ZZ_WSP_ATR_Submitted_ID=?";
 
-	    int atrTotal = DB.getSQLValue(get_TrxName(), atrSql, submittedId);
+	    int atrTotal = DB.getSQLValue(trxName, atrSql, submittedId);
 
 	    String wspSql =
 	        "SELECT COALESCE(SUM(coalesce(zz_male,0) + coalesce(zz_female,0)),0)  " +
@@ -73,7 +77,7 @@ public class MZZWSPATRATRDetail extends X_ZZ_WSP_ATR_ATR_Detail {
 	        "WHERE ZZ_WSP_ATR_Submitted_ID=?";
 
 	    BigDecimal wspTotal =
-	        DB.getSQLValueBD(get_TrxName(), wspSql, submittedId);
+	        DB.getSQLValueBD(trxName, wspSql, submittedId);
 
 	    BigDecimal atrBD = BigDecimal.valueOf(atrTotal);
 
@@ -87,7 +91,7 @@ public class MZZWSPATRATRDetail extends X_ZZ_WSP_ATR_ATR_Detail {
 	    }
 
 	    MZZWSPATRSubmitted submitted =
-	        MZZWSPATRSubmitted.getSubmitted(getCtx(), submittedId, get_TrxName());
+	        MZZWSPATRSubmitted.getSubmitted(ctx, submittedId, trxName);
 
 	    submitted.updateChecklistTotal(
 	        MZZWSPATRSubmitted.CL_ATR_TOTAL,
