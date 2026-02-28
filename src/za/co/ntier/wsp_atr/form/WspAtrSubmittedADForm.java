@@ -582,6 +582,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	    int adClientId = Env.getAD_Client_ID(ctx);
 	    int adOrgId    = Env.getAD_Org_ID(ctx);
 	    int adUserId   = Env.getAD_User_ID(ctx);
+	    int tableID = MTable.getTable_ID(X_ZZ_WSP_ATR_Submitted.Table_Name);
 
 	    DB.executeUpdateEx(
 	            "INSERT INTO zz_bg_job_queue " +
@@ -597,7 +598,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	                    submittedId,
 	                    adUserId,         // createdby
 	                    adUserId,         // updatedby
-	                    0                 // ad_table_id (optional) - set if you want
+	                    tableID                 // ad_table_id (optional) - set if you want
 	            },
 	            null
 	    );
