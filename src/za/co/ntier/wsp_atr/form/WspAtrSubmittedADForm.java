@@ -351,6 +351,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	            submitted.setName("WSP/ATR " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
 	            submitted.setZZ_Import_Submitted_Data("N");
 	            submitted.setZZSdfOrganisation_ID(org.zzSdfOrganisationId);
+	            submitted.setZZ_DocAction(null);
 	            submitted.setZZ_DocStatus(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating);
 	            submitted.saveEx();
 
@@ -363,6 +364,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	            submitted.setFileName(filename);
 	            submitted.setZZ_Import_Submitted_Data("N");
 	            submitted.setZZSdfOrganisation_ID(org.zzSdfOrganisationId);
+	            submitted.setZZ_DocAction(null);
 	            submitted.setZZ_DocStatus(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating);
 	            submitted.saveEx();
 
