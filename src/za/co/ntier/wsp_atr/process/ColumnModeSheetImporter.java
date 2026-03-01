@@ -55,7 +55,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 			ImportWspAtrDataFromTemplate process,
 			DataFormatter formatter) throws IllegalStateException, SQLException {
 
-		Sheet sheet = getSheetOrThrow(wb, mappingHeader);
+		Sheet sheet = getSheetOrThrow(wb, mappingHeader); 
 		List<X_ZZ_WSP_ATR_Lookup_Mapping_Detail> details =
 				loadDetails(mappingHeader, trxName);
 
@@ -120,6 +120,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 		int startRow = (mappingHeader.getStart_Row() == null) ? 0 : mappingHeader.getStart_Row().intValue();
 		if (startRow <= 0) startRow = 4; // keep current default behavior
 
+		int emptyRowsInARow = 0;
 		for (int r = startRow; r <= lastRow; r++) {
 			Row row = sheet.getRow(r);
 			if (row == null)
@@ -131,8 +132,14 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 					colIndexToMeta.keySet(),
 					formatter,
 					process.getEvaluator())) {
+				emptyRowsInARow++;
+				if (emptyRowsInARow > 10) {
+					break;  // to many empty lines.  Assume the rest are empty
+				}
 				continue;
 			}
+			
+			emptyRowsInARow = 0;
 
 			// 2️⃣ Ignore rows based on Ignore_If_Blank
 			if (shouldIgnoreRowBecauseOfIgnoreIfBlank(

@@ -56,6 +56,7 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 				trxName)
 				.setParameters(mappingHeader.getZZ_WSP_ATR_Lookup_Mapping_ID())
 				.setOnlyActiveRecords(true)
+				.setOrderBy(X_ZZ_WSP_ATR_Lookup_Mapping_Detail.COLUMNNAME_ZZ_Column_Letter)
 				.list();
 	}
 
