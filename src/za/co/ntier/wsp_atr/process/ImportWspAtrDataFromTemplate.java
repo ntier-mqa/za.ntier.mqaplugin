@@ -3,6 +3,7 @@ package za.co.ntier.wsp_atr.process;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Level;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -14,6 +15,7 @@ import org.compiere.model.MAttachment;
 import org.compiere.model.MAttachmentEntry;
 import org.compiere.model.Query;
 import org.compiere.process.SvrProcess;
+import org.compiere.util.DB;
 import org.compiere.util.Env;
 
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping;
@@ -83,8 +85,21 @@ public class ImportWspAtrDataFromTemplate extends SvrProcess {
 			IWspAtrSheetImporter importer = isColumns
 					? new ColumnModeSheetImporter(refService,this)
 							: new RowModeSheetImporter(refService,this);
+			importer.setLog(log);
 
-			int count = importer.importData(ctx, wb, submitted, mapHeader, trxName, this, formatter);
+			int count = 0;
+			try {
+				count = importer.importData(ctx, wb, submitted, mapHeader, trxName, this, formatter);
+			} catch (Exception e){
+				// IMPORTANT: rollback resets aborted transaction state in PostgreSQL
+			    DB.rollback(true, trxName);
+
+			    addLog("ERROR in Importer : " + e.getMessage());
+
+			    // optional: also log stacktrace to server log
+			    log.log(Level.SEVERE,"ERROR in Importer : " + e.getMessage());
+			    throw e;
+			}
 			totalImported += count;
 
 		}

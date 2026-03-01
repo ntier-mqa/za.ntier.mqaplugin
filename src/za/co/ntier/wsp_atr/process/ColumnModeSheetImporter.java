@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Level;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -17,6 +18,7 @@ import org.compiere.model.MTable;
 import org.compiere.model.PO;
 import org.compiere.model.Query;
 import org.compiere.process.SvrProcess;
+import org.compiere.util.CLogger;
 import org.compiere.util.DB;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Util;
@@ -40,7 +42,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 
 	// Data usually starts at row 7 (Excel 1-based) => index 6 (0-based)
 	private static final int DEFAULT_COMMIT_EVERY = 1000; // change as you like
-
+	
 
 	public ColumnModeSheetImporter(ReferenceLookupService refService,SvrProcess svrProcess) {
 		super(refService,svrProcess);
@@ -229,18 +231,44 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 				continue; // ignore entire line
 			}
 
-			line.saveEx();
-			imported++;
+			
+			try {
+			    line.saveEx();
+			    imported++;
 
-			// Commit in batches to avoid huge transactions
-			if (commitEvery > 0 && (imported % commitEvery) == 0) {
-				DB.commit(true, trxName);
-			//	process.addLog("Committed after " + imported + " inserts (tab " + mappingHeader.getZZ_Tab_Name() + ")");
+			    if (commitEvery > 0 && (imported % commitEvery) == 0) {
+			        DB.commit(true, trxName);
+			    }
+
+			} catch (Exception ex) {
+			    // IMPORTANT: rollback resets aborted transaction state in PostgreSQL
+			    DB.rollback(true, trxName);
+
+			    process.addLog("ERROR row " + (r + 1)
+			        + " (tab " + mappingHeader.getZZ_Tab_Name() + "): "
+			        + ex.getClass().getSimpleName() + " - " + ex.getMessage());
+
+			    // optional: also log stacktrace to server log
+			    log.log(Level.SEVERE,
+			        "Import failed at row " + (r + 1) + ", tab " + mappingHeader.getZZ_Tab_Name(),
+			        ex);
+
+			    // Decide: skip row and continue OR rethrow to stop whole import
+			    continue;
 			}
+
+			
 		}
 
 		// Final commit at end (safe)
-		DB.commit(true,trxName);
+		
+		try {
+		    DB.commit(true, trxName);
+		} catch (Exception ex) {
+		    DB.rollback(true, trxName);
+		    log.log(Level.SEVERE, "Final commit failed for tab " + mappingHeader.getZZ_Tab_Name(), ex);
+		    throw ex; // or return imported if you want partial success
+		}
 
 	//	process.addLog("Imported " + imported + " rows from tab " + mappingHeader.getZZ_Tab_Name());
 		return imported;
