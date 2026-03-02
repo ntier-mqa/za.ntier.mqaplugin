@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.logging.Level;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -40,7 +42,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 
 	// Data usually starts at row 7 (Excel 1-based) => index 6 (0-based)
 	private static final int DEFAULT_COMMIT_EVERY = 1000; // change as you like
-
+	
 
 	public ColumnModeSheetImporter(ReferenceLookupService refService,SvrProcess svrProcess) {
 		super(refService,svrProcess);
@@ -120,6 +122,8 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 		int startRow = (mappingHeader.getStart_Row() == null) ? 0 : mappingHeader.getStart_Row().intValue();
 		if (startRow <= 0) startRow = 4; // keep current default behavior
 
+		Set<Integer> existingRowNos = loadExistingRowNos(ctx, targetTableName, submitted.get_ID(), trxName);
+
 		int emptyRowsInARow = 0;
 		for (int r = startRow; r <= lastRow; r++) {
 			Row row = sheet.getRow(r);
@@ -162,8 +166,12 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 			int sheetRowNo = r + 1;
 
 			// Restartable: if a line already exists for this Submitted + Row_No, skip
-			if (rowAlreadyImported(ctx, targetTableName, submitted.get_ID(), sheetRowNo, trxName)) {
-				continue;
+		//	if (rowAlreadyImported(ctx, targetTableName, submitted.get_ID(), sheetRowNo, trxName)) {
+			//	continue;
+		//	}
+			
+			if (existingRowNos.contains(sheetRowNo)) {
+			    continue;
 			}
 
 			PO line = newTargetPO(ctx, submitted, mappingHeader, trxName);
@@ -229,18 +237,44 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 				continue; // ignore entire line
 			}
 
-			line.saveEx();
-			imported++;
+			
+			try {
+			    line.saveEx();
+			    imported++;
 
-			// Commit in batches to avoid huge transactions
-			if (commitEvery > 0 && (imported % commitEvery) == 0) {
-				DB.commit(true, trxName);
-			//	process.addLog("Committed after " + imported + " inserts (tab " + mappingHeader.getZZ_Tab_Name() + ")");
+			    if (commitEvery > 0 && (imported % commitEvery) == 0) {
+			        DB.commit(true, trxName);
+			    }
+
+			} catch (Exception ex) {
+			    // IMPORTANT: rollback resets aborted transaction state in PostgreSQL
+			    DB.rollback(true, trxName);
+
+			    process.addLog("ERROR row " + (r + 1)
+			        + " (tab " + mappingHeader.getZZ_Tab_Name() + "): "
+			        + ex.getClass().getSimpleName() + " - " + ex.getMessage());
+
+			    // optional: also log stacktrace to server log
+			    log.log(Level.SEVERE,
+			        "Import failed at row " + (r + 1) + ", tab " + mappingHeader.getZZ_Tab_Name(),
+			        ex);
+
+			    // Decide: skip row and continue OR rethrow to stop whole import
+			    continue;
 			}
+
+			
 		}
 
 		// Final commit at end (safe)
-		DB.commit(true,trxName);
+		
+		try {
+		    DB.commit(true, trxName);
+		} catch (Exception ex) {
+		    DB.rollback(true, trxName);
+		    log.log(Level.SEVERE, "Final commit failed for tab " + mappingHeader.getZZ_Tab_Name(), ex);
+		    throw ex; // or return imported if you want partial success
+		}
 
 	//	process.addLog("Imported " + imported + " rows from tab " + mappingHeader.getZZ_Tab_Name());
 		return imported;
@@ -538,6 +572,26 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 
 	private static class SkipRowException extends RuntimeException {
 		SkipRowException(String msg) { super(msg); }
+	}
+	
+	private java.util.Set<Integer> loadExistingRowNos(Properties ctx, String tableName, int submittedId, String trxName) {
+	    java.util.Set<Integer> set = new java.util.HashSet<>();
+	    String sql = "SELECT Row_No FROM " + tableName + " WHERE ZZ_WSP_ATR_Submitted_ID=?";
+	    java.sql.PreparedStatement ps = null;
+	    java.sql.ResultSet rs = null;
+	    try {
+	        ps = DB.prepareStatement(sql, trxName);
+	        ps.setInt(1, submittedId);
+	        rs = ps.executeQuery();
+	        while (rs.next()) {
+	            set.add(rs.getInt(1));
+	        }
+	    } catch (Exception e) {
+	        throw new AdempiereException("Failed to load existing Row_No for " + tableName, e);
+	    } finally {
+	        DB.close(rs, ps);
+	    }
+	    return set;
 	}
 
 }

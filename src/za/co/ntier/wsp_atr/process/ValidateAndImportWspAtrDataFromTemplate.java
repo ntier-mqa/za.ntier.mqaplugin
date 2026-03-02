@@ -49,6 +49,7 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 	protected String doIt() throws Exception {
 		int totalErrors = 0;
 		boolean validationCompletedWithErrors = false;
+		Workbook wb = null;
 		try {
 			if (p_ZZ_WSP_ATR_Submitted_ID <= 0)
 				throw new AdempiereException("No WSP/ATR Submitted record selected");
@@ -65,7 +66,7 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 					new X_ZZ_WSP_ATR_Submitted(ctx, p_ZZ_WSP_ATR_Submitted_ID, trxName);
 
 			// Load workbook (same as your existing)
-			Workbook wb = loadWorkbook(submitted);
+			wb = loadWorkbook(submitted);
 			DataFormatter formatter = new DataFormatter();
 			FormulaEvaluator evaluator = wb.getCreationHelper().createFormulaEvaluator();
 
@@ -122,7 +123,13 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 			}
 
 			throw ex;
-		}
+		} finally {
+	        if (wb != null) {
+	            try {
+	                wb.close();   
+	            } catch (Exception ignore) {}
+	        }
+	    }
 
 
 		// No errors => run import
@@ -151,6 +158,14 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 	        bos.flush();
 	        data = bos.toByteArray();
 	    }
+	    
+	    try (java.util.zip.ZipInputStream zis = new java.util.zip.ZipInputStream(new java.io.ByteArrayInputStream(data))) {
+	        if (zis.getNextEntry() == null) {
+	            throw new AdempiereException("Generated Excel file is not a valid ZIP (corrupt write).");
+	        }
+	    } finally {
+	        try { wb.close(); } catch (Exception ignore) {}
+	    }
 
 	    String trxName = Trx.createTrxName("WSPATR_ERRFILE");
 	    Trx trx = Trx.get(trxName, true);
@@ -171,6 +186,7 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 	        throw e;
 	    } finally {
 	        trx.close();
+	        try { wb.close(); } catch (Exception ignore) {}
 	    }
 	}
 
@@ -351,7 +367,7 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 
 		String ts = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 
-		return "ERROR_" + baseName + "_" + ts + ".xlsm";
+		return "ERROR_" + baseName + "_" + ts + ".xlsx";
 	}
 
 

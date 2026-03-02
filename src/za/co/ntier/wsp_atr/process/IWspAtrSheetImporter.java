@@ -6,6 +6,7 @@ import java.util.Properties;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.compiere.process.SvrProcess;
+import org.compiere.util.CLogger;
 
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
@@ -26,4 +27,8 @@ public interface IWspAtrSheetImporter {
                    String trxName,
                    ImportWspAtrDataFromTemplate process,
                    DataFormatter formatter) throws IllegalStateException, SQLException;
+    
+    public CLogger getLog();
+
+	public void setLog(CLogger log);
 }

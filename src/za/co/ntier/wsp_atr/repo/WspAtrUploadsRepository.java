@@ -28,7 +28,8 @@ public class WspAtrUploadsRepository {
             "LEFT JOIN adempiere.zzsdforganisation_v v ON v.zzsdforganisation_v_id = s.ZZSDFOrganisation_ID " +
             "WHERE v.ad_user_id = ? " +
             " And s.zz_docstatus in ('" + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported + "'"
-            		+ ",'" + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Uploaded + "') " +
+            		+ ",'" + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Uploaded + "','"
+            		+ X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Query + "') " +
             "ORDER BY s.ZZ_WSP_ATR_Submitted_ID DESC";
 
         return DB.getSQLArrayObjectsEx(null, sql, adUserId);
@@ -156,7 +157,7 @@ public class WspAtrUploadsRepository {
             if (Util.isEmpty(n, true)) continue;
             String upper = n.toUpperCase();
             if (upper.startsWith("ERROR")) continue;
-            if (!upper.endsWith(".XLSM")) continue;
+            if (!upper.endsWith(".XLSM") && !upper.endsWith(".XLSX") ) continue;
             return true;
         }
         return false;

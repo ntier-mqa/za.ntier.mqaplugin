@@ -9,6 +9,7 @@ import org.zkoss.zk.ui.util.Clients;
 
 import za.co.ntier.wsp_atr.domain.UploadTypeDef;
 import za.co.ntier.wsp_atr.form.WspAtrUploadsADForm;
+import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Uploads;
 import za.co.ntier.wsp_atr.repo.WspAtrUploadsRepository;
 import za.co.ntier.wsp_atr.service.WspAtrUploadsService;
@@ -69,7 +70,9 @@ public class WspAtrRowUiBuilder {
             ? repo.findFirstAttachmentFileName(X_ZZ_WSP_ATR_Uploads.Table_ID, uploadId.intValue())
             : null;
 
-        String btnLabel = !Util.isEmpty(fileName, true) ? "Upload again" : typeDef.initialLabel;
+       // String btnLabel = !Util.isEmpty(fileName, true) ? "Upload again" : typeDef.initialLabel;
+        
+        String btnLabel = typeDef.initialLabel;
 
         org.adempiere.webui.component.Button btn = new org.adempiere.webui.component.Button(btnLabel);
         btn.setSclass("btn btn-sm btn-primary wsp-edit-purple");
@@ -91,12 +94,15 @@ public class WspAtrRowUiBuilder {
         return hb;
     }
     
-    public org.zkoss.zul.Hbox buildSubmitLine(int submittedId) {
+    public org.zkoss.zul.Hbox buildSubmitLine(int submittedId,String status) {
         org.zkoss.zul.Hbox hb = new org.zkoss.zul.Hbox();
         hb.setSpacing("10px");
         hb.setAlign("center");
 
         boolean eligible = service.isEligibleToSubmit(submittedId);
+        if (!status.equalsIgnoreCase("Imported")) {
+        	eligible = false;
+        }
 
         org.adempiere.webui.component.Button btn = new org.adempiere.webui.component.Button("Submit WSP-ATR");
         btn.setSclass("btn btn-sm btn-primary wsp-edit-purple");

@@ -17,6 +17,7 @@ import org.compiere.model.MTable;
 import org.compiere.model.PO;
 import org.compiere.model.Query;
 import org.compiere.process.SvrProcess;
+import org.compiere.util.CLogger;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 import org.compiere.util.Util;
@@ -29,6 +30,17 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 
 	protected final ReferenceLookupService refService;
 	protected final SvrProcess svrProcess;
+	
+	CLogger			log = null;
+
+
+	public CLogger getLog() {
+		return log;
+	}
+
+	public void setLog(CLogger log) {
+		this.log = log;
+	}
 
 	protected AbstractMappingSheetImporter(ReferenceLookupService refService,SvrProcess svrProcess) {
 		this.refService = refService;
