@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.logging.Level;
 
 import org.adempiere.exceptions.AdempiereException;
@@ -18,7 +19,6 @@ import org.compiere.model.MTable;
 import org.compiere.model.PO;
 import org.compiere.model.Query;
 import org.compiere.process.SvrProcess;
-import org.compiere.util.CLogger;
 import org.compiere.util.DB;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Util;
@@ -122,6 +122,8 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 		int startRow = (mappingHeader.getStart_Row() == null) ? 0 : mappingHeader.getStart_Row().intValue();
 		if (startRow <= 0) startRow = 4; // keep current default behavior
 
+		Set<Integer> existingRowNos = loadExistingRowNos(ctx, targetTableName, submitted.get_ID(), trxName);
+
 		int emptyRowsInARow = 0;
 		for (int r = startRow; r <= lastRow; r++) {
 			Row row = sheet.getRow(r);
@@ -164,8 +166,12 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 			int sheetRowNo = r + 1;
 
 			// Restartable: if a line already exists for this Submitted + Row_No, skip
-			if (rowAlreadyImported(ctx, targetTableName, submitted.get_ID(), sheetRowNo, trxName)) {
-				continue;
+		//	if (rowAlreadyImported(ctx, targetTableName, submitted.get_ID(), sheetRowNo, trxName)) {
+			//	continue;
+		//	}
+			
+			if (existingRowNos.contains(sheetRowNo)) {
+			    continue;
 			}
 
 			PO line = newTargetPO(ctx, submitted, mappingHeader, trxName);
@@ -566,6 +572,26 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 
 	private static class SkipRowException extends RuntimeException {
 		SkipRowException(String msg) { super(msg); }
+	}
+	
+	private java.util.Set<Integer> loadExistingRowNos(Properties ctx, String tableName, int submittedId, String trxName) {
+	    java.util.Set<Integer> set = new java.util.HashSet<>();
+	    String sql = "SELECT Row_No FROM " + tableName + " WHERE ZZ_WSP_ATR_Submitted_ID=?";
+	    java.sql.PreparedStatement ps = null;
+	    java.sql.ResultSet rs = null;
+	    try {
+	        ps = DB.prepareStatement(sql, trxName);
+	        ps.setInt(1, submittedId);
+	        rs = ps.executeQuery();
+	        while (rs.next()) {
+	            set.add(rs.getInt(1));
+	        }
+	    } catch (Exception e) {
+	        throw new AdempiereException("Failed to load existing Row_No for " + tableName, e);
+	    } finally {
+	        DB.close(rs, ps);
+	    }
+	    return set;
 	}
 
 }

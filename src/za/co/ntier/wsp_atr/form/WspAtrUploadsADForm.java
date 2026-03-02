@@ -59,7 +59,7 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
         refreshList();
 
         // Optional button style
-        Clients.evalJavaScript(
+       /* Clients.evalJavaScript(
             "var s=document.createElement('style');" +
             "s.innerHTML=`" +
             ".wsp-edit-purple{background:#2f2d8f!important;border-color:#2f2d8f!important;color:#fff!important;transition:all .15s ease-in-out;}" +
@@ -69,6 +69,18 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
             "`;" +
             "document.head.appendChild(s);"
         );
+        */
+        
+        Clients.evalJavaScript(
+        	    "var s=document.createElement('style');" +
+        	    "s.innerHTML=`" +
+        	    ".wsp-edit-purple{background:#2f2d8f!important;border-color:#2f2d8f!important;color:#fff!important;}" +
+        	    ".wsp-edit-purple:hover{background:#262372!important;border-color:#262372!important;color:#fff!important;}" +
+        	    ".wsp-edit-purple[disabled], " +
+        	    ".wsp-edit-purple.z-button-disabled{background:#d3d3d3!important;border-color:#c0c0c0!important;color:#888!important;cursor:not-allowed!important;opacity:0.7!important;}" +
+        	    "`;" +
+        	    "document.head.appendChild(s);"
+        	);
     }
 
     private void buildList() {
@@ -186,7 +198,7 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
         v.appendChild(ui.buildUploadLine(submittedId, UploadTypeDef.WSP_ATR_REPORT));
         v.appendChild(ui.buildUploadLine(submittedId, UploadTypeDef.SIGNED_MINUTES));
         v.appendChild(ui.buildUploadLine(submittedId, UploadTypeDef.ATTENDANCE_REGISTER));
-        v.appendChild(ui.buildSubmitLine(submittedId));
+        v.appendChild(ui.buildSubmitLine(submittedId,status));
 
         actionsCell.appendChild(v);
         item.appendChild(actionsCell);
