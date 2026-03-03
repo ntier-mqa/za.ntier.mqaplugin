@@ -49,12 +49,12 @@ public class FinanceTrainingComparisonSection8Builder extends AbstractReportSect
             + "  COALESCE(f.ZZ_Finance_Type,'') AS finance_type, \n"
             + "  COALESCE(f.ZZ_Finance_Value,'')AS finance_value \n"
             + "FROM " + INPUT_TABLE + " f \n"
-            + "WHERE f.ZZ_WSP_ATR_Submitted_ID = ? \n"
+            + "WHERE f.ZZ_WSP_ATR_Submitted_ID in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),trxName)
             + "  AND f.IsActive = 'Y' \n"
             + "ORDER BY COALESCE(f.Row_No,0), f.ZZ_WSP_ATR_Finance_ID \n";
 
         try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName)) {
-            pstmt.setInt(1, submitted.getZZ_WSP_ATR_Submitted_ID());
+            //pstmt.setInt(1, submitted.getZZ_WSP_ATR_Submitted_ID());
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {

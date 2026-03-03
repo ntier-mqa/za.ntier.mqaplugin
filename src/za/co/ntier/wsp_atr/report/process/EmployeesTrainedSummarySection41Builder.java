@@ -45,7 +45,7 @@ public class EmployeesTrainedSummarySection41Builder extends AbstractReportSecti
             "  SELECT DISTINCT ON (COALESCE(a.zz_wsp_employees_id, a.employee_number_id)) \n" +
             "    COALESCE(a.zz_wsp_employees_id, a.employee_number_id) AS emp_id \n" +
             "  FROM zz_wsp_atr_atr_detail a \n" +
-            "  WHERE a.zz_wsp_atr_submitted_id = ? \n" +
+            "  WHERE a.zz_wsp_atr_submitted_id in " +  getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),trxName) +
             "    AND a.isactive = 'Y' \n" +
             "    AND COALESCE(a.zz_wsp_employees_id, a.employee_number_id) IS NOT NULL \n" +
             "  ORDER BY COALESCE(a.zz_wsp_employees_id, a.employee_number_id), a.row_no NULLS LAST, a.zz_wsp_atr_atr_detail_id \n" +
@@ -61,7 +61,7 @@ public class EmployeesTrainedSummarySection41Builder extends AbstractReportSecti
             "  FROM emp e \n" +
             "  JOIN zz_wsp_atr_biodata_detail b \n" +
             "    ON b.zz_wsp_employees_id = e.emp_id \n" +
-            "   AND b.zz_wsp_atr_submitted_id = ? \n" +
+            "   AND b.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),trxName) +
             "), occ AS ( \n" +
             "  SELECT \n" +
             "    bio.*, \n" +
@@ -113,8 +113,8 @@ public class EmployeesTrainedSummarySection41Builder extends AbstractReportSecti
         int rowNo = 0;
 
         try (PreparedStatement ps = DB.prepareStatement(sql, trxName)) {
-            ps.setInt(1, submitted.getZZ_WSP_ATR_Submitted_ID());
-            ps.setInt(2, submitted.getZZ_WSP_ATR_Submitted_ID());
+            //ps.setInt(1, submitted.getZZ_WSP_ATR_Submitted_ID());
+            //ps.setInt(2, submitted.getZZ_WSP_ATR_Submitted_ID());
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {

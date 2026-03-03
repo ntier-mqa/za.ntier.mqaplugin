@@ -56,7 +56,7 @@ public class SummEmpTrainingInterventionsSection51Builder extends AbstractReport
             + "  JOIN zz_wsp_atr_biodata_detail bd \n"
             + "    ON bd.zz_wsp_employees_id = d.zz_wsp_employees_id \n"
             + "   AND bd.zz_wsp_atr_submitted_id = d.zz_wsp_atr_submitted_id \n"
-            + "  WHERE d.zz_wsp_atr_submitted_id = ? \n"
+            + "  WHERE d.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),trxName)
             + "    AND d.zz_wsp_employees_id IS NOT NULL \n"
             + "), txt AS ( \n"
             + "  SELECT \n"
@@ -100,7 +100,7 @@ public class SummEmpTrainingInterventionsSection51Builder extends AbstractReport
             + "ORDER BY qualification_type_id, learning_programme_detail_id \n";
 
         try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName)) {
-            pstmt.setInt(1, submitted.getZZ_WSP_ATR_Submitted_ID());
+            //pstmt.setInt(1, submitted.getZZ_WSP_ATR_Submitted_ID());
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {

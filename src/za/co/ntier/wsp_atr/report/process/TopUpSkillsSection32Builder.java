@@ -38,11 +38,11 @@ public class TopUpSkillsSection32Builder extends AbstractReportSectionBuilder {
               + "  t.zz_topupskill_id, \n"
               + "  t.comments \n"
               + "FROM ZZ_WSP_ATR_TopUp_Skills t \n"
-              + "WHERE t.zz_wsp_atr_submitted_id = ? \n"
+              + "WHERE t.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),trxName)
               + "ORDER BY t.row_no, t.zz_wsp_atr_topup_skills_id \n";
 
         try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName)) {
-            pstmt.setInt(1, submitted.getZZ_WSP_ATR_Submitted_ID());
+            //pstmt.setInt(1, submitted.getZZ_WSP_ATR_Submitted_ID());
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {

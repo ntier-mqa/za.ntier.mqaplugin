@@ -64,7 +64,7 @@ public class NonEmployeesSkillsDevPlanSection64Builder extends AbstractReportSec
             + "  FROM " + INPUT_TABLE + " t \n"
             + "  LEFT JOIN ZZ_Learning_Programme_Ref lpt \n"
             + "         ON lpt.ZZ_Learning_Programme_Ref_ID = t.zz_learning_programme_type_planned_id \n"
-            + "  WHERE t.zz_wsp_atr_submitted_id = ? \n"
+            + "  WHERE t.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),trxName)
             + "    AND t.isactive = 'Y' \n"
             + "    AND t.zz_learning_programme_type_planned_id IS NOT NULL \n"
             + "    AND ( \n"
@@ -88,7 +88,7 @@ public class NonEmployeesSkillsDevPlanSection64Builder extends AbstractReportSec
             + "ORDER BY row_no \n";
 
         try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName)) {
-            pstmt.setInt(1, submitted.getZZ_WSP_ATR_Submitted_ID());
+            //pstmt.setInt(1, submitted.getZZ_WSP_ATR_Submitted_ID());
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {

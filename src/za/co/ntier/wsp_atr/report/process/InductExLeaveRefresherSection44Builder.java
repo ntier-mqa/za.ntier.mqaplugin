@@ -66,7 +66,7 @@ public class InductExLeaveRefresherSection44Builder extends AbstractReportSectio
             + "    ON mg.value = left(occ.value, 6) \n"
             + "  JOIN zz_learning_programme_ref lpr \n"
             + "    ON lpr.zz_learning_programme_ref_id = w.zz_learning_programme_type_id \n"
-            + "  WHERE w.zz_wsp_atr_submitted_id = ? \n"
+            + "  WHERE w.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),trxName)
             + "), planned AS ( \n"
             + "  SELECT \n"
             + "    major_group_id, \n"
@@ -97,7 +97,7 @@ public class InductExLeaveRefresherSection44Builder extends AbstractReportSectio
             + "    ON occ.zz_occupations_ref_id = bd.ofo_occupation_code_id \n"
             + "  JOIN zz_wsp_atr_ofo_major_group_ref mg \n"
             + "    ON mg.value = left(occ.value, 6) \n"
-            + "  WHERE d.zz_wsp_atr_submitted_id = ? \n"
+            + "  WHERE d.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),trxName)
             + "    AND d.employee_number_id IS NOT NULL \n"
             + "), trained AS ( \n"
             + "  SELECT \n"
@@ -129,8 +129,8 @@ public class InductExLeaveRefresherSection44Builder extends AbstractReportSectio
 
         try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName)) {
             int idx = 1;
-            pstmt.setInt(idx++, submitted.getZZ_WSP_ATR_Submitted_ID()); // planned
-            pstmt.setInt(idx++, submitted.getZZ_WSP_ATR_Submitted_ID()); // trained
+            //pstmt.setInt(idx++, submitted.getZZ_WSP_ATR_Submitted_ID()); // planned
+            //pstmt.setInt(idx++, submitted.getZZ_WSP_ATR_Submitted_ID()); // trained
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {

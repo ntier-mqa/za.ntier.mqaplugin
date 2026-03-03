@@ -69,7 +69,7 @@ public class GeoDistributionSection22Builder extends AbstractReportSectionBuilde
               + "  LEFT JOIN ZZ_Gender_Ref  g    ON g.ZZ_Gender_Ref_ID   = bd.Gender_ID \n"
               + "  LEFT JOIN ZZ_No_Yes_Ref  dis  ON dis.ZZ_No_Yes_Ref_ID = bd.Disabled_ID \n"
               + "  LEFT JOIN ZZ_No_Yes_Ref  sa   ON sa.ZZ_No_Yes_Ref_ID  = bd.SA_Citizen_ID \n"
-              + "  WHERE bd.ZZ_WSP_ATR_Submitted_ID = ? \n"
+              + "  WHERE bd.ZZ_WSP_ATR_Submitted_ID in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),trxName)
               + ") \n"
               + "SELECT \n"
               + "  bd2.Province_ID AS province_id, \n"
@@ -94,7 +94,7 @@ public class GeoDistributionSection22Builder extends AbstractReportSectionBuilde
               + "ORDER BY bd2.Province_ID \n";
 
         try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName)) {
-            pstmt.setInt(1, submitted.getZZ_WSP_ATR_Submitted_ID());
+            //pstmt.setInt(1, submitted.getZZ_WSP_ATR_Submitted_ID());
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {

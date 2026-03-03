@@ -71,7 +71,7 @@ public class SummEmpTrainingInterventionsSection42Builder extends AbstractReport
               + "    d.ZZ_WSP_Employees_ID           AS zz_wsp_employees_id \n"
               + "  FROM " + X_ZZ_WSP_ATR_ATR_Detail.Table_Name + " d \n"
               + "  WHERE d.IsActive='Y' \n"
-              + "    AND d.ZZ_WSP_ATR_Submitted_ID = ? \n"
+              + "    AND d.ZZ_WSP_ATR_Submitted_ID in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),trxName)
               + "    AND d.ZZ_WSP_Employees_ID IS NOT NULL \n"
               + "    AND d.Qualification_Type_ID IS NOT NULL \n"
               + "    AND d.Learning_Programme_Detail_ID IS NOT NULL \n"
@@ -94,7 +94,7 @@ public class SummEmpTrainingInterventionsSection42Builder extends AbstractReport
               + "  FROM dedup dd \n"
               + "  LEFT JOIN " + X_ZZ_WSP_ATR_Biodata_Detail.Table_Name + " bd \n"
               + "         ON bd.ZZ_WSP_Employees_ID = dd.zz_wsp_employees_id \n"
-              + "        AND bd.ZZ_WSP_ATR_Submitted_ID = ? \n"
+              + "        AND bd.ZZ_WSP_ATR_Submitted_ID in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),trxName)
               + "        AND bd.IsActive='Y' \n"
               + "  LEFT JOIN ZZ_Equity_Ref  eq   ON eq.ZZ_Equity_Ref_ID  = bd.Race_ID \n"
               + "  LEFT JOIN ZZ_Gender_Ref  g    ON g.ZZ_Gender_Ref_ID   = bd.Gender_ID \n"
@@ -124,8 +124,8 @@ public class SummEmpTrainingInterventionsSection42Builder extends AbstractReport
               + "ORDER BY d.qualification_type_id, d.learning_programme_detail_id \n";
 
         try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName)) {
-            pstmt.setInt(1, submitted.getZZ_WSP_ATR_Submitted_ID());
-            pstmt.setInt(2, submitted.getZZ_WSP_ATR_Submitted_ID());
+            //pstmt.setInt(1, submitted.getZZ_WSP_ATR_Submitted_ID());
+            //pstmt.setInt(2, submitted.getZZ_WSP_ATR_Submitted_ID());
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {

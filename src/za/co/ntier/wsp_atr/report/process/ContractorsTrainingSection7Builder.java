@@ -67,7 +67,7 @@ public class ContractorsTrainingSection7Builder extends AbstractReportSectionBui
             + "    SUM(COALESCE(c.zz_elementary_planned,0))::int        AS elementary_planned, \n"
             + "    SUM(COALESCE(c.zz_learners_planned,0))::int          AS learners_planned \n"
             + "  FROM " + INPUT_TABLE + " c \n"
-            + "  WHERE c.zz_wsp_atr_submitted_id = ? \n"
+            + "  WHERE c.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),trxName)
             + "    AND c.isactive = 'Y' \n"
             + "    AND c.ZZ_Learning_Programme_Type_ID IS NOT NULL \n"
             + "  GROUP BY c.ZZ_Learning_Programme_Type_ID \n"
@@ -78,7 +78,7 @@ public class ContractorsTrainingSection7Builder extends AbstractReportSectionBui
             + "SELECT * FROM numbered ORDER BY row_no \n";
 
         try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName)) {
-            pstmt.setInt(1, submitted.getZZ_WSP_ATR_Submitted_ID());
+            //pstmt.setInt(1, submitted.getZZ_WSP_ATR_Submitted_ID());
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {

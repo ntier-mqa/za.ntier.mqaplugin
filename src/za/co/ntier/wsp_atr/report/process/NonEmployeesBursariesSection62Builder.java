@@ -56,7 +56,7 @@ public class NonEmployeesBursariesSection62Builder extends AbstractReportSection
             + "    t.zz_non_emp_status_done_id       AS status_id, \n"
             + "    SUM(COALESCE(t.zz_male,0) + COALESCE(t.zz_female,0))::numeric(10) AS total_done \n"
             + "  FROM " + INPUT_TABLE + " t \n"
-            + "  WHERE t.zz_wsp_atr_submitted_id = ? \n"
+            + "  WHERE t.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),trxName)
             + "    AND t.isactive = 'Y' \n"
             + "    AND t.zz_learning_programme_done_id IS NOT NULL \n"
             + "    AND t.zz_non_emp_status_done_id IS NOT NULL \n"
@@ -68,7 +68,7 @@ public class NonEmployeesBursariesSection62Builder extends AbstractReportSection
             + "    t.zz_non_emp_status_planned_id     AS status_id, \n"
             + "    SUM(COALESCE(t.zz_total_planned,0))::numeric(10) AS total_planned \n"
             + "  FROM " + INPUT_TABLE + " t \n"
-            + "  WHERE t.zz_wsp_atr_submitted_id = ? \n"
+            + "  WHERE t.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),trxName)
             + "    AND t.isactive = 'Y' \n"
             + "    AND t.zz_learning_programme_planned_id IS NOT NULL \n"
             + "    AND t.zz_non_emp_status_planned_id IS NOT NULL \n"
@@ -97,8 +97,8 @@ public class NonEmployeesBursariesSection62Builder extends AbstractReportSection
             + "ORDER BY row_no \n";
 
         try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName)) {
-            pstmt.setInt(1, submitted.getZZ_WSP_ATR_Submitted_ID());
-            pstmt.setInt(2, submitted.getZZ_WSP_ATR_Submitted_ID());
+            //pstmt.setInt(1, submitted.getZZ_WSP_ATR_Submitted_ID());
+            //pstmt.setInt(2, submitted.getZZ_WSP_ATR_Submitted_ID());
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {

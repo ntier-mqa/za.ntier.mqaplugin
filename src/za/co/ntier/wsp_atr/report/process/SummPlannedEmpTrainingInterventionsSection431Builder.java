@@ -64,7 +64,7 @@ public class SummPlannedEmpTrainingInterventionsSection431Builder extends Abstra
               + "    COALESCE(w.ZZ_White,0)    AS white_cnt, \n"
               + "    COALESCE(w.ZZ_Disabled,0) AS disabled_cnt \n"
               + "  FROM " + X_ZZ_WSP_ATR_WSP.Table_Name + " w \n"
-              + "  WHERE w.ZZ_WSP_ATR_Submitted_ID = ? \n"
+              + "  WHERE w.ZZ_WSP_ATR_Submitted_ID in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),trxName)
               + "), agg AS ( \n"
               + "  SELECT \n"
               + "    ZZ_OFO_Specialisation_ID, \n"
@@ -94,7 +94,7 @@ public class SummPlannedEmpTrainingInterventionsSection431Builder extends Abstra
               + "SELECT * FROM numbered ORDER BY row_no \n";
 
         try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName)) {
-            pstmt.setInt(1, submitted.getZZ_WSP_ATR_Submitted_ID());
+            //pstmt.setInt(1, submitted.getZZ_WSP_ATR_Submitted_ID());
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {

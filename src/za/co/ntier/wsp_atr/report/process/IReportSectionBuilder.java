@@ -1,5 +1,7 @@
 package za.co.ntier.wsp_atr.report.process;
 
+import java.util.Properties;
+
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Report;
 import za.ntier.models.MZZWSPATRSubmitted;
 
@@ -16,4 +18,10 @@ public interface IReportSectionBuilder {
      * Must insert rows linked to report.getZZ_WSP_ATR_Report_ID().
      */
     ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted, String trxName) throws Exception;
+    
+    String getParentAndChildSubmittedIdsInClause(Properties ctx,
+            int parentSubmittedId,
+            String trxName);
+    
+    
 }
