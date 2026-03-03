@@ -191,7 +191,9 @@ public class ZZBgJobQueueDispatcher extends SvrProcess {
         int roleId = DB.getSQLValue(null,
                 "SELECT ur.ad_role_id " +
                 "FROM ad_user_roles ur " +
+                "Join ad_role r on ur.ad_role_id = r.ad_role_id " +
                 "WHERE ur.ad_user_id=? AND ur.ad_client_id=? AND ur.isactive='Y' " +
+                " and r.isactive = 'Y' " +
                 "ORDER BY ur.ad_role_id " +
                 "LIMIT 1",
                 adUserId, adClientId);

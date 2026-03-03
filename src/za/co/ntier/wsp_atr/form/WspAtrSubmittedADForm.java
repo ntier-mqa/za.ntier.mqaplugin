@@ -326,6 +326,8 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	    }
 
 	    byte[] data = getMediaBytes(media);
+	    
+	    assertZipLooksValid(data, filename);
 
 	    String trxName = Trx.createTrxName("WSPATRUpload");
 	    Trx trx = Trx.get(trxName, true);
@@ -374,7 +376,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	        // 4) Recreate attachment and attach the new file (same trx)
 	        MAttachment att = new MAttachment(Env.getCtx(), X_ZZ_WSP_ATR_Submitted.Table_ID, submittedId, null, trxName);
 	        att.addEntry(filename, data);
-	        att.saveEx();
+	        att.saveEx(trxName);
 
 	        trx.commit(true);
 
@@ -391,6 +393,8 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	    runValidateImportInBackground(submittedId);
 	    
 	}
+	
+	
 
 		
 	private void refreshList() {
@@ -677,7 +681,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	}
 
 	// ---------------- Media / IO Helpers ----------------
-
+/*
 	private byte[] getMediaBytes(Media media) {
 		try {
 			// xlsm should be binary
@@ -689,6 +693,34 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 		} catch (Exception e) {
 			throw new AdempiereException("Failed to read uploaded file: " + e.getMessage());
 		}
+	}
+	*/
+	
+	private byte[] getMediaBytes(Media media) {
+	    try {
+	        // Always treat Excel as binary and read the stream fully
+	        try (InputStream is = media.getStreamData()) {
+	            if (is == null)
+	                throw new AdempiereException("Upload stream is null for " + media.getName());
+	            return readAllBytes(is);
+	        }
+	    } catch (Exception e) {
+	        throw new AdempiereException("Failed to read uploaded file: " + e.getMessage(), e);
+	    }
+	}
+	
+	
+	private void assertZipLooksValid(byte[] data, String name) {
+	    try (java.util.zip.ZipInputStream zis =
+	             new java.util.zip.ZipInputStream(new java.io.ByteArrayInputStream(data))) {
+	        if (zis.getNextEntry() == null) {
+	            throw new AdempiereException("Uploaded file is corrupt/truncated (not a valid Excel ZIP): " + name);
+	        }
+	    } catch (AdempiereException ex) {
+	        throw ex;
+	    } catch (Exception e) {
+	        throw new AdempiereException("Could not validate uploaded ZIP: " + name + " : " + e.getMessage(), e);
+	    }
 	}
 
 	private byte[] readAllBytes(InputStream is) throws Exception {
