@@ -3,11 +3,12 @@ package za.ntier.models;
 import java.sql.ResultSet;
 import java.util.Properties;
 
-import org.compiere.model.MBPartner;
 import org.compiere.model.MClient;
 import org.compiere.model.MMailText;
 import org.compiere.model.MUser;
 import org.compiere.util.DB;
+
+import za.co.ntier.api.model.MBPartner_New;
 
 public class MZZSDR_Temp_Org extends X_ZZ_SDR_Temp_Org {
 
@@ -113,13 +114,14 @@ public class MZZSDR_Temp_Org extends X_ZZ_SDR_Temp_Org {
         }
 
         // Create BP
-        MBPartner bp = new MBPartner(getCtx(), 0, get_TrxName());
-        bp.setValue(sdlNo); // SDL No as search key
+        MBPartner_New bp = new MBPartner_New(getCtx(), 0, get_TrxName());
+        bp.setValue(getValue()); // Search Key as BPartner search key
         bp.setName(getZZ_Organisation_Name());
         bp.setName2(getZZ_TradingAs());
         bp.setReferenceNo(getZZ_Organisation_Reg_No());
         bp.setIsCustomer(true);
         bp.setIsVendor(false);
+        bp.setZZ_SDL_No(sdlNo);
      // Default BP Group = UNKNOWN
         int bpGroupID = DB.getSQLValueEx(
                 get_TrxName(),
