@@ -32,7 +32,7 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260301L;
+	private static final long serialVersionUID = 20260303L;
 
     /** Standard Constructor */
     public X_ZZ_Org_Transfer (Properties ctx, int ZZ_Org_Transfer_ID, String trxName)
@@ -40,10 +40,10 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
       super (ctx, ZZ_Org_Transfer_ID, trxName);
       /** if (ZZ_Org_Transfer_ID == 0)
         {
-			setName (null);
 			setZZ_IsApproved (false);
 // N
 			setZZ_Org_Transfer_ID (0);
+			setZZ_ToSETA_ID (0);
         } */
     }
 
@@ -53,10 +53,10 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
       super (ctx, ZZ_Org_Transfer_ID, trxName, virtualColumns);
       /** if (ZZ_Org_Transfer_ID == 0)
         {
-			setName (null);
 			setZZ_IsApproved (false);
 // N
 			setZZ_Org_Transfer_ID (0);
+			setZZ_ToSETA_ID (0);
         } */
     }
 
@@ -66,10 +66,10 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
       super (ctx, ZZ_Org_Transfer_UU, trxName);
       /** if (ZZ_Org_Transfer_UU == null)
         {
-			setName (null);
 			setZZ_IsApproved (false);
 // N
 			setZZ_Org_Transfer_ID (0);
+			setZZ_ToSETA_ID (0);
         } */
     }
 
@@ -79,10 +79,10 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
       super (ctx, ZZ_Org_Transfer_UU, trxName, virtualColumns);
       /** if (ZZ_Org_Transfer_UU == null)
         {
-			setName (null);
 			setZZ_IsApproved (false);
 // N
 			setZZ_Org_Transfer_ID (0);
+			setZZ_ToSETA_ID (0);
         } */
     }
 
@@ -142,6 +142,37 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
 		return ii.intValue();
 	}
 
+	/** Set Cellphonenumber.
+		@param Cellphonenumber Cellphonenumber
+	*/
+	public void setCellphonenumber (String Cellphonenumber)
+	{
+		set_Value (COLUMNNAME_Cellphonenumber, Cellphonenumber);
+	}
+
+	/** Get Cellphonenumber.
+		@return Cellphonenumber	  */
+	public String getCellphonenumber()
+	{
+		return (String)get_Value(COLUMNNAME_Cellphonenumber);
+	}
+
+	/** Set Contact Name.
+		@param ContactName Business Partner Contact Name
+	*/
+	public void setContactName (String ContactName)
+	{
+		set_ValueNoCheck (COLUMNNAME_ContactName, ContactName);
+	}
+
+	/** Get Contact Name.
+		@return Business Partner Contact Name
+	  */
+	public String getContactName()
+	{
+		return (String)get_Value(COLUMNNAME_ContactName);
+	}
+
 	/** Set Description.
 		@param Description Optional short description of the record
 	*/
@@ -156,6 +187,22 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
 	public String getDescription()
 	{
 		return (String)get_Value(COLUMNNAME_Description);
+	}
+
+	/** Set EMail Address.
+		@param EMail Electronic Mail Address
+	*/
+	public void setEMail (String EMail)
+	{
+		set_Value (COLUMNNAME_EMail, EMail);
+	}
+
+	/** Get EMail Address.
+		@return Electronic Mail Address
+	  */
+	public String getEMail()
+	{
+		return (String)get_Value(COLUMNNAME_EMail);
 	}
 
 	/** Set Name.
@@ -609,21 +656,6 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
 		return (String)get_Value(COLUMNNAME_ZZ_DocStatus);
 	}
 
-	/** Set From SETA.
-		@param ZZ_FromSETA From SETA
-	*/
-	public void setZZ_FromSETA (String ZZ_FromSETA)
-	{
-		set_Value (COLUMNNAME_ZZ_FromSETA, ZZ_FromSETA);
-	}
-
-	/** Get From SETA.
-		@return From SETA	  */
-	public String getZZ_FromSETA()
-	{
-		return (String)get_Value(COLUMNNAME_ZZ_FromSETA);
-	}
-
 	/** Set Is Approved.
 		@param ZZ_IsApproved Is Approved
 	*/
@@ -644,6 +676,21 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
 			return "Y".equals(oo);
 		}
 		return false;
+	}
+
+	/** Set Phone 2.
+		@param ZZ_Landline_No Phone 2
+	*/
+	public void setZZ_Landline_No (String ZZ_Landline_No)
+	{
+		set_Value (COLUMNNAME_ZZ_Landline_No, ZZ_Landline_No);
+	}
+
+	/** Get Phone 2.
+		@return Phone 2	  */
+	public String getZZ_Landline_No()
+	{
+		return (String)get_Value(COLUMNNAME_ZZ_Landline_No);
 	}
 
 	/** Set Org Transfer.
@@ -680,6 +727,36 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
 	public String getZZ_Org_Transfer_UU()
 	{
 		return (String)get_Value(COLUMNNAME_ZZ_Org_Transfer_UU);
+	}
+
+	/** Set Organisation Reg No.
+		@param ZZ_Organisation_Reg_No Organisation Reg No
+	*/
+	public void setZZ_Organisation_Reg_No (String ZZ_Organisation_Reg_No)
+	{
+		set_Value (COLUMNNAME_ZZ_Organisation_Reg_No, ZZ_Organisation_Reg_No);
+	}
+
+	/** Get Organisation Reg No.
+		@return Organisation Reg No	  */
+	public String getZZ_Organisation_Reg_No()
+	{
+		return (String)get_Value(COLUMNNAME_ZZ_Organisation_Reg_No);
+	}
+
+	/** Set SDL Number.
+		@param ZZ_SDL_No SDL Number
+	*/
+	public void setZZ_SDL_No (String ZZ_SDL_No)
+	{
+		set_Value (COLUMNNAME_ZZ_SDL_No, ZZ_SDL_No);
+	}
+
+	/** Get SDL Number.
+		@return SDL Number	  */
+	public String getZZ_SDL_No()
+	{
+		return (String)get_Value(COLUMNNAME_ZZ_SDL_No);
 	}
 
 	public org.compiere.model.I_AD_User getZZ_SnrMgrFinApprovedBy() throws RuntimeException
@@ -934,42 +1011,30 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
 		return (Timestamp)get_Value(COLUMNNAME_ZZ_SubmittedDate);
 	}
 
-	/** Set To SETA.
-		@param ZZ_ToSETA To SETA
-	*/
-	public void setZZ_ToSETA (String ZZ_ToSETA)
+	public I_ZZ_SETA_Master getZZ_ToSETA() throws RuntimeException
 	{
-		set_Value (COLUMNNAME_ZZ_ToSETA, ZZ_ToSETA);
+		return (I_ZZ_SETA_Master)MTable.get(getCtx(), I_ZZ_SETA_Master.Table_ID)
+			.getPO(getZZ_ToSETA_ID(), get_TrxName());
+	}
+
+	/** Set To SETA.
+		@param ZZ_ToSETA_ID To SETA
+	*/
+	public void setZZ_ToSETA_ID (int ZZ_ToSETA_ID)
+	{
+		if (ZZ_ToSETA_ID < 1)
+			set_Value (COLUMNNAME_ZZ_ToSETA_ID, null);
+		else
+			set_Value (COLUMNNAME_ZZ_ToSETA_ID, Integer.valueOf(ZZ_ToSETA_ID));
 	}
 
 	/** Get To SETA.
 		@return To SETA	  */
-	public String getZZ_ToSETA()
+	public int getZZ_ToSETA_ID()
 	{
-		return (String)get_Value(COLUMNNAME_ZZ_ToSETA);
-	}
-
-	/** Transfer In = IN */
-	public static final String ZZ_TRANSFERTYPE_TransferIn = "IN";
-	/** Internal Transfer = INT */
-	public static final String ZZ_TRANSFERTYPE_InternalTransfer = "INT";
-	/** Transfer Out = OUT */
-	public static final String ZZ_TRANSFERTYPE_TransferOut = "OUT";
-	/** Reversal = REV */
-	public static final String ZZ_TRANSFERTYPE_Reversal = "REV";
-	/** Set Transfer Type.
-		@param ZZ_TransferType Transfer Type
-	*/
-	public void setZZ_TransferType (String ZZ_TransferType)
-	{
-
-		set_Value (COLUMNNAME_ZZ_TransferType, ZZ_TransferType);
-	}
-
-	/** Get Transfer Type.
-		@return Transfer Type	  */
-	public String getZZ_TransferType()
-	{
-		return (String)get_Value(COLUMNNAME_ZZ_TransferType);
+		Integer ii = (Integer)get_Value(COLUMNNAME_ZZ_ToSETA_ID);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
 	}
 }

@@ -79,6 +79,28 @@ public interface I_ZZ_Org_Transfer
 
 	public org.compiere.model.I_C_BPartner getC_BPartner() throws RuntimeException;
 
+    /** Column name Cellphonenumber */
+    public static final String COLUMNNAME_Cellphonenumber = "Cellphonenumber";
+
+	/** Set Cellphonenumber	  */
+	public void setCellphonenumber (String Cellphonenumber);
+
+	/** Get Cellphonenumber	  */
+	public String getCellphonenumber();
+
+    /** Column name ContactName */
+    public static final String COLUMNNAME_ContactName = "ContactName";
+
+	/** Set Contact Name.
+	  * Business Partner Contact Name
+	  */
+	public void setContactName (String ContactName);
+
+	/** Get Contact Name.
+	  * Business Partner Contact Name
+	  */
+	public String getContactName();
+
     /** Column name Created */
     public static final String COLUMNNAME_Created = "Created";
 
@@ -107,6 +129,19 @@ public interface I_ZZ_Org_Transfer
 	  * Optional short description of the record
 	  */
 	public String getDescription();
+
+    /** Column name EMail */
+    public static final String COLUMNNAME_EMail = "EMail";
+
+	/** Set EMail Address.
+	  * Electronic Mail Address
+	  */
+	public void setEMail (String EMail);
+
+	/** Get EMail Address.
+	  * Electronic Mail Address
+	  */
+	public String getEMail();
 
     /** Column name IsActive */
     public static final String COLUMNNAME_IsActive = "IsActive";
@@ -310,15 +345,6 @@ public interface I_ZZ_Org_Transfer
 	/** Get Document Status	  */
 	public String getZZ_DocStatus();
 
-    /** Column name ZZ_FromSETA */
-    public static final String COLUMNNAME_ZZ_FromSETA = "ZZ_FromSETA";
-
-	/** Set From SETA	  */
-	public void setZZ_FromSETA (String ZZ_FromSETA);
-
-	/** Get From SETA	  */
-	public String getZZ_FromSETA();
-
     /** Column name ZZ_IsApproved */
     public static final String COLUMNNAME_ZZ_IsApproved = "ZZ_IsApproved";
 
@@ -327,6 +353,15 @@ public interface I_ZZ_Org_Transfer
 
 	/** Get Is Approved	  */
 	public boolean isZZ_IsApproved();
+
+    /** Column name ZZ_Landline_No */
+    public static final String COLUMNNAME_ZZ_Landline_No = "ZZ_Landline_No";
+
+	/** Set Phone 2	  */
+	public void setZZ_Landline_No (String ZZ_Landline_No);
+
+	/** Get Phone 2	  */
+	public String getZZ_Landline_No();
 
     /** Column name ZZ_Org_Transfer_ID */
     public static final String COLUMNNAME_ZZ_Org_Transfer_ID = "ZZ_Org_Transfer_ID";
@@ -345,6 +380,24 @@ public interface I_ZZ_Org_Transfer
 
 	/** Get ZZ_Org_Transfer_UU	  */
 	public String getZZ_Org_Transfer_UU();
+
+    /** Column name ZZ_Organisation_Reg_No */
+    public static final String COLUMNNAME_ZZ_Organisation_Reg_No = "ZZ_Organisation_Reg_No";
+
+	/** Set Organisation Reg No	  */
+	public void setZZ_Organisation_Reg_No (String ZZ_Organisation_Reg_No);
+
+	/** Get Organisation Reg No	  */
+	public String getZZ_Organisation_Reg_No();
+
+    /** Column name ZZ_SDL_No */
+    public static final String COLUMNNAME_ZZ_SDL_No = "ZZ_SDL_No";
+
+	/** Set SDL Number	  */
+	public void setZZ_SDL_No (String ZZ_SDL_No);
+
+	/** Get SDL Number	  */
+	public String getZZ_SDL_No();
 
     /** Column name ZZ_SnrMgrFinApprovedBy_ID */
     public static final String COLUMNNAME_ZZ_SnrMgrFinApprovedBy_ID = "ZZ_SnrMgrFinApprovedBy_ID";
@@ -466,21 +519,14 @@ public interface I_ZZ_Org_Transfer
 	/** Get Submitted Date	  */
 	public Timestamp getZZ_SubmittedDate();
 
-    /** Column name ZZ_ToSETA */
-    public static final String COLUMNNAME_ZZ_ToSETA = "ZZ_ToSETA";
+    /** Column name ZZ_ToSETA_ID */
+    public static final String COLUMNNAME_ZZ_ToSETA_ID = "ZZ_ToSETA_ID";
 
 	/** Set To SETA	  */
-	public void setZZ_ToSETA (String ZZ_ToSETA);
+	public void setZZ_ToSETA_ID (int ZZ_ToSETA_ID);
 
 	/** Get To SETA	  */
-	public String getZZ_ToSETA();
+	public int getZZ_ToSETA_ID();
 
-    /** Column name ZZ_TransferType */
-    public static final String COLUMNNAME_ZZ_TransferType = "ZZ_TransferType";
-
-	/** Set Transfer Type	  */
-	public void setZZ_TransferType (String ZZ_TransferType);
-
-	/** Get Transfer Type	  */
-	public String getZZ_TransferType();
+	public I_ZZ_SETA_Master getZZ_ToSETA() throws RuntimeException;
 }
