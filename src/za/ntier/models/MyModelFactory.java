@@ -59,6 +59,7 @@ public class MyModelFactory implements IModelFactory {
     static {
         // Register all your tables + model classes here
     	
+    	register(X_ZZ_Org_Transfer.Table_Name,          MZZOrgTransfer.class);
     	register(X_ZZ_SDR_Temp_Branch.Table_Name,          MZZSDRTempBranch.class);
     	register(I_ZZ_WSP_ATR_HTVF.Table_Name,          MZZWSPATRHTVF.class);
     	register(I_ZZ_WSP_ATR_WSP.Table_Name,          MZZWSPATRWSP.class);
@@ -91,6 +92,7 @@ public class MyModelFactory implements IModelFactory {
         register(I_ZZ_WSP_ATR_Lookup_Mapping_Detail.Table_Name,     X_ZZ_WSP_ATR_Lookup_Mapping_Detail.class);
         register(I_ZZ_WSP_ATR_Biodata_Detail.Table_Name,X_ZZ_WSP_ATR_Biodata_Detail.class);
         register(I_ZZ_WSP_Employees.Table_Name,X_ZZ_WSP_Employees.class);
+        register(I_ZZ_SETA_Master.Table_Name,X_ZZ_SETA_Master.class);
     }
 
     private static void register(String tableName, Class<? extends PO> modelClass) {
