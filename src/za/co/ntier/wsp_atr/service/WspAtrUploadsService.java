@@ -32,6 +32,15 @@ public class WspAtrUploadsService {
 	private final Properties ctx;
 	private final WspAtrUploadsRepository repo;
 	private final String generateReportProcessUU;
+	private String submitButtonMsg = null;
+
+	public String getSubmitButtonMsg() {
+		return submitButtonMsg;
+	}
+
+	public void setSubmitButtonMsg(String submitButtonMsg) {
+		this.submitButtonMsg = submitButtonMsg;
+	}
 
 	public WspAtrUploadsService(Properties ctx, WspAtrUploadsRepository repo, String generateReportProcessUU) {
 		this.ctx = ctx;
@@ -140,6 +149,7 @@ public class WspAtrUploadsService {
 	}
 
 	public boolean isEligibleToSubmit(int submittedId) {
+		submitButtonMsg = null;
 		int clientId = Env.getAD_Client_ID(ctx);
 		int orgId = repo.getSubmittedOrgId(submittedId);
 
@@ -158,6 +168,7 @@ public class WspAtrUploadsService {
 			return false;
 		
 		if (isChildWithParentUploadsEnabled(ctx,submittedId,null)) {
+			submitButtonMsg = "Child Organisation configured for Upload only";
 			return false;
 		}
 

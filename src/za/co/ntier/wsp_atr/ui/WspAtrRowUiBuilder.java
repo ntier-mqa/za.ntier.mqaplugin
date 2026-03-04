@@ -108,8 +108,8 @@ public class WspAtrRowUiBuilder {
         btn.setSclass("btn btn-sm btn-primary wsp-edit-purple");
         btn.setDisabled(!eligible);
 
-        org.adempiere.webui.component.Label lblMsg =
-            new org.adempiere.webui.component.Label(eligible ? "" : "Not in submission window / missing uploads");
+        org.adempiere.webui.component.Label lblMsg = 
+            new org.adempiere.webui.component.Label((service.getSubmitButtonMsg() != null) ?  service.getSubmitButtonMsg() :  (eligible ? "" : "Not in submission window / missing uploads"));
         lblMsg.setStyle("margin-left:6px; color:#555;");
 
         btn.addEventListener(Events.ON_CLICK, (EventListener<Event>) e -> {
