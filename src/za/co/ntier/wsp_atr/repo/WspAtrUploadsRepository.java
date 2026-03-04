@@ -23,7 +23,7 @@ public class WspAtrUploadsRepository {
 
     public List<List<Object>> rawSubmittedRowsForUser(int adUserId) {
         String sql =
-            "SELECT s.ZZ_WSP_ATR_Submitted_ID, s.SubmittedDate, v.orgname, s.ZZ_DocStatus " +
+            "SELECT s.ZZ_WSP_ATR_Submitted_ID, s.SubmittedDate, (v.zz_sdl_no || '-' || v.orgname), s.ZZ_DocStatus " +
             "FROM ZZ_WSP_ATR_Submitted s " +
             "LEFT JOIN adempiere.zzsdforganisation_v v ON v.zzsdforganisation_v_id = s.ZZSDFOrganisation_ID " +
             "WHERE v.ad_user_id = ? " +

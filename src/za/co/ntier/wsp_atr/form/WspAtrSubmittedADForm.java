@@ -737,7 +737,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	    int adUserId = Env.getAD_User_ID(Env.getCtx());
 
 	    String sql =
-	        "SELECT zzsdforganisation_v_id, orgname " +
+	        "SELECT zzsdforganisation_v_id, (zz_sdl_no || '-' || orgname) " +
 	        "FROM adempiere.zzsdforganisation_v " +
 	        "WHERE ad_user_id = ? " +
 	        "AND isactive = 'Y' " +

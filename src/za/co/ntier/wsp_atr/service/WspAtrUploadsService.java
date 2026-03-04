@@ -1,5 +1,7 @@
 package za.co.ntier.wsp_atr.service;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -154,6 +156,10 @@ public class WspAtrUploadsService {
 
 		if (!(inMainWindow || inExtWindow))
 			return false;
+		
+		if (isChildWithParentUploadsEnabled(ctx,submittedId,null)) {
+			return false;
+		}
 
 		// must be Uploaded status
 		//if (!repo.isSubmissionStatusUploaded(submittedId))
@@ -169,6 +175,35 @@ public class WspAtrUploadsService {
 				za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Uploads.ZZ_WSP_ATR_UPLOAD_TYPE_UploadAttendanceRegister);
 
 		return hasTemplate && hasReport && hasMinutes && hasAttendance;
+	}
+
+	private boolean isChildWithParentUploadsEnabled(Properties ctx,
+			int submittedId,
+			String trxName) {
+
+		final String sql =
+				"SELECT 1 " +
+						"FROM adempiere.zz_wsp_atr_submitted s " +
+						"JOIN adempiere.zzsdforganisation so " +
+						"  ON so.zzsdforganisation_id = s.zzsdforganisation_id " +
+						"JOIN adempiere.zzorganisationlinkage l " +
+						"  ON l.c_bpartner_id = so.c_bpartner_id " +
+						"WHERE s.zz_wsp_atr_submitted_id = ? " +
+						"  AND l.isactive = 'Y' " +
+						"  AND l.bpartner_parent_id IS NOT NULL " +
+						"  AND l.zz_parent_uploads = 'Y'";
+
+		try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName)) {
+			pstmt.setInt(1, submittedId);
+
+			try (ResultSet rs = pstmt.executeQuery()) {
+				return rs.next(); // true if at least one record exists
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(
+					"Failed to check child parent-upload rule for submittedId "
+							+ submittedId + ": " + e.getMessage(), e);
+		}
 	}
 
 	private boolean isBetween(Timestamp now, Timestamp start, Timestamp end) {
@@ -197,7 +232,7 @@ public class WspAtrUploadsService {
 			// OPTIONAL: action log
 			// repo.insertActionLog(submittedId, "SUBMIT", null, trxName);
 			MZZWSPATRSubmitted submitted =
-			        MZZWSPATRSubmitted.getSubmitted(ctx, submittedId,trxName );
+					MZZWSPATRSubmitted.getSubmitted(ctx, submittedId,trxName );
 			submitted.sendSuccessfulSubmissionEmail();
 
 			trx.commit(true);
