@@ -32,7 +32,7 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260303L;
+	private static final long serialVersionUID = 20260304L;
 
     /** Standard Constructor */
     public X_ZZ_Org_Transfer (Properties ctx, int ZZ_Org_Transfer_ID, String trxName)
@@ -40,9 +40,19 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
       super (ctx, ZZ_Org_Transfer_ID, trxName);
       /** if (ZZ_Org_Transfer_ID == 0)
         {
+			setContactName (null);
+			setEMail (null);
+			setZZ_FromSDRUploaded (false);
+// N
 			setZZ_IsApproved (false);
 // N
+			setZZ_Landline_No (null);
+			setZZ_MotivationUploaded (false);
+// N
 			setZZ_Org_Transfer_ID (0);
+			setZZ_SDL_No (null);
+			setZZ_SignedISTUploaded (false);
+// N
 			setZZ_ToSETA_ID (0);
         } */
     }
@@ -53,9 +63,19 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
       super (ctx, ZZ_Org_Transfer_ID, trxName, virtualColumns);
       /** if (ZZ_Org_Transfer_ID == 0)
         {
+			setContactName (null);
+			setEMail (null);
+			setZZ_FromSDRUploaded (false);
+// N
 			setZZ_IsApproved (false);
 // N
+			setZZ_Landline_No (null);
+			setZZ_MotivationUploaded (false);
+// N
 			setZZ_Org_Transfer_ID (0);
+			setZZ_SDL_No (null);
+			setZZ_SignedISTUploaded (false);
+// N
 			setZZ_ToSETA_ID (0);
         } */
     }
@@ -66,9 +86,19 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
       super (ctx, ZZ_Org_Transfer_UU, trxName);
       /** if (ZZ_Org_Transfer_UU == null)
         {
+			setContactName (null);
+			setEMail (null);
+			setZZ_FromSDRUploaded (false);
+// N
 			setZZ_IsApproved (false);
 // N
+			setZZ_Landline_No (null);
+			setZZ_MotivationUploaded (false);
+// N
 			setZZ_Org_Transfer_ID (0);
+			setZZ_SDL_No (null);
+			setZZ_SignedISTUploaded (false);
+// N
 			setZZ_ToSETA_ID (0);
         } */
     }
@@ -79,9 +109,19 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
       super (ctx, ZZ_Org_Transfer_UU, trxName, virtualColumns);
       /** if (ZZ_Org_Transfer_UU == null)
         {
+			setContactName (null);
+			setEMail (null);
+			setZZ_FromSDRUploaded (false);
+// N
 			setZZ_IsApproved (false);
 // N
+			setZZ_Landline_No (null);
+			setZZ_MotivationUploaded (false);
+// N
 			setZZ_Org_Transfer_ID (0);
+			setZZ_SDL_No (null);
+			setZZ_SignedISTUploaded (false);
+// N
 			setZZ_ToSETA_ID (0);
         } */
     }
@@ -514,6 +554,8 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
 	public static final String ZZ_DOCACTION_Evaluate = "EV";
 	/** Final Approval/Do not Approve = FA */
 	public static final String ZZ_DOCACTION_FinalApprovalDoNotApprove = "FA";
+	/** PrepareCEO = PC */
+	public static final String ZZ_DOCACTION_PrepareCEO = "PC";
 	/** Recommend = RE */
 	public static final String ZZ_DOCACTION_Recommend = "RE";
 	/** Re-Submit = RS */
@@ -562,6 +604,8 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
 	public static final String ZZ_DOCSTATUS_ApprovedByManagerFinanceConsumables = "AC";
 	/** Approved = AP */
 	public static final String ZZ_DOCSTATUS_Approved = "AP";
+	/** Prepared for CEO = CF */
+	public static final String ZZ_DOCSTATUS_PreparedForCEO = "CF";
 	/** Completed = CO */
 	public static final String ZZ_DOCSTATUS_Completed = "CO";
 	/** Draft = DR */
@@ -656,6 +700,28 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
 		return (String)get_Value(COLUMNNAME_ZZ_DocStatus);
 	}
 
+	/** Set From SDR Uploaded.
+		@param ZZ_FromSDRUploaded From SDR Uploaded
+	*/
+	public void setZZ_FromSDRUploaded (boolean ZZ_FromSDRUploaded)
+	{
+		set_Value (COLUMNNAME_ZZ_FromSDRUploaded, Boolean.valueOf(ZZ_FromSDRUploaded));
+	}
+
+	/** Get From SDR Uploaded.
+		@return From SDR Uploaded	  */
+	public boolean isZZ_FromSDRUploaded()
+	{
+		Object oo = get_Value(COLUMNNAME_ZZ_FromSDRUploaded);
+		if (oo != null)
+		{
+			 if (oo instanceof Boolean)
+				 return ((Boolean)oo).booleanValue();
+			return "Y".equals(oo);
+		}
+		return false;
+	}
+
 	/** Set Is Approved.
 		@param ZZ_IsApproved Is Approved
 	*/
@@ -691,6 +757,28 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
 	public String getZZ_Landline_No()
 	{
 		return (String)get_Value(COLUMNNAME_ZZ_Landline_No);
+	}
+
+	/** Set Motivation Uploaded.
+		@param ZZ_MotivationUploaded Motivation Uploaded
+	*/
+	public void setZZ_MotivationUploaded (boolean ZZ_MotivationUploaded)
+	{
+		set_Value (COLUMNNAME_ZZ_MotivationUploaded, Boolean.valueOf(ZZ_MotivationUploaded));
+	}
+
+	/** Get Motivation Uploaded.
+		@return Motivation Uploaded	  */
+	public boolean isZZ_MotivationUploaded()
+	{
+		Object oo = get_Value(COLUMNNAME_ZZ_MotivationUploaded);
+		if (oo != null)
+		{
+			 if (oo instanceof Boolean)
+				 return ((Boolean)oo).booleanValue();
+			return "Y".equals(oo);
+		}
+		return false;
 	}
 
 	/** Set Org Transfer.
@@ -757,6 +845,28 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
 	public String getZZ_SDL_No()
 	{
 		return (String)get_Value(COLUMNNAME_ZZ_SDL_No);
+	}
+
+	/** Set Signed IST Uploaded.
+		@param ZZ_SignedISTUploaded Signed IST Uploaded
+	*/
+	public void setZZ_SignedISTUploaded (boolean ZZ_SignedISTUploaded)
+	{
+		set_Value (COLUMNNAME_ZZ_SignedISTUploaded, Boolean.valueOf(ZZ_SignedISTUploaded));
+	}
+
+	/** Get Signed IST Uploaded.
+		@return Signed IST Uploaded	  */
+	public boolean isZZ_SignedISTUploaded()
+	{
+		Object oo = get_Value(COLUMNNAME_ZZ_SignedISTUploaded);
+		if (oo != null)
+		{
+			 if (oo instanceof Boolean)
+				 return ((Boolean)oo).booleanValue();
+			return "Y".equals(oo);
+		}
+		return false;
 	}
 
 	public org.compiere.model.I_AD_User getZZ_SnrMgrFinApprovedBy() throws RuntimeException

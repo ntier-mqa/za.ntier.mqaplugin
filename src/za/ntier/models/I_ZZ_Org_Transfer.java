@@ -345,6 +345,15 @@ public interface I_ZZ_Org_Transfer
 	/** Get Document Status	  */
 	public String getZZ_DocStatus();
 
+    /** Column name ZZ_FromSDRUploaded */
+    public static final String COLUMNNAME_ZZ_FromSDRUploaded = "ZZ_FromSDRUploaded";
+
+	/** Set From SDR Uploaded	  */
+	public void setZZ_FromSDRUploaded (boolean ZZ_FromSDRUploaded);
+
+	/** Get From SDR Uploaded	  */
+	public boolean isZZ_FromSDRUploaded();
+
     /** Column name ZZ_IsApproved */
     public static final String COLUMNNAME_ZZ_IsApproved = "ZZ_IsApproved";
 
@@ -362,6 +371,15 @@ public interface I_ZZ_Org_Transfer
 
 	/** Get Phone 2	  */
 	public String getZZ_Landline_No();
+
+    /** Column name ZZ_MotivationUploaded */
+    public static final String COLUMNNAME_ZZ_MotivationUploaded = "ZZ_MotivationUploaded";
+
+	/** Set Motivation Uploaded	  */
+	public void setZZ_MotivationUploaded (boolean ZZ_MotivationUploaded);
+
+	/** Get Motivation Uploaded	  */
+	public boolean isZZ_MotivationUploaded();
 
     /** Column name ZZ_Org_Transfer_ID */
     public static final String COLUMNNAME_ZZ_Org_Transfer_ID = "ZZ_Org_Transfer_ID";
@@ -398,6 +416,15 @@ public interface I_ZZ_Org_Transfer
 
 	/** Get SDL Number	  */
 	public String getZZ_SDL_No();
+
+    /** Column name ZZ_SignedISTUploaded */
+    public static final String COLUMNNAME_ZZ_SignedISTUploaded = "ZZ_SignedISTUploaded";
+
+	/** Set Signed IST Uploaded	  */
+	public void setZZ_SignedISTUploaded (boolean ZZ_SignedISTUploaded);
+
+	/** Get Signed IST Uploaded	  */
+	public boolean isZZ_SignedISTUploaded();
 
     /** Column name ZZ_SnrMgrFinApprovedBy_ID */
     public static final String COLUMNNAME_ZZ_SnrMgrFinApprovedBy_ID = "ZZ_SnrMgrFinApprovedBy_ID";

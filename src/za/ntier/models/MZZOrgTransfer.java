@@ -5,6 +5,11 @@ import java.util.Properties;
 import org.compiere.model.Query;
 import org.compiere.util.DB;
 import za.ntier.models.MZZSDR_Temp_Org;
+import org.compiere.model.MMailText;
+import org.compiere.util.Env;
+import org.compiere.util.Msg;
+import org.compiere.model.MUser;
+import org.compiere.model.MClient;
 
 public class MZZOrgTransfer extends X_ZZ_Org_Transfer {
 
@@ -32,10 +37,103 @@ public class MZZOrgTransfer extends X_ZZ_Org_Transfer {
 		super(ctx, rs, trxName);
 		// TODO Auto-generated constructor stub
 	}
+	
+	private void sendEmailToMgrSDR(MClient client) {
+
+	    //  Get MailText ID from UUID
+	    String mailTextUUID = "cc606c26-3bb9-4a62-89f9-b9c03d0aae9c";
+
+	    int mailTextID = DB.getSQLValueEx(
+	        get_TrxName(),
+	        "SELECT r_mailtext_id FROM adempiere.r_mailtext WHERE r_mailtext_uu = ?",
+	        mailTextUUID
+	    );
+
+	    if (mailTextID <= 0) {
+	        log.warning("MailText not found for UUID=" + mailTextUUID);
+	        return;
+	    }
+
+	    // Load MailText
+	    MMailText mText = new MMailText(getCtx(), mailTextID, get_TrxName());
+	    if (mText.get_ID() <= 0) {
+	        log.warning("Unable to load MailText ID=" + mailTextID);
+	        return;
+	    }
+
+	    // 3️ Get Mgr SDR user email
+	    int AD_User_ID = getMgrSDRUserID();
+	    if (AD_User_ID <= 0) {
+	        log.warning("Mgr SDR user not found for record " + get_ID());
+	        return;
+	    }
+
+	    String to = DB.getSQLValueStringEx(
+	        get_TrxName(),
+	        "SELECT email FROM adempiere.ad_user WHERE ad_user_id = ?",
+	        AD_User_ID
+	    );
+
+	    if (to == null || to.trim().isEmpty()) {
+	        log.warning("Mgr SDR has no email. AD_User_ID=" + AD_User_ID);
+	        return;
+	    }
+
+	    //  Generate message body
+	    String message = mText.getMailText(true);
+
+	    // Optional: attach this PO for token resolution (if supported)
+	    try {
+	        mText.setPO(this, true);
+	    } catch (Throwable t) {
+	        try {
+	            mText.setPO(this);
+	        } catch (Throwable ignore) {}
+	    }
+
+	    //  Subject from template
+	    String subject = mText.getMailHeader();
+
+	    //  Send email using MClient
+	    boolean sent = client.sendEMail(to, subject, message, null, true);
+
+	    if (!sent)
+	        log.warning("Failed to send email to Mgr SDR: " + to);
+	    else
+	        log.info("Email sent successfully to Mgr SDR: " + to);
+	}
+	
+	private int getMgrSDRUserID() {
+	    // Find the first active user with the role "Mgr - SDR"
+	    String sql = "SELECT u.AD_User_ID FROM AD_User_Roles ur "
+	               + "JOIN AD_User u ON ur.AD_User_ID=u.AD_User_ID "
+	               + "JOIN AD_Role r ON ur.AD_Role_ID=r.AD_Role_ID "
+	               + "WHERE r.Name='Mgr - SDR' AND u.IsActive='Y' "
+	               + "ORDER BY u.AD_User_ID LIMIT 1";
+	    int userId = DB.getSQLValueEx(get_TrxName(), sql);
+	    return userId;
+	}
 
 	@Override
 	protected boolean beforeSave(boolean newRecord)
 	{
+		
+	    boolean docsComplete =
+	            isZZ_MotivationUploaded()
+	            && isZZ_FromSDRUploaded()
+	            && isZZ_SignedISTUploaded();
+
+	    if (docsComplete
+	            && (getZZ_DocStatus() == null || getZZ_DocStatus().isEmpty())
+	            && (getZZ_DocAction() == null || getZZ_DocAction().isEmpty()))
+	    {
+	        setZZ_DocStatus("IP"); //In Progress
+	        setZZ_DocAction("UP"); //Update
+
+	        MClient client = MClient.get(getCtx());
+	        sendEmailToMgrSDR(client);
+	    }
+		
 	    if (newRecord || is_ValueChanged("ZZ_SDL_No"))
 	    {
 	        String sdl = get_ValueAsString("ZZ_SDL_No");
