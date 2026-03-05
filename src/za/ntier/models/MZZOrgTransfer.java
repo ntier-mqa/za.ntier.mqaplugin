@@ -130,7 +130,8 @@ public class MZZOrgTransfer extends X_ZZ_Org_Transfer {
 	        setZZ_DocStatus("IP"); //In Progress
 	        setZZ_DocAction("UP"); //Update
 
-
+	        //MClient client = MClient.get(getCtx());
+	        //sendEmailToMgrSDR(client);
 	    }
 		
 	    if (newRecord || is_ValueChanged("ZZ_SDL_No"))
@@ -173,28 +174,9 @@ public class MZZOrgTransfer extends X_ZZ_Org_Transfer {
 	    return true;
 	}
 	@Override
-	protected boolean afterSave(boolean newRecord, boolean success)
-	{
-	    if (!success)
-	        return success;
-
-	    boolean docsComplete =
-	            isZZ_MotivationUploaded()
-	            && isZZ_FromSDRUploaded()
-	            && isZZ_SignedISTUploaded();
-
-	    boolean docsChanged =
-	            is_ValueChanged("ZZ_MotivationUploaded")
-	            || is_ValueChanged("ZZ_FromSDRUploaded")
-	            || is_ValueChanged("ZZ_SignedISTUploaded");
-
-	    if (docsComplete && docsChanged)
-	    {
-	        MClient client = MClient.get(getCtx());
-	        sendEmailToMgrSDR(client);
-	    }
-
-	    return success;
+	protected boolean afterSave(boolean newRecord, boolean success) {
+		// TODO Auto-generated method stub
+		return super.afterSave(newRecord, success);
 	}
 
 }
