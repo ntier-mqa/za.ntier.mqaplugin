@@ -130,8 +130,8 @@ public class MZZOrgTransfer extends X_ZZ_Org_Transfer {
 	        setZZ_DocStatus("IP"); //In Progress
 	        setZZ_DocAction("UP"); //Update
 
-	        MClient client = MClient.get(getCtx());
-	        sendEmailToMgrSDR(client);
+	        //MClient client = MClient.get(getCtx());
+	        //sendEmailToMgrSDR(client);
 	    }
 		
 	    if (newRecord || is_ValueChanged("ZZ_SDL_No"))
