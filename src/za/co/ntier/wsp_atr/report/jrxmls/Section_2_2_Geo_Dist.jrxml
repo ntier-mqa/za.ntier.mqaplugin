@@ -1,181 +1,208 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport
-    xmlns="http://jasperreports.sourceforge.net/jasperreports"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
-                        http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
-    name="Section_2_2_Geo_Dist"
-    pageWidth="842"
-    pageHeight="595"
-    orientation="Landscape"
-    columnWidth="802"
-    leftMargin="20"
-    rightMargin="20"
-    topMargin="20"
-    bottomMargin="20">
+<!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 6.20.2  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+	name="Section_2_2_Geo_Dist"
+	pageWidth="842" pageHeight="595" orientation="Landscape"
+	columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20"
+	uuid="1e217afc-8e0d-42f9-a7de-306ae46d5683">
 
-    <!-- ===================== -->
-    <!-- STYLES (TOP ONLY)     -->
-    <!-- ===================== -->
+	<!-- Styles -->
+	<style name="HdrBig" fontName="SansSerif" fontSize="12" isBold="true"/>
+	<style name="HdrSmall" fontName="SansSerif" fontSize="10" isBold="true"/>
 
-    <style name="HdrBig" fontName="SansSerif" fontSize="12" isBold="true"/>
-    <style name="HdrSmall" fontName="SansSerif" fontSize="10" isBold="true"/>
-    <style name="CellText" fontName="SansSerif" fontSize="9"/>
-    <style name="CellNum" fontName="SansSerif" fontSize="9"/>
+	<style name="TblHdr" fontName="SansSerif" fontSize="9" isBold="true"
+		horizontalAlignment="Center" verticalAlignment="Middle">
+		<box leftPadding="4" rightPadding="4" topPadding="2" bottomPadding="2"/>
+	</style>
 
-    <!-- ===================== -->
-    <!-- PARAMETER             -->
-    <!-- ===================== -->
+	<style name="CellText" fontName="SansSerif" fontSize="9"
+		horizontalAlignment="Left" verticalAlignment="Middle">
+		<box leftPadding="4" rightPadding="4" topPadding="2" bottomPadding="2"/>
+	</style>
 
-    <parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
+	<style name="CellNum" fontName="SansSerif" fontSize="9"
+		horizontalAlignment="Right" verticalAlignment="Middle">
+		<box leftPadding="4" rightPadding="4" topPadding="2" bottomPadding="2"/>
+	</style>
 
-    <!-- ===================== -->
-    <!-- QUERY                 -->
-    <!-- ===================== -->
+	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
 
-    <queryString>
-        <![CDATA[
-        SELECT
-            p.Name AS province_name,
-            r.*
-        FROM ZZ_WSP_ATR_Geo_Dist_Rep r
-        LEFT JOIN ZZ_Province_Ref p ON p.ZZ_Province_Ref_ID = r.Province_ID
-        WHERE r.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
-          AND r.ZZ_Report_Section = '2.2'
-        ORDER BY p.Name
-        ]]>
-    </queryString>
+	<queryString>
+		<![CDATA[
+			SELECT
+				p.Name AS province_name,
+				r.*
+			FROM ZZ_WSP_ATR_Geo_Dist_Rep r
+			LEFT JOIN ZZ_Province_Ref p ON p.ZZ_Province_Ref_ID = r.Province_ID
+			WHERE r.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
+			  AND r.ZZ_Report_Section = '2.2'
+			ORDER BY p.Name
+		]]>
+	</queryString>
 
-    <!-- ===================== -->
-    <!-- FIELDS                -->
-    <!-- ===================== -->
+	<field name="province_name" class="java.lang.String"/>
+	<field name="ZZ_African_Male_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_African_Female_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_Coloured_Male_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_Coloured_Female_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_Indian_Male_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_Indian_Female_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_White_Male_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_White_Female_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_Total_Male_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_Total_Female_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_Disabled_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_NonSA_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_Age_U35_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_Age_35_55_Cnt" class="java.lang.Integer"/>
+	<field name="ZZ_Age_O55_Cnt" class="java.lang.Integer"/>
 
-    <field name="province_name" class="java.lang.String"/>
-    <field name="ZZ_African_Male_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_African_Female_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_Coloured_Male_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_Coloured_Female_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_Indian_Male_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_Indian_Female_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_White_Male_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_White_Female_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_Total_Male_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_Total_Female_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_Disabled_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_NonSA_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_Age_U35_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_Age_35_55_Cnt" class="java.lang.Integer"/>
-    <field name="ZZ_Age_O55_Cnt" class="java.lang.Integer"/>
+	<variable name="Sum_Total_Male" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{ZZ_Total_Male_Cnt}]]></variableExpression>
+	</variable>
+	<variable name="Sum_Total_Female" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{ZZ_Total_Female_Cnt}]]></variableExpression>
+	</variable>
+	<variable name="Grand_Total_Employees" class="java.lang.Integer">
+		<variableExpression><![CDATA[
+			($V{Sum_Total_Male} == null ? 0 : $V{Sum_Total_Male})
+			+
+			($V{Sum_Total_Female} == null ? 0 : $V{Sum_Total_Female})
+		]]></variableExpression>
+	</variable>
 
-    <!-- ===================== -->
-    <!-- VARIABLES (TOTALS)    -->
-    <!-- ===================== -->
+	<title>
+		<band height="30">
+			<staticText>
+				<reportElement style="HdrBig" x="0" y="0" width="802" height="20" uuid="052a1fc7-64bc-444a-b7c6-f13774f07648"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[2.2 Geographical Distribution of Employees]]></text>
+			</staticText>
+		</band>
+	</title>
 
-    <variable name="Sum_Total_Male" class="java.lang.Integer" calculation="Sum">
-        <variableExpression><![CDATA[$F{ZZ_Total_Male_Cnt}]]></variableExpression>
-    </variable>
+	<!-- Column headers (wider columns + padding like Section 2.1) -->
+	<columnHeader>
+		<band height="20">
+			<staticText>
+				<reportElement style="TblHdr" x="0" y="0" width="230" height="20" uuid="a1a9a9a9-0001-0001-0001-a1a9a9a9a001"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[Province]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TblHdr" x="230" y="0" width="81" height="20" uuid="a1a9a9a9-0001-0001-0001-a1a9a9a9a002"/>
+				<text><![CDATA[Total Male]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TblHdr" x="311" y="0" width="81" height="20" uuid="a1a9a9a9-0001-0001-0001-a1a9a9a9a003"/>
+				<text><![CDATA[Total Female]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TblHdr" x="392" y="0" width="81" height="20" uuid="a1a9a9a9-0001-0001-0001-a1a9a9a9a004"/>
+				<text><![CDATA[Disabled]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TblHdr" x="473" y="0" width="81" height="20" uuid="a1a9a9a9-0001-0001-0001-a1a9a9a9a005"/>
+				<text><![CDATA[Non-SA]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TblHdr" x="554" y="0" width="81" height="20" uuid="a1a9a9a9-0001-0001-0001-a1a9a9a9a006"/>
+				<text><![CDATA[Age <35]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TblHdr" x="635" y="0" width="81" height="20" uuid="a1a9a9a9-0001-0001-0001-a1a9a9a9a007"/>
+				<text><![CDATA[Age 35-55]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TblHdr" x="716" y="0" width="86" height="20" uuid="a1a9a9a9-0001-0001-0001-a1a9a9a9a008"/>
+				<text><![CDATA[Age >55]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
 
-    <variable name="Sum_Total_Female" class="java.lang.Integer" calculation="Sum">
-        <variableExpression><![CDATA[$F{ZZ_Total_Female_Cnt}]]></variableExpression>
-    </variable>
+	<detail>
+		<band height="20">
+			<textField isBlankWhenNull="true">
+				<reportElement style="CellText" x="0" y="0" width="230" height="20" uuid="51dab1d0-99aa-46d3-872b-0016e98c1d5e"/>
+				<box leftPadding="6" rightPadding="4" topPadding="2" bottomPadding="2"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{province_name}]]></textFieldExpression>
+			</textField>
 
-    <variable name="Grand_Total_Employees" class="java.lang.Integer" calculation="Nothing">
-        <variableExpression><![CDATA[
-($V{Sum_Total_Male} == null ? 0 : $V{Sum_Total_Male})
-+
-($V{Sum_Total_Female} == null ? 0 : $V{Sum_Total_Female})
-        ]]></variableExpression>
-    </variable>
+			<textField isBlankWhenNull="true">
+				<reportElement style="CellNum" x="230" y="0" width="81" height="20" uuid="ab5c1ad3-d3c7-4e8a-866e-d76ed957274a"/>
+				<box leftPadding="4" rightPadding="6" topPadding="2" bottomPadding="2"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ZZ_Total_Male_Cnt}]]></textFieldExpression>
+			</textField>
 
-    <!-- ===================== -->
-    <!-- TITLE                 -->
-    <!-- ===================== -->
+			<textField isBlankWhenNull="true">
+				<reportElement style="CellNum" x="311" y="0" width="81" height="20" uuid="dec439b4-6a04-4e5a-9a28-911af23a5c8c"/>
+				<box leftPadding="4" rightPadding="6" topPadding="2" bottomPadding="2"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ZZ_Total_Female_Cnt}]]></textFieldExpression>
+			</textField>
 
-    <title>
-        <band height="30">
-            <staticText>
-                <reportElement x="0" y="0" width="802" height="20" style="HdrBig"/>
-                <textElement textAlignment="Left"/>
-                <text><![CDATA[2.2 Geographical Distribution of Employees]]></text>
-            </staticText>
-        </band>
-    </title>
+			<textField isBlankWhenNull="true">
+				<reportElement style="CellNum" x="392" y="0" width="81" height="20" uuid="ef101282-88f4-4327-a34f-d5d1d8419547"/>
+				<box leftPadding="4" rightPadding="6" topPadding="2" bottomPadding="2"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ZZ_Disabled_Cnt}]]></textFieldExpression>
+			</textField>
 
-    <!-- ===================== -->
-    <!-- DETAIL (Province Rows)-->
-    <!-- ===================== -->
+			<textField isBlankWhenNull="true">
+				<reportElement style="CellNum" x="473" y="0" width="81" height="20" uuid="656553aa-ebfb-4e06-a70e-2da544948a15"/>
+				<box leftPadding="4" rightPadding="6" topPadding="2" bottomPadding="2"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ZZ_NonSA_Cnt}]]></textFieldExpression>
+			</textField>
 
-    <detail>
-        <band height="18">
+			<textField isBlankWhenNull="true">
+				<reportElement style="CellNum" x="554" y="0" width="81" height="20" uuid="5c0a42f3-1466-498a-be90-2af553854702"/>
+				<box leftPadding="4" rightPadding="6" topPadding="2" bottomPadding="2"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ZZ_Age_U35_Cnt}]]></textFieldExpression>
+			</textField>
 
-            <textField>
-                <reportElement x="0" y="0" width="100" height="18" style="CellText"/>
-                <textFieldExpression><![CDATA[$F{province_name}]]></textFieldExpression>
-            </textField>
+			<textField isBlankWhenNull="true">
+				<reportElement style="CellNum" x="635" y="0" width="81" height="20" uuid="26ba4de7-51a0-4880-82d2-aee138e64240"/>
+				<box leftPadding="4" rightPadding="6" topPadding="2" bottomPadding="2"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ZZ_Age_35_55_Cnt}]]></textFieldExpression>
+			</textField>
 
-            <textField>
-                <reportElement x="450" y="0" width="50" height="18" style="CellNum"/>
-                <textFieldExpression><![CDATA[$F{ZZ_Total_Male_Cnt}]]></textFieldExpression>
-            </textField>
+			<textField isBlankWhenNull="true">
+				<reportElement style="CellNum" x="716" y="0" width="86" height="20" uuid="ec8dba87-1bc1-43f5-8831-cec5fd4b5537"/>
+				<box leftPadding="4" rightPadding="6" topPadding="2" bottomPadding="2"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ZZ_Age_O55_Cnt}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
 
-            <textField>
-                <reportElement x="500" y="0" width="50" height="18" style="CellNum"/>
-                <textFieldExpression><![CDATA[$F{ZZ_Total_Female_Cnt}]]></textFieldExpression>
-            </textField>
+	<summary>
+		<band height="44">
+			<staticText>
+				<reportElement style="HdrSmall" x="0" y="6" width="230" height="18" uuid="530d9320-19eb-4348-bbc7-98684d55ce2c"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[Total]]></text>
+			</staticText>
 
-            <textField>
-                <reportElement x="550" y="0" width="50" height="18" style="CellNum"/>
-                <textFieldExpression><![CDATA[$F{ZZ_Disabled_Cnt}]]></textFieldExpression>
-            </textField>
+			<staticText>
+				<reportElement style="HdrSmall" x="0" y="26" width="300" height="18" uuid="60c2a77f-7dc5-43cd-8fe3-742e9a648516"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[Grand Total (Employees)]]></text>
+			</staticText>
 
-            <textField>
-                <reportElement x="600" y="0" width="50" height="18" style="CellNum"/>
-                <textFieldExpression><![CDATA[$F{ZZ_NonSA_Cnt}]]></textFieldExpression>
-            </textField>
-
-            <textField>
-                <reportElement x="650" y="0" width="50" height="18" style="CellNum"/>
-                <textFieldExpression><![CDATA[$F{ZZ_Age_U35_Cnt}]]></textFieldExpression>
-            </textField>
-
-            <textField>
-                <reportElement x="700" y="0" width="50" height="18" style="CellNum"/>
-                <textFieldExpression><![CDATA[$F{ZZ_Age_35_55_Cnt}]]></textFieldExpression>
-            </textField>
-
-            <textField>
-                <reportElement x="750" y="0" width="50" height="18" style="CellNum"/>
-                <textFieldExpression><![CDATA[$F{ZZ_Age_O55_Cnt}]]></textFieldExpression>
-            </textField>
-
-        </band>
-    </detail>
-
-    <!-- ===================== -->
-    <!-- SUMMARY (Totals)      -->
-    <!-- ===================== -->
-
-    <summary>
-        <band height="40">
-
-            <!-- Total Row -->
-            <staticText>
-                <reportElement x="0" y="0" width="200" height="18" style="HdrSmall"/>
-                <text><![CDATA[Total]]></text>
-            </staticText>
-
-            <!-- Grand Total Row -->
-            <staticText>
-                <reportElement x="0" y="20" width="300" height="18" style="HdrSmall"/>
-                <text><![CDATA[Grand Total (Employees)]]></text>
-            </staticText>
-
-            <textField>
-                <reportElement x="600" y="20" width="100" height="18" style="HdrSmall"/>
-                <textFieldExpression><![CDATA[$V{Grand_Total_Employees}]]></textFieldExpression>
-            </textField>
-
-        </band>
-    </summary>
+			<textField isBlankWhenNull="true">
+				<reportElement style="HdrSmall" x="716" y="26" width="86" height="18" uuid="6395344a-7d2e-4f70-b1b6-8044585fd3ca"/>
+				<box leftPadding="4" rightPadding="6" topPadding="2" bottomPadding="2"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{Grand_Total_Employees}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
 
 </jasperReport>
