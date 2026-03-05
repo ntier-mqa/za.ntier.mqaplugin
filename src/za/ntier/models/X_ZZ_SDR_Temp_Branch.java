@@ -32,7 +32,7 @@ public class X_ZZ_SDR_Temp_Branch extends PO implements I_ZZ_SDR_Temp_Branch, I_
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260225L;
+	private static final long serialVersionUID = 20260305L;
 
     /** Standard Constructor */
     public X_ZZ_SDR_Temp_Branch (Properties ctx, int ZZ_SDR_Temp_Branch_ID, String trxName)
@@ -40,7 +40,6 @@ public class X_ZZ_SDR_Temp_Branch extends PO implements I_ZZ_SDR_Temp_Branch, I_
       super (ctx, ZZ_SDR_Temp_Branch_ID, trxName);
       /** if (ZZ_SDR_Temp_Branch_ID == 0)
         {
-			setName (null);
 			setZZ_SDR_Temp_Branch_ID (0);
         } */
     }
@@ -51,7 +50,6 @@ public class X_ZZ_SDR_Temp_Branch extends PO implements I_ZZ_SDR_Temp_Branch, I_
       super (ctx, ZZ_SDR_Temp_Branch_ID, trxName, virtualColumns);
       /** if (ZZ_SDR_Temp_Branch_ID == 0)
         {
-			setName (null);
 			setZZ_SDR_Temp_Branch_ID (0);
         } */
     }
@@ -62,7 +60,6 @@ public class X_ZZ_SDR_Temp_Branch extends PO implements I_ZZ_SDR_Temp_Branch, I_
       super (ctx, ZZ_SDR_Temp_Branch_UU, trxName);
       /** if (ZZ_SDR_Temp_Branch_UU == null)
         {
-			setName (null);
 			setZZ_SDR_Temp_Branch_ID (0);
         } */
     }
@@ -73,7 +70,6 @@ public class X_ZZ_SDR_Temp_Branch extends PO implements I_ZZ_SDR_Temp_Branch, I_
       super (ctx, ZZ_SDR_Temp_Branch_UU, trxName, virtualColumns);
       /** if (ZZ_SDR_Temp_Branch_UU == null)
         {
-			setName (null);
 			setZZ_SDR_Temp_Branch_ID (0);
         } */
     }
@@ -312,6 +308,8 @@ public class X_ZZ_SDR_Temp_Branch extends PO implements I_ZZ_SDR_Temp_Branch, I_
 	public static final String ZZ_DOCACTION_Evaluate = "EV";
 	/** Final Approval/Do not Approve = FA */
 	public static final String ZZ_DOCACTION_FinalApprovalDoNotApprove = "FA";
+	/** PrepareCEO = PC */
+	public static final String ZZ_DOCACTION_PrepareCEO = "PC";
 	/** Recommend = RE */
 	public static final String ZZ_DOCACTION_Recommend = "RE";
 	/** Re-Submit = RS */
@@ -338,6 +336,10 @@ public class X_ZZ_SDR_Temp_Branch extends PO implements I_ZZ_SDR_Temp_Branch, I_
 	public static final String ZZ_DOCACTION_SubmitToSnrMgrSRU = "SS";
 	/** Submit to Line Manager = SU */
 	public static final String ZZ_DOCACTION_SubmitToLineManager = "SU";
+	/** Update = UP */
+	public static final String ZZ_DOCACTION_Update = "UP";
+	/** Verify = VE */
+	public static final String ZZ_DOCACTION_Verify = "VE";
 	/** Set Document Action.
 		@param ZZ_DocAction Document Action
 	*/
@@ -358,12 +360,22 @@ public class X_ZZ_SDR_Temp_Branch extends PO implements I_ZZ_SDR_Temp_Branch, I_
 	public static final String ZZ_DOCSTATUS_ApprovedByManagerFinanceConsumables = "AC";
 	/** Approved = AP */
 	public static final String ZZ_DOCSTATUS_Approved = "AP";
+	/** Prepared for CEO = CF */
+	public static final String ZZ_DOCSTATUS_PreparedForCEO = "CF";
 	/** Completed = CO */
 	public static final String ZZ_DOCSTATUS_Completed = "CO";
 	/** Draft = DR */
 	public static final String ZZ_DOCSTATUS_Draft = "DR";
+	/** Error Importing = EE */
+	public static final String ZZ_DOCSTATUS_ErrorImporting = "EE";
+	/** Validation Error = ER */
+	public static final String ZZ_DOCSTATUS_ValidationError = "ER";
 	/** Evaluated = EV */
 	public static final String ZZ_DOCSTATUS_Evaluated = "EV";
+	/** Importing = IG */
+	public static final String ZZ_DOCSTATUS_Importing = "IG";
+	/** Imported = IM */
+	public static final String ZZ_DOCSTATUS_Imported = "IM";
 	/** In Progress = IP */
 	public static final String ZZ_DOCSTATUS_InProgress = "IP";
 	/** Not Recommended By Senior Mgr SDR = N1 */
@@ -418,8 +430,18 @@ public class X_ZZ_SDR_Temp_Branch extends PO implements I_ZZ_SDR_Temp_Branch, I_
 	public static final String ZZ_DOCSTATUS_SubmittedToITAdmin = "ST";
 	/** Submitted = SU */
 	public static final String ZZ_DOCSTATUS_Submitted = "SU";
+	/** Transfer Out = TO */
+	public static final String ZZ_DOCSTATUS_TransferOut = "TO";
+	/** Updated by SDR Admin = UA */
+	public static final String ZZ_DOCSTATUS_UpdatedBySDRAdmin = "UA";
+	/** Uploaded = UP */
+	public static final String ZZ_DOCSTATUS_Uploaded = "UP";
 	/** Delinked = UnSdfOrg */
 	public static final String ZZ_DOCSTATUS_Delinked = "UnSdfOrg";
+	/** Validating = VA */
+	public static final String ZZ_DOCSTATUS_Validating = "VA";
+	/** Verified = VE */
+	public static final String ZZ_DOCSTATUS_Verified = "VE";
 	/** Set Document Status.
 		@param ZZ_DocStatus Document Status
 	*/
@@ -449,6 +471,36 @@ public class X_ZZ_SDR_Temp_Branch extends PO implements I_ZZ_SDR_Temp_Branch, I_
 	public String getZZ_Landline_No()
 	{
 		return (String)get_Value(COLUMNNAME_ZZ_Landline_No);
+	}
+
+	/** Set Organisation Reg No.
+		@param ZZ_Organisation_Reg_No Organisation Reg No
+	*/
+	public void setZZ_Organisation_Reg_No (String ZZ_Organisation_Reg_No)
+	{
+		set_Value (COLUMNNAME_ZZ_Organisation_Reg_No, ZZ_Organisation_Reg_No);
+	}
+
+	/** Get Organisation Reg No.
+		@return Organisation Reg No	  */
+	public String getZZ_Organisation_Reg_No()
+	{
+		return (String)get_Value(COLUMNNAME_ZZ_Organisation_Reg_No);
+	}
+
+	/** Set SDL Number.
+		@param ZZ_SDL_No SDL Number
+	*/
+	public void setZZ_SDL_No (String ZZ_SDL_No)
+	{
+		set_Value (COLUMNNAME_ZZ_SDL_No, ZZ_SDL_No);
+	}
+
+	/** Get SDL Number.
+		@return SDL Number	  */
+	public String getZZ_SDL_No()
+	{
+		return (String)get_Value(COLUMNNAME_ZZ_SDL_No);
 	}
 
 	/** Set SDR Temporary Branch.

@@ -267,6 +267,24 @@ public interface I_ZZ_SDR_Temp_Branch
 	/** Get Landline No	  */
 	public String getZZ_Landline_No();
 
+    /** Column name ZZ_Organisation_Reg_No */
+    public static final String COLUMNNAME_ZZ_Organisation_Reg_No = "ZZ_Organisation_Reg_No";
+
+	/** Set Organisation Reg No	  */
+	public void setZZ_Organisation_Reg_No (String ZZ_Organisation_Reg_No);
+
+	/** Get Organisation Reg No	  */
+	public String getZZ_Organisation_Reg_No();
+
+    /** Column name ZZ_SDL_No */
+    public static final String COLUMNNAME_ZZ_SDL_No = "ZZ_SDL_No";
+
+	/** Set SDL Number	  */
+	public void setZZ_SDL_No (String ZZ_SDL_No);
+
+	/** Get SDL Number	  */
+	public String getZZ_SDL_No();
+
     /** Column name ZZ_SDR_Temp_Branch_ID */
     public static final String COLUMNNAME_ZZ_SDR_Temp_Branch_ID = "ZZ_SDR_Temp_Branch_ID";
 
