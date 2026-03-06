@@ -125,7 +125,7 @@ public class MZZOrgTransfer extends X_ZZ_Org_Transfer {
 
 	    if (docsComplete
 	            && (getZZ_DocStatus() == null || getZZ_DocStatus().isEmpty())
-	            && (getZZ_DocAction() == null || getZZ_DocAction().isEmpty()))
+	            )
 	    {
 	        setZZ_DocStatus("IP"); //In Progress
 	        setZZ_DocAction("UP"); //Update
