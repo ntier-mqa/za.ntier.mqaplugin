@@ -83,11 +83,17 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	}
 
 	@Override
-	protected boolean beforeSave(boolean newRecord) {
-		// TODO Auto-generated method stub
-		return super.beforeSave(newRecord);
-	}
+	protected boolean beforeSave(boolean newRecord)
+	{
+	    if (is_ValueChanged(COLUMNNAME_ZZ_DocStatus)
+	            && X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Query.equals(getZZ_DocStatus()))
+	    {
+	        setZZ_IsQuery(true);
+	    }
 
+	    return super.beforeSave(newRecord);
+	}
+	
 	@Override
 	protected boolean afterSave(boolean newRecord, boolean success) {
 		// TODO Auto-generated method stub
