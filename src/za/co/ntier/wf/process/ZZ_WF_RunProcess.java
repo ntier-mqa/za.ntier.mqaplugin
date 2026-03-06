@@ -138,7 +138,10 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 		Integer requesterUserId = po.getCreatedBy();
 		MZZWFLines submitStep = MZZWFHeader.getFirstLine(ctx,hdr.get_ID(),trxName);
 		if (submitStep != null) {
-			requesterUserId = (Integer) po.get_Value(ADColumnUtil.getColumnName(ctx, step.getZZ_Approved_User_COL_ID(), trxName));
+			requesterUserId = (Integer) po.get_Value(ADColumnUtil.getColumnName(ctx, submitStep.getZZ_Approved_User_COL_ID(), trxName));
+			if (requesterUserId == null || requesterUserId <= 0) {
+				requesterUserId = (Integer) po.get_Value(ADColumnUtil.getColumnName(ctx, submitStep.getZZ_Rejected_User_COL_ID(), trxName));
+			}
 		}
 		
 		String respColumn = step.getResponsibleColumnName(step.getCtx(), step.get_TrxName());
@@ -183,7 +186,7 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 						"REQUEST", nextStatus, nextStatus, null, nextAction, "Auto-queued next step",currUserID);
 			}
 			I_R_MailText mailText = (approve) ? step.getMMailText_Approved() : step.getMMailText_Rejected();
-			if (approve && mailText != null) {
+			if (approve && mailText != null && mailText.getR_MailText_ID() > 0) {
 				MailNoticeUtil.requestStepNotifyAll(queueNotifis,step, po, hdr, getTable_ID(),getRecord_ID(),
 					MailNoticeUtil.setPOForMail(mailText,po),ctx, trxName);
 			}

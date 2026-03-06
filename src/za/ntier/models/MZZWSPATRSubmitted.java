@@ -32,7 +32,7 @@ import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
 
 
 public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
-	
+
 	private static final long serialVersionUID = 1L;
 	// Checklist reference search keys
 	public static final String CL_HTVF = "9";
@@ -41,19 +41,19 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	public static final String CL_DEVIATION_PCT = "12";
 	public static final String CL_COMPARE = "13";
 	public static final String CL_DEVIATION = "14";
-	
-    // Your fixed mail template UUID
-    private static final String WSP_ATRQuery_TEMPLATE_UUID = "c981b4f2-a103-4e62-a79f-f7401620bebe";
-    private static final String WSP_ATR_Successful_Submission_TEMPLATE_UUID = "8763dcdc-4b83-44e5-b84a-c54e6a5beafe";
-    private static final String WSP_ATR_FINAL_APPROVAL_TEMPLATE_UUID = "6a3d10f8-8f15-4106-a491-e365dff4a7b2";
-    public static final int FROM_EMAIL_USER_ID = MSysConfig.getIntValue("FROM_EMAIL_USER_ID",1000011);
-    
-    public static MZZWSPATRSubmitted getSubmitted(Properties ctx,
-            int submittedId,
-            String trxName)
-    	{
-    		return new MZZWSPATRSubmitted(ctx, submittedId, trxName);
-		}
+
+	// Your fixed mail template UUID
+	private static final String WSP_ATRQuery_TEMPLATE_UUID = "c981b4f2-a103-4e62-a79f-f7401620bebe";
+	private static final String WSP_ATR_Successful_Submission_TEMPLATE_UUID = "8763dcdc-4b83-44e5-b84a-c54e6a5beafe";
+	private static final String WSP_ATR_FINAL_APPROVAL_TEMPLATE_UUID = "6a3d10f8-8f15-4106-a491-e365dff4a7b2";
+	public static final int FROM_EMAIL_USER_ID = MSysConfig.getIntValue("FROM_EMAIL_USER_ID",1000011);
+
+	public static MZZWSPATRSubmitted getSubmitted(Properties ctx,
+			int submittedId,
+			String trxName)
+	{
+		return new MZZWSPATRSubmitted(ctx, submittedId, trxName);
+	}
 
 	public MZZWSPATRSubmitted(Properties ctx, int ZZ_WSP_ATR_Submitted_ID, String trxName) {
 		super(ctx, ZZ_WSP_ATR_Submitted_ID, trxName);
@@ -73,7 +73,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	public MZZWSPATRSubmitted(Properties ctx, String ZZ_WSP_ATR_Submitted_UU, String trxName,
 			String... virtualColumns) {
 		super(ctx, ZZ_WSP_ATR_Submitted_UU, trxName, virtualColumns);    
-	    
+
 		// TODO Auto-generated constructor stub
 	}
 
@@ -84,421 +84,425 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 	@Override
 	protected boolean beforeSave(boolean newRecord)
-	{
-	    if (is_ValueChanged(COLUMNNAME_ZZ_DocStatus)
-	            && X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Query.equals(getZZ_DocStatus()))
-	    {
-	        setZZ_IsQuery(true);
-	    }
+	{				
+		if (is_ValueChanged(COLUMNNAME_ZZ_DocStatus)
+				&& X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Query.equals(getZZ_DocStatus()))
+		{
+			setZZ_IsQuery(true);
+		}
 
-	    return super.beforeSave(newRecord);
+		return super.beforeSave(newRecord);
 	}
-	
+
 	@Override
 	protected boolean afterSave(boolean newRecord, boolean success) {
 		// TODO Auto-generated method stub
-	    // Call parent first
-	    boolean ok = super.afterSave(newRecord, success);
+		// Call parent first
+		boolean ok = super.afterSave(newRecord, success);
 
-	    // Only create checklist on new record
-	    //if (ok && newRecord)
-	    //    createVerificationChecklist();
-	    
-	    // Ensure checklist exists (new OR existing record) , if it was not created before.
-	    ensureVerificationChecklist();
+		// Only create checklist on new record
+		//if (ok && newRecord)
+		//    createVerificationChecklist();
 
-	 // If user ticked IsQuery = true, generate PDF and send email
-	    if (ok && is_ValueChanged("ZZ_IsQuery") && isZZ_IsQuery()) {
-	        try {
-	            sendQueryEmailWithPDF(WSP_ATRQuery_TEMPLATE_UUID);
-	        } catch (Exception e) {
-	            log.severe("Failed to send query email: " + e.getMessage());
-	        }
-	    }
-	    if (ok && is_ValueChanged(COLUMNNAME_ZZ_DocStatus) && getZZ_DocStatus() != null && getZZ_DocStatus().equals("AP") ) {  // Approved
-	    	try {
-	            sendQueryEmailWithPDF(WSP_ATR_FINAL_APPROVAL_TEMPLATE_UUID);
-	        } catch (Exception e) {
-	            log.severe("Failed to send approval email: " + e.getMessage());
-	        }
-	    }
-	    return ok;
+		// Ensure checklist exists (new OR existing record) , if it was not created before.
+		ensureVerificationChecklist();
+
+		// If user ticked IsQuery = true, generate PDF and send email
+		if (is_ValueChanged(COLUMNNAME_ZZ_DocStatus)
+				&& X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Query.equals(getZZ_DocStatus())) {
+			if (isZZ_IsQuery()) {
+				try {
+					sendQueryEmailWithPDF(WSP_ATRQuery_TEMPLATE_UUID);
+				} catch (Exception e) {
+					log.severe("Failed to send query email: " + e.getMessage());
+				}
+			}
+		}
+
+		if (ok && is_ValueChanged(COLUMNNAME_ZZ_DocStatus) && getZZ_DocStatus() != null && getZZ_DocStatus().equals("AP") ) {  // Approved
+			try {
+				sendQueryEmailWithPDF(WSP_ATR_FINAL_APPROVAL_TEMPLATE_UUID);
+			} catch (Exception e) {
+				log.severe("Failed to send approval email: " + e.getMessage());
+			}
+		}
+		return ok;
 	}	
-	
+
 	private void ensureVerificationChecklist() {
-	    int submittedId = getZZ_WSP_ATR_Submitted_ID();
-	    if (submittedId <= 0)
-	        return;
+		int submittedId = getZZ_WSP_ATR_Submitted_ID();
+		if (submittedId <= 0)
+			return;
 
-	    // Do we already have at least one checklist line for this submitted record?
-	    boolean hasAny = new Query(getCtx(),
-	            MZZWSPATRVeriChecklist.Table_Name,
-	            "ZZ_WSP_ATR_Submitted_ID=?",
-	            get_TrxName())
-	        .setParameters(submittedId)
-	        .match();
+		// Do we already have at least one checklist line for this submitted record?
+		boolean hasAny = new Query(getCtx(),
+				MZZWSPATRVeriChecklist.Table_Name,
+				"ZZ_WSP_ATR_Submitted_ID=?",
+				get_TrxName())
+				.setParameters(submittedId)
+				.match();
 
-	    if (!hasAny) {
-	        createVerificationChecklist();
-	    }
+		if (!hasAny) {
+			createVerificationChecklist();
+		}
 	}
-	
+
 	private void createVerificationChecklist() {
-	    List<PO> poList = new Query(getCtx(),
-	            X_ZZ_WSP_ATR_Checklist_Ref.Table_Name,
-	            X_ZZ_WSP_ATR_Checklist_Ref.COLUMNNAME_IsActive + "='Y'",
-	            get_TrxName())
-	        .setOrderBy("CAST(Value AS integer)")
-	        .list();
+		List<PO> poList = new Query(getCtx(),
+				X_ZZ_WSP_ATR_Checklist_Ref.Table_Name,
+				X_ZZ_WSP_ATR_Checklist_Ref.COLUMNNAME_IsActive + "='Y'",
+				get_TrxName())
+				.setOrderBy("CAST(Value AS integer)")
+				.list();
 
-	    int submittedId = getZZ_WSP_ATR_Submitted_ID();
-	    int lineNo = 10;
+		int submittedId = getZZ_WSP_ATR_Submitted_ID();
+		int lineNo = 10;
 
-	    for (PO po : poList) {
-	        X_ZZ_WSP_ATR_Checklist_Ref ref =
-	            new X_ZZ_WSP_ATR_Checklist_Ref(po.getCtx(), po.get_ID(), po.get_TrxName());
+		for (PO po : poList) {
+			X_ZZ_WSP_ATR_Checklist_Ref ref =
+					new X_ZZ_WSP_ATR_Checklist_Ref(po.getCtx(), po.get_ID(), po.get_TrxName());
 
-	        // Skip if already created for this submitted record
-	        boolean exists = new Query(getCtx(),
-	                MZZWSPATRVeriChecklist.Table_Name,
-	                "ZZ_WSP_ATR_Submitted_ID=? AND ZZ_Checklist_No=?",
-	                get_TrxName())
-	            .setParameters(submittedId, ref.getValue())
-	            .match();
+			// Skip if already created for this submitted record
+			boolean exists = new Query(getCtx(),
+					MZZWSPATRVeriChecklist.Table_Name,
+					"ZZ_WSP_ATR_Submitted_ID=? AND ZZ_Checklist_No=?",
+					get_TrxName())
+					.setParameters(submittedId, ref.getValue())
+					.match();
 
-	        if (exists) {
-	            continue;
-	        }
+			if (exists) {
+				continue;
+			}
 
-	        MZZWSPATRVeriChecklist line = new MZZWSPATRVeriChecklist(getCtx(), 0, get_TrxName());
-	        line.setZZ_WSP_ATR_Submitted_ID(submittedId);
-	        line.setzz_wsp_atr_checklist_ref_ID(ref.getzz_wsp_atr_checklist_ref_ID());
-	        line.setLineNo(lineNo);
-	        lineNo += 10;
-	        line.setZZ_Checklist_No(ref.getValue());
-	        line.setName(ref.getName());
-	        line.setZZ_Information_Completed(false);
-	        line.saveEx();
-	    }
+			MZZWSPATRVeriChecklist line = new MZZWSPATRVeriChecklist(getCtx(), 0, get_TrxName());
+			line.setZZ_WSP_ATR_Submitted_ID(submittedId);
+			line.setzz_wsp_atr_checklist_ref_ID(ref.getzz_wsp_atr_checklist_ref_ID());
+			line.setLineNo(lineNo);
+			lineNo += 10;
+			line.setZZ_Checklist_No(ref.getValue());
+			line.setName(ref.getName());
+			line.setZZ_Information_Completed(false);
+			line.saveEx();
+		}
 	}
-	
-    /**
-     * FROM adempiere.zzsdforganisation orglink
-     * JOIN adempiere.zzsdf sdf ON orglink.zzsdf_id = sdf.zzsdf_id
-     * JOIN adempiere.ad_user usr ON sdf.ad_user_id = usr.ad_user_id
-     */
-    public int getSdfUserId() {
-        String sql =
-                "SELECT u.ad_user_id " +
-                "FROM adempiere.zzsdforganisation orglink " +
-                "JOIN adempiere.zzsdf sdf ON orglink.zzsdf_id = sdf.zzsdf_id " +
-                "JOIN adempiere.ad_user u ON sdf.ad_user_id = u.ad_user_id " +
-                "WHERE orglink.zzsdforganisation_id = ?";
 
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        try {
-            pstmt = DB.prepareStatement(sql, get_TrxName());
-            pstmt.setInt(1, getZZSdfOrganisation_ID());
-            rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-        } catch (Exception e) {
-            log.severe("Error getting SDF AD_User_ID: " + e.getMessage());
-        } finally {
-            DB.close(rs, pstmt);
-        }
-        return 0;
-    }
-    
-    public String getSdfUserName() {
+	/**
+	 * FROM adempiere.zzsdforganisation orglink
+	 * JOIN adempiere.zzsdf sdf ON orglink.zzsdf_id = sdf.zzsdf_id
+	 * JOIN adempiere.ad_user usr ON sdf.ad_user_id = usr.ad_user_id
+	 */
+	public int getSdfUserId() {
+		String sql =
+				"SELECT u.ad_user_id " +
+						"FROM adempiere.zzsdforganisation orglink " +
+						"JOIN adempiere.zzsdf sdf ON orglink.zzsdf_id = sdf.zzsdf_id " +
+						"JOIN adempiere.ad_user u ON sdf.ad_user_id = u.ad_user_id " +
+						"WHERE orglink.zzsdforganisation_id = ?";
 
-        String sql =
-            "SELECT u.name " +
-            "FROM adempiere.zzsdforganisation orglink " +
-            "JOIN adempiere.zzsdf sdf ON orglink.zzsdf_id = sdf.zzsdf_id " +
-            "JOIN adempiere.ad_user u ON sdf.ad_user_id = u.ad_user_id " +
-            "WHERE orglink.zzsdforganisation_id = ?";
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		try {
+			pstmt = DB.prepareStatement(sql, get_TrxName());
+			pstmt.setInt(1, getZZSdfOrganisation_ID());
+			rs = pstmt.executeQuery();
+			if (rs.next()) {
+				return rs.getInt(1);
+			}
+		} catch (Exception e) {
+			log.severe("Error getting SDF AD_User_ID: " + e.getMessage());
+		} finally {
+			DB.close(rs, pstmt);
+		}
+		return 0;
+	}
 
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        try {
-            pstmt = DB.prepareStatement(sql, get_TrxName());
-            pstmt.setInt(1, getZZSdfOrganisation_ID());
-            rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return rs.getString(1);
-            }
-        } catch (Exception e) {
-            log.severe("Error getting SDF Name: " + e.getMessage());
-        } finally {
-            DB.close(rs, pstmt);
-        }
-        return null;
-    }
-    
-    public String getTradingAs() {
+	public String getSdfUserName() {
 
-        MBPartner bp = getBusinessPartner(); // reuse helper
-        if (bp == null)
-            return null;
+		String sql =
+				"SELECT u.name " +
+						"FROM adempiere.zzsdforganisation orglink " +
+						"JOIN adempiere.zzsdf sdf ON orglink.zzsdf_id = sdf.zzsdf_id " +
+						"JOIN adempiere.ad_user u ON sdf.ad_user_id = u.ad_user_id " +
+						"WHERE orglink.zzsdforganisation_id = ?";
 
-        return bp.getName2();
-    }
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		try {
+			pstmt = DB.prepareStatement(sql, get_TrxName());
+			pstmt.setInt(1, getZZSdfOrganisation_ID());
+			rs = pstmt.executeQuery();
+			if (rs.next()) {
+				return rs.getString(1);
+			}
+		} catch (Exception e) {
+			log.severe("Error getting SDF Name: " + e.getMessage());
+		} finally {
+			DB.close(rs, pstmt);
+		}
+		return null;
+	}
 
-    private MZZSdfOrganisation getSdfOrganisation() {
+	public String getTradingAs() {
 
-        int orgId = getZZSdfOrganisation_ID();
-        if (orgId <= 0)
-            return null;
+		MBPartner bp = getBusinessPartner(); // reuse helper
+		if (bp == null)
+			return null;
 
-        return new MZZSdfOrganisation(getCtx(), orgId, get_TrxName());
-    }
-    
-    private MBPartner getBusinessPartner() {
+		return bp.getName2();
+	}
 
-        MZZSdfOrganisation sdfOrg = getSdfOrganisation();
-        if (sdfOrg == null)
-            return null;
+	private MZZSdfOrganisation getSdfOrganisation() {
 
-        int bpId = sdfOrg.getC_BPartner_ID();
-        if (bpId <= 0)
-            return null;
+		int orgId = getZZSdfOrganisation_ID();
+		if (orgId <= 0)
+			return null;
 
-        return new MBPartner(getCtx(), bpId, get_TrxName());
-    }
-    
-    public String getOrganisationName() {
-        MBPartner bp = getBusinessPartner();
-        return bp != null ? bp.getName() : null;
-    }
+		return new MZZSdfOrganisation(getCtx(), orgId, get_TrxName());
+	}
 
-    public String getSdlNumber() {
-        MBPartner bp = getBusinessPartner();
-        return bp != null ? bp.getValue() : null;
-    }
-	
-	
+	private MBPartner getBusinessPartner() {
+
+		MZZSdfOrganisation sdfOrg = getSdfOrganisation();
+		if (sdfOrg == null)
+			return null;
+
+		int bpId = sdfOrg.getC_BPartner_ID();
+		if (bpId <= 0)
+			return null;
+
+		return new MBPartner(getCtx(), bpId, get_TrxName());
+	}
+
+	public String getOrganisationName() {
+		MBPartner bp = getBusinessPartner();
+		return bp != null ? bp.getName() : null;
+	}
+
+	public String getSdlNumber() {
+		MBPartner bp = getBusinessPartner();
+		return bp != null ? bp.getValue() : null;
+	}
+
+
 	private void sendQueryEmailWithPDF(String templateUUID) throws Exception {
 
-	    int adUserId = getSdfUserId();
+		int adUserId = getSdfUserId();
 
-	    if (adUserId <= 0) {
-	        log.warning("No recipient AD_User found");
-	        return;
-	    }
+		if (adUserId <= 0) {
+			log.warning("No recipient AD_User found");
+			return;
+		}
 
-	    MUser toUser = MUser.get(getCtx(), adUserId);
+		MUser toUser = MUser.get(getCtx(), adUserId);
 
-	    if (toUser.getEMail() == null || toUser.getEMail().isEmpty()) {
-	        log.warning("Recipient has no email address");
-	        return;
-	    }
+		if (toUser.getEMail() == null || toUser.getEMail().isEmpty()) {
+			log.warning("Recipient has no email address");
+			return;
+		}
 
-	    // Load template
-	    MMailText mailText =
-	        new MMailText(getCtx(), templateUUID, get_TrxName());
+		// Load template
+		MMailText mailText =
+				new MMailText(getCtx(), templateUUID, get_TrxName());
 
-	    if (mailText.get_ID() <= 0) {
-	        log.severe("Mail template not found");
-	        return;
-	    }
+		if (mailText.get_ID() <= 0) {
+			log.severe("Mail template not found");
+			return;
+		}
 
-	    try {
-	        mailText.setPO(this, true);
-	    } catch (Throwable t) {
-	        mailText.setPO(this);
-	    }
+		try {
+			mailText.setPO(this, true);
+		} catch (Throwable t) {
+			mailText.setPO(this);
+		}
 
-	    String html = mailText.getMailText(true);
-	            
-	   // html = html.replace("@Logo@", getLogoBase64());
+		String html = mailText.getMailText(true);
 
-	    String subject = mailText.getMailHeader();
-	    if (subject == null || subject.trim().isEmpty())
-	        subject = "WSP-ATR Query Notification";
+		// html = html.replace("@Logo@", getLogoBase64());
 
-	    
-	    File pdf = createPDF(html);
+		String subject = mailText.getMailHeader();
+		if (subject == null || subject.trim().isEmpty())
+			subject = "WSP-ATR Query Notification";
 
-	    // Sender
-	    MUser fromUser =
-	        MUser.get(getCtx(), FROM_EMAIL_USER_ID);
 
-	    MClient client = MClient.get(getCtx());
+		File pdf = createPDF(html);
 
-	    boolean sent =
-	        client.sendEMail(fromUser, toUser, subject, html, pdf, true);
+		// Sender
+		MUser fromUser =
+				MUser.get(getCtx(), FROM_EMAIL_USER_ID);
 
-	    if (!sent)
-	        log.severe("Failed to send query  email");
-	    else
-	        log.info("Query email sent successfully");
+		MClient client = MClient.get(getCtx());
+
+		boolean sent =
+				client.sendEMail(fromUser, toUser, subject, html, pdf, true);
+
+		if (!sent)
+			log.severe("Failed to send query  email");
+		else
+			log.info("Query email sent successfully");
 	}
-	
-	
+
+
 	public void sendSuccessfulSubmissionEmail() throws Exception {
 
-	    int adUserId = getSdfUserId();
+		int adUserId = getSdfUserId();
 
-	    if (adUserId <= 0) {
-	        log.warning("No recipient AD_User found");
-	        return;
-	    }
+		if (adUserId <= 0) {
+			log.warning("No recipient AD_User found");
+			return;
+		}
 
-	    MUser toUser = MUser.get(getCtx(), adUserId);
+		MUser toUser = MUser.get(getCtx(), adUserId);
 
-	    if (toUser.getEMail() == null || toUser.getEMail().isEmpty()) {
-	        log.warning("Recipient has no email address");
-	        return;
-	    }
+		if (toUser.getEMail() == null || toUser.getEMail().isEmpty()) {
+			log.warning("Recipient has no email address");
+			return;
+		}
 
-	    // Load template
-	    MMailText mailText =
-	        new MMailText(getCtx(), WSP_ATR_Successful_Submission_TEMPLATE_UUID, get_TrxName());
+		// Load template
+		MMailText mailText =
+				new MMailText(getCtx(), WSP_ATR_Successful_Submission_TEMPLATE_UUID, get_TrxName());
 
-	    if (mailText.get_ID() <= 0) {
-	        log.severe("Mail template not found");
-	        return;
-	    }
+		if (mailText.get_ID() <= 0) {
+			log.severe("Mail template not found");
+			return;
+		}
 
-	    try {
-	        mailText.setPO(this, true);
-	    } catch (Throwable t) {
-	        mailText.setPO(this);
-	    }
+		try {
+			mailText.setPO(this, true);
+		} catch (Throwable t) {
+			mailText.setPO(this);
+		}
 
-	    String html = mailText.getMailText(true);
-	            
-	   // html = html.replace("@Logo@", getLogoBase64());
+		String html = mailText.getMailText(true);
 
-	    String subject = mailText.getMailHeader();
-	    if (subject == null || subject.trim().isEmpty())
-	        subject = "Successful WSP-ATR Submission";
+		// html = html.replace("@Logo@", getLogoBase64());
 
-	        
+		String subject = mailText.getMailHeader();
+		if (subject == null || subject.trim().isEmpty())
+			subject = "Successful WSP-ATR Submission";
 
-	    // Sender
-	    MUser fromUser =
-	        MUser.get(getCtx(), FROM_EMAIL_USER_ID);
 
-	    MClient client = MClient.get(getCtx());
 
-	    boolean sent =
-	        client.sendEMail(fromUser, toUser, subject, html, null, true);
+		// Sender
+		MUser fromUser =
+				MUser.get(getCtx(), FROM_EMAIL_USER_ID);
 
-	    if (!sent)
-	        log.severe("Failed to send Successful Submission email");
-	    else
-	        log.info("Successfule Submission email sent successfully");
+		MClient client = MClient.get(getCtx());
+
+		boolean sent =
+				client.sendEMail(fromUser, toUser, subject, html, null, true);
+
+		if (!sent)
+			log.severe("Failed to send Successful Submission email");
+		else
+			log.info("Successfule Submission email sent successfully");
 	}
 
 
 
-	
+
 	public String getQueryReasons()
 	{
-	    StringBuilder reasons = new StringBuilder();
+		StringBuilder reasons = new StringBuilder();
 
-	    List<MZZWSPATRVeriChecklist> list =
-	        new Query(getCtx(),
-	                  MZZWSPATRVeriChecklist.Table_Name,
-	                  "ZZ_WSP_ATR_Submitted_ID=? AND ZZ_Information_Completed='N'",
-	                  get_TrxName())
-	        .setParameters(get_ID())
-	        .list();
+		List<MZZWSPATRVeriChecklist> list =
+				new Query(getCtx(),
+						MZZWSPATRVeriChecklist.Table_Name,
+						"ZZ_WSP_ATR_Submitted_ID=? AND ZZ_Information_Completed='N'",
+						get_TrxName())
+				.setParameters(get_ID())
+				.list();
 
-	    for (MZZWSPATRVeriChecklist c : list)
-	        reasons.append(c.getName()).append("<br/>");
+		for (MZZWSPATRVeriChecklist c : list)
+			reasons.append(c.getName()).append("<br/>");
 
-	    return reasons.toString();
+		return reasons.toString();
 	}
-	
+
 	private File createPDF(String html) throws Exception
 	{
-	    File pdfFile = File.createTempFile("QueryLetter_", ".pdf");
+		File pdfFile = File.createTempFile("QueryLetter_", ".pdf");
 
-	    Document document = new Document();
-	    PdfWriter.getInstance(document, new FileOutputStream(pdfFile));
+		Document document = new Document();
+		PdfWriter.getInstance(document, new FileOutputStream(pdfFile));
 
-	    document.open();
+		document.open();
 
-	    HTMLWorker worker = new HTMLWorker(document);
-	    worker.parse(new StringReader(html));
+		HTMLWorker worker = new HTMLWorker(document);
+		worker.parse(new StringReader(html));
 
-	    document.close();
-	    worker.close();
+		document.close();
+		worker.close();
 
-	    return pdfFile;
+		return pdfFile;
 	}
 
 
-	
+
 	public String getLogo()
 	{
-	    String IMAGE_UUID = "bfdc53c3-bb63-4047-874f-ff8802d629c2";
+		String IMAGE_UUID = "bfdc53c3-bb63-4047-874f-ff8802d629c2";
 
-	    MImage image = new Query(getCtx(),
-	            MImage.Table_Name,
-	            "AD_Image_UU=?",
-	            get_TrxName())
-	            .setParameters(IMAGE_UUID)
-	            .first();
+		MImage image = new Query(getCtx(),
+				MImage.Table_Name,
+				"AD_Image_UU=?",
+				get_TrxName())
+				.setParameters(IMAGE_UUID)
+				.first();
 
-	    if (image == null)
-	    {
-	        log.warning("Logo image not found for UUID=" + IMAGE_UUID);
-	        return "";
-	    }
+		if (image == null)
+		{
+			log.warning("Logo image not found for UUID=" + IMAGE_UUID);
+			return "";
+		}
 
-	    byte[] data = image.getData();
-	    if (data == null || data.length == 0)
-	        return "";
+		byte[] data = image.getData();
+		if (data == null || data.length == 0)
+			return "";
 
-	    String base64 = Base64.getEncoder().encodeToString(data);
+		String base64 = Base64.getEncoder().encodeToString(data);
 
-	    return "data:image/jpeg;base64," + base64;
+		return "data:image/jpeg;base64," + base64;
 	}
-	
-	
+
+
 	public String getSentDateTime()
 	{
-	    java.text.SimpleDateFormat sdf =
-	        new java.text.SimpleDateFormat("dd MMM yyyy HH:mm");
+		java.text.SimpleDateFormat sdf =
+				new java.text.SimpleDateFormat("dd MMM yyyy HH:mm");
 
-	    return sdf.format(new java.util.Date());
+		return sdf.format(new java.util.Date());
 	}
-	
-	
+
+
 	public void updateChecklistTotal(String checklistValue, BigDecimal total)
 	{
-	    MZZWSPATRVeriChecklist ver =
-	        new Query(getCtx(),
-	            MZZWSPATRVeriChecklist.Table_Name,
-	            "ZZ_WSP_ATR_Submitted_ID=? AND zz_checklist_no=?",
-	            get_TrxName())
-	        .setParameters(getZZ_WSP_ATR_Submitted_ID(), checklistValue)
-	        .first();
+		MZZWSPATRVeriChecklist ver =
+				new Query(getCtx(),
+						MZZWSPATRVeriChecklist.Table_Name,
+						"ZZ_WSP_ATR_Submitted_ID=? AND zz_checklist_no=?",
+						get_TrxName())
+				.setParameters(getZZ_WSP_ATR_Submitted_ID(), checklistValue)
+				.first();
 
-	    if (ver != null)
-	    {
-	        ver.set_ValueOfColumn("ZZ_TotalNo", total);
-	        ver.saveEx();
-	    }
-	    else
-	    {
-	        log.warning("Checklist row not found for value=" + checklistValue);
-	    }
+		if (ver != null)
+		{
+			ver.set_ValueOfColumn("ZZ_TotalNo", total);
+			ver.saveEx();
+		}
+		else
+		{
+			log.warning("Checklist row not found for value=" + checklistValue);
+		}
 	}
-	
-	public static String getWspYear(Timestamp created) {
-	    if (created == null) {
-	        return null; // or return "" if you prefer empty string
-	    }
 
-	    LocalDateTime ldt = created.toLocalDateTime();
-	    return String.valueOf(ldt.getYear());
+	public static String getWspYear(Timestamp created) {
+		if (created == null) {
+			return null; // or return "" if you prefer empty string
+		}
+
+		LocalDateTime ldt = created.toLocalDateTime();
+		return String.valueOf(ldt.getYear());
 	}
 
 
