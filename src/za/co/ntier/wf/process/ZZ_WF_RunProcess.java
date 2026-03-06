@@ -186,7 +186,7 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 						"REQUEST", nextStatus, nextStatus, null, nextAction, "Auto-queued next step",currUserID);
 			}
 			I_R_MailText mailText = (approve) ? step.getMMailText_Approved() : step.getMMailText_Rejected();
-			if (approve && mailText != null && mailText.getR_MailText_ID() > 0) {
+			if (mailText != null && mailText.getR_MailText_ID() > 0) {
 				MailNoticeUtil.requestStepNotifyAll(queueNotifis,step, po, hdr, getTable_ID(),getRecord_ID(),
 					MailNoticeUtil.setPOForMail(mailText,po),ctx, trxName);
 			}
