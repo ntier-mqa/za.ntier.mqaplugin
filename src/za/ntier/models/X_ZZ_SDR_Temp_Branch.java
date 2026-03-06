@@ -40,6 +40,11 @@ public class X_ZZ_SDR_Temp_Branch extends PO implements I_ZZ_SDR_Temp_Branch, I_
       super (ctx, ZZ_SDR_Temp_Branch_ID, trxName);
       /** if (ZZ_SDR_Temp_Branch_ID == 0)
         {
+			setContactName (null);
+			setEMail (null);
+			setZZ_BranchName (null);
+			setZZ_Date_Requested (new Timestamp( System.currentTimeMillis() ));
+			setZZ_Landline_No (null);
 			setZZ_SDR_Temp_Branch_ID (0);
         } */
     }
@@ -50,6 +55,11 @@ public class X_ZZ_SDR_Temp_Branch extends PO implements I_ZZ_SDR_Temp_Branch, I_
       super (ctx, ZZ_SDR_Temp_Branch_ID, trxName, virtualColumns);
       /** if (ZZ_SDR_Temp_Branch_ID == 0)
         {
+			setContactName (null);
+			setEMail (null);
+			setZZ_BranchName (null);
+			setZZ_Date_Requested (new Timestamp( System.currentTimeMillis() ));
+			setZZ_Landline_No (null);
 			setZZ_SDR_Temp_Branch_ID (0);
         } */
     }
@@ -60,6 +70,11 @@ public class X_ZZ_SDR_Temp_Branch extends PO implements I_ZZ_SDR_Temp_Branch, I_
       super (ctx, ZZ_SDR_Temp_Branch_UU, trxName);
       /** if (ZZ_SDR_Temp_Branch_UU == null)
         {
+			setContactName (null);
+			setEMail (null);
+			setZZ_BranchName (null);
+			setZZ_Date_Requested (new Timestamp( System.currentTimeMillis() ));
+			setZZ_Landline_No (null);
 			setZZ_SDR_Temp_Branch_ID (0);
         } */
     }
@@ -70,6 +85,11 @@ public class X_ZZ_SDR_Temp_Branch extends PO implements I_ZZ_SDR_Temp_Branch, I_
       super (ctx, ZZ_SDR_Temp_Branch_UU, trxName, virtualColumns);
       /** if (ZZ_SDR_Temp_Branch_UU == null)
         {
+			setContactName (null);
+			setEMail (null);
+			setZZ_BranchName (null);
+			setZZ_Date_Requested (new Timestamp( System.currentTimeMillis() ));
+			setZZ_Landline_No (null);
 			setZZ_SDR_Temp_Branch_ID (0);
         } */
     }
@@ -296,6 +316,21 @@ public class X_ZZ_SDR_Temp_Branch extends PO implements I_ZZ_SDR_Temp_Branch, I_
 	public Timestamp getZZ_Date_Completed()
 	{
 		return (Timestamp)get_Value(COLUMNNAME_ZZ_Date_Completed);
+	}
+
+	/** Set Date Requested.
+		@param ZZ_Date_Requested Date Requested
+	*/
+	public void setZZ_Date_Requested (Timestamp ZZ_Date_Requested)
+	{
+		set_Value (COLUMNNAME_ZZ_Date_Requested, ZZ_Date_Requested);
+	}
+
+	/** Get Date Requested.
+		@return Date Requested	  */
+	public Timestamp getZZ_Date_Requested()
+	{
+		return (Timestamp)get_Value(COLUMNNAME_ZZ_Date_Requested);
 	}
 
 	/** Exec Approve = AE */

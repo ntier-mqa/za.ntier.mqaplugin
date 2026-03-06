@@ -240,6 +240,15 @@ public interface I_ZZ_SDR_Temp_Branch
 	/** Get Date Completed	  */
 	public Timestamp getZZ_Date_Completed();
 
+    /** Column name ZZ_Date_Requested */
+    public static final String COLUMNNAME_ZZ_Date_Requested = "ZZ_Date_Requested";
+
+	/** Set Date Requested	  */
+	public void setZZ_Date_Requested (Timestamp ZZ_Date_Requested);
+
+	/** Get Date Requested	  */
+	public Timestamp getZZ_Date_Requested();
+
     /** Column name ZZ_DocAction */
     public static final String COLUMNNAME_ZZ_DocAction = "ZZ_DocAction";
 
