@@ -1,11 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 6.20.2  -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="section_8_finance_train_compare" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="15" bottomMargin="15" uuid="2a4a73f7-2e21-4b6d-9aa3-6a82c6e4b1a2">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="section_8_finance_train_compare" pageWidth="1250" pageHeight="1800" whenNoDataType="AllSectionsNoDetail" columnWidth="1210" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="2a4a73f7-2e21-4b6d-9aa3-6a82c6e4b1a2">
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="mqa dev"/>
-	<style name="HdrBar" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="10" isBold="true"/>
-	<style name="SectionBar" hTextAlign="Left" vTextAlign="Middle" fontName="SansSerif" fontSize="9" isBold="true"/>
-	<style name="CellLeft" hTextAlign="Left" vTextAlign="Middle" fontName="SansSerif" fontSize="9"/>
-	<style name="CellRight" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="9"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<style name="SectionTitle" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="18" isBold="true"/>
+	<style name="Hdr" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="14" isBold="true"/>
+	<style name="HdrSmall" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="12" isBold="true"/>
+	<style name="SectionBar" mode="Opaque" forecolor="#000000" backcolor="#D9D9D9" hTextAlign="Left" vTextAlign="Middle" fontName="SansSerif" fontSize="12" isBold="true"/>
+	<style name="CellText" vTextAlign="Middle" fontName="SansSerif" fontSize="12"/>
+	<style name="CellNum" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="12"/>
 	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
 	<queryString language="SQL">
 		<![CDATA[SELECT
@@ -24,49 +34,58 @@ ORDER BY COALESCE(t.Row_No,0), t.ZZ_WSP_ATR_Finance_Train_Compare_Rep_ID]]>
 	<group name="GrpSection">
 		<groupExpression><![CDATA[$F{zz_section}]]></groupExpression>
 		<groupHeader>
-			<band height="16">
+			<band height="28">
 				<staticText>
-					<reportElement style="SectionBar" x="0" y="0" width="802" height="16" uuid="3033995a-1f57-4dca-adba-e60798708c61"/>
+					<reportElement style="SectionBar" x="0" y="0" width="1210" height="28" uuid="3033995a-1f57-4dca-adba-e60798708c61"/>
 					<box>
 						<pen lineWidth="0.5"/>
 					</box>
 					<text><![CDATA[]]></text>
 				</staticText>
 				<textField>
-					<reportElement style="SectionBar" x="0" y="0" width="802" height="16" uuid="45cbab87-5fae-4276-b89e-4c1bcbb22abe"/>
+					<reportElement style="SectionBar" x="0" y="0" width="1210" height="28" uuid="45cbab87-5fae-4276-b89e-4c1bcbb22abe"/>
 					<box>
 						<pen lineWidth="0.5"/>
 					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<paragraph leftIndent="8" rightIndent="6"/>
+					</textElement>
 					<textFieldExpression><![CDATA[$F{zz_section}]]></textFieldExpression>
 				</textField>
 			</band>
 		</groupHeader>
 	</group>
 	<title>
-		<band height="20">
+		<band height="120">
 			<staticText>
-				<reportElement style="HdrBar" x="0" y="0" width="802" height="20" uuid="72f1d4fa-baf7-4973-8667-19626b238ba9"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
+				<reportElement style="SectionTitle" x="0" y="0" width="1210" height="28" uuid="72f1d4fa-baf7-4973-8667-19626b238ba9"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<paragraph leftIndent="8" rightIndent="8" spacingBefore="2" spacingAfter="2"/>
+				</textElement>
 				<text><![CDATA[Section 8: Finance and Training Comparison]]></text>
 			</staticText>
 		</band>
 	</title>
 	<detail>
-		<band height="16">
-			<textField textAdjust="StretchHeight">
-				<reportElement style="CellLeft" x="0" y="0" width="520" height="16" uuid="f8d16a6c-4c40-47de-ab55-69776a3e4e6c"/>
+		<band height="26" splitType="Stretch">
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="0" y="0" width="780" height="26" uuid="f8d16a6c-4c40-47de-ab55-69776a3e4e6c"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<paragraph leftIndent="4" rightIndent="4"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$F{finance_type}]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight">
-				<reportElement style="CellRight" x="520" y="0" width="282" height="16" uuid="7ba9e53f-7cbe-424b-8f3a-896316ef1b5a"/>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="780" y="0" width="430" height="26" uuid="7ba9e53f-7cbe-424b-8f3a-896316ef1b5a"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<paragraph leftIndent="4" rightIndent="4"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$F{finance_value}]]></textFieldExpression>
 			</textField>
 		</band>

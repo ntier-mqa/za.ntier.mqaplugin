@@ -1,27 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 6.20.2  -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="WSP_ATR_Section_3_2_TopUp_Skills" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="10" bottomMargin="10" uuid="b38c3035-e541-40a7-af85-f4081673ce24">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="sub_section_3_2_topup_skills" pageWidth="1250" pageHeight="1800" whenNoDataType="AllSectionsNoDetail" columnWidth="1210" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="b38c3035-e541-40a7-af85-f4081673ce24">
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="mqa dev"/>
-	<style name="Hdr" fontName="SansSerif" fontSize="9" isBold="true"/>
-	<style name="Cell" fontName="SansSerif" fontSize="8"/>
-	<style name="CellCenter" fontName="SansSerif" fontSize="8"/>
-	<style name="CellWrap" fontName="SansSerif" fontSize="8"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<style name="SectionTitle" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="18" isBold="true"/>
+	<style name="Hdr" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="12" isBold="true"/>
+	<style name="CellText" vTextAlign="Top" fontName="SansSerif" fontSize="11"/>
 	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
-	<queryString>
+	<queryString language="SQL">
 		<![CDATA[SELECT
-                r.Row_No,
-                occ.Name AS occupation_title,
-                COALESCE(occ.Value,'') AS occupation_code,
-                s.Name AS skillset_name,
-                COALESCE(s.Description, '') AS skillset_description,
-                COALESCE(r.Comments, '') AS comments
-            FROM ZZ_WSP_ATR_TopUp_Skills_Rep r
-            LEFT JOIN ZZ_Occupations_Ref occ
-                ON occ.ZZ_Occupations_Ref_ID = r.ZZ_OFO_Specialisation_ID
-            LEFT JOIN ZZ_TopUp_Skills_Ref s
-                ON s.ZZ_TopUp_Skills_Ref_ID = r.ZZ_TopUpSkill_ID
-            WHERE r.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
-            ORDER BY r.Row_No, occupation_title, skillset_name]]>
+    r.Row_No,
+    COALESCE(occ.Name,'') AS occupation_title,
+    COALESCE(occ.Value,'') AS occupation_code,
+    COALESCE(s.Name,'') AS skillset_name,
+    COALESCE(s.Description,'') AS skillset_description,
+    COALESCE(r.Comments,'') AS comments
+FROM ZZ_WSP_ATR_TopUp_Skills_Rep r
+LEFT JOIN ZZ_Occupations_Ref occ
+       ON occ.ZZ_Occupations_Ref_ID = r.ZZ_OFO_Specialisation_ID
+LEFT JOIN ZZ_TopUp_Skills_Ref s
+       ON s.ZZ_TopUp_Skills_Ref_ID = r.ZZ_TopUpSkill_ID
+WHERE r.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
+ORDER BY r.Row_No, occupation_title, skillset_name]]>
 	</queryString>
 	<field name="Row_No" class="java.lang.Integer"/>
 	<field name="occupation_title" class="java.lang.String"/>
@@ -29,65 +36,146 @@
 	<field name="skillset_name" class="java.lang.String"/>
 	<field name="skillset_description" class="java.lang.String"/>
 	<field name="comments" class="java.lang.String"/>
-	<columnHeader>
-		<band height="35">
+	<title>
+		<band height="110">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
 			<staticText>
-				<reportElement style="Hdr" x="0" y="0" width="802" height="15" uuid="ead71eb8-9ba0-43b8-bf5e-36eca8634fa7"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<reportElement style="SectionTitle" x="0" y="0" width="1210" height="28" uuid="32000000-0000-0000-0000-000000000001"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<paragraph leftIndent="8" rightIndent="8" spacingBefore="2" spacingAfter="2"/>
+				</textElement>
+				<text><![CDATA[Section 3: Hard-to-Fill Vacancies and Scarce Skills]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="34" width="1210" height="22" uuid="32000000-0000-0000-0000-000000000002"/>
+				<textElement verticalAlignment="Middle">
+					<font size="14" isBold="true"/>
+					<paragraph leftIndent="8" rightIndent="8" spacingBefore="1" spacingAfter="1"/>
+				</textElement>
 				<text><![CDATA[3.2 Generic or “Top-up” Skills Survey]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="0" y="15" width="200" height="20" uuid="9bf03b71-47d6-492c-bf43-48a9ede6afac"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<reportElement x="0" y="60" width="1210" height="18" uuid="32000000-0000-0000-0000-000000000003"/>
+				<textElement verticalAlignment="Middle">
+					<font size="12"/>
+					<paragraph leftIndent="8" rightIndent="8"/>
+				</textElement>
+				<text><![CDATA[Summary of generic or top-up skills identified for occupations.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="80" width="1210" height="24" uuid="32000000-0000-0000-0000-000000000004"/>
+				<textElement verticalAlignment="Middle">
+					<font size="12"/>
+					<paragraph leftIndent="8" rightIndent="8"/>
+				</textElement>
+				<text><![CDATA[This table contains occupation titles, skillsets, descriptions and any additional comments provided by the organisation.]]></text>
+			</staticText>
+		</band>
+	</title>
+	<columnHeader>
+		<band height="50">
+			<staticText>
+				<reportElement style="Hdr" x="0" y="0" width="170" height="50" uuid="32000000-0000-0000-0000-000000000010"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<paragraph leftIndent="6" rightIndent="6"/>
+				</textElement>
 				<text><![CDATA[Occupation Title]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="200" y="15" width="120" height="20" uuid="9482306f-2004-4a96-8239-1efc72e64fa0"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<reportElement style="Hdr" x="170" y="0" width="100" height="50" uuid="32000000-0000-0000-0000-000000000011"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<paragraph leftIndent="6" rightIndent="6"/>
+				</textElement>
 				<text><![CDATA[Occupation Code]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="320" y="15" width="120" height="20" uuid="862cc74e-b590-4513-95cb-81c8560666be"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<reportElement style="Hdr" x="270" y="0" width="90" height="50" uuid="32000000-0000-0000-0000-000000000012"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<paragraph leftIndent="6" rightIndent="6"/>
+				</textElement>
 				<text><![CDATA[Skillset Name]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="440" y="15" width="260" height="20" uuid="a1b74515-e76f-4326-922d-e1a2f121bfc3"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<reportElement style="Hdr" x="360" y="0" width="630" height="50" uuid="32000000-0000-0000-0000-000000000013"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<paragraph leftIndent="6" rightIndent="6"/>
+				</textElement>
 				<text><![CDATA[Skillset Description]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="700" y="15" width="102" height="20" uuid="6ace66e0-839e-45d8-8ae5-223f2a897a10"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
-				<text><![CDATA[Additional comments]]></text>
+				<reportElement style="Hdr" x="990" y="0" width="220" height="50" uuid="32000000-0000-0000-0000-000000000014"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<paragraph leftIndent="6" rightIndent="6"/>
+				</textElement>
+				<text><![CDATA[Additional comments on the detail of the selected skillset]]></text>
 			</staticText>
 		</band>
 	</columnHeader>
 	<detail>
-		<band height="40">
-			<textField textAdjust="StretchHeight">
-				<reportElement style="CellWrap" x="0" y="0" width="200" height="40" uuid="f28f12c0-5597-457f-96f0-5c4c2d81ac73"/>
-				<textElement verticalAlignment="Top"/>
+		<band height="26" splitType="Stretch">
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="0" y="0" width="170" height="26" uuid="32000000-0000-0000-0000-000000000040"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<paragraph leftIndent="4" rightIndent="4" spacingBefore="1" spacingAfter="1"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$F{occupation_title}]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight">
-				<reportElement style="CellWrap" x="200" y="0" width="120" height="40" uuid="b118f601-4c9f-425d-ad06-fdf307a74ad0"/>
-				<textElement verticalAlignment="Top"/>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="170" y="0" width="100" height="26" uuid="32000000-0000-0000-0000-000000000041"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<paragraph leftIndent="4" rightIndent="4" spacingBefore="1" spacingAfter="1"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$F{occupation_code}]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight">
-				<reportElement style="CellWrap" x="320" y="0" width="120" height="40" uuid="fb0e6688-783b-4fc1-87e8-3f2e030ebdcb"/>
-				<textElement verticalAlignment="Top"/>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="270" y="0" width="90" height="26" uuid="32000000-0000-0000-0000-000000000042"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<paragraph leftIndent="4" rightIndent="4" spacingBefore="1" spacingAfter="1"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$F{skillset_name}]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight">
-				<reportElement style="CellWrap" x="440" y="0" width="260" height="40" uuid="77c09653-65f9-4ae4-bab1-8c885272883d"/>
-				<textElement verticalAlignment="Top"/>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="360" y="0" width="630" height="26" uuid="32000000-0000-0000-0000-000000000043"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<paragraph leftIndent="4" rightIndent="4" spacingBefore="1" spacingAfter="1"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$F{skillset_description}]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight">
-				<reportElement style="CellWrap" x="700" y="0" width="102" height="40" uuid="dfb938a6-d1f1-4f83-be13-15d90414dced"/>
-				<textElement verticalAlignment="Top"/>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="990" y="0" width="220" height="26" uuid="32000000-0000-0000-0000-000000000044"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<paragraph leftIndent="4" rightIndent="4" spacingBefore="1" spacingAfter="1"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$F{comments}]]></textFieldExpression>
 			</textField>
 		</band>

@@ -1,10 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 6.20.2  -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="section_6_2_bursaries_including_het" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="15" bottomMargin="15" uuid="b81a0d8f-6c8a-49de-94f8-3cbb89c31c22">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="section_6_2_bursaries_including_het" pageWidth="1250" pageHeight="1800" whenNoDataType="AllSectionsNoDetail" columnWidth="1210" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="b81a0d8f-6c8a-49de-94f8-3cbb89c31c22">
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="mqa dev"/>
-	<style name="Hdr" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="9" isBold="true"/>
-	<style name="Cell" vTextAlign="Middle" fontName="SansSerif" fontSize="9"/>
-	<style name="CellNum" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="9"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<style name="SectionTitle" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="18" isBold="true"/>
+	<style name="Hdr" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="14" isBold="true"/>
+	<style name="HdrSmall" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="12" isBold="true"/>
+	<style name="CellText" vTextAlign="Middle" fontName="SansSerif" fontSize="12"/>
+	<style name="CellNum" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="12"/>
 	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
 	<queryString language="SQL">
 		<![CDATA[SELECT
@@ -34,41 +44,49 @@ ORDER BY t.Row_No]]>
 		<variableExpression><![CDATA[$F{total_planned_2025}]]></variableExpression>
 	</variable>
 	<title>
-		<band height="26">
+		<band height="120">
 			<staticText>
-				<reportElement x="0" y="0" width="802" height="14" uuid="52d1f0a2-6e7b-4f33-9d08-ef6b4f64b2b1"/>
+				<reportElement style="SectionTitle" x="0" y="0" width="1210" height="28" uuid="52d1f0a2-6e7b-4f33-9d08-ef6b4f64b2b1"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<paragraph leftIndent="8" rightIndent="8" spacingBefore="2" spacingAfter="2"/>
+				</textElement>
+				<text><![CDATA[Section 6: Non-Employees AET and Bursaries]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="36" width="1210" height="18" uuid="52d1f0a2-6e7b-4f33-9d08-ef6b4f64b2b2"/>
 				<textElement verticalAlignment="Middle">
-					<font size="10" isBold="true"/>
+					<font size="12" isBold="true"/>
+					<paragraph leftIndent="8" rightIndent="8"/>
 				</textElement>
 				<text><![CDATA[6.2 Bursaries (Including HET)]]></text>
 			</staticText>
 		</band>
 	</title>
 	<columnHeader>
-		<band height="18">
+		<band height="40">
 			<staticText>
-				<reportElement style="Hdr" x="0" y="0" width="260" height="18" uuid="0c5bcae4-0d68-4db2-8bfb-e1c8f3b2c111"/>
+				<reportElement style="Hdr" x="0" y="0" width="380" height="40" uuid="0c5bcae4-0d68-4db2-8bfb-e1c8f3b2c111"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Name of Programme]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="260" y="0" width="260" height="18" uuid="b4a2df6c-1b8c-4ee6-9b7c-2c2c3c3c3c01"/>
+				<reportElement style="Hdr" x="380" y="0" width="380" height="40" uuid="b4a2df6c-1b8c-4ee6-9b7c-2c2c3c3c3c01"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Non-Employee Status]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="520" y="0" width="141" height="18" uuid="c8a7a4d2-6cba-4b08-91d9-9d9f9e9e9e01"/>
+				<reportElement style="Hdr" x="760" y="0" width="225" height="40" uuid="c8a7a4d2-6cba-4b08-91d9-9d9f9e9e9e01"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Total Trained 2024]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="661" y="0" width="141" height="18" uuid="a7b6c5d4-e3f2-4a11-8b22-334455667788"/>
+				<reportElement style="Hdr" x="985" y="0" width="225" height="40" uuid="a7b6c5d4-e3f2-4a11-8b22-334455667788"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -77,30 +95,36 @@ ORDER BY t.Row_No]]>
 		</band>
 	</columnHeader>
 	<detail>
-		<band height="16">
-			<textField isBlankWhenNull="true">
-				<reportElement style="Cell" x="0" y="0" width="260" height="16" uuid="d1111111-2222-3333-4444-555555555555"/>
+		<band height="26" splitType="Stretch">
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="0" y="0" width="380" height="26" uuid="d1111111-2222-3333-4444-555555555555"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<paragraph leftIndent="4" rightIndent="4"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$F{programme_name}]]></textFieldExpression>
 			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement style="Cell" x="260" y="0" width="260" height="16" uuid="e1111111-2222-3333-4444-666666666666"/>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="380" y="0" width="380" height="26" uuid="e1111111-2222-3333-4444-666666666666"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<paragraph leftIndent="4" rightIndent="4"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$F{non_emp_status}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="CellNum" x="520" y="0" width="141" height="16" uuid="f1111111-2222-3333-4444-777777777777"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="760" y="0" width="225" height="26" uuid="f1111111-2222-3333-4444-777777777777"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{total_done_2024}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="CellNum" x="661" y="0" width="141" height="16" uuid="01111111-2222-3333-4444-888888888888"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="985" y="0" width="225" height="26" uuid="01111111-2222-3333-4444-888888888888"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -109,24 +133,26 @@ ORDER BY t.Row_No]]>
 		</band>
 	</detail>
 	<summary>
-		<band height="16">
+		<band height="28">
 			<staticText>
-				<reportElement style="Hdr" x="0" y="0" width="520" height="16" uuid="11111111-aaaa-bbbb-cccc-999999999999"/>
+				<reportElement style="HdrSmall" x="0" y="0" width="760" height="28" uuid="11111111-aaaa-bbbb-cccc-999999999999"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
-				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<paragraph leftIndent="8" rightIndent="6"/>
+				</textElement>
 				<text><![CDATA[Grand Total]]></text>
 			</staticText>
 			<textField>
-				<reportElement style="CellNum" x="520" y="0" width="141" height="16" uuid="22222222-aaaa-bbbb-cccc-999999999999"/>
+				<reportElement style="CellNum" x="760" y="0" width="225" height="28" uuid="22222222-aaaa-bbbb-cccc-999999999999"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_Done}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="CellNum" x="661" y="0" width="141" height="16" uuid="33333333-aaaa-bbbb-cccc-999999999999"/>
+				<reportElement style="CellNum" x="985" y="0" width="225" height="28" uuid="33333333-aaaa-bbbb-cccc-999999999999"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>

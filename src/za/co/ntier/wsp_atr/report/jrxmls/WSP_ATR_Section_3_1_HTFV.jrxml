@@ -1,37 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 6.20.2  -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="WSP_ATR_Section_3_1_HTFV" pageWidth="842" pageHeight="595" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="10" bottomMargin="10" uuid="be5eb564-dbd3-420e-9b2d-1f1b9aa87420">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="sub_section_3_1_htfv" pageWidth="1250" pageHeight="1800" whenNoDataType="AllSectionsNoDetail" columnWidth="1210" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="be5eb564-dbd3-420e-9b2d-1f1b9aa87420">
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="mqa dev"/>
-	<style name="Hdr" fontName="SansSerif" fontSize="9" isBold="true"/>
-	<style name="Cell" fontName="SansSerif" fontSize="8"/>
-	<style name="CellCenter" fontName="SansSerif" fontSize="8"/>
-	<style name="CellWrap" fontName="SansSerif" fontSize="8"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<style name="SectionTitle" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="18" isBold="true"/>
+	<style name="Hdr" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="12" isBold="true"/>
+	<style name="HdrSmall" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="11" isBold="true"/>
+	<style name="CellText" vTextAlign="Top" fontName="SansSerif" fontSize="11"/>
+	<style name="CellNum" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="11"/>
 	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
-	<queryString>
+	<queryString language="SQL">
 		<![CDATA[SELECT
-                r.Row_No,
-                occ.Name AS occupation_name,
-                COALESCE(occ.Value,'') AS occupation_code,
-                sr.Name AS primary_reason,
-                fsr1.Name AS further_reason1,
-                fsr2.Name AS further_reason2,
-                r.ZZ_Scarce_Other_Reasons_Comments AS comments,
-                r.ZZ_Vacancies_EC_Cnt,
-                r.ZZ_Vacancies_FS_Cnt,
-                r.ZZ_Vacancies_GP_Cnt,
-                r.ZZ_Vacancies_KZN_Cnt,
-                r.ZZ_Vacancies_LP_Cnt,
-                r.ZZ_Vacancies_MP_Cnt,
-                r.ZZ_Vacancies_NP_Cnt,
-                r.ZZ_Vacancies_NW_Cnt,
-                r.ZZ_Vacancies_WC_Cnt
-            FROM ZZ_WSP_ATR_HTFV_Rep r
-            LEFT JOIN ZZ_Occupations_Ref   occ  ON occ.ZZ_Occupations_Ref_ID = r.ZZ_Occupations_ID
-            LEFT JOIN ZZ_Scarce_Reason_Ref sr   ON sr.ZZ_Scarce_Reason_Ref_ID = r.ZZ_Scarce_Reason_ID
-            LEFT JOIN ZZ_Scarce_Reason_Ref fsr1 ON fsr1.ZZ_Scarce_Reason_Ref_ID = r.ZZ_Further_Scarce_Reason_ID
-            LEFT JOIN ZZ_Scarce_Reason_Ref fsr2 ON fsr2.ZZ_Scarce_Reason_Ref_ID = r.ZZ_Further_Scarce_Reason2_ID
-            WHERE r.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
-            ORDER BY r.Row_No, occupation_name]]>
+    r.Row_No,
+    COALESCE(occ.Name,'') AS occupation_name,
+    COALESCE(occ.Value,'') AS occupation_code,
+    COALESCE(sr.Name,'') AS primary_reason,
+    COALESCE(fsr1.Name,'') AS further_reason1,
+    COALESCE(fsr2.Name,'') AS further_reason2,
+    COALESCE(r.ZZ_Scarce_Other_Reasons_Comments,'') AS comments,
+    COALESCE(r.ZZ_Vacancies_EC_Cnt,0)  AS ZZ_Vacancies_EC_Cnt,
+    COALESCE(r.ZZ_Vacancies_FS_Cnt,0)  AS ZZ_Vacancies_FS_Cnt,
+    COALESCE(r.ZZ_Vacancies_GP_Cnt,0)  AS ZZ_Vacancies_GP_Cnt,
+    COALESCE(r.ZZ_Vacancies_KZN_Cnt,0) AS ZZ_Vacancies_KZN_Cnt,
+    COALESCE(r.ZZ_Vacancies_LP_Cnt,0)  AS ZZ_Vacancies_LP_Cnt,
+    COALESCE(r.ZZ_Vacancies_MP_Cnt,0)  AS ZZ_Vacancies_MP_Cnt,
+    COALESCE(r.ZZ_Vacancies_NP_Cnt,0)  AS ZZ_Vacancies_NP_Cnt,
+    COALESCE(r.ZZ_Vacancies_NW_Cnt,0)  AS ZZ_Vacancies_NW_Cnt,
+    COALESCE(r.ZZ_Vacancies_WC_Cnt,0)  AS ZZ_Vacancies_WC_Cnt
+FROM ZZ_WSP_ATR_HTFV_Rep r
+LEFT JOIN ZZ_Occupations_Ref occ
+       ON occ.ZZ_Occupations_Ref_ID = r.ZZ_Occupations_ID
+LEFT JOIN ZZ_Scarce_Reason_Ref sr
+       ON sr.ZZ_Scarce_Reason_Ref_ID = r.ZZ_Scarce_Reason_ID
+LEFT JOIN ZZ_Scarce_Reason_Ref fsr1
+       ON fsr1.ZZ_Scarce_Reason_Ref_ID = r.ZZ_Further_Scarce_Reason_ID
+LEFT JOIN ZZ_Scarce_Reason_Ref fsr2
+       ON fsr2.ZZ_Scarce_Reason_Ref_ID = r.ZZ_Further_Scarce_Reason2_ID
+WHERE r.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
+ORDER BY r.Row_No, occupation_name]]>
 	</queryString>
 	<field name="Row_No" class="java.lang.Integer"/>
 	<field name="occupation_name" class="java.lang.String"/>
@@ -49,169 +62,319 @@
 	<field name="ZZ_Vacancies_NP_Cnt" class="java.math.BigDecimal"/>
 	<field name="ZZ_Vacancies_NW_Cnt" class="java.math.BigDecimal"/>
 	<field name="ZZ_Vacancies_WC_Cnt" class="java.math.BigDecimal"/>
-	<columnHeader>
-		<band height="45">
+	<title>
+		<band height="110">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
 			<staticText>
-				<reportElement style="Hdr" x="0" y="0" width="802" height="15" uuid="dd4bc4ed-084e-4d1d-89b9-276cfb754fae"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<reportElement style="SectionTitle" x="0" y="0" width="1210" height="28" uuid="31000000-0000-0000-0000-000000000001"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<paragraph leftIndent="8" rightIndent="8" spacingBefore="2" spacingAfter="2"/>
+				</textElement>
+				<text><![CDATA[Section 3: Hard-to-Fill Vacancies and Scarce Skills]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="34" width="1210" height="22" uuid="31000000-0000-0000-0000-000000000002"/>
+				<textElement verticalAlignment="Middle">
+					<font size="14" isBold="true"/>
+					<paragraph leftIndent="8" rightIndent="8" spacingBefore="1" spacingAfter="1"/>
+				</textElement>
 				<text><![CDATA[3.1 Hard-To-Fill Vacancy (HTFV)]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="0" y="15" width="90" height="30" uuid="2c33c08c-78f3-411e-9947-c8ccb9b31438"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<reportElement x="0" y="60" width="1210" height="18" uuid="31000000-0000-0000-0000-000000000003"/>
+				<textElement verticalAlignment="Middle">
+					<font size="12"/>
+					<paragraph leftIndent="8" rightIndent="8"/>
+				</textElement>
+				<text><![CDATA[Summary of hard-to-fill vacancies, reasons and vacancies per province.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="80" width="1210" height="24" uuid="31000000-0000-0000-0000-000000000004"/>
+				<textElement verticalAlignment="Middle">
+					<font size="12"/>
+					<paragraph leftIndent="8" rightIndent="8"/>
+				</textElement>
+				<text><![CDATA[This table contains the occupations identified as hard-to-fill vacancies and the reasons reported by the organisation.]]></text>
+			</staticText>
+		</band>
+	</title>
+	<columnHeader>
+		<band height="70">
+			<staticText>
+				<reportElement style="Hdr" x="0" y="0" width="130" height="70" uuid="31000000-0000-0000-0000-000000000010"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<paragraph leftIndent="6" rightIndent="6"/>
+				</textElement>
 				<text><![CDATA[Occupation]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="90" y="15" width="55" height="30" uuid="6487b6d5-dad2-49be-894b-f313e8272192"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<reportElement style="Hdr" x="130" y="0" width="80" height="70" uuid="31000000-0000-0000-0000-000000000011"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<paragraph leftIndent="6" rightIndent="6"/>
+				</textElement>
 				<text><![CDATA[Code]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="145" y="15" width="120" height="30" uuid="f5bda213-01cc-4728-ad9a-2641c55db9ec"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<reportElement style="Hdr" x="210" y="0" width="150" height="70" uuid="31000000-0000-0000-0000-000000000012"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<paragraph leftIndent="6" rightIndent="6"/>
+				</textElement>
 				<text><![CDATA[Primary reason]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="265" y="15" width="120" height="30" uuid="95a5d946-dd33-4ab1-818b-3f47db88147d"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<reportElement style="Hdr" x="360" y="0" width="150" height="70" uuid="31000000-0000-0000-0000-000000000013"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<paragraph leftIndent="6" rightIndent="6"/>
+				</textElement>
 				<text><![CDATA[Further reason 1]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="385" y="15" width="110" height="30" uuid="f5b305b3-f289-450e-8181-9c9f770817ab"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<reportElement style="Hdr" x="510" y="0" width="140" height="70" uuid="31000000-0000-0000-0000-000000000014"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<paragraph leftIndent="6" rightIndent="6"/>
+				</textElement>
 				<text><![CDATA[Further reason 2]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="495" y="15" width="199" height="30" uuid="ca6c17d2-d7da-49c9-9d52-925b94318a93"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<reportElement style="Hdr" x="650" y="0" width="260" height="70" uuid="31000000-0000-0000-0000-000000000015"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<paragraph leftIndent="6" rightIndent="6"/>
+				</textElement>
 				<text><![CDATA[Additional Comments]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="694" y="15" width="108" height="15" uuid="eced047d-e478-4836-be9f-da360176b3e1"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<reportElement style="HdrSmall" x="910" y="0" width="300" height="30" uuid="31000000-0000-0000-0000-000000000016"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<paragraph leftIndent="4" rightIndent="4"/>
+				</textElement>
 				<text><![CDATA[Vacancies per Province]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="694" y="30" width="12" height="15" uuid="fe56dc99-d9f1-4f54-ba7d-3d2d81b4c6b9"/>
+				<reportElement style="HdrSmall" x="910" y="30" width="33" height="40" uuid="31000000-0000-0000-0000-000000000021"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<text><![CDATA[EC]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="706" y="30" width="12" height="15" uuid="5c00ea8a-9695-4b32-9909-6858df7df31e"/>
+				<reportElement style="HdrSmall" x="943" y="30" width="33" height="40" uuid="31000000-0000-0000-0000-000000000022"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<text><![CDATA[FS]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="718" y="30" width="12" height="15" uuid="b8633f9d-ac7e-4720-af1d-cd196a715080"/>
+				<reportElement style="HdrSmall" x="976" y="30" width="33" height="40" uuid="31000000-0000-0000-0000-000000000023"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<text><![CDATA[GP]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="730" y="30" width="12" height="15" uuid="1fab515c-958b-45be-aba1-4ac43a14f5df"/>
+				<reportElement style="HdrSmall" x="1009" y="30" width="33" height="40" uuid="31000000-0000-0000-0000-000000000024"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
-				<text><![CDATA[KZ]]></text>
+				<text><![CDATA[KZN]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="742" y="30" width="12" height="15" uuid="48661bb3-cb8c-4093-98b4-caf490ad1a76"/>
+				<reportElement style="HdrSmall" x="1042" y="30" width="33" height="40" uuid="31000000-0000-0000-0000-000000000025"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<text><![CDATA[LP]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="754" y="30" width="12" height="15" uuid="85cbe493-17d6-4867-bb5b-f402d5138398"/>
+				<reportElement style="HdrSmall" x="1075" y="30" width="33" height="40" uuid="31000000-0000-0000-0000-000000000026"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<text><![CDATA[MP]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="766" y="30" width="12" height="15" uuid="9f3817a0-7d40-4392-b6bf-cfad76118870"/>
+				<reportElement style="HdrSmall" x="1108" y="30" width="33" height="40" uuid="31000000-0000-0000-0000-000000000027"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<text><![CDATA[NP]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="778" y="30" width="12" height="15" uuid="0dca29d5-ece6-4e67-92b2-c87c23db8830"/>
+				<reportElement style="HdrSmall" x="1141" y="30" width="33" height="40" uuid="31000000-0000-0000-0000-000000000028"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<text><![CDATA[NW]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="790" y="30" width="12" height="15" uuid="a2202578-335d-43ef-89ff-3deeb9b0674c"/>
+				<reportElement style="HdrSmall" x="1174" y="30" width="36" height="40" uuid="31000000-0000-0000-0000-000000000029"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<text><![CDATA[WC]]></text>
 			</staticText>
 		</band>
 	</columnHeader>
 	<detail>
-		<band height="55">
-			<textField textAdjust="StretchHeight">
-				<reportElement style="CellWrap" x="0" y="0" width="90" height="55" uuid="fbd26bfb-2274-4504-96e5-ee2129589394"/>
-				<textElement verticalAlignment="Top"/>
+		<band height="40" splitType="Stretch">
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="0" y="0" width="130" height="40" uuid="31000000-0000-0000-0000-000000000040"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<paragraph leftIndent="4" rightIndent="4" spacingBefore="1" spacingAfter="1"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$F{occupation_name}]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight">
-				<reportElement style="CellWrap" x="90" y="0" width="55" height="55" uuid="7d51700f-6ad0-43f1-80c5-cc9aaaa88bca"/>
-				<textElement verticalAlignment="Top"/>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="130" y="0" width="80" height="40" uuid="31000000-0000-0000-0000-000000000041"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<paragraph leftIndent="4" rightIndent="4" spacingBefore="1" spacingAfter="1"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$F{occupation_code}]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight">
-				<reportElement style="CellWrap" x="145" y="0" width="120" height="55" uuid="5a6d1850-e586-479f-9836-f506455f2304"/>
-				<textElement verticalAlignment="Top"/>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="210" y="0" width="150" height="40" uuid="31000000-0000-0000-0000-000000000042"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<paragraph leftIndent="4" rightIndent="4" spacingBefore="1" spacingAfter="1"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$F{primary_reason}]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight">
-				<reportElement style="CellWrap" x="265" y="0" width="120" height="55" uuid="4123acd4-16e9-4650-b6ad-01a43124971a"/>
-				<textElement verticalAlignment="Top"/>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="360" y="0" width="150" height="40" uuid="31000000-0000-0000-0000-000000000043"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<paragraph leftIndent="4" rightIndent="4" spacingBefore="1" spacingAfter="1"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$F{further_reason1}]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight">
-				<reportElement style="CellWrap" x="385" y="0" width="110" height="55" uuid="93e20dd2-86fc-4528-89c4-f530a65c6f52"/>
-				<textElement verticalAlignment="Top"/>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="510" y="0" width="140" height="40" uuid="31000000-0000-0000-0000-000000000044"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<paragraph leftIndent="4" rightIndent="4" spacingBefore="1" spacingAfter="1"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$F{further_reason2}]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight">
-				<reportElement style="CellWrap" x="495" y="0" width="199" height="55" uuid="3071b842-0260-4035-86c9-f077be431620"/>
-				<textElement verticalAlignment="Top"/>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="650" y="0" width="260" height="40" uuid="31000000-0000-0000-0000-000000000045"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Top">
+					<paragraph leftIndent="4" rightIndent="4" spacingBefore="1" spacingAfter="1"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$F{comments}]]></textFieldExpression>
 			</textField>
-			<textField>
-				<reportElement style="CellCenter" x="694" y="0" width="12" height="55" uuid="b92e4f5d-06a0-4f1e-8897-567dcca2a8ac"/>
+			<textField isBlankWhenNull="true">
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="910" y="0" width="33" height="40" uuid="31000000-0000-0000-0000-000000000051"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{ZZ_Vacancies_EC_Cnt}]]></textFieldExpression>
 			</textField>
-			<textField>
-				<reportElement style="CellCenter" x="706" y="0" width="12" height="55" uuid="0783b480-9d41-4519-8a64-77ba54ed5964"/>
+			<textField isBlankWhenNull="true">
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="943" y="0" width="33" height="40" uuid="31000000-0000-0000-0000-000000000052"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{ZZ_Vacancies_FS_Cnt}]]></textFieldExpression>
 			</textField>
-			<textField>
-				<reportElement style="CellCenter" x="718" y="0" width="12" height="55" uuid="6c5a489a-9814-43a8-8bf6-f3521fb68dc8"/>
+			<textField isBlankWhenNull="true">
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="976" y="0" width="33" height="40" uuid="31000000-0000-0000-0000-000000000053"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{ZZ_Vacancies_GP_Cnt}]]></textFieldExpression>
 			</textField>
-			<textField>
-				<reportElement style="CellCenter" x="730" y="0" width="12" height="55" uuid="9056c567-29b1-4c71-afae-bddf62d65024"/>
+			<textField isBlankWhenNull="true">
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="1009" y="0" width="33" height="40" uuid="31000000-0000-0000-0000-000000000054"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{ZZ_Vacancies_KZN_Cnt}]]></textFieldExpression>
 			</textField>
-			<textField>
-				<reportElement style="CellCenter" x="742" y="0" width="12" height="55" uuid="9eb4feb9-9fe5-41f4-8700-2cf61d870f78"/>
+			<textField isBlankWhenNull="true">
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="1042" y="0" width="33" height="40" uuid="31000000-0000-0000-0000-000000000055"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{ZZ_Vacancies_LP_Cnt}]]></textFieldExpression>
 			</textField>
-			<textField>
-				<reportElement style="CellCenter" x="754" y="0" width="12" height="55" uuid="e548d0fc-1e9a-46be-ace5-6dc62436af5a"/>
+			<textField isBlankWhenNull="true">
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="1075" y="0" width="33" height="40" uuid="31000000-0000-0000-0000-000000000056"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{ZZ_Vacancies_MP_Cnt}]]></textFieldExpression>
 			</textField>
-			<textField>
-				<reportElement style="CellCenter" x="766" y="0" width="12" height="55" uuid="7edae165-bf70-47a3-9238-d20fa0df6810"/>
+			<textField isBlankWhenNull="true">
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="1108" y="0" width="33" height="40" uuid="31000000-0000-0000-0000-000000000057"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{ZZ_Vacancies_NP_Cnt}]]></textFieldExpression>
 			</textField>
-			<textField>
-				<reportElement style="CellCenter" x="778" y="0" width="12" height="55" uuid="c2e6b96d-cca0-4b52-8b10-040da6bd23af"/>
+			<textField isBlankWhenNull="true">
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="1141" y="0" width="33" height="40" uuid="31000000-0000-0000-0000-000000000058"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{ZZ_Vacancies_NW_Cnt}]]></textFieldExpression>
 			</textField>
-			<textField>
-				<reportElement style="CellCenter" x="790" y="0" width="12" height="55" uuid="37faf5d2-22ab-4210-b233-1f49109602d9"/>
+			<textField isBlankWhenNull="true">
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="1174" y="0" width="36" height="40" uuid="31000000-0000-0000-0000-000000000059"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{ZZ_Vacancies_WC_Cnt}]]></textFieldExpression>
 			</textField>
