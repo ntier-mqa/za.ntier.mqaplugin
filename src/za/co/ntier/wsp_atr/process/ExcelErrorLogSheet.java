@@ -1,10 +1,17 @@
 package za.co.ntier.wsp_atr.process;
 
-import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 import org.apache.poi.common.usermodel.HyperlinkType;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Hyperlink;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellReference;
 import org.compiere.util.Util;
 
@@ -12,27 +19,24 @@ public class ExcelErrorLogSheet {
 
     public static final String SHEET_NAME = "Errors";
 
-    // Columns in the Errors sheet
-    private static final int COL_TAB      = 0;
-    private static final int COL_HEADER   = 1; // mapping "Header Name"
-    private static final int COL_ROW      = 2; // 1-based
-    private static final int COL_COL      = 3; // Excel column letter
-    private static final int COL_LINK     = 4; // hyperlink to the bad cell
-    private static final int COL_MESSAGE  = 5;
+    private static final int COL_TAB     = 0;
+    private static final int COL_HEADER  = 1;
+    private static final int COL_ROW     = 2;
+    private static final int COL_COL     = 3;
+    private static final int COL_LINK    = 4;
+    private static final int COL_MESSAGE = 5;
 
-    // Cache styles per workbook instance
-    private static final Map<Workbook, CellStyle> HEADER_STYLE_CACHE = new IdentityHashMap<>();
-    private static final Map<Workbook, CellStyle> LINK_STYLE_CACHE   = new IdentityHashMap<>();
+    // Use WeakHashMap so workbooks can still be GC'd
+    private static final Map<Workbook, CellStyle> HEADER_STYLE_CACHE = new WeakHashMap<>();
+    private static final Map<Workbook, CellStyle> LINK_STYLE_CACHE   = new WeakHashMap<>();
 
     public Sheet getOrCreateErrorsSheet(Workbook wb) {
         Sheet s = wb.getSheet(SHEET_NAME);
         if (s == null) {
             s = wb.createSheet(SHEET_NAME);
             createHeaderRow(s, wb);
-        } else {
-            if (s.getPhysicalNumberOfRows() == 0) {
-                createHeaderRow(s, wb);
-            }
+        } else if (s.getPhysicalNumberOfRows() == 0) {
+            createHeaderRow(s, wb);
         }
         return s;
     }
@@ -48,101 +52,94 @@ public class ExcelErrorLogSheet {
         hr.createCell(COL_MESSAGE).setCellValue("Message");
 
         CellStyle bold = getOrCreateHeaderStyle(wb);
-
         for (int i = 0; i <= COL_MESSAGE; i++) {
             hr.getCell(i).setCellStyle(bold);
         }
 
-        // Optional: widen columns a bit
-        s.setColumnWidth(COL_TAB,  18 * 256);
+        s.setColumnWidth(COL_TAB, 18 * 256);
         s.setColumnWidth(COL_HEADER, 28 * 256);
-        s.setColumnWidth(COL_ROW,  10 * 256);
-        s.setColumnWidth(COL_COL,  10 * 256);
+        s.setColumnWidth(COL_ROW, 10 * 256);
+        s.setColumnWidth(COL_COL, 10 * 256);
         s.setColumnWidth(COL_LINK, 30 * 256);
         s.setColumnWidth(COL_MESSAGE, 60 * 256);
     }
 
-    /** Append one error row with hyperlink to the actual sheet cell. */
     public void appendError(Workbook wb,
                             String tabName,
                             String headerName,
                             int sheetRowIndex0,
                             int sheetColIndex0,
                             String message) {
-    	
-    	
 
         Sheet errSheet = getOrCreateErrorsSheet(wb);
-        int nextRow = errSheet.getLastRowNum() + 1;
-        if (nextRow == 0) nextRow = 1;
+        int nextRow = Math.max(errSheet.getLastRowNum() + 1, 1);
 
         Row r = errSheet.createRow(nextRow);
 
         String safeTab = Util.isEmpty(tabName, true) ? "" : tabName;
+        String safeHeader = Util.isEmpty(headerName, true) ? "" : headerName;
+        String safeMessage = Util.isEmpty(message, true) ? "" : message;
 
-        r.createCell(COL_TAB).setCellValue(safeTab);
-        r.createCell(COL_HEADER).setCellValue(Util.isEmpty(headerName, true) ? "" : headerName);
-
-        int excelRow1 = sheetRowIndex0 + 1; // 1-based for display
+        int excelRow1 = sheetRowIndex0 + 1;
         String excelColLetter = CellReference.convertNumToColString(sheetColIndex0);
 
+        r.createCell(COL_TAB).setCellValue(safeTab);
+        r.createCell(COL_HEADER).setCellValue(safeHeader);
         r.createCell(COL_ROW).setCellValue(excelRow1);
         r.createCell(COL_COL).setCellValue(excelColLetter);
 
-       
-        
-        
-
         Cell linkCell = r.createCell(COL_LINK);
         Sheet target = wb.getSheet(safeTab);
-        CreationHelper ch = wb.getCreationHelper();
+
         if (target == null) {
-            // write text only, no hyperlink
             linkCell.setCellValue(excelColLetter + excelRow1);
         } else {
             String realName = target.getSheetName();
             String addr = "'" + realName.replace("'", "''") + "'!" + excelColLetter + excelRow1;
+
             linkCell.setCellValue(addr);
 
+            CreationHelper ch = wb.getCreationHelper();
             Hyperlink link = ch.createHyperlink(HyperlinkType.DOCUMENT);
             link.setAddress(addr);
+
             linkCell.setHyperlink(link);
             linkCell.setCellStyle(getOrCreateLinkStyle(wb));
         }
 
-
-        // Apply cached hyperlink style
-        linkCell.setCellStyle(getOrCreateLinkStyle(wb));
-
-        r.createCell(COL_MESSAGE).setCellValue(Util.isEmpty(message, true) ? "" : message);
+        r.createCell(COL_MESSAGE).setCellValue(safeMessage);
     }
 
     private CellStyle getOrCreateHeaderStyle(Workbook wb) {
         CellStyle cached = HEADER_STYLE_CACHE.get(wb);
-        if (cached != null) return cached;
+        if (cached != null) {
+            return cached;
+        }
 
         Font f = wb.createFont();
         f.setBold(true);
 
-        CellStyle bold = wb.createCellStyle();
-        bold.setFont(f);
+        CellStyle style = wb.createCellStyle();
+        style.setFont(f);
 
-        HEADER_STYLE_CACHE.put(wb, bold);
-        return bold;
+        HEADER_STYLE_CACHE.put(wb, style);
+        return style;
     }
 
     private CellStyle getOrCreateLinkStyle(Workbook wb) {
         CellStyle cached = LINK_STYLE_CACHE.get(wb);
-        if (cached != null) return cached;
+        if (cached != null) {
+            return cached;
+        }
 
         Font hf = wb.createFont();
         hf.setUnderline(Font.U_SINGLE);
-        hf.setColor(IndexedColors.BLUE.getIndex());
+        hf.setColor(org.apache.poi.ss.usermodel.IndexedColors.BLUE.getIndex());
 
-        CellStyle hstyle = wb.createCellStyle();
-        hstyle.setFont(hf);
+        CellStyle style = wb.createCellStyle();
+        style.setFont(hf);
 
-        LINK_STYLE_CACHE.put(wb, hstyle);
-        return hstyle;
+        LINK_STYLE_CACHE.put(wb, style);
+        return style;
     }
 }
