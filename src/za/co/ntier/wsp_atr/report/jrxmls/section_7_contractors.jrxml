@@ -1,11 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 6.20.2  -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="section_7_contractors" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="15" bottomMargin="15" uuid="1bce85b4-e939-4c96-aea6-20d0a9ff6f7e">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="section_7_contractors" pageWidth="1250" pageHeight="1800" whenNoDataType="AllSectionsNoDetail" columnWidth="1210" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="1bce85b4-e939-4c96-aea6-20d0a9ff6f7e">
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="mqa dev"/>
-	<style name="Hdr" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="8" isBold="true"/>
-	<style name="HdrRot" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="8" isBold="true"/>
-	<style name="Cell" vTextAlign="Middle" fontName="SansSerif" fontSize="8"/>
-	<style name="CellNum" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="8"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<style name="SectionTitle" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="18" isBold="true"/>
+	<style name="Hdr" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="14" isBold="true"/>
+	<style name="HdrSmall" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="12" isBold="true"/>
+	<style name="HdrRot" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="11" isBold="true"/>
+	<style name="CellText" vTextAlign="Middle" fontName="SansSerif" fontSize="12"/>
+	<style name="CellNum" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="12"/>
 	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
 	<queryString language="SQL">
 		<![CDATA[SELECT
@@ -79,48 +89,49 @@ ORDER BY programme_name]]>
 		<initialValueExpression><![CDATA[0]]></initialValueExpression>
 	</variable>
 	<title>
-		<band height="20">
+		<band height="120">
 			<staticText>
-				<reportElement x="0" y="0" width="802" height="20" uuid="9b8543ba-d341-4270-b64c-e338fb32a0bb"/>
+				<reportElement style="SectionTitle" x="0" y="0" width="1210" height="28" uuid="9b8543ba-d341-4270-b64c-e338fb32a0bb"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font size="10" isBold="true"/>
+					<paragraph leftIndent="8" rightIndent="8" spacingBefore="2" spacingAfter="2"/>
 				</textElement>
 				<text><![CDATA[Section 7: Contractors]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="36" width="1210" height="18" uuid="9b8543ba-d341-4270-b64c-e338fb32a0bc"/>
+				<textElement verticalAlignment="Middle">
+					<font size="12" isBold="true"/>
+					<paragraph leftIndent="8" rightIndent="8"/>
+				</textElement>
+				<text><![CDATA[Contractors: Received Training in 2024 and Planned Training for 2025]]></text>
 			</staticText>
 		</band>
 	</title>
 	<columnHeader>
-		<band height="150">
+		<band height="220">
 			<staticText>
-				<reportElement style="Hdr" x="0" y="0" width="802" height="16" uuid="ba904f39-3391-4191-bebf-454b0caa00f7"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<text><![CDATA[Contractors: Received Training in 2024 and Planned Training for 2025]]></text>
-			</staticText>
-			<staticText>
-				<reportElement style="Hdr" x="0" y="16" width="190" height="134" uuid="4ab27c78-60da-4d40-96cf-39fdbcb1c647"/>
+				<reportElement style="Hdr" x="0" y="0" width="280" height="40" uuid="4ab27c78-60da-4d40-96cf-39fdbcb1c647"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Name of Programme]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="190" y="16" width="306" height="16" uuid="3b34640c-f7bb-4a59-9346-47d436169266"/>
+				<reportElement style="Hdr" x="280" y="0" width="465" height="40" uuid="3b34640c-f7bb-4a59-9346-47d436169266"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Number Trained in 2024, Per Occupational Group]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="496" y="16" width="306" height="16" uuid="6fef1ac3-4a6d-4e7f-9dfb-a70df39c36f7"/>
+				<reportElement style="Hdr" x="745" y="0" width="465" height="40" uuid="6fef1ac3-4a6d-4e7f-9dfb-a70df39c36f7"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Planned Number to be Trained in 2025, Per Occupational Group]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrRot" x="190" y="32" width="30" height="118" uuid="b897828d-8283-464d-aed1-3711c9139343"/>
+				<reportElement style="HdrRot" x="280" y="40" width="45" height="180" uuid="b897828d-8283-464d-aed1-3711c9139343"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -128,7 +139,7 @@ ORDER BY programme_name]]>
 				<text><![CDATA[Managers]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrRot" x="220" y="32" width="30" height="118" uuid="7a571ec2-8bb0-4874-a17a-df6d31537028"/>
+				<reportElement style="HdrRot" x="325" y="40" width="45" height="180" uuid="7a571ec2-8bb0-4874-a17a-df6d31537028"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -136,7 +147,7 @@ ORDER BY programme_name]]>
 				<text><![CDATA[Professionals]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrRot" x="250" y="32" width="30" height="118" uuid="c3e22c32-4b39-4ee3-a323-992c6df036fc"/>
+				<reportElement style="HdrRot" x="370" y="40" width="45" height="180" uuid="c3e22c32-4b39-4ee3-a323-992c6df036fc"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -144,7 +155,7 @@ ORDER BY programme_name]]>
 				<text><![CDATA[Technicians & Associates]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrRot" x="280" y="32" width="30" height="118" uuid="1fa03422-9126-42a3-8acc-33cc0020e64d"/>
+				<reportElement style="HdrRot" x="415" y="40" width="45" height="180" uuid="1fa03422-9126-42a3-8acc-33cc0020e64d"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -152,7 +163,7 @@ ORDER BY programme_name]]>
 				<text><![CDATA[Clerical Support Workers]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrRot" x="310" y="32" width="30" height="118" uuid="836e74f9-b108-4d78-bede-a29ba37ee002"/>
+				<reportElement style="HdrRot" x="460" y="40" width="45" height="180" uuid="836e74f9-b108-4d78-bede-a29ba37ee002"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -160,7 +171,7 @@ ORDER BY programme_name]]>
 				<text><![CDATA[Service and Sales Workers]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrRot" x="340" y="32" width="30" height="118" uuid="9879ba8b-b194-4070-8b45-8a2456c0711c"/>
+				<reportElement style="HdrRot" x="505" y="40" width="45" height="180" uuid="9879ba8b-b194-4070-8b45-8a2456c0711c"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -168,7 +179,7 @@ ORDER BY programme_name]]>
 				<text><![CDATA[Trade Worker]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrRot" x="370" y="32" width="30" height="118" uuid="b9cf7f44-8d3b-4019-a73b-e5ce1066b388"/>
+				<reportElement style="HdrRot" x="550" y="40" width="45" height="180" uuid="b9cf7f44-8d3b-4019-a73b-e5ce1066b388"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -176,7 +187,7 @@ ORDER BY programme_name]]>
 				<text><![CDATA[Machine Operators]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrRot" x="400" y="32" width="30" height="118" uuid="135e0047-eb52-463a-bd88-2aec8d2708b5"/>
+				<reportElement style="HdrRot" x="595" y="40" width="45" height="180" uuid="135e0047-eb52-463a-bd88-2aec8d2708b5"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -184,7 +195,7 @@ ORDER BY programme_name]]>
 				<text><![CDATA[Elementary Occupations]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrRot" x="430" y="32" width="30" height="118" uuid="6ba7a40f-9e63-4b72-a8a9-e2687a039d7f"/>
+				<reportElement style="HdrRot" x="640" y="40" width="45" height="180" uuid="6ba7a40f-9e63-4b72-a8a9-e2687a039d7f"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -192,7 +203,7 @@ ORDER BY programme_name]]>
 				<text><![CDATA[Learner]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrRot" x="460" y="32" width="36" height="118" uuid="36e25852-a5f5-4993-b7be-d7d090b7fc3e"/>
+				<reportElement style="HdrRot" x="685" y="40" width="60" height="180" uuid="36e25852-a5f5-4993-b7be-d7d090b7fc3e"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -200,7 +211,7 @@ ORDER BY programme_name]]>
 				<text><![CDATA[Total Trained]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrRot" x="496" y="32" width="30" height="118" uuid="c548a4bc-1e63-4e66-a42e-8f22a11b87a6"/>
+				<reportElement style="HdrRot" x="745" y="40" width="45" height="180" uuid="c548a4bc-1e63-4e66-a42e-8f22a11b87a6"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -208,7 +219,7 @@ ORDER BY programme_name]]>
 				<text><![CDATA[Managers]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrRot" x="526" y="32" width="30" height="118" uuid="d74cd7e3-9c40-4997-9ded-aeeb519fdadc"/>
+				<reportElement style="HdrRot" x="790" y="40" width="45" height="180" uuid="d74cd7e3-9c40-4997-9ded-aeeb519fdadc"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -216,7 +227,7 @@ ORDER BY programme_name]]>
 				<text><![CDATA[Professionals]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrRot" x="556" y="32" width="30" height="118" uuid="f60e9331-d66e-4196-b63c-e5ef6d4178e9"/>
+				<reportElement style="HdrRot" x="835" y="40" width="45" height="180" uuid="f60e9331-d66e-4196-b63c-e5ef6d4178e9"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -224,7 +235,7 @@ ORDER BY programme_name]]>
 				<text><![CDATA[Technicians & Associates]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrRot" x="586" y="32" width="30" height="118" uuid="88dd20e6-3838-4b6b-baa2-ebfb92e60c0e"/>
+				<reportElement style="HdrRot" x="880" y="40" width="45" height="180" uuid="88dd20e6-3838-4b6b-baa2-ebfb92e60c0e"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -232,7 +243,7 @@ ORDER BY programme_name]]>
 				<text><![CDATA[Clerical Support Workers]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrRot" x="616" y="32" width="30" height="118" uuid="0aab3b06-5dcf-4dd6-8ec2-499e33e48ad7"/>
+				<reportElement style="HdrRot" x="925" y="40" width="45" height="180" uuid="0aab3b06-5dcf-4dd6-8ec2-499e33e48ad7"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -240,7 +251,7 @@ ORDER BY programme_name]]>
 				<text><![CDATA[Service and Sales Workers]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrRot" x="646" y="32" width="30" height="118" uuid="992e1d6e-2884-4cc6-8725-bad2301c82c6"/>
+				<reportElement style="HdrRot" x="970" y="40" width="45" height="180" uuid="992e1d6e-2884-4cc6-8725-bad2301c82c6"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -248,7 +259,7 @@ ORDER BY programme_name]]>
 				<text><![CDATA[Trade Worker]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrRot" x="676" y="32" width="30" height="118" uuid="9b4524bb-5873-47e9-bd68-40e24251c874"/>
+				<reportElement style="HdrRot" x="1015" y="40" width="45" height="180" uuid="9b4524bb-5873-47e9-bd68-40e24251c874"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -256,7 +267,7 @@ ORDER BY programme_name]]>
 				<text><![CDATA[Machine Operators]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrRot" x="706" y="32" width="30" height="118" uuid="d59240e3-a1d3-420f-b5d8-c5aecc0760c2"/>
+				<reportElement style="HdrRot" x="1060" y="40" width="45" height="180" uuid="d59240e3-a1d3-420f-b5d8-c5aecc0760c2"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -264,7 +275,7 @@ ORDER BY programme_name]]>
 				<text><![CDATA[Elementary Occupations]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrRot" x="736" y="32" width="30" height="118" uuid="80e19f32-5647-4607-854d-0ee896c67315"/>
+				<reportElement style="HdrRot" x="1105" y="40" width="45" height="180" uuid="80e19f32-5647-4607-854d-0ee896c67315"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -272,7 +283,7 @@ ORDER BY programme_name]]>
 				<text><![CDATA[Learner]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrRot" x="766" y="32" width="36" height="118" uuid="e79f9cc8-8dff-463b-af73-30c6aa5a3746"/>
+				<reportElement style="HdrRot" x="1150" y="40" width="60" height="180" uuid="e79f9cc8-8dff-463b-af73-30c6aa5a3746"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -282,149 +293,152 @@ ORDER BY programme_name]]>
 		</band>
 	</columnHeader>
 	<detail>
-		<band height="14">
-			<textField>
-				<reportElement style="Cell" x="0" y="0" width="190" height="14" uuid="f7ff8eba-4d61-4ab5-a1c5-89713869f88e"/>
+		<band height="26" splitType="Stretch">
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="0" y="0" width="280" height="26" uuid="f7ff8eba-4d61-4ab5-a1c5-89713869f88e"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<paragraph leftIndent="4" rightIndent="4"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$F{programme_name}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0">
-				<reportElement style="CellNum" x="190" y="0" width="30" height="14" uuid="e7102fac-144e-47aa-8b87-9d3feed4d322"/>
+				<reportElement style="CellNum" x="280" y="0" width="45" height="26" uuid="e7102fac-144e-47aa-8b87-9d3feed4d322"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{managers_trained}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0">
-				<reportElement style="CellNum" x="220" y="0" width="30" height="14" uuid="d7db4531-aec2-41b2-80f2-8911541ae57b"/>
+				<reportElement style="CellNum" x="325" y="0" width="45" height="26" uuid="d7db4531-aec2-41b2-80f2-8911541ae57b"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{professionals_trained}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0">
-				<reportElement style="CellNum" x="250" y="0" width="30" height="14" uuid="76681f2d-9a13-41ba-a672-4cfa863a198e"/>
+				<reportElement style="CellNum" x="370" y="0" width="45" height="26" uuid="76681f2d-9a13-41ba-a672-4cfa863a198e"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{technicians_trained}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0">
-				<reportElement style="CellNum" x="280" y="0" width="30" height="14" uuid="222bdb75-ef30-4860-8f15-9006765dfdcc"/>
+				<reportElement style="CellNum" x="415" y="0" width="45" height="26" uuid="222bdb75-ef30-4860-8f15-9006765dfdcc"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{clerical_trained}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0">
-				<reportElement style="CellNum" x="310" y="0" width="30" height="14" uuid="0413183a-18ef-4265-b51b-11aae803c128"/>
+				<reportElement style="CellNum" x="460" y="0" width="45" height="26" uuid="0413183a-18ef-4265-b51b-11aae803c128"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{service_trained}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0">
-				<reportElement style="CellNum" x="340" y="0" width="30" height="14" uuid="26de6aa3-af00-4107-b64c-0802d19dfd65"/>
+				<reportElement style="CellNum" x="505" y="0" width="45" height="26" uuid="26de6aa3-af00-4107-b64c-0802d19dfd65"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{trade_trained}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0">
-				<reportElement style="CellNum" x="370" y="0" width="30" height="14" uuid="2832b1b9-1f45-4527-94bc-677e7cc0334a"/>
+				<reportElement style="CellNum" x="550" y="0" width="45" height="26" uuid="2832b1b9-1f45-4527-94bc-677e7cc0334a"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{machine_trained}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0">
-				<reportElement style="CellNum" x="400" y="0" width="30" height="14" uuid="74bb1a2a-ff50-4e7d-9fa9-10aec796b93f"/>
+				<reportElement style="CellNum" x="595" y="0" width="45" height="26" uuid="74bb1a2a-ff50-4e7d-9fa9-10aec796b93f"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{elementary_trained}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0">
-				<reportElement style="CellNum" x="430" y="0" width="30" height="14" uuid="30aba855-20ef-44c9-901e-e59c13498c6a"/>
+				<reportElement style="CellNum" x="640" y="0" width="45" height="26" uuid="30aba855-20ef-44c9-901e-e59c13498c6a"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{learner_trained}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0">
-				<reportElement style="CellNum" x="460" y="0" width="36" height="14" uuid="b64d51b8-0388-465c-a325-24fc66c496a5"/>
+				<reportElement style="CellNum" x="685" y="0" width="60" height="26" uuid="b64d51b8-0388-465c-a325-24fc66c496a5"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{total_trained}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0">
-				<reportElement style="CellNum" x="496" y="0" width="30" height="14" uuid="090983b9-d1b9-4c54-934e-eed10a3aec70"/>
+				<reportElement style="CellNum" x="745" y="0" width="45" height="26" uuid="090983b9-d1b9-4c54-934e-eed10a3aec70"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{managers_planned}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0">
-				<reportElement style="CellNum" x="526" y="0" width="30" height="14" uuid="ac87db3e-e08c-4cef-a0c5-d78777bbaeb4"/>
+				<reportElement style="CellNum" x="790" y="0" width="45" height="26" uuid="ac87db3e-e08c-4cef-a0c5-d78777bbaeb4"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{professionals_planned}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0">
-				<reportElement style="CellNum" x="556" y="0" width="30" height="14" uuid="87d86db0-575b-42cd-bb9b-ae19f35d3738"/>
+				<reportElement style="CellNum" x="835" y="0" width="45" height="26" uuid="87d86db0-575b-42cd-bb9b-ae19f35d3738"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{technicians_planned}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0">
-				<reportElement style="CellNum" x="586" y="0" width="30" height="14" uuid="03084d2a-c6e7-4007-b288-ccecd4ee32f1"/>
+				<reportElement style="CellNum" x="880" y="0" width="45" height="26" uuid="03084d2a-c6e7-4007-b288-ccecd4ee32f1"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{clerical_planned}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0">
-				<reportElement style="CellNum" x="616" y="0" width="30" height="14" uuid="89530262-58fc-4c58-8035-8806791b9c55"/>
+				<reportElement style="CellNum" x="925" y="0" width="45" height="26" uuid="89530262-58fc-4c58-8035-8806791b9c55"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{service_planned}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0">
-				<reportElement style="CellNum" x="646" y="0" width="30" height="14" uuid="e9124aa2-12ca-4001-8b59-bea68fcf8f5d"/>
+				<reportElement style="CellNum" x="970" y="0" width="45" height="26" uuid="e9124aa2-12ca-4001-8b59-bea68fcf8f5d"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{trade_planned}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0">
-				<reportElement style="CellNum" x="676" y="0" width="30" height="14" uuid="24ad550f-9897-41da-81d6-95d2bcf0205a"/>
+				<reportElement style="CellNum" x="1015" y="0" width="45" height="26" uuid="24ad550f-9897-41da-81d6-95d2bcf0205a"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{machine_planned}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0">
-				<reportElement style="CellNum" x="706" y="0" width="30" height="14" uuid="ee32d7c1-35c0-42df-afe4-1cf30f8ed54f"/>
+				<reportElement style="CellNum" x="1060" y="0" width="45" height="26" uuid="ee32d7c1-35c0-42df-afe4-1cf30f8ed54f"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{elementary_planned}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0">
-				<reportElement style="CellNum" x="736" y="0" width="30" height="14" uuid="c917f472-c57e-4884-bb62-399879e9da6a"/>
+				<reportElement style="CellNum" x="1105" y="0" width="45" height="26" uuid="c917f472-c57e-4884-bb62-399879e9da6a"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{learner_planned}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0">
-				<reportElement style="CellNum" x="766" y="0" width="36" height="14" uuid="4b8a41ef-e736-4458-a045-cebc3ed3231c"/>
+				<reportElement style="CellNum" x="1150" y="0" width="60" height="26" uuid="4b8a41ef-e736-4458-a045-cebc3ed3231c"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -433,24 +447,26 @@ ORDER BY programme_name]]>
 		</band>
 	</detail>
 	<summary>
-		<band height="14">
+		<band height="28">
 			<staticText>
-				<reportElement style="Hdr" x="0" y="0" width="190" height="14" uuid="8b0b8dee-f4f1-4fe9-ae50-da5f03c8bb4b"/>
+				<reportElement style="HdrSmall" x="0" y="0" width="685" height="28" uuid="8b0b8dee-f4f1-4fe9-ae50-da5f03c8bb4b"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
-				<textElement textAlignment="Left"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<paragraph leftIndent="8" rightIndent="6"/>
+				</textElement>
 				<text><![CDATA[Total]]></text>
 			</staticText>
 			<textField pattern="###0">
-				<reportElement style="CellNum" x="460" y="0" width="36" height="14" uuid="101f2c99-9297-4426-8d71-44086fb3c94f"/>
+				<reportElement style="CellNum" x="685" y="0" width="60" height="28" uuid="101f2c99-9297-4426-8d71-44086fb3c94f"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{SumTotalTrained}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0">
-				<reportElement style="CellNum" x="766" y="0" width="36" height="14" uuid="e0101207-e93d-4156-a87d-fd3c71f917e2"/>
+				<reportElement style="CellNum" x="1150" y="0" width="60" height="28" uuid="e0101207-e93d-4156-a87d-fd3c71f917e2"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>

@@ -1,10 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 6.20.2  -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="sub_section_5_2_1_planned_train_per_occ_group" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="15" bottomMargin="15" uuid="c6f9b2a4-2f7a-4b6a-a4d7-2c7d8a08b9d1">
-	<style name="Hdr" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="9" isBold="true"/>
-	<style name="HdrSmall" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="8" isBold="true"/>
-	<style name="CellText" vTextAlign="Middle" fontName="SansSerif" fontSize="8"/>
-	<style name="CellNum" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="8"/>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="sub_section_5_2_1_planned_train_per_occ_group" pageWidth="1250" pageHeight="1800" whenNoDataType="AllSectionsNoDetail" columnWidth="1210" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="c6f9b2a4-2f7a-4b6a-a4d7-2c7d8a08b9d1">
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="mqa dev"/>
+	<style name="SectionTitle" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="18" isBold="true"/>
+	<style name="Hdr" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="14" isBold="true"/>
+	<style name="HdrSmall" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="10" isBold="true"/>
+	<style name="CellText" vTextAlign="Middle" fontName="SansSerif" fontSize="12"/>
+	<style name="CellNum" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="12"/>
 	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
 	<queryString language="SQL">
 		<![CDATA[SELECT
@@ -76,125 +86,134 @@ ORDER BY t.Row_No]]>
           + ($V{Sum_Female}==null?0:$V{Sum_Female}.intValue())]]></variableExpression>
 	</variable>
 	<title>
-		<band height="44">
+		<band height="120">
 			<staticText>
-				<reportElement x="0" y="0" width="802" height="18" uuid="8d7a6cbe-8c91-4c77-8f11-5e2d8fd6b1a1"/>
+				<reportElement style="SectionTitle" x="0" y="0" width="1210" height="28" uuid="8d7a6cbe-8c91-4c77-8f11-5e2d8fd6b1a1"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font size="11" isBold="true"/>
+					<paragraph leftIndent="8" rightIndent="8" spacingBefore="2" spacingAfter="2"/>
+				</textElement>
+				<text><![CDATA[Section 5: Pivotal Programme Report]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="36" width="1210" height="18" uuid="0a9f1a8a-9d5e-4a7f-8e3b-3c2f8f2c4f20"/>
+				<textElement verticalAlignment="Middle">
+					<font size="12" isBold="true"/>
+					<paragraph leftIndent="8" rightIndent="8"/>
 				</textElement>
 				<text><![CDATA[5.2 Summary of Planned Employee Training Interventions for the period of 2025]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="0" y="20" width="802" height="16" uuid="0a9f1a8a-9d5e-4a7f-8e3b-3c2f8f2c4f20"/>
+				<reportElement x="0" y="58" width="1210" height="18" uuid="0a9f1a8a-9d5e-4a7f-8e3b-3c2f8f2c4f21"/>
 				<textElement verticalAlignment="Middle">
-					<font size="9" isBold="true"/>
+					<font size="12" isBold="true"/>
+					<paragraph leftIndent="8" rightIndent="8"/>
 				</textElement>
 				<text><![CDATA[5.2.1 Planned number to be trained per Occupational Group]]></text>
 			</staticText>
 		</band>
 	</title>
 	<columnHeader>
-		<band height="44">
+		<band height="70">
 			<staticText>
-				<reportElement style="HdrSmall" x="0" y="0" width="175" height="44" uuid="41f99f7a-7a5d-4c88-b42e-fd8f1fe0c8a2"/>
+				<reportElement style="HdrSmall" x="0" y="0" width="265" height="70" uuid="41f99f7a-7a5d-4c88-b42e-fd8f1fe0c8a2"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Specialisation / Occupation Title]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="175" y="0" width="42" height="44" uuid="6c6d0c86-11cf-4a06-98c4-9bb1a7b5e6f2"/>
+				<reportElement style="HdrSmall" x="265" y="0" width="75" height="70" uuid="6c6d0c86-11cf-4a06-98c4-9bb1a7b5e6f2"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Code]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="217" y="0" width="105" height="44" uuid="b2d8a2d6-52f1-4b3b-bc30-2e4f3a3a6b31"/>
+				<reportElement style="HdrSmall" x="340" y="0" width="155" height="70" uuid="b2d8a2d6-52f1-4b3b-bc30-2e4f3a3a6b31"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Qualification / Learning Programme Type]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="322" y="0" width="98" height="44" uuid="d6e3d5b7-4a1a-4f90-9ce1-1c2d4e5f6a10"/>
+				<reportElement style="HdrSmall" x="495" y="0" width="145" height="70" uuid="d6e3d5b7-4a1a-4f90-9ce1-1c2d4e5f6a10"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Please add details of learning programme from lists supplied]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="420" y="0" width="99" height="44" uuid="2b45c3d6-1c28-4a74-8b63-5f7e8d9a0b12"/>
+				<reportElement style="HdrSmall" x="640" y="0" width="150" height="70" uuid="2b45c3d6-1c28-4a74-8b63-5f7e8d9a0b12"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Please specify if study field or specialisation is not in previous column]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="519" y="0" width="64" height="22" uuid="7a1c3b5d-0f1e-4b7f-8d3a-2c6e9f1a4b5c"/>
+				<reportElement style="HdrSmall" x="790" y="0" width="96" height="30" uuid="7a1c3b5d-0f1e-4b7f-8d3a-2c6e9f1a4b5c"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Gender]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="519" y="22" width="32" height="22" uuid="1e2f3a4b-5c6d-7e8f-9012-3a4b5c6d7e8f"/>
+				<reportElement style="HdrSmall" x="790" y="30" width="48" height="40" uuid="1e2f3a4b-5c6d-7e8f-9012-3a4b5c6d7e8f"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Male]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="551" y="22" width="32" height="22" uuid="9f8e7d6c-5b4a-3210-9e8d-7c6b5a4f3e2d"/>
+				<reportElement style="HdrSmall" x="838" y="30" width="48" height="40" uuid="9f8e7d6c-5b4a-3210-9e8d-7c6b5a4f3e2d"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Female]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="583" y="0" width="128" height="22" uuid="c2d3e4f5-6789-4abc-9def-0123456789ab"/>
+				<reportElement style="HdrSmall" x="886" y="0" width="192" height="30" uuid="c2d3e4f5-6789-4abc-9def-0123456789ab"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Race]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="583" y="22" width="32" height="22" uuid="aa11bb22-cc33-dd44-ee55-ff6677889900"/>
+				<reportElement style="HdrSmall" x="886" y="30" width="48" height="40" uuid="aa11bb22-cc33-dd44-ee55-ff6677889900"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[African]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="615" y="22" width="32" height="22" uuid="00112233-4455-6677-8899-aabbccddeeff"/>
+				<reportElement style="HdrSmall" x="934" y="30" width="48" height="40" uuid="00112233-4455-6677-8899-aabbccddeeff"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Coloured]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="647" y="22" width="32" height="22" uuid="11223344-5566-7788-99aa-bbccddeeff00"/>
+				<reportElement style="HdrSmall" x="982" y="30" width="48" height="40" uuid="11223344-5566-7788-99aa-bbccddeeff00"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Indian]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="679" y="22" width="32" height="22" uuid="22334455-6677-8899-aabb-ccddeeff0011"/>
+				<reportElement style="HdrSmall" x="1030" y="30" width="48" height="40" uuid="22334455-6677-8899-aabb-ccddeeff0011"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[White]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="711" y="0" width="32" height="44" uuid="33445566-7788-99aa-bbcc-ddeeff001122"/>
+				<reportElement style="HdrSmall" x="1078" y="0" width="52" height="70" uuid="33445566-7788-99aa-bbcc-ddeeff001122"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Disabled]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="743" y="0" width="59" height="44" uuid="44556677-8899-aabb-ccdd-eeff00112233"/>
+				<reportElement style="HdrSmall" x="1130" y="0" width="80" height="70" uuid="44556677-8899-aabb-ccdd-eeff00112233"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -203,94 +222,108 @@ ORDER BY t.Row_No]]>
 		</band>
 	</columnHeader>
 	<detail>
-		<band height="16">
-			<textField isBlankWhenNull="true">
-				<reportElement style="CellText" x="0" y="0" width="175" height="16" uuid="5a7b9c1d-2e3f-4a5b-8c6d-7e8f9a0b1c2d"/>
+		<band height="26" splitType="Stretch">
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="0" y="0" width="265" height="26" uuid="5a7b9c1d-2e3f-4a5b-8c6d-7e8f9a0b1c2d"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<paragraph leftIndent="4" rightIndent="4"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$F{specialisation}]]></textFieldExpression>
 			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement style="CellText" x="175" y="0" width="42" height="16" uuid="6b8c9d0e-1f2a-3b4c-5d6e-7f8091a2b3c4"/>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="265" y="0" width="75" height="26" uuid="6b8c9d0e-1f2a-3b4c-5d6e-7f8091a2b3c4"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<paragraph leftIndent="2" rightIndent="2"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$F{code}]]></textFieldExpression>
 			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement style="CellText" x="217" y="0" width="105" height="16" uuid="7c9d0e1f-2a3b-4c5d-6e7f-8091a2b3c4d5"/>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="340" y="0" width="155" height="26" uuid="7c9d0e1f-2a3b-4c5d-6e7f-8091a2b3c4d5"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<paragraph leftIndent="4" rightIndent="4"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$F{learning_programme_type}]]></textFieldExpression>
 			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement style="CellText" x="322" y="0" width="98" height="16" uuid="8d0e1f2a-3b4c-5d6e-7f80-91a2b3c4d5e6"/>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="495" y="0" width="145" height="26" uuid="8d0e1f2a-3b4c-5d6e-7f80-91a2b3c4d5e6"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<paragraph leftIndent="4" rightIndent="4"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$F{learning_programme_detail}]]></textFieldExpression>
 			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement style="CellText" x="420" y="0" width="99" height="16" uuid="9e1f2a3b-4c5d-6e7f-8091-a2b3c4d5e6f7"/>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="640" y="0" width="150" height="26" uuid="9e1f2a3b-4c5d-6e7f-8091-a2b3c4d5e6f7"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<paragraph leftIndent="4" rightIndent="4"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$F{study_field_specify}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement style="CellNum" x="519" y="0" width="32" height="16" uuid="a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="790" y="0" width="48" height="26" uuid="a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{male_cnt}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement style="CellNum" x="551" y="0" width="32" height="16" uuid="b2c3d4e5-f607-4b8c-9d0e-1f2a3b4c5d6e"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="838" y="0" width="48" height="26" uuid="b2c3d4e5-f607-4b8c-9d0e-1f2a3b4c5d6e"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{female_cnt}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement style="CellNum" x="583" y="0" width="32" height="16" uuid="c3d4e5f6-0718-4c9d-0e1f-2a3b4c5d6e7f"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="886" y="0" width="48" height="26" uuid="c3d4e5f6-0718-4c9d-0e1f-2a3b4c5d6e7f"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{african_cnt}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement style="CellNum" x="615" y="0" width="32" height="16" uuid="d4e5f607-1829-4d0e-1f2a-3b4c5d6e7f80"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="934" y="0" width="48" height="26" uuid="d4e5f607-1829-4d0e-1f2a-3b4c5d6e7f80"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{coloured_cnt}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement style="CellNum" x="647" y="0" width="32" height="16" uuid="e5f60718-293a-4e1f-2a3b-4c5d6e7f8091"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="982" y="0" width="48" height="26" uuid="e5f60718-293a-4e1f-2a3b-4c5d6e7f8091"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{indian_cnt}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement style="CellNum" x="679" y="0" width="32" height="16" uuid="f6071829-3a4b-4f2a-3b4c-5d6e7f8091a2"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="1030" y="0" width="48" height="26" uuid="f6071829-3a4b-4f2a-3b4c-5d6e7f8091a2"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{white_cnt}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement style="CellNum" x="711" y="0" width="32" height="16" uuid="0718293a-4b5c-402a-9b3c-5d6e7f8091a3"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="1078" y="0" width="52" height="26" uuid="0718293a-4b5c-402a-9b3c-5d6e7f8091a3"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{disabled_cnt}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="CellNum" x="743" y="0" width="59" height="16" uuid="18293a4b-5c6d-4a3b-8c9d-0e1f2a3b4c5e"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="1130" y="0" width="80" height="26" uuid="18293a4b-5c6d-4a3b-8c9d-0e1f2a3b4c5e"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -299,130 +332,97 @@ ORDER BY t.Row_No]]>
 		</band>
 	</detail>
 	<summary>
-		<band height="32">
+		<band height="56">
 			<staticText>
-				<reportElement style="HdrSmall" x="0" y="0" width="519" height="16" uuid="9a0b1c2d-3e4f-4a5b-8c6d-7e8f9a0b1c2e"/>
+				<reportElement style="HdrSmall" x="0" y="0" width="790" height="28" uuid="9a0b1c2d-3e4f-4a5b-8c6d-7e8f9a0b1c2e"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
-				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<paragraph leftIndent="8" rightIndent="6"/>
+				</textElement>
 				<text><![CDATA[Total]]></text>
 			</staticText>
 			<textField>
-				<reportElement style="CellNum" x="519" y="0" width="32" height="16" uuid="8c088b5e-850c-4718-a4e7-a81c68078125"/>
+				<reportElement style="CellNum" x="790" y="0" width="48" height="28" uuid="8c088b5e-850c-4718-a4e7-a81c68078125"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_Male}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="CellNum" x="551" y="0" width="32" height="16" uuid="eb521756-7a6b-4210-96a9-bbdd5134a02f"/>
+				<reportElement style="CellNum" x="838" y="0" width="48" height="28" uuid="eb521756-7a6b-4210-96a9-bbdd5134a02f"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_Female}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="CellNum" x="583" y="0" width="32" height="16" uuid="d96c8684-1f18-436e-aca8-f849d07989a1"/>
+				<reportElement style="CellNum" x="886" y="0" width="48" height="28" uuid="d96c8684-1f18-436e-aca8-f849d07989a1"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_African}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="CellNum" x="615" y="0" width="32" height="16" uuid="e4570058-7fca-4cf2-9dc2-dd56655a84ad"/>
+				<reportElement style="CellNum" x="934" y="0" width="48" height="28" uuid="e4570058-7fca-4cf2-9dc2-dd56655a84ad"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_Coloured}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="CellNum" x="647" y="0" width="32" height="16" uuid="fd5bd3d7-306e-4965-aa8e-74acad150526"/>
+				<reportElement style="CellNum" x="982" y="0" width="48" height="28" uuid="fd5bd3d7-306e-4965-aa8e-74acad150526"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_Indian}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="CellNum" x="679" y="0" width="32" height="16" uuid="e29da1d1-0d97-45a6-9ff2-544e873c01e6"/>
+				<reportElement style="CellNum" x="1030" y="0" width="48" height="28" uuid="e29da1d1-0d97-45a6-9ff2-544e873c01e6"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_White}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="CellNum" x="711" y="0" width="32" height="16" uuid="4f47afe3-ab0f-463d-8cf1-73066f8ed0ad"/>
+				<reportElement style="CellNum" x="1078" y="0" width="52" height="28" uuid="4f47afe3-ab0f-463d-8cf1-73066f8ed0ad"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_Disabled}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="CellNum" x="743" y="0" width="59" height="16" uuid="049f8e62-2076-4d41-ad1e-796e605b8788"/>
+				<reportElement style="CellNum" x="1130" y="0" width="80" height="28" uuid="049f8e62-2076-4d41-ad1e-796e605b8788"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Grand_Total_Planned}]]></textFieldExpression>
 			</textField>
-			<textField>
-				<reportElement style="HdrSmall" x="0" y="16" width="519" height="16" uuid="0b1c2d3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e"/>
+			<staticText>
+				<reportElement style="HdrSmall" x="0" y="28" width="790" height="28" uuid="0b1c2d3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
-				<textElement textAlignment="Left" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA["Grand Total"]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="519" y="16" width="32" height="16" uuid="1b4cfe82-0704-4adb-b44c-f73d2acfdf2b"/>
-				<box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<paragraph leftIndent="8" rightIndent="6"/>
+				</textElement>
+				<text><![CDATA[Grand Total]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="790" y="28" width="288" height="28" uuid="0b1c2d3e-4f5a-4b6c-8d7e-9f0a1b2c3d4f"/>
+				<graphicElement>
 					<pen lineWidth="0.5"/>
-				</box>
-				<textFieldExpression><![CDATA[$V{Sum_Male}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="551" y="16" width="32" height="16" uuid="a87c148b-2642-4acd-8499-daa7ac3ed713"/>
-				<box>
+				</graphicElement>
+			</rectangle>
+			<rectangle>
+				<reportElement x="1078" y="28" width="52" height="28" uuid="0b1c2d3e-4f5a-4b6c-8d7e-9f0a1b2c3d50"/>
+				<graphicElement>
 					<pen lineWidth="0.5"/>
-				</box>
-				<textFieldExpression><![CDATA[$V{Sum_Female}]]></textFieldExpression>
-			</textField>
+				</graphicElement>
+			</rectangle>
 			<textField>
-				<reportElement style="CellNum" x="583" y="16" width="32" height="16" uuid="83108409-6eb5-4da1-8471-dd2cc7019175"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textFieldExpression><![CDATA[$V{Sum_African}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="615" y="16" width="32" height="16" uuid="b86d2130-a351-42b5-b82b-ff2418667a2e"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textFieldExpression><![CDATA[$V{Sum_Coloured}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="647" y="16" width="32" height="16" uuid="85609f27-921f-49c0-a4a1-6942267152d1"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textFieldExpression><![CDATA[$V{Sum_Indian}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="679" y="16" width="32" height="16" uuid="74aada63-71e2-473a-b89e-b483bc467b81"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textFieldExpression><![CDATA[$V{Sum_White}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="711" y="16" width="32" height="16" uuid="d54b58e0-63ce-4f3f-9932-c0f8f9beb18d"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textFieldExpression><![CDATA[$V{Sum_Disabled}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="743" y="16" width="59" height="16" uuid="dd36c2d4-df7b-4ce1-960f-45bcafd773bc"/>
+				<reportElement style="CellNum" x="1130" y="28" width="80" height="28" uuid="dd36c2d4-df7b-4ce1-960f-45bcafd773bc"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>

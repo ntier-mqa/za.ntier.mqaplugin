@@ -231,5 +231,35 @@
 				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_8_finance_train_compare.jasper"]]></subreportExpression>
 			</subreport>
 		</band>
+		<band height="1801" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="1811" height="1270" uuid="29c7b93f-2ecc-4fa2-8d55-a18452211cc3"/>
+				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
+					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_9_Levy_Paying_Status.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+		<band height="1801" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="1811" height="1270" uuid="29c7b93f-2ecc-4fa2-8d55-a18452211cc3"/>
+				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
+					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_10_Signatories.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+		<band height="1801" splitType="Stretch">
+			<subreport>
+				<reportElement x="0" y="0" width="1811" height="1270" uuid="29c7b93f-2ecc-4fa2-8d55-a18452211cc3"/>
+				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
+					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "WSP_ATR_Section_11_Comments.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
 	</detail>
 </jasperReport>
