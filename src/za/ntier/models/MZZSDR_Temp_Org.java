@@ -120,7 +120,7 @@ public class MZZSDR_Temp_Org extends X_ZZ_SDR_Temp_Org {
         bp.setName2(getZZ_TradingAs());
         bp.setReferenceNo(getZZ_Organisation_Reg_No());
         bp.setIsCustomer(true);
-        bp.setIsVendor(false);
+        bp.setIsVendor(true);
         bp.setZZ_SDL_No(sdlNo);
      // Default BP Group = UNKNOWN
         int bpGroupID = DB.getSQLValueEx(

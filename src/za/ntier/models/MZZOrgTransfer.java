@@ -120,19 +120,20 @@ public class MZZOrgTransfer extends X_ZZ_Org_Transfer {
 		
 	    boolean docsComplete =
 	            isZZ_MotivationUploaded()
-	            && isZZ_FromSDRUploaded()
 	            && isZZ_SignedISTUploaded();
 
-	    if (docsComplete
-	            && (getZZ_DocStatus() == null || getZZ_DocStatus().isEmpty())
-	            )
-	    {
-	        setZZ_DocStatus("IP"); //In Progress
-	        setZZ_DocAction("UP"); //Update
+	    boolean docsChanged =
+	            is_ValueChanged("ZZ_MotivationUploaded") ||
+	            is_ValueChanged("ZZ_SignedISTUploaded");
 
-	        //MClient client = MClient.get(getCtx());
-	        //sendEmailToMgrSDR(client);
+	    if (docsComplete
+	            && docsChanged
+	            && ("DR".equals(getZZ_DocStatus()) || getZZ_DocStatus() == null))
+	    {
+	        setZZ_DocStatus("IP"); // In Progress
+	        setZZ_DocAction("UP"); // Update
 	    }
+
 		
 	    if (newRecord || is_ValueChanged("ZZ_SDL_No"))
 	    {
