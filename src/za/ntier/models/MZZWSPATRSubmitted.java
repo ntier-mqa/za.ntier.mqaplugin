@@ -440,7 +440,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 	private File createPDF(String html,String fileName) throws Exception
 	{
-		File pdfFile = File.createTempFile("QueryLetter_", ".pdf");
+		File pdfFile = File.createTempFile(fileName + "_", ".pdf");
 
 		Document document = new Document();
 		PdfWriter.getInstance(document, new FileOutputStream(pdfFile));
