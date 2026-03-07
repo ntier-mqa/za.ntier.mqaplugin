@@ -28,6 +28,7 @@ import com.lowagie.text.pdf.PdfWriter;
 
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Checklist_Ref;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
+import za.co.ntier.wsp_atr.repo.WspAtrUploadsRepository.SdrWindowConfig;
 
 
 
@@ -112,7 +113,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 				&& X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Query.equals(getZZ_DocStatus())) {
 			if (isZZ_IsQuery()) {
 				try {
-					sendQueryEmailWithPDF(WSP_ATRQuery_TEMPLATE_UUID);
+					sendQueryEmailWithPDF(WSP_ATRQuery_TEMPLATE_UUID,"QueryLetter");
 				} catch (Exception e) {
 					log.severe("Failed to send query email: " + e.getMessage());
 				}
@@ -121,13 +122,31 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 		if (ok && is_ValueChanged(COLUMNNAME_ZZ_DocStatus) && getZZ_DocStatus() != null && getZZ_DocStatus().equals("AP") ) {  // Approved
 			try {
-				sendQueryEmailWithPDF(WSP_ATR_FINAL_APPROVAL_TEMPLATE_UUID);
+				sendQueryEmailWithPDF(WSP_ATR_FINAL_APPROVAL_TEMPLATE_UUID,"WSP-ATR_Approval_" + getSdlNumber() +"_" + getFiscalYear(getAD_Client_ID()));
 			} catch (Exception e) {
 				log.severe("Failed to send approval email: " + e.getMessage());
 			}
 		}
 		return ok;
 	}	
+	
+	public String getFiscalYear(int adClientId) {
+        // choose the “active” configuration row; if you have multiple per org, adjust filters
+        List<List<Object>> rows = DB.getSQLArrayObjectsEx(null,
+            "SELECT y.FiscalYear " +
+            "FROM zz_sdr_configuration s" +
+            "Join C_Year y on s.ZZ_FinYear_ID = y.C_Year_ID " +
+            "WHERE s.ad_client_id=? AND s.isactive='Y' " +
+            "ORDER BY s.updated DESC " +
+            "FETCH FIRST 1 ROWS ONLY",
+            adClientId
+        );
+        if (rows == null || rows.isEmpty())
+            return null;
+
+        List<Object> r = rows.get(0);
+        return (String) r.get(0);
+    }
 
 	private void ensureVerificationChecklist() {
 		int submittedId = getZZ_WSP_ATR_Submitted_ID();
@@ -284,7 +303,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	}
 
 
-	private void sendQueryEmailWithPDF(String templateUUID) throws Exception {
+	private void sendQueryEmailWithPDF(String templateUUID,String fileName) throws Exception {
 
 		int adUserId = getSdfUserId();
 
@@ -324,7 +343,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 			subject = "WSP-ATR Query Notification";
 
 
-		File pdf = createPDF(html);
+		File pdf = createPDF(html,fileName);
 
 		// Sender
 		MUser fromUser =
@@ -419,7 +438,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 		return reasons.toString();
 	}
 
-	private File createPDF(String html) throws Exception
+	private File createPDF(String html,String fileName) throws Exception
 	{
 		File pdfFile = File.createTempFile("QueryLetter_", ".pdf");
 
