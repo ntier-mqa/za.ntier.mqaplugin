@@ -24,6 +24,7 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
 
     private final ExcelErrorMarker marker = new ExcelErrorMarker();
     private final ExcelErrorLogSheet errorLog = new ExcelErrorLogSheet();
+    private static final int MAX_ERRORS = 100;
 
     public ColumnModeSheetValidator(ReferenceLookupService refService, SvrProcess proc) {
         super(refService, proc);
@@ -71,15 +72,22 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
             startRow = 4;
         }
 
+        int emptyRowsInARow = 0;
         for (int r = startRow; r <= lastRow; r++) {
             Row row = sheet.getRow(r);
             if (row == null) {
                 continue;
             }
 
-            if (isRowCompletelyEmpty(row, colIndexToMeta.keySet(), formatter, evaluator)) {
+            if (row == null || isRowCompletelyEmpty(row, colIndexToMeta.keySet(), formatter, evaluator)) {
+            	emptyRowsInARow++;
+				if (emptyRowsInARow > 10) {
+					break;  // to many empty lines.  Assume the rest are empty
+				}
                 continue;
             }
+            
+            emptyRowsInARow = 0;
 
             if (shouldIgnoreRowBecauseOfIgnoreIfBlank(row, colIndexToMeta.values(), formatter, evaluator)) {
                 continue;
@@ -104,6 +112,11 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
                         msg
                     );
                     errors++;
+
+                    if (errors >= MAX_ERRORS) {
+                        errorLog.appendTooManyErrors(wb);
+                        return errors;
+                    }
                 }
             }
 
@@ -136,6 +149,11 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
                         msg
                     );
                     errors++;
+
+                    if (errors >= MAX_ERRORS) {
+                        errorLog.appendTooManyErrors(wb);
+                        return errors;
+                    }
                 }
             }
         }
