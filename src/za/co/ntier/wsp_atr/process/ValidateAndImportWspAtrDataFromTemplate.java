@@ -141,6 +141,13 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 					p_ZZ_WSP_ATR_Submitted_ID,
 					X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Importing
 					);
+			// So garbage collector runs
+			formatter = null;
+			evaluator = null;
+			headers = null;
+			cleaner = null;
+			loadResult = null;
+			submitted = null;
 		} catch (OutOfMemoryError oom) {
 			log.severe("OutOfMemoryError at stage: " + stage);
 			throw oom;
@@ -161,7 +168,11 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 				wb = null;
 			}
 		}
-		logHeap("BEFORE IMPORT PROCESS");
+		logHeap("BEFORE IMPORT PROCESS and GC");
+		
+		//System.gc();
+		//Thread.sleep(1000);
+		//logHeap("AFTER VALIDATION GC");
 
 		try {
 			//  ImportWspAtrDataFromTemplate importProc = new ImportWspAtrDataFromTemplate();
@@ -179,6 +190,7 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 					p_ZZ_WSP_ATR_Submitted_ID,
 					X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported
 					);
+			
 			return "";
 
 		} catch (Exception ex) {
