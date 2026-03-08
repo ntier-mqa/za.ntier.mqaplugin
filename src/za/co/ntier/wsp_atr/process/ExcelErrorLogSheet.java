@@ -142,4 +142,22 @@ public class ExcelErrorLogSheet {
         LINK_STYLE_CACHE.put(wb, style);
         return style;
     }
+    
+    public void appendTooManyErrors(Workbook wb) {
+
+        Sheet errSheet = getOrCreateErrorsSheet(wb);
+        int nextRow = Math.max(errSheet.getLastRowNum() + 1, 1);
+
+        Row r = errSheet.createRow(nextRow);
+
+        r.createCell(COL_TAB).setCellValue("");
+        r.createCell(COL_HEADER).setCellValue("");
+        r.createCell(COL_ROW).setCellValue("");
+        r.createCell(COL_COL).setCellValue("");
+        r.createCell(COL_LINK).setCellValue("");
+
+        r.createCell(COL_MESSAGE).setCellValue(
+            "Too many errors found. Validation stopped. Please correct the errors listed above and try again."
+        );
+    }
 }

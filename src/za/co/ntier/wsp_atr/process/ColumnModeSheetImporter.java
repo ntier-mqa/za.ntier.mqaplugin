@@ -10,6 +10,7 @@ import java.util.logging.Level;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -54,8 +55,8 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 			X_ZZ_WSP_ATR_Submitted submitted,
 			X_ZZ_WSP_ATR_Lookup_Mapping mappingHeader,
 			String trxName,
-			ImportWspAtrDataFromTemplate process,
-			DataFormatter formatter) throws IllegalStateException, SQLException {
+			DataFormatter formatter,
+			FormulaEvaluator evaluator) throws IllegalStateException, SQLException {
 
 		Sheet sheet = getSheetOrThrow(wb, mappingHeader); 
 		List<X_ZZ_WSP_ATR_Lookup_Mapping_Detail> details =
@@ -135,7 +136,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 					row,
 					colIndexToMeta.keySet(),
 					formatter,
-					process.getEvaluator())) {
+					evaluator)) {
 				emptyRowsInARow++;
 				if (emptyRowsInARow > 10) {
 					break;  // to many empty lines.  Assume the rest are empty
@@ -150,13 +151,13 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 					row,
 					colIndexToMeta.values(),
 					formatter,
-					process.getEvaluator())) {
+					evaluator)) {
 				continue;
 			}
-			if (isRowEmptyByMappedColumns(row, colIndexToMeta.keySet(), formatter,process))
+			if (isRowEmptyByMappedColumns(row, colIndexToMeta.keySet(), formatter,evaluator))
 				continue;
 
-			if (isMissingMandatory(row, colIndexToMeta.values(), formatter,process)) {
+			if (isMissingMandatory(row, colIndexToMeta.values(), formatter,evaluator)) {
 				// optional log
 			//	process.addLog("Skipping row " + (r + 1) + " - mandatory column missing (tab " + mappingHeader.getZZ_Tab_Name() + ")");
 				continue;
@@ -188,7 +189,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 					ColumnMeta meta = entry.getValue();
 					int colIndex = meta.columnIndex;
 
-					String mainText = getCellText(row, colIndex, formatter,process.getEvaluator());
+					String mainText = getCellText(row, colIndex, formatter,evaluator);
 					String valueText = null;
 					String nameText  = null;
 
@@ -199,10 +200,10 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 
 					if (meta.createIfNotExist && isRefColumn) {
 						if (meta.valueColumnIndex != null) {
-							valueText = getCellText(row, meta.valueColumnIndex, formatter,process.getEvaluator());
+							valueText = getCellText(row, meta.valueColumnIndex, formatter,evaluator);
 						}
 						if (meta.nameColumnIndex != null) {
-							nameText = getCellText(row, meta.nameColumnIndex, formatter,process.getEvaluator());
+							nameText = getCellText(row, meta.nameColumnIndex, formatter,evaluator);
 						}
 
 						if (Util.isEmpty(mainText, true)
@@ -250,9 +251,9 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 			    // IMPORTANT: rollback resets aborted transaction state in PostgreSQL
 			    DB.rollback(true, trxName);
 
-			    process.addLog("ERROR row " + (r + 1)
-			        + " (tab " + mappingHeader.getZZ_Tab_Name() + "): "
-			        + ex.getClass().getSimpleName() + " - " + ex.getMessage());
+			    //process.addLog("ERROR row " + (r + 1)
+			    //    + " (tab " + mappingHeader.getZZ_Tab_Name() + "): "
+			    //    + ex.getClass().getSimpleName() + " - " + ex.getMessage());
 
 			    // optional: also log stacktrace to server log
 			    log.log(Level.SEVERE,
@@ -542,9 +543,9 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 	private boolean isRowEmptyByMappedColumns(Row row,
 			Iterable<Integer> colIndexes,
 			DataFormatter formatter,
-			ImportWspAtrDataFromTemplate process) {
+			FormulaEvaluator evaluator) {
 		for (Integer colIndex : colIndexes) {
-			String txt = getCellText(row, colIndex, formatter,process.getEvaluator());
+			String txt = getCellText(row, colIndex, formatter,evaluator);
 			if (!Util.isEmpty(txt, true))
 				return false;
 		}
@@ -554,12 +555,12 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 	private boolean isMissingMandatory(Row row,
 			Iterable<ColumnMeta> metas,
 			DataFormatter formatter,
-			ImportWspAtrDataFromTemplate process) {
+			FormulaEvaluator evaluator) {
 		for (ColumnMeta meta : metas) {
 			if (!meta.mandatory)
 				continue;
 
-			String txt = getCellText(row, meta.columnIndex, formatter,process.getEvaluator());
+			String txt = getCellText(row, meta.columnIndex, formatter,evaluator);
 			if (Util.isEmpty(txt, true)) {
 				return true;
 			}
