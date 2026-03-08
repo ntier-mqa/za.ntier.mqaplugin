@@ -51,6 +51,7 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
         int totalErrors = 0;
         boolean validationCompletedWithErrors = false;
         Workbook wb = null;
+        String stage = "start";
 
         try {
             if (p_ZZ_WSP_ATR_Submitted_ID <= 0) {
@@ -61,19 +62,26 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
                 p_ZZ_WSP_ATR_Submitted_ID,
                 X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating
             );
+            stage = "delete Records commited record";
             deleteRecordsCommitted(p_ZZ_WSP_ATR_Submitted_ID);
 
             Properties ctx = Env.getCtx();
             String trxName = get_TrxName();
 
+            stage = "load submitted record";
             X_ZZ_WSP_ATR_Submitted submitted =
                 new X_ZZ_WSP_ATR_Submitted(ctx, p_ZZ_WSP_ATR_Submitted_ID, trxName);
 
+            logHeap("BEFORE load workbook");
             WorkbookLoadResult loadResult = loadWorkbook(submitted);
             wb = loadResult.workbook;
+            logHeap("AFTER load workbook");
 
+            stage = "create formatter/evaluator";
+            logHeap("BEFORE create evaluator");
             DataFormatter formatter = new DataFormatter();
             FormulaEvaluator evaluator = wb.getCreationHelper().createFormulaEvaluator();
+            logHeap("AFTER create evaluator");
 
             List<X_ZZ_WSP_ATR_Lookup_Mapping> headers = new Query(
                 ctx,
@@ -87,10 +95,14 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
                 throw new AdempiereException("No WSP/ATR mapping header records defined");
             }
 
+            stage = "reset workbook before validation";
             ExcelValidationCleaner cleaner = new ExcelValidationCleaner();
             cleaner.resetWorkbookBeforeValidation(wb);
 
             for (X_ZZ_WSP_ATR_Lookup_Mapping mapHeader : headers) {
+            	stage = "validate sheet: " + mapHeader.getZZ_Tab_Name()
+                + " / tableId=" + mapHeader.getAD_Table_ID();
+            	logHeap("BEFORE " + stage);
                 if (mapHeader.getAD_Table_ID() <= 0) {
                     continue;
                 }
@@ -102,9 +114,11 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
                 } else {
                     // Row-mode validator here later
                 }
+                logHeap("AFTER " + stage);
             }
 
             if (totalErrors > 0) {
+            	stage = "attach error workbook";
                 String errName = buildErrorFileName(submitted, loadResult.sourceFileName);
                 attachErrorWorkbook(submitted, wb, errName);
 
@@ -126,8 +140,10 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
                 p_ZZ_WSP_ATR_Submitted_ID,
                 X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Importing
             );
-
-        } catch (Exception ex) {
+        } catch (OutOfMemoryError oom) {
+            log.severe("OutOfMemoryError at stage: " + stage);
+            throw oom;
+        }  catch (Exception ex) {
             if (!validationCompletedWithErrors) {
                 updateSubmittedStatusCommitted(
                     p_ZZ_WSP_ATR_Submitted_ID,
@@ -162,14 +178,33 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
             throw ex;
         }
     }
+    
+    private void logHeap(String label) {
+        Runtime rt = Runtime.getRuntime();
+        long max = rt.maxMemory();
+        long total = rt.totalMemory();
+        long free = rt.freeMemory();
+        long used = total - free;
+
+        log.warning(label
+            + " | usedMB=" + (used / 1024 / 1024)
+            + " totalMB=" + (total / 1024 / 1024)
+            + " maxMB=" + (max / 1024 / 1024)
+            + " freeMB=" + (free / 1024 / 1024));
+    }
 
     private void attachErrorWorkbook(X_ZZ_WSP_ATR_Submitted submitted, Workbook wb, String fileName) throws Exception {
+    	logHeap("attachErrorWorkbook - start");
+
         byte[] data;
 
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
             wb.write(bos);
             bos.flush();
+            logHeap("attachErrorWorkbook - after wb.write");
             data = bos.toByteArray();
+            log.warning("Generated workbook bytes=" + (data.length / 1024 / 1024) + "MB");
+            logHeap("attachErrorWorkbook - after toByteArray");
         }
 
         if (data == null || data.length == 0) {
