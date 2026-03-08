@@ -163,8 +163,16 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
         logHeap("BEFORE IMPORT PROCESS");
 
         try {
-            ImportWspAtrDataFromTemplate importProc = new ImportWspAtrDataFromTemplate();
-            importProc.startProcess(getCtx(), getProcessInfo(), Trx.get(get_TrxName(), false));
+          //  ImportWspAtrDataFromTemplate importProc = new ImportWspAtrDataFromTemplate();
+          //  importProc.startProcess(getCtx(), getProcessInfo(), Trx.get(get_TrxName(), false));
+            WspAtrImportService importService = new WspAtrImportService();
+            int totalImported = importService.importSubmitted(
+                    getCtx(),
+                    p_ZZ_WSP_ATR_Submitted_ID,
+                    get_TrxName(),
+                    this
+            );
+            addLog("Imported " + totalImported + " records from all mapped tabs");
 
             updateSubmittedStatusCommitted(
                 p_ZZ_WSP_ATR_Submitted_ID,
