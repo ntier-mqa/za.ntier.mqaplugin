@@ -48,6 +48,7 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 
     @Override
     protected String doIt() throws Exception {
+    	logHeap("PROCESS START");
         int totalErrors = 0;
         boolean validationCompletedWithErrors = false;
         Workbook wb = null;
@@ -159,6 +160,7 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
                 }
             }
         }
+        logHeap("BEFORE IMPORT PROCESS");
 
         try {
             ImportWspAtrDataFromTemplate importProc = new ImportWspAtrDataFromTemplate();
@@ -176,6 +178,8 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
                 X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_ErrorImporting
             );
             throw ex;
+        } finally {
+        	logHeap("PROCESS END BEFORE CLOSE");
         }
     }
     

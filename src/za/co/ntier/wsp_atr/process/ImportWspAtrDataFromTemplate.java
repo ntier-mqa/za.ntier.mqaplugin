@@ -32,8 +32,8 @@ public class ImportWspAtrDataFromTemplate extends SvrProcess {
 	private int p_ZZ_WSP_ATR_Submitted_ID;
 
 	private final ReferenceLookupService refService = new ReferenceLookupService();
-	
-	private FormulaEvaluator evaluator = null;
+
+	//private FormulaEvaluator evaluator = null;
 
 	@Override
 	protected void prepare() {
@@ -53,63 +53,77 @@ public class ImportWspAtrDataFromTemplate extends SvrProcess {
 		X_ZZ_WSP_ATR_Submitted submitted =
 				new X_ZZ_WSP_ATR_Submitted(ctx, p_ZZ_WSP_ATR_Submitted_ID, trxName);
 
-		Workbook wb = loadWorkbook(submitted);
-		DataFormatter formatter = new DataFormatter();
-		evaluator = wb.getCreationHelper().createFormulaEvaluator();
+		Workbook wb = null;
+		try {
+			wb = loadWorkbook(submitted);
+			DataFormatter formatter = new DataFormatter();
+			FormulaEvaluator evaluator = 
+		    wb.getCreationHelper().createFormulaEvaluator();
 
-		// Load all mapping headers for this process (you can filter by TabName if needed)
-		List<X_ZZ_WSP_ATR_Lookup_Mapping> headers = new Query(
-				ctx,
-				X_ZZ_WSP_ATR_Lookup_Mapping.Table_Name,
-				null,
-				trxName)
-				.setOnlyActiveRecords(true)
-				.list();
+			// Load all mapping headers for this process (you can filter by TabName if needed)
+			List<X_ZZ_WSP_ATR_Lookup_Mapping> headers = new Query(
+					ctx,
+					X_ZZ_WSP_ATR_Lookup_Mapping.Table_Name,
+					null,
+					trxName)
+					.setOnlyActiveRecords(true)
+					.list();
 
-		if (headers == null || headers.isEmpty()) {
-			throw new org.adempiere.exceptions.AdempiereException(
-					"No WSP/ATR mapping header records defined");
-		}
-
-		int totalImported = 0;
-		for (X_ZZ_WSP_ATR_Lookup_Mapping mapHeader : headers) {
-			if (mapHeader.getAD_Table_ID() <= 0) {
-				continue;
+			if (headers == null || headers.isEmpty()) {
+				throw new org.adempiere.exceptions.AdempiereException(
+						"No WSP/ATR mapping header records defined");
 			}
-			//if (mapHeader.getZZ_WSP_ATR_Lookup_Mapping_ID() != 1000007) {
-			//	continue;
-			//}
-			boolean isColumns = mapHeader.get_ValueAsBoolean("ZZ_Is_Columns");  // Y=column mode, N=row mode
+
+			int totalImported = 0;
+			for (X_ZZ_WSP_ATR_Lookup_Mapping mapHeader : headers) {
+				if (mapHeader.getAD_Table_ID() <= 0) {
+					continue;
+				}
+				//if (mapHeader.getZZ_WSP_ATR_Lookup_Mapping_ID() != 1000007) {
+				//	continue;
+				//}
+				//boolean isColumns = mapHeader.get_ValueAsBoolean("ZZ_Is_Columns");  // Y=column mode, N=row mode
 
 
-			IWspAtrSheetImporter importer = isColumns
-					? new ColumnModeSheetImporter(refService,this)
-							: new RowModeSheetImporter(refService,this);
-			importer.setLog(log);
+				IWspAtrSheetImporter importer =new ColumnModeSheetImporter(refService,this);
+				importer.setLog(log);
 
-			int count = 0;
-			try {
-				count = importer.importData(ctx, wb, submitted, mapHeader, trxName, this, formatter);
-			} catch (Exception e){
-				// IMPORTANT: rollback resets aborted transaction state in PostgreSQL
-			    DB.rollback(true, trxName);
+				int count = 0;
+				try {
+					count = importer.importData(ctx, wb, submitted, mapHeader, trxName,  formatter,evaluator);
+				} catch (Exception e){
+					// IMPORTANT: rollback resets aborted transaction state in PostgreSQL
+					DB.rollback(true, trxName);
 
-			    addLog("ERROR in Importer : " + e.getMessage());
+					addLog("ERROR in Importer : " + e.getMessage());
 
-			    // optional: also log stacktrace to server log
-			    log.log(Level.SEVERE,"ERROR in Importer : " + e.getMessage());
-			    throw e;
+					// optional: also log stacktrace to server log
+					log.log(Level.SEVERE,"ERROR in Importer : " + e.getMessage());
+					throw e;
+				}
+				totalImported += count;
+
 			}
-			totalImported += count;
+			
+			MZZWSPATRATRDetail.updateATRAndDeviation(ctx, p_ZZ_WSP_ATR_Submitted_ID, trxName);
+			MZZWSPATRHTVF.updateHTVFTotal(ctx, p_ZZ_WSP_ATR_Submitted_ID, trxName);
+			MZZWSPATRWSP.updateWSPTotal(ctx, p_ZZ_WSP_ATR_Submitted_ID, trxName);
+			MZZWSPATRSubmitted mZZWSPATRSubmitted = new MZZWSPATRSubmitted(ctx, p_ZZ_WSP_ATR_Submitted_ID, trxName);
 
+
+			addLog("The WSP-ATR import for " + mZZWSPATRSubmitted.getOrganisationName() + " with SDL Number " + mZZWSPATRSubmitted.getSdlNumber() + " was successful.");  // will be sent via emails
+			return "Imported " + totalImported + " records from all mapped tabs";
+			
+						
+			
+		} finally {
+		//	this.evaluator = null;
+			if (wb != null) {
+				try {
+					wb.close();
+				} catch (Exception ignore) {}
+			}
 		}
-		MZZWSPATRATRDetail.updateATRAndDeviation(ctx, p_ZZ_WSP_ATR_Submitted_ID, trxName);
-		MZZWSPATRHTVF.updateHTVFTotal(ctx, p_ZZ_WSP_ATR_Submitted_ID, trxName);
-		MZZWSPATRWSP.updateWSPTotal(ctx, p_ZZ_WSP_ATR_Submitted_ID, trxName);
-		MZZWSPATRSubmitted mZZWSPATRSubmitted = new MZZWSPATRSubmitted(ctx, p_ZZ_WSP_ATR_Submitted_ID, trxName);
-
-		addLog("The WSP-ATR import for " + mZZWSPATRSubmitted.getOrganisationName() + " with SDL Number " + mZZWSPATRSubmitted.getSdlNumber() + " was successful.");  // will be sent via emails
-		return "Imported " + totalImported + " records from all mapped tabs";
 	}
 
 	private Workbook loadWorkbook(X_ZZ_WSP_ATR_Submitted submitted) throws Exception {
@@ -159,7 +173,7 @@ public class ImportWspAtrDataFromTemplate extends SvrProcess {
 			return WorkbookFactory.create(is);
 		}
 	}
-
+/*
 	public FormulaEvaluator getEvaluator() {
 		return evaluator;
 	}
@@ -167,4 +181,5 @@ public class ImportWspAtrDataFromTemplate extends SvrProcess {
 	public void setEvaluator(FormulaEvaluator evaluator) {
 		this.evaluator = evaluator;
 	}
+	*/
 }
