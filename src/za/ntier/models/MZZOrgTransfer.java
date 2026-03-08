@@ -10,6 +10,7 @@ import org.compiere.util.Env;
 import org.compiere.util.Msg;
 import org.compiere.model.MUser;
 import org.compiere.model.MClient;
+import za.co.ntier.api.model.MBPartner_New;
 
 public class MZZOrgTransfer extends X_ZZ_Org_Transfer {
 
@@ -148,31 +149,46 @@ public class MZZOrgTransfer extends X_ZZ_Org_Transfer {
 	        setC_BPartner_ID(0);
 	        set_Value("ZZ_Organisation_Reg_No", null);
 
+	        // 1️⃣ Check SDR Temp Organisation table first
 	        MZZSDR_Temp_Org tempOrg = new Query(getCtx(),
-	        		MZZSDR_Temp_Org.Table_Name,
+	                MZZSDR_Temp_Org.Table_Name,
 	                "ZZ_SDL_No=? AND IsActive='Y'",
 	                get_TrxName())
 	                .setParameters(sdl)
 	                .first();
 
-	        if (tempOrg == null)
+	        if (tempOrg != null && tempOrg.getC_BPartner_ID() > 0)
 	        {
-	            log.saveError("Error", "No Organisation found for SDL Number");
-	            return false;
+	            setC_BPartner_ID(tempOrg.getC_BPartner_ID());
+	            set_Value("ZZ_Organisation_Reg_No", tempOrg.getZZ_Organisation_Reg_No());
+	            return true;
 	        }
 
-	        if (tempOrg.getC_BPartner_ID() <= 0)
-	        {
-	            log.saveError("Error", "Organisation not linked to Business Partner");
-	            return false;
-	        }
+	     // 2️⃣ Fallback: check Business Partner table
+	        MBPartner_New bp = new Query(getCtx(),
+	                "C_BPartner",
+	                "ZZ_SDL_No=? AND IsActive='Y'",
+	                get_TrxName())
+	                .setParameters(sdl)
+	                .first();
 
-	        setC_BPartner_ID(tempOrg.getC_BPartner_ID());
-	        set_Value("ZZ_Organisation_Reg_No",
-	                tempOrg.getZZ_Organisation_Reg_No());
+	        if (bp != null)
+	        {
+	            setC_BPartner_ID(bp.getC_BPartner_ID());
+
+	            // Map BP registration number to your field
+	            set_Value("ZZ_Organisation_Reg_No",
+	                    bp.get_ValueAsString("ZZ_Business_Reg_No"));
+
+	            return true;
+	        }
+	        // 3️⃣ Nothing found
+	        log.saveError("Error", "No Organisation found for SDL Number");
+	        return false;
 	    }
-
+	    
 	    return true;
+
 	}
 	@Override
 	protected boolean afterSave(boolean newRecord, boolean success) {
