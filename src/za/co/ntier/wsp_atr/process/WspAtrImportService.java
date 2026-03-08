@@ -3,7 +3,6 @@ package za.co.ntier.wsp_atr.process;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
-import java.util.logging.Level;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -15,6 +14,7 @@ import org.compiere.model.MAttachment;
 import org.compiere.model.MAttachmentEntry;
 import org.compiere.model.Query;
 import org.compiere.process.SvrProcess;
+import org.compiere.util.CLogger;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 
@@ -28,6 +28,9 @@ import za.ntier.models.MZZWSPATRWSP;
 public class WspAtrImportService {
 
     private final ReferenceLookupService refService = new ReferenceLookupService();
+    
+    private static final CLogger log = CLogger.getCLogger(WspAtrImportService.class);
+    
 
     public int importSubmitted(Properties ctx,
                                int submittedId,
@@ -38,12 +41,15 @@ public class WspAtrImportService {
             throw new AdempiereException("No WSP/ATR Submitted record selected");
         }
 
+        logHeap(process, "IMPORT SERVICE START");
+
         X_ZZ_WSP_ATR_Submitted submitted =
                 new X_ZZ_WSP_ATR_Submitted(ctx, submittedId, trxName);
 
         Workbook wb = null;
         try {
             wb = loadWorkbook(submitted);
+            logHeap(process, "IMPORT AFTER LOAD WORKBOOK");
 
             DataFormatter formatter = new DataFormatter();
             FormulaEvaluator evaluator = wb.getCreationHelper().createFormulaEvaluator();
@@ -66,7 +72,7 @@ public class WspAtrImportService {
                 if (mapHeader.getAD_Table_ID() <= 0) {
                     continue;
                 }
-
+                logHeap(process, "BEFORE IMPORT TAB: " + mapHeader.getZZ_Tab_Name());
                 IWspAtrSheetImporter importer = new ColumnModeSheetImporter(refService, process);
                // importer.setLog(process.getLog());
 
@@ -82,6 +88,7 @@ public class WspAtrImportService {
                     );
                     importer.importData(ctx, wb, submitted, mapHeader, trxName,  formatter,evaluator);
                     totalImported += count;
+                    logHeap(process, "AFTER IMPORT TAB: " + mapHeader.getZZ_Tab_Name());
 
                 } catch (Exception e) {
                     DB.rollback(true, trxName);
@@ -92,10 +99,11 @@ public class WspAtrImportService {
                 }
             }
 
+            logHeap(process, "BEFORE TOTALS UPDATE");
             MZZWSPATRATRDetail.updateATRAndDeviation(ctx, submittedId, trxName);
             MZZWSPATRHTVF.updateHTVFTotal(ctx, submittedId, trxName);
             MZZWSPATRWSP.updateWSPTotal(ctx, submittedId, trxName);
-
+            logHeap(process, "AFTER TOTALS UPDATE");
             MZZWSPATRSubmitted mZZWSPATRSubmitted =
                     new MZZWSPATRSubmitted(ctx, submittedId, trxName);
 
@@ -106,7 +114,7 @@ public class WspAtrImportService {
                     + mZZWSPATRSubmitted.getSdlNumber()
                     + " was successful."
             );
-
+            logHeap(process, "IMPORT SERVICE END");
             return totalImported;
 
         } finally {
@@ -150,4 +158,29 @@ public class WspAtrImportService {
             return WorkbookFactory.create(is);
         }
     }
+    
+  
+    
+    private void logHeap(SvrProcess process, String label) {
+
+        Runtime rt = Runtime.getRuntime();
+
+        long used  = (rt.totalMemory() - rt.freeMemory()) / 1024 / 1024;
+        long total = rt.totalMemory() / 1024 / 1024;
+        long max   = rt.maxMemory() / 1024 / 1024;
+        long free  = rt.freeMemory() / 1024 / 1024;
+
+        String msg = label +
+                " | usedMB=" + used +
+                " totalMB=" + total +
+                " maxMB=" + max +
+                " freeMB=" + free;
+
+        // visible in Process Monitor
+        process.addLog(msg);
+
+        // visible in server log
+        log.warning(msg);
+    }
+
 }
