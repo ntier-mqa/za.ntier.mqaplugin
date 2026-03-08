@@ -77,11 +77,10 @@ public class WspAtrImportService {
                             submitted,
                             mapHeader,
                             trxName,
-                            process,
                             formatter,
                             evaluator
                     );
-                    importer.importData(ctx, wb, submitted, mapHeader, trxName, this, formatter,evaluator);
+                    importer.importData(ctx, wb, submitted, mapHeader, trxName,  formatter,evaluator);
                     totalImported += count;
 
                 } catch (Exception e) {
