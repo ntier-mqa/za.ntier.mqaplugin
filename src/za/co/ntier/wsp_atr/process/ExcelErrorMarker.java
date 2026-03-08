@@ -1,30 +1,51 @@
 package za.co.ntier.wsp_atr.process;
 
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.*;
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.ClientAnchor;
+import org.apache.poi.ss.usermodel.Comment;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.Drawing;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class ExcelErrorMarker {
 
-    // cache: original style idx -> derived error style
-    private final Map<Short, CellStyle> errorStylesByOriginal = new IdentityHashMap<>();
+    // Must be HashMap, not IdentityHashMap, because key is boxed Short value
+    private final Map<Short, CellStyle> errorStylesByOriginal = new HashMap<>();
 
-    // cache: sheet -> drawing patriarch (IMPORTANT!)
+    // OK to keep identity-based per actual sheet instance
     private final Map<XSSFSheet, Drawing<?>> drawingCache = new IdentityHashMap<>();
 
     public void markError(Workbook wb, Sheet sheet, Row row, int colIndex, String message) {
-        if (row == null) return;
+        if (row == null) {
+            return;
+        }
 
         Cell cell = row.getCell(colIndex);
-        if (cell == null) cell = row.createCell(colIndex);
+        if (cell == null) {
+            cell = row.createCell(colIndex);
+        }
 
         short origStyleIdx = cell.getCellStyle() != null ? cell.getCellStyle().getIndex() : 0;
-
         cell.setCellStyle(getOrCreateErrorStyle(wb, origStyleIdx));
 
-        addOrReplaceComment(wb, sheet, cell,
+        addOrReplaceComment(
+            wb,
+            sheet,
+            cell,
             ExcelValidationCleaner.COMMENT_PREFIX
                 + "origStyle=" + origStyleIdx + "\n"
                 + "Invalid:\n" + message
@@ -33,24 +54,36 @@ public class ExcelErrorMarker {
 
     private CellStyle getOrCreateErrorStyle(Workbook wb, short originalStyleIdx) {
         CellStyle cached = errorStylesByOriginal.get(originalStyleIdx);
-        if (cached != null) return cached;
+        if (cached != null) {
+            return cached;
+        }
 
         CellStyle base = wb.getCellStyleAt(originalStyleIdx);
 
         CellStyle cs = wb.createCellStyle();
-        if (base != null) cs.cloneStyleFrom(base);
+        if (base != null) {
+            cs.cloneStyleFrom(base);
+        }
 
         cs.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         cs.setFillForegroundColor(IndexedColors.ROSE.getIndex());
 
-        Font baseFont = (base != null) ? wb.getFontAt(base.getFontIndexAsInt()) : null;
+        Font baseFont = null;
+        if (base != null) {
+            baseFont = wb.getFontAt(base.getFontIndexAsInt());
+        }
+
+               
         Font f = wb.createFont();
         if (baseFont != null) {
             f.setBold(baseFont.getBold());
             f.setItalic(baseFont.getItalic());
+            f.setStrikeout(baseFont.getStrikeout());
             f.setFontHeight(baseFont.getFontHeight());
             f.setFontName(baseFont.getFontName());
             f.setUnderline(baseFont.getUnderline());
+            f.setTypeOffset(baseFont.getTypeOffset());
+            f.setCharSet(baseFont.getCharSet());
         }
         f.setColor(IndexedColors.RED.getIndex());
         cs.setFont(f);
@@ -71,7 +104,6 @@ public class ExcelErrorMarker {
 
         XSSFCell xcell = (XSSFCell) cell;
         XSSFSheet xsheet = (XSSFSheet) sheet;
-
         CreationHelper factory = wb.getCreationHelper();
 
         Comment existing = xcell.getCellComment();
