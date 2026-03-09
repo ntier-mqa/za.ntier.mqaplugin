@@ -167,7 +167,7 @@ public class MZZOrgTransfer extends X_ZZ_Org_Transfer {
 	     // 2️⃣ Fallback: check Business Partner table
 	        MBPartner_New bp = new Query(getCtx(),
 	                "C_BPartner",
-	                "ZZ_SDL_No=? AND IsActive='Y'",
+	                "Value=? AND IsActive='Y'",
 	                get_TrxName())
 	                .setParameters(sdl)
 	                .first();
