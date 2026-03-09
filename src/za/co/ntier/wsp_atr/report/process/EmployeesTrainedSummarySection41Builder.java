@@ -57,7 +57,7 @@ public class EmployeesTrainedSummarySection41Builder extends AbstractReportSecti
             "    b.disabled_id, \n" +
             "    b.sa_citizen_id, \n" +
             "    b.birth_year_true, \n" +
-            "    b.ZZ_Specializations_Ref_id \n" +
+            "    b.ofo_specialisation_id \n" +
             "  FROM emp e \n" +
             "  JOIN zz_wsp_atr_biodata_detail b \n" +
             "    ON b.zz_wsp_employees_id = e.emp_id \n" +
@@ -68,9 +68,9 @@ public class EmployeesTrainedSummarySection41Builder extends AbstractReportSecti
             "    o.value AS ofo_value \n" +
             "  FROM bio \n" +
             "  LEFT JOIN ZZ_Specializations_Ref  sf \n" +
-            "    ON o.ZZ_Specializations_Ref_id = bio.ZZ_Specializations_Ref_id \n" +
+            "    ON o.ZZ_Specializations_Ref_id = bio.ofo_specialisation_id \n" +
             "  LEFT JOIN zz_occupations_ref o \n" +
-            "    ON o.zz_occupations_ref_id = sf.ofo_occupation_code_id \n" +
+            "    ON o.zz_occupations_ref_id = sf.zz_occupations_ref_id \n" +
             "), mg AS ( \n" +
             "  SELECT \n" +
             "    occ.*, \n" +
