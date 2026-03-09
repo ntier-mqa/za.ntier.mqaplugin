@@ -32,7 +32,7 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260304L;
+	private static final long serialVersionUID = 20260309L;
 
     /** Standard Constructor */
     public X_ZZ_Org_Transfer (Properties ctx, int ZZ_Org_Transfer_ID, String trxName)
@@ -40,8 +40,10 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
       super (ctx, ZZ_Org_Transfer_ID, trxName);
       /** if (ZZ_Org_Transfer_ID == 0)
         {
+			setCellphonenumber (null);
 			setContactName (null);
 			setEMail (null);
+			setZZ_DateRequested (new Timestamp( System.currentTimeMillis() ));
 			setZZ_FromSDRUploaded (false);
 // N
 			setZZ_IsApproved (false);
@@ -63,8 +65,10 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
       super (ctx, ZZ_Org_Transfer_ID, trxName, virtualColumns);
       /** if (ZZ_Org_Transfer_ID == 0)
         {
+			setCellphonenumber (null);
 			setContactName (null);
 			setEMail (null);
+			setZZ_DateRequested (new Timestamp( System.currentTimeMillis() ));
 			setZZ_FromSDRUploaded (false);
 // N
 			setZZ_IsApproved (false);
@@ -86,8 +90,10 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
       super (ctx, ZZ_Org_Transfer_UU, trxName);
       /** if (ZZ_Org_Transfer_UU == null)
         {
+			setCellphonenumber (null);
 			setContactName (null);
 			setEMail (null);
+			setZZ_DateRequested (new Timestamp( System.currentTimeMillis() ));
 			setZZ_FromSDRUploaded (false);
 // N
 			setZZ_IsApproved (false);
@@ -109,8 +115,10 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
       super (ctx, ZZ_Org_Transfer_UU, trxName, virtualColumns);
       /** if (ZZ_Org_Transfer_UU == null)
         {
+			setCellphonenumber (null);
 			setContactName (null);
 			setEMail (null);
+			setZZ_DateRequested (new Timestamp( System.currentTimeMillis() ));
 			setZZ_FromSDRUploaded (false);
 // N
 			setZZ_IsApproved (false);
@@ -582,6 +590,8 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
 	public static final String ZZ_DOCACTION_SubmitToSnrMgrSRU = "SS";
 	/** Submit to Line Manager = SU */
 	public static final String ZZ_DOCACTION_SubmitToLineManager = "SU";
+	/** Update = UP */
+	public static final String ZZ_DOCACTION_Update = "UP";
 	/** Verify = VE */
 	public static final String ZZ_DOCACTION_Verify = "VE";
 	/** Set Document Action.
@@ -676,6 +686,8 @@ public class X_ZZ_Org_Transfer extends PO implements I_ZZ_Org_Transfer, I_Persis
 	public static final String ZZ_DOCSTATUS_Submitted = "SU";
 	/** Transfer Out = TO */
 	public static final String ZZ_DOCSTATUS_TransferOut = "TO";
+	/** Updated by SDR Admin = UA */
+	public static final String ZZ_DOCSTATUS_UpdatedBySDRAdmin = "UA";
 	/** Uploaded = UP */
 	public static final String ZZ_DOCSTATUS_Uploaded = "UP";
 	/** Delinked = UnSdfOrg */

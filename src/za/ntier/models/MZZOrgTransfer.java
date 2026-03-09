@@ -132,7 +132,7 @@ public class MZZOrgTransfer extends X_ZZ_Org_Transfer {
 	            && ("DR".equals(getZZ_DocStatus()) || getZZ_DocStatus() == null))
 	    {
 	        setZZ_DocStatus("IP"); // In Progress
-	        setZZ_DocAction("UP"); // Update
+	        setZZ_DocAction("S1"); // Submit
 	    }
 
 		
@@ -190,6 +190,17 @@ public class MZZOrgTransfer extends X_ZZ_Org_Transfer {
 	    return true;
 
 	}
+	
+	public String getBPName()
+	{
+	    int bpId = getC_BPartner_ID();
+	    if (bpId <= 0)
+	        return "";
+
+	    MBPartner_New bp = new MBPartner_New(getCtx(), bpId, get_TrxName());
+	    return bp.getName();
+	}
+	
 	@Override
 	protected boolean afterSave(boolean newRecord, boolean success) {
 		// TODO Auto-generated method stub
