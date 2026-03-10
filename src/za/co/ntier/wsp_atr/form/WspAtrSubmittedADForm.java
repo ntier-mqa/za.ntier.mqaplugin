@@ -5,24 +5,18 @@ import java.io.InputStream;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.Set;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import org.adempiere.exceptions.AdempiereException;
-import org.adempiere.util.Callback;
 import org.adempiere.webui.AdempiereWebUI;
 import org.adempiere.webui.ISupportMask;
 import org.adempiere.webui.LayoutUtils;
-import org.adempiere.webui.apps.BackgroundJob;
 import org.adempiere.webui.component.Borderlayout;
 import org.adempiere.webui.component.Label;
 import org.adempiere.webui.component.ListCell;
@@ -36,11 +30,8 @@ import org.adempiere.webui.panel.ADForm;
 import org.adempiere.webui.util.ZKUpdateUtil;
 import org.compiere.model.MAttachment;
 import org.compiere.model.MAttachmentEntry;
-import org.compiere.model.MPInstance;
 import org.compiere.model.MProcess;
 import org.compiere.model.MTable;
-import org.compiere.model.Query;
-import org.compiere.process.ProcessInfo;
 import org.compiere.util.CLogger;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
@@ -62,7 +53,6 @@ import org.zkoss.zul.Toolbarbutton;
 import org.zkoss.zul.Vlayout;
 
 import za.co.ntier.api.model.X_ZZSdfOrganisation;
-import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
 import za.ntier.models.MZZWSPATRSubmitted;
 
@@ -313,21 +303,30 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	    cancel.addEventListener(Events.ON_CLICK, e -> win.detach());
 	}
 
-
 	private void doUploadWithOrganisation(SdfOrgRow org, Media media) throws Exception {
 	    if (media == null)
 	        return;
 
 	    String filename = media.getName();
-	    if (!filename.toLowerCase().endsWith(".xlsm"))
+	    if (filename == null || !filename.toLowerCase().endsWith(".xlsm"))
 	        throw new AdempiereException("Please upload an .xlsm file");
+
 	    if (filename.toLowerCase().startsWith("error")) {
-	    	throw new AdempiereException("File Name cannot start with Error,please rename and try again");
+	        throw new AdempiereException("File Name cannot start with Error, please rename and try again");
 	    }
 
 	    byte[] data = getMediaBytes(media);
-	    
-	    assertZipLooksValid(data, filename);
+
+	    if (data == null || data.length == 0) {
+	        throw new AdempiereException("Uploaded file is empty: " + filename);
+	    }
+
+	    // Validate the uploaded file before saving
+	    assertZipLooksFullyValid(data, filename);
+
+	    log.info("UPLOAD START | file=" + filename
+	            + " | uploadedLen=" + data.length
+	            + " | uploadedSha256=" + sha256Hex(data));
 
 	    String trxName = Trx.createTrxName("WSPATRUpload");
 	    Trx trx = Trx.get(trxName, true);
@@ -335,19 +334,15 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	    int submittedId = 0;
 
 	    try {
-	        // 1) Find existing record for org (if any)
 	        int existingId = findExistingSubmittedIdForOrg(org.zzSdfOrganisationId, trxName);
 
-	        MZZWSPATRSubmitted  submitted;
+	        MZZWSPATRSubmitted submitted;
 	        if (existingId > 0) {
-	            // REUSE
 	            submitted = new MZZWSPATRSubmitted(Env.getCtx(), existingId, trxName);
 
-	            // 2) Clear old attachments + related records
 	            deleteAllAttachmentsForSubmitted(existingId, trxName);
-	           // deleteRelatedRecordsBeforeProcessing(existingId, trxName);
+	            // deleteRelatedRecordsBeforeProcessing(existingId, trxName);
 
-	            // 3) Update the row fields (optional but recommended)
 	            submitted.setSubmittedDate(new Timestamp(System.currentTimeMillis()));
 	            submitted.setFileName(filename);
 	            submitted.setName("WSP/ATR " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
@@ -359,7 +354,6 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 	            submittedId = existingId;
 	        } else {
-	            // CREATE NEW
 	            submitted = new MZZWSPATRSubmitted(Env.getCtx(), 0, trxName);
 	            submitted.setName("WSP/ATR " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
 	            submitted.setSubmittedDate(new Timestamp(System.currentTimeMillis()));
@@ -373,10 +367,19 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	            submittedId = submitted.get_ID();
 	        }
 
-	        // 4) Recreate attachment and attach the new file (same trx)
-	        MAttachment att = new MAttachment(Env.getCtx(), X_ZZ_WSP_ATR_Submitted.Table_ID, submittedId, null, trxName);
+	        MAttachment att = new MAttachment(
+	                Env.getCtx(),
+	                X_ZZ_WSP_ATR_Submitted.Table_ID,
+	                submittedId,
+	                null,
+	                trxName
+	        );
+
 	        att.addEntry(filename, data);
 	        att.saveEx(trxName);
+
+	        // Verify immediately inside the same transaction
+	        verifyAttachmentRoundTrip(submittedId, filename, data, trxName);
 
 	        trx.commit(true);
 
@@ -387,13 +390,14 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	        trx.close();
 	    }
 
+	    // Verify again after commit / fresh reload
+	    verifyAttachmentRoundTrip(submittedId, filename, data, null);
+
 	    lblSelectedOrg.setValue("Organisation: " + org.orgName);
 	    lblInfo.setValue("Uploaded: " + filename + " (ID " + submittedId + ")");
 	    refreshList();
 	    runValidateImportInBackground(submittedId);
-	    
 	}
-	
 	
 
 		
@@ -496,71 +500,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	    item.appendChild(actions);
 
 	    list.appendChild(item);
-	}
-
-
-
-	// ---------------- Background Process ----------------
-
-	
-	/*
-	private void runValidateImportInBackground(final int submittedId) {
-	    final Properties ctx = Env.getCtx();
-
-	    final MProcess proc = MProcess.get(ctx, PROCESS_VALIDATE_IMPORT_UU);
-	    if (proc == null || proc.getAD_Process_ID() <= 0) {
-	        throw new AdempiereException("Validate/Import process not found (UU=" + PROCESS_VALIDATE_IMPORT_UU + ")");
-	    }
-
-	    String trxName = null;
-	    if (hasRunningJob(proc.getAD_Process_ID(), submittedId, trxName)) {
-	        lblInfo.setValue("A job is already running for Submitted ID " + submittedId);
-	        return;
-	    }
-
-	    // Build ProcessInfo
-	    final ProcessInfo pi = new ProcessInfo(proc.getName(), proc.getAD_Process_ID());
-	    pi.setAD_User_ID(Env.getAD_User_ID(ctx));
-	    pi.setAD_Client_ID(Env.getAD_Client_ID(ctx));
-	    pi.setRecord_ID(submittedId);
-	    pi.setAD_Process_UU(proc.getAD_Process_UU());
-
-	    // Create MPInstance tied to THIS record so the process runs with correct context
-	    final MPInstance instance = new MPInstance(ctx, proc.getAD_Process_ID(), 0, submittedId, null);
-	    instance.setIsRunAsJob(true);
-
-	    // Optional: force notification type (Notice is usually nicest in UI)
-	    instance.setNotificationType(MPInstance.NOTIFICATIONTYPE_EMailPlusNotice);
-
-	    instance.saveEx();
-	    pi.setAD_PInstance_ID(instance.getAD_PInstance_ID());
-
-	    // No parameters to save from this form, so callback can be empty
-	    Callback<Integer> createInstanceParaCallback = id -> {
-	        // If you later add process parameters, you’d save them here.
-	    };
-
-	    BackgroundJob.create(pi)
-	        .withContext(ctx)
-	        .withNotificationType(instance.getNotificationType())  // or hardcode Notice/Email
-	        .withInitialDelay(500)                                // optional
-	        .run(createInstanceParaCallback);
-
-	    lblInfo.setValue("Background job queued for Submitted ID " + submittedId);
-	}
-	
-	private boolean hasRunningJob(int adProcessId, int recordId, String trxName) {
-	    // AD_PInstance.IsProcessing='Y' is the usual “still running”
-	    int cnt = DB.getSQLValueEx(trxName,
-	        "SELECT COUNT(1) " +
-	        "FROM AD_PInstance " +
-	        "WHERE AD_Process_ID=? " +
-	        "AND Record_ID=? " +
-	        "AND IsProcessing='Y'",
-	        adProcessId, recordId);
-	    return cnt > 0;
-	}
-	*/
+	}	
 	
 	private void runValidateImportInBackground(final int submittedId) {
 	    final Properties ctx = Env.getCtx();
@@ -803,111 +743,137 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	    );
 	}
 	
+	
 	private void deleteAllAttachmentsForSubmitted(int submittedId, String trxName) {
 	    MAttachment att = MAttachment.get(Env.getCtx(), X_ZZ_WSP_ATR_Submitted.Table_ID, submittedId);
 	    if (att != null) {
-	        att.delete(true); // deletes AD_Attachment and its entries
+	        att.deleteEx(true, trxName);
 	    }
 	}
+
 	
-	private void deleteRelatedRecordsBeforeProcessing(int submittedId, String trxName) {
-
-	    // 1) Load mapped tables
-	    List<X_ZZ_WSP_ATR_Lookup_Mapping> headers = new Query(
-	            Env.getCtx(),
-	            X_ZZ_WSP_ATR_Lookup_Mapping.Table_Name,
-	            null,
-	            trxName)
-	        .setOnlyActiveRecords(true)
-	        .list();
-
-	    if (headers == null || headers.isEmpty())
-	        return; // nothing to delete
-
-	    // 2) Build unique table list
-	    Set<Integer> tableIds = new HashSet<>();
-	    for (X_ZZ_WSP_ATR_Lookup_Mapping h : headers) {
-	        if (h.getAD_Table_ID() > 0)
-	            tableIds.add(h.getAD_Table_ID());
-	    }
-
-	    // 3) Create delete jobs for tables that have ZZ_WSP_ATR_Submitted_ID
-	    class DelJob {
-	        final String tableName;
-	        DelJob(String t) { tableName = t; }
-	    }
-
-	    List<DelJob> jobs = new ArrayList<>();
-
-	    for (Integer adTableId : tableIds) {
-	        MTable t = MTable.get(Env.getCtx(), adTableId);
-	        if (t == null) continue;
-
-	        String tableName = t.getTableName();
-	        if (Util.isEmpty(tableName, true))
-	            continue;
-
-	        // Safety: never delete from these
-	        if (X_ZZ_WSP_ATR_Submitted.Table_Name.equalsIgnoreCase(tableName)
-	                || X_ZZ_WSP_ATR_Lookup_Mapping.Table_Name.equalsIgnoreCase(tableName))
-	            continue;
-
-	        // Only delete if table is designed to link back to submittedId
-	        if (columnExists(tableName, "ZZ_WSP_ATR_Submitted_ID", trxName)) {
-	            jobs.add(new DelJob(tableName));
+	private void verifyAttachmentRoundTrip(int submittedId, String filename, byte[] originalData, String trxName) {
+	    try {
+	        MAttachment savedAtt = MAttachment.get(Env.getCtx(), X_ZZ_WSP_ATR_Submitted.Table_ID, submittedId);
+	        if (savedAtt == null || savedAtt.getEntryCount() <= 0) {
+	            throw new AdempiereException("Attachment was not found immediately after save for record " + submittedId);
 	        }
-	    }
 
-	    if (jobs.isEmpty())
-	        return;
-
-	    // 4) Run deletes in retry passes to handle FK order
-	    List<DelJob> remaining = new ArrayList<>(jobs);
-
-	    for (int pass = 1; pass <= 4 && !remaining.isEmpty(); pass++) {
-	        List<DelJob> failed = new ArrayList<>();
-
-	        for (DelJob job : remaining) {
-	            try {
-	            	Object [] parms = {submittedId};
-	            	DB.executeUpdateEx(
-	                    "DELETE FROM " + job.tableName + " WHERE ZZ_WSP_ATR_Submitted_ID=?",
-	                    parms,
-	                    trxName,
-	                    0
-	                );
-	            } catch (Exception ex) {
-	                failed.add(job);
+	        MAttachmentEntry matched = null;
+	        for (MAttachmentEntry e : savedAtt.getEntries()) {
+	            if (e != null && filename.equals(e.getName())) {
+	                matched = e;
+	                break;
 	            }
 	        }
 
-	        remaining = failed;
-	    }
+	        if (matched == null) {
+	            throw new AdempiereException("Saved attachment entry not found: " + filename);
+	        }
 
-	    // If some still remain, log them (usually means those tables link differently)
-	    if (!remaining.isEmpty()) {
-	        for (DelJob job : remaining) {
-	            log.log(Level.WARNING,
-	                "Could not delete from mapped table " + job.tableName +
-	                " for ZZ_WSP_ATR_Submitted_ID=" + submittedId +
-	                " (likely FK order or different link column).");
+	        byte[] savedData;
+	        try (InputStream is = matched.getInputStream()) {
+	            savedData = readAllBytes(is);
+	        }
+
+	        int originalLen = originalData != null ? originalData.length : -1;
+	        int savedLen = savedData != null ? savedData.length : -1;
+
+	        String originalHash = sha256Hex(originalData);
+	        String savedHash = sha256Hex(savedData);
+
+	        log.info("UPLOAD VERIFY | submittedId=" + submittedId
+	                + " | file=" + filename
+	                + " | originalLen=" + originalLen
+	                + " | savedLen=" + savedLen
+	                + " | originalSha256=" + originalHash
+	                + " | savedSha256=" + savedHash);
+
+	        if (originalLen != savedLen) {
+	            logFirstDifference(originalData, savedData, "original", "saved");
+	            throw new AdempiereException(
+	                    "Attachment size mismatch after save. Original=" + originalLen + " bytes, Saved=" + savedLen + " bytes");
+	        }
+
+	        if (!originalHash.equals(savedHash)) {
+	            logFirstDifference(originalData, savedData, "original", "saved");
+	            throw new AdempiereException("Attachment content mismatch after save. SHA-256 differs.");
+	        }
+
+	        assertZipLooksFullyValid(savedData, filename);
+
+	    } catch (Exception e) {
+	        throw new AdempiereException("Attachment verification failed: " + e.getMessage(), e);
+	    }
+	}
+
+	private String sha256Hex(byte[] data) {
+	    try {
+	        java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+	        byte[] digest = md.digest(data);
+
+	        StringBuilder sb = new StringBuilder(digest.length * 2);
+	        for (byte b : digest) {
+	            sb.append(String.format("%02x", b));
+	        }
+	        return sb.toString();
+	    } catch (Exception e) {
+	        throw new RuntimeException("Could not calculate SHA-256", e);
+	    }
+	}
+
+	private void assertZipLooksFullyValid(byte[] data, String name) {
+	    java.io.File temp = null;
+	    try {
+	        temp = java.io.File.createTempFile("wspatr_", ".xlsm");
+	        try (java.io.FileOutputStream fos = new java.io.FileOutputStream(temp)) {
+	            fos.write(data);
+	        }
+
+	        try (java.util.zip.ZipFile zf = new java.util.zip.ZipFile(temp)) {
+	            if (zf.size() == 0) {
+	                throw new AdempiereException("ZIP has no entries: " + name);
+	            }
+
+	            if (zf.getEntry("[Content_Types].xml") == null) {
+	                throw new AdempiereException("Not a valid Excel workbook ZIP: missing [Content_Types].xml in " + name);
+	            }
+	        }
+	    } catch (AdempiereException ex) {
+	        throw ex;
+	    } catch (Exception e) {
+	        throw new AdempiereException("ZIP validation failed for " + name + ": " + e.getMessage(), e);
+	    } finally {
+	        if (temp != null && temp.exists()) {
+	            temp.delete();
 	        }
 	    }
 	}
 
-	
-	private boolean columnExists(String tableName, String columnName, String trxName) {
-	    int cnt = DB.getSQLValueEx(
-	        trxName,
-	        "SELECT COUNT(1) " +
-	        "FROM AD_Column c " +
-	        "JOIN AD_Table t ON t.AD_Table_ID=c.AD_Table_ID " +
-	        "WHERE t.TableName=? AND c.ColumnName=? AND c.IsActive='Y'",
-	        tableName, columnName
-	    );
-	    return cnt > 0;
-	}
+	private void logFirstDifference(byte[] a, byte[] b, String labelA, String labelB) {
+	    if (a == null || b == null) {
+	        log.warning("Cannot compare bytes: one array is null");
+	        return;
+	    }
 
+	    int min = Math.min(a.length, b.length);
+	    for (int i = 0; i < min; i++) {
+	        if (a[i] != b[i]) {
+	            log.warning("First byte difference between " + labelA + " and " + labelB
+	                    + " at offset " + i
+	                    + " | " + labelA + "=" + (a[i] & 0xff)
+	                    + " | " + labelB + "=" + (b[i] & 0xff));
+	            return;
+	        }
+	    }
+
+	    if (a.length != b.length) {
+	        log.warning("No byte difference in first " + min + " bytes, but lengths differ. "
+	                + labelA + "=" + a.length + ", " + labelB + "=" + b.length);
+	    } else {
+	        log.info("No byte differences found between " + labelA + " and " + labelB);
+	    }
+	}
 
 
 
