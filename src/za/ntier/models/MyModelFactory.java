@@ -14,6 +14,7 @@ import org.osgi.service.component.annotations.Component;
 
 import za.co.ntier.api.model.I_ZZSdfOrganisation;
 import za.co.ntier.api.model.I_ZZ_Program_Master_Data;
+import za.co.ntier.api.model.I_ZZ_WSP_ATR_EXTENSION_BATCH;
 import za.co.ntier.api.model.X_ZZ_WSP_ATR_Approvals;
 import za.co.ntier.wf.model.MZZWFHeader;
 import za.co.ntier.wf.model.MZZWFLineRole;
@@ -93,6 +94,7 @@ public class MyModelFactory implements IModelFactory {
         register(I_ZZ_WSP_ATR_Biodata_Detail.Table_Name,X_ZZ_WSP_ATR_Biodata_Detail.class);
         register(I_ZZ_WSP_Employees.Table_Name,X_ZZ_WSP_Employees.class);
         register(I_ZZ_SETA_Master.Table_Name,X_ZZ_SETA_Master.class);
+        register(I_ZZ_WSP_ATR_EXTENSION_BATCH.Table_Name,MZZWSPATRExtensionBatch.class);
     }
 
     private static void register(String tableName, Class<? extends PO> modelClass) {
