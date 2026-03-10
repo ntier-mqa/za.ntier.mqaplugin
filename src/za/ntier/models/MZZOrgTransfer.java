@@ -178,7 +178,7 @@ public class MZZOrgTransfer extends X_ZZ_Org_Transfer {
 
 	            // Map BP registration number to your field
 	            set_Value("ZZ_Organisation_Reg_No",
-	                    bp.get_ValueAsString("ZZ_Business_Reg_No"));
+	                    bp.get_ValueAsString("referenceno"));
 
 	            return true;
 	        }
