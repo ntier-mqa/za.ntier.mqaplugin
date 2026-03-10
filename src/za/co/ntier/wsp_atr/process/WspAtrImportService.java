@@ -29,7 +29,7 @@ public class WspAtrImportService {
 
     private final ReferenceLookupService refService = new ReferenceLookupService();
     
-    private static final CLogger log = CLogger.getCLogger(WspAtrImportService.class);
+    //private static final CLogger log = CLogger.getCLogger(WspAtrImportService.class);
     
 
     public int importSubmitted(Properties ctx,
@@ -162,7 +162,8 @@ public class WspAtrImportService {
   
     
     private void logHeap(SvrProcess process, String label) {
-
+    	return;
+        /* For debugging
         Runtime rt = Runtime.getRuntime();
 
         long used  = (rt.totalMemory() - rt.freeMemory()) / 1024 / 1024;
@@ -181,6 +182,7 @@ public class WspAtrImportService {
 
         // visible in server log
         log.warning(msg);
+        */
     }
 
 }

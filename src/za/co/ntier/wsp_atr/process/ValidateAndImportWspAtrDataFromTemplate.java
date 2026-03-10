@@ -210,6 +210,8 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 	}
 
 	private void logHeap(String label) {
+		return;
+		/* For debugging purposes
 		Runtime rt = Runtime.getRuntime();
 		long max = rt.maxMemory();
 		long total = rt.totalMemory();
@@ -221,6 +223,7 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 				+ " totalMB=" + (total / 1024 / 1024)
 				+ " maxMB=" + (max / 1024 / 1024)
 				+ " freeMB=" + (free / 1024 / 1024));
+				*/
 	}
 
 	private void attachErrorWorkbook(X_ZZ_WSP_ATR_Submitted submitted, Workbook wb, String fileName) throws Exception {
@@ -233,7 +236,7 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 			bos.flush();
 			logHeap("attachErrorWorkbook - after wb.write");
 			data = bos.toByteArray();
-			log.warning("Generated workbook bytes=" + (data.length / 1024 / 1024) + "MB");
+			//log.warning("Generated workbook bytes=" + (data.length / 1024 / 1024) + "MB");
 			logHeap("attachErrorWorkbook - after toByteArray");
 		}
 

@@ -86,9 +86,7 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
 				}
                 continue;
             }
-            if (row.getRowNum() > 49613) {
-            	log.warning("EMPTY ROWS : " + row.getRowNum() + " " + row ) ;
-            }
+            
             
             emptyRowsInARow = 0;
 

@@ -26,9 +26,9 @@ import com.lowagie.text.Document;
 import com.lowagie.text.html.simpleparser.HTMLWorker;
 import com.lowagie.text.pdf.PdfWriter;
 
+import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Approvals;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Checklist_Ref;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
-import za.co.ntier.wsp_atr.repo.WspAtrUploadsRepository.SdrWindowConfig;
 
 
 
@@ -122,6 +122,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 		if (ok && is_ValueChanged(COLUMNNAME_ZZ_DocStatus) && getZZ_DocStatus() != null && getZZ_DocStatus().equals("AP") ) {  // Approved
 			try {
+				createWSPATR_Approval_Records(getFiscalYear(getAD_Client_ID()));
 				sendQueryEmailWithPDF(WSP_ATR_FINAL_APPROVAL_TEMPLATE_UUID,"WSP-ATR_Approval_" + getSdlNumber() +"_" + getFiscalYear(getAD_Client_ID()));
 			} catch (Exception e) {
 				log.severe("Failed to send approval email: " + e.getMessage());
@@ -129,6 +130,33 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 		}
 		return ok;
 	}	
+	
+	private void createWSPATR_Approval_Records (String financialYr) {
+		if (financialYr == null) {
+			return;
+		}
+		MBPartner mBPartner = getBusinessPartner();
+		if (mBPartner == null) {
+			return;
+		}
+		int bpID = mBPartner.getC_BPartner_ID();
+		// Check if record exists for same BP and Financial Year
+		String sql = "SELECT ZZ_WSP_ATR_Approvals_ID FROM ZZ_WSP_ATR_Approvals WHERE C_BPartner_ID=? AND zz_financial_year=?";
+		int wspID = DB.getSQLValue(get_TrxName(), sql, bpID, financialYr);
+
+		X_ZZ_WSP_ATR_Approvals record;
+		if (wspID > 0) {
+			record = new X_ZZ_WSP_ATR_Approvals(getCtx(), wspID, get_TrxName());
+		} else {
+			record = new X_ZZ_WSP_ATR_Approvals(getCtx(), 0, get_TrxName());
+		}
+
+		record.setC_BPartner_ID(bpID);
+		record.setZZ_Financial_Year(financialYr);
+		record.setZZ_Grant_Status("A" );
+		record.setProcessedOn(new Timestamp(System.currentTimeMillis()));
+		record.saveEx();
+	}
 	
 	public String getFiscalYear(int adClientId) {
         // choose the “active” configuration row; if you have multiple per org, adjust filters
