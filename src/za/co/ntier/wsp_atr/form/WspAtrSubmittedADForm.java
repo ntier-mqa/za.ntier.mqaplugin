@@ -340,7 +340,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	        if (existingId > 0) {
 	            submitted = new MZZWSPATRSubmitted(Env.getCtx(), existingId, trxName);
 
-	            deleteAllAttachmentsForSubmitted(existingId, trxName);
+	            deleteAllAttachmentsForSubmitted(existingId);
 	            // deleteRelatedRecordsBeforeProcessing(existingId, trxName);
 
 	            submitted.setSubmittedDate(new Timestamp(System.currentTimeMillis()));
@@ -367,21 +367,22 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	            submittedId = submitted.get_ID();
 	        }
 
-	        MAttachment att = new MAttachment(
-	                Env.getCtx(),
-	                X_ZZ_WSP_ATR_Submitted.Table_ID,
-	                submittedId,
-	                null,
-	                trxName
-	        );
-
+	        //MAttachment att = new MAttachment(
+	        //        Env.getCtx(),
+	         //       X_ZZ_WSP_ATR_Submitted.Table_ID,
+	         //       submittedId,
+	          //      null,
+	           //     trxName
+	       // );
+	        trx.commit(true);
+	        MAttachment att = submitted.createAttachment();
 	        att.addEntry(filename, data);
-	        att.saveEx(trxName);
+	        att.saveEx();
 
 	        // Verify immediately inside the same transaction
-	        verifyAttachmentRoundTrip(submittedId, filename, data, trxName);
+	        verifyAttachmentRoundTrip(submittedId, filename, data);
 
-	        trx.commit(true);
+	        //trx.commit(true);
 
 	    } catch (Exception e) {
 	        trx.rollback();
@@ -391,7 +392,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	    }
 
 	    // Verify again after commit / fresh reload
-	    verifyAttachmentRoundTrip(submittedId, filename, data, null);
+	  //  verifyAttachmentRoundTrip(submittedId, filename, data);
 
 	    lblSelectedOrg.setValue("Organisation: " + org.orgName);
 	    lblInfo.setValue("Uploaded: " + filename + " (ID " + submittedId + ")");
@@ -744,15 +745,15 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	}
 	
 	
-	private void deleteAllAttachmentsForSubmitted(int submittedId, String trxName) {
+	private void deleteAllAttachmentsForSubmitted(int submittedId) {
 	    MAttachment att = MAttachment.get(Env.getCtx(), X_ZZ_WSP_ATR_Submitted.Table_ID, submittedId);
 	    if (att != null) {
-	        att.deleteEx(true, trxName);
+	        att.deleteEx(true);
 	    }
 	}
 
 	
-	private void verifyAttachmentRoundTrip(int submittedId, String filename, byte[] originalData, String trxName) {
+	private void verifyAttachmentRoundTrip(int submittedId, String filename, byte[] originalData) {
 	    try {
 	        MAttachment savedAtt = MAttachment.get(Env.getCtx(), X_ZZ_WSP_ATR_Submitted.Table_ID, submittedId);
 	        if (savedAtt == null || savedAtt.getEntryCount() <= 0) {
