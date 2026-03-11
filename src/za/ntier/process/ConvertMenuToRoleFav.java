@@ -2,10 +2,12 @@ package za.ntier.process;
 
 import static org.compiere.model.SystemIDs.TREE_MENUPRIMARY;
 
+import java.math.BigDecimal;
 import java.util.Enumeration;
 import java.util.Properties;
 
 import org.adempiere.base.annotation.Parameter;
+import org.compiere.model.MMenu;
 import org.compiere.model.MTable;
 import org.compiere.model.MTree;
 import org.compiere.model.MTreeFavorite;
@@ -27,7 +29,7 @@ public class ConvertMenuToRoleFav extends SvrProcess{
 	protected String doIt() throws Exception  {
 		String [] menuIds = menus.split(",");
 		String [] roleIds = roles.split(",");
-		
+		menus = "," + menus + ",";
 		for (String roleId : roleIds) {
 			int adRoleId = Integer.valueOf(roleId);
 			int adTreeId = getTreeId(Env.getCtx(), adRoleId);
@@ -36,9 +38,10 @@ public class ConvertMenuToRoleFav extends SvrProcess{
 			String queryTreeFavByRole = "SELECT AD_Tree_Favorite_ID FROM AD_Tree_Favorite WHERE IsActive='Y' AND AD_Role_ID=?";
 			int treeFavID = DB.getSQLValue(null, queryTreeFavByRole, adRoleId);
 			if (treeFavID > 0) {
-				DB.executeUpdateEx("DELETE FROM AD_Tree_Favorite_Node WHERE AD_Tree_Favorite_ID = ?", 
+				int oldFavNode = DB.executeUpdateEx("DELETE FROM AD_Tree_Favorite_Node WHERE AD_Tree_Favorite_ID = ?", 
 						new Object [] {treeFavID}, 
 						get_TrxName());
+				addBufferLog(0, null, BigDecimal.valueOf(oldFavNode), "Number of old fav node", 0, 0);
 			}else {
 				MTreeFavorite treeFav = new MTreeFavorite(getCtx(), 0, get_TrxName());
 				treeFav.setAD_Role_ID(adRoleId);
@@ -48,6 +51,13 @@ public class ConvertMenuToRoleFav extends SvrProcess{
 			
 			
 			MTree mTree = new MTree(Env.getCtx(), adTreeId, false, true, null);
+			
+			addBufferLog(0, null, null, 
+					String.format("Tree: %s - %s", 
+							mTree.getName(),
+							mTree.getAD_Tree_ID()
+							),
+					0, 0);
 			
 			MTreeNode rootNode = mTree.getRoot();
 			
@@ -62,11 +72,15 @@ public class ConvertMenuToRoleFav extends SvrProcess{
 		while(nodeEnum.hasMoreElements()){
 			MTreeNode mChildNode = (MTreeNode)nodeEnum.nextElement();
 			
-			String sMenuIdOfNode = String.valueOf(mChildNode.getNode_ID());
+			String sMenuIdOfNode = String.valueOf("," + mChildNode.getNode_ID()) + ",";
 			if (menus.indexOf(sMenuIdOfNode) > -1) {
+				// add this menu and all its child
 				addFav(mChildNode, treeFavID, 0);
-			}else {
+			}else if(mChildNode.isSummary()){
+				// lookup on child
 				findMenuNode(mChildNode, treeFavID);
+			}else {
+				// ignore this menu item by don't include on list
 			}
         }
 	}
@@ -84,6 +98,14 @@ public class ConvertMenuToRoleFav extends SvrProcess{
 				true, 
 				true,
 				get_TrxName());
+		MMenu menu = MMenu.get(favNode.getNode_ID());
+		addBufferLog(0, null, null, 
+				String.format("Fav Node: %s - %s Menu: %s", 
+						createdFavNode.getName(), 
+						favNode.isSummary(),
+						menu.getName()
+						),
+				0, 0);
 		
 		if (favNode.isSummary()) {
 			Enumeration<?> nodeEnum = favNode.children();
