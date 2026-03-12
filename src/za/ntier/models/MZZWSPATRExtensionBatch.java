@@ -77,7 +77,6 @@ public class MZZWSPATRExtensionBatch extends X_ZZ_WSP_ATR_EXTENSION_BATCH
 	{
 		int batchId = get_ID();
 
-		// 1. Fetch Mail Template
 		MMailText mailText = new MMailText(getCtx(), EXTENSION_BATCH_FINAL_APPROVAL_TEMPLATE_UUID, get_TrxName());
 
 		if (mailText.get_ID() <= 0)
@@ -87,71 +86,78 @@ public class MZZWSPATRExtensionBatch extends X_ZZ_WSP_ATR_EXTENSION_BATCH
 			return;
 		}
 
-		try
-		{
-			mailText.setPO(this, true); // Populate context variables
-		}
-		catch (Throwable t)
-		{
-			mailText.setPO(this);
-		}
-
-		String html = mailText.getMailText(true);
-		String subject = mailText.getMailHeader();
-		if (subject == null || subject.trim().isEmpty())
-		{
-			subject = "WSP-ATR Extension Application Update: Approval Confirmation";
-		}
-
-		// 2. Fetch all related child records from ZZ_WSP_ATR_EXTENSION
 		List<X_ZZ_WSP_ATR_EXTENSION> extensions = new Query(getCtx(), X_ZZ_WSP_ATR_EXTENSION.Table_Name,
 				"ZZ_WSP_ATR_EXTENSION_BATCH_ID=?", get_TrxName()).setParameters(batchId).list();
 
-		// 3. Collect emails and remove duplicates
-		Set<String> uniqueEmails = new HashSet<>();
-		for (X_ZZ_WSP_ATR_EXTENSION ext : extensions)
+		if (extensions.isEmpty())
 		{
-			if (ext.getZZ_SDF_EMAIL() != null && !ext.getZZ_SDF_EMAIL().trim().isEmpty())
-			{
-				uniqueEmails.add(ext.getZZ_SDF_EMAIL().trim().toLowerCase());
-			}
-			if (ext.getZZ_SOR_EMAIL() != null && !ext.getZZ_SOR_EMAIL().trim().isEmpty())
-			{
-				uniqueEmails.add(ext.getZZ_SOR_EMAIL().trim().toLowerCase());
-			}
-		}
-
-		if (uniqueEmails.isEmpty())
-		{
-			log.warning("No recipient emails (SDF or SOR) found related to Extension Batch ID: " + batchId);
+			log.warning("No related extensions found for Extension Batch ID: " + batchId);
 			return;
 		}
 
 		MClient client = MClient.get(getCtx());
 		int successCount = 0;
 
-		for (String email : uniqueEmails)
+		for (X_ZZ_WSP_ATR_EXTENSION ext : extensions)
 		{
-
-			if (email != null && !email.isBlank())
+			try
 			{
-				boolean sent = client.sendEMail(email, subject, html, null, true);
-				if (sent)
+				mailText.setPO(ext, true);
+			}
+			catch (Throwable t)
+			{
+				mailText.setPO(ext);
+			}
+
+			String html = mailText.getMailText(true);
+			String subject = mailText.getMailHeader();
+			if (subject == null || subject.trim().isEmpty())
+			{
+				subject = "WSP-ATR Extension Application Update: Approval Confirmation";
+			}
+
+			// Collect emails specific to this single extension and remove
+			// duplicates
+			Set<String> emailsForExt = new HashSet<>();
+			if (ext.getZZ_SDF_EMAIL() != null && !ext.getZZ_SDF_EMAIL().trim().isEmpty())
+			{
+				emailsForExt.add(ext.getZZ_SDF_EMAIL().trim().toLowerCase());
+			}
+			if (ext.getZZ_SOR_EMAIL() != null && !ext.getZZ_SOR_EMAIL().trim().isEmpty())
+			{
+				emailsForExt.add(ext.getZZ_SOR_EMAIL().trim().toLowerCase());
+			}
+
+			if (emailsForExt.isEmpty())
+			{
+				log.warning("No recipient emails (SDF or SOR) found related to Extension ID: " + ext.get_ID());
+				continue;
+			}
+
+			// Send the personalized email configured for this specific
+			// extension
+			for (String email : emailsForExt)
+			{
+				if (email != null && !email.isBlank())
 				{
-					successCount++;
+					boolean sent = client.sendEMail(email, subject, html, null, true);
+					if (sent)
+					{
+						successCount++;
+					}
+					else
+					{
+						log.warning("Failed to dispatch Extension Notification to " + email);
+					}
 				}
 				else
 				{
-					log.warning("Failed to dispatch Extension Batch Notification to " + email);
+					log.warning("WSP Extension Notification Error: No valid Email for extension " + ext.get_ID());
 				}
-			}
-			else
-			{
-				log.warning(
-						"WSP Extension Batch Notification Error: No matching AD_User account found for Email " + email);
 			}
 		}
 
-		log.info("Successfully send " + successCount + " Extension Batch email notifications for Batch ID: " + batchId);
+		log.info("Successfully sent " + successCount + " Extension email notifications for Batch ID: " + batchId);
 	}
+
 }
