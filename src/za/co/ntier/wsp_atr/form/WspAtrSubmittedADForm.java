@@ -394,7 +394,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 		String sql =
 				"SELECT s.ZZ_WSP_ATR_Submitted_ID, s.SubmittedDate, s.FileName, " +
-						"       s.ZZ_Import_Submitted_Data, v.orgname, s.ZZ_DocStatus " +
+						"       s.ZZ_Import_Submitted_Data, (zz_sdl_no || '-' || orgname), s.ZZ_DocStatus " +
 
 	        "FROM ZZ_WSP_ATR_Submitted s " +
 	        "LEFT JOIN adempiere.zzsdforganisation_v v " +
@@ -862,7 +862,8 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 						+ "   FROM adempiere.zzsdforganisation so "
 						+ "   JOIN children_bp cb "
 						+ "     ON cb.child_bp = so.c_bpartner_id "
-						+ "   WHERE so.isactive = 'Y' "
+						+ "   WHERE so.isactive = 'Y'"
+						+ "   and so.zz_docStatus <> 'UnSdfOrg' "  // Unlinked
 						+ ") "
 						+ "SELECT zzsdforganisation_id "
 						+ "FROM children_orgs "
