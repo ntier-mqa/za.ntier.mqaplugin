@@ -21,6 +21,7 @@ public abstract class AbstractReportSectionBuilder implements IReportSectionBuil
 		return DB.executeUpdateEx(sql, new Object[] { reportId}, trxName);
 	}
 	
+	/*
 	public String getParentAndChildSubmittedIdsInClause(Properties ctx,
 			int parentSubmittedId,
 			String trxName) {
@@ -80,6 +81,54 @@ public abstract class AbstractReportSectionBuilder implements IReportSectionBuil
 		return "(" + ids.stream()
 		.map(String::valueOf)
 		.collect(Collectors.joining(",")) + ")";
+	}
+	*/
+	
+	public String getParentAndChildSubmittedIdsInClause(Properties ctx, int parentSubmittedId, String trxName) {
+	    final String sql =
+	          "SELECT q.zz_wsp_atr_submitted_id "
+	        + "FROM ( "
+	        + "    SELECT ? AS zz_wsp_atr_submitted_id, 0 AS sort_no "
+	        + "    UNION "
+	        + "    SELECT DISTINCT ON (s.zzsdforganisation_id) "
+	        + "           s.zz_wsp_atr_submitted_id, "
+	        + "           1 AS sort_no "
+	        + "    FROM adempiere.zz_wsp_atr_sub_levy_orgs slo "
+	        + "    JOIN adempiere.zz_wsp_atr_submitted s "
+	        + "      ON s.zzsdforganisation_id = slo.zzsdforganisation_id "
+	        + "    WHERE slo.zz_wsp_atr_submitted_id = ? "
+	        + "      AND s.isactive = 'Y' "
+	        + "      AND s.zz_docstatus IN ('"
+	        + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported + "','"
+	        + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Uploaded + "','"
+	        + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Query + "') "
+	        + "    ORDER BY s.zzsdforganisation_id, s.updated DESC, s.zz_wsp_atr_submitted_id DESC "
+	        + ") q "
+	        + "ORDER BY q.sort_no, q.zz_wsp_atr_submitted_id";
+
+	    List<Integer> ids = new ArrayList<>();
+
+	    try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName)) {
+	        pstmt.setInt(1, parentSubmittedId);
+	        pstmt.setInt(2, parentSubmittedId);
+
+	        try (ResultSet rs = pstmt.executeQuery()) {
+	            while (rs.next()) {
+	                ids.add(rs.getInt(1));
+	            }
+	        }
+	    } catch (Exception e) {
+	        throw new RuntimeException(
+	            "Failed to load parent/child submitted ids for " + parentSubmittedId + ": " + e.getMessage(), e);
+	    }
+
+	    if (ids.isEmpty()) {
+	        return "(" + parentSubmittedId + ")";
+	    }
+
+	    return "(" + ids.stream()
+	            .map(String::valueOf)
+	            .collect(Collectors.joining(",")) + ")";
 	}
 
 }

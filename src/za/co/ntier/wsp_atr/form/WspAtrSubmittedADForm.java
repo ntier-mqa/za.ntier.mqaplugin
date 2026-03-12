@@ -2,6 +2,8 @@ package za.co.ntier.wsp_atr.form;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
@@ -53,6 +55,7 @@ import org.zkoss.zul.Toolbarbutton;
 import org.zkoss.zul.Vlayout;
 
 import za.co.ntier.api.model.X_ZZSdfOrganisation;
+import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Sub_Levy_Orgs;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
 import za.ntier.models.MZZWSPATRSubmitted;
 
@@ -70,25 +73,24 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 	private Hbox actions = new Hbox();
 	private Toolbarbutton btnUpload = new Toolbarbutton("Upload .xlsm");
-	//private Toolbarbutton btnSubmit = new Toolbarbutton("Submit");
 	private Toolbarbutton btnRefresh = new Toolbarbutton("Refresh");
 	private Label lblInfo = new Label("");
 	private Label lblSelectedOrg = new Label("");
 	private Media pendingUploadMedia;
-	
+
 	private static final CLogger log = CLogger.getCLogger(WspAtrSubmittedADForm.class);
 
 
 
 
 	private Listbox list = new Listbox();
-	
+
 	private static final DateTimeFormatter TS_FORMAT =
-	        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+			DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
 	@Override
 	protected void initForm() {
-		
+
 		ZKUpdateUtil.setWidth(layout, "100%");
 		ZKUpdateUtil.setHeight(layout, "100%");
 		this.appendChild(layout);
@@ -102,8 +104,8 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 		this.addEventListener("onDownloadError", this);
 		this.addEventListener("onRunProcess", this);
 		org.zkoss.zk.ui.util.Clients.evalJavaScript(
-			    "var s=document.createElement('style');" +
-			    "s.innerHTML=`" +
+				"var s=document.createElement('style');" +
+						"s.innerHTML=`" +
 
 			    /* Normal */
 			    ".wsp-edit-purple{" +
@@ -136,41 +138,41 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 			    "`;" +
 			    "document.head.appendChild(s);"
-			);
+				);
 
 	}
 
 	private void buildNorth() {
 		btnUpload.setSclass("btn btn-sm btn-primary wsp-edit-purple");
 		btnRefresh.setSclass("btn btn-sm btn-primary wsp-edit-purple");
-	    north.setSplittable(false);
-	    north.setCollapsible(false);
-	    north.setSize("110px"); // a bit taller
+		north.setSplittable(false);
+		north.setCollapsible(false);
+		north.setSize("110px"); // a bit taller
 
-	    Div northDiv = new Div();
-	    north.appendChild(northDiv);
+		Div northDiv = new Div();
+		north.appendChild(northDiv);
 
-	    actions.setSpacing("12px");
-	    actions.appendChild(btnUpload);
-	//    actions.appendChild(btnSubmit);
-	    actions.appendChild(btnRefresh);
+		actions.setSpacing("12px");
+		actions.appendChild(btnUpload);
+		//    actions.appendChild(btnSubmit);
+		actions.appendChild(btnRefresh);
 
-	    // IMPORTANT: use ON_UPLOAD for upload button if you're using UploadEvent
-	    btnUpload.setUpload(AdempiereWebUI.getUploadSetting());
-	    btnUpload.addEventListener(Events.ON_UPLOAD, this);
+		// IMPORTANT: use ON_UPLOAD for upload button if you're using UploadEvent
+		btnUpload.setUpload(AdempiereWebUI.getUploadSetting());
+		btnUpload.addEventListener(Events.ON_UPLOAD, this);
 
-	   // btnSubmit.addEventListener(Events.ON_CLICK, this);
-	    btnRefresh.addEventListener(Events.ON_CLICK, this);
+		// btnSubmit.addEventListener(Events.ON_CLICK, this);
+		btnRefresh.addEventListener(Events.ON_CLICK, this);
 
-	    northDiv.appendChild(actions);
-	    northDiv.appendChild(new Separator());
+		northDiv.appendChild(actions);
+		northDiv.appendChild(new Separator());
 
-	    // show selected org
-	    northDiv.appendChild(lblSelectedOrg);
-	    northDiv.appendChild(new Separator());
+		// show selected org
+		northDiv.appendChild(lblSelectedOrg);
+		northDiv.appendChild(new Separator());
 
-	    // your info label
-	    northDiv.appendChild(lblInfo);
+		// your info label
+		northDiv.appendChild(lblInfo);
 	}
 
 
@@ -184,7 +186,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 		ListHead head = new ListHead();
 		list.appendChild(head);
 
-		
+
 		head.appendChild(new ListHeader("Organisation"));
 		head.appendChild(new ListHeader("Submitted Date"));
 		head.appendChild(new ListHeader("Uploaded File"));
@@ -195,24 +197,18 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 	@Override
 	public void onEvent(Event event) throws Exception {				
-		
+
 		if (event instanceof UploadEvent && event.getTarget() == btnUpload) {
-	        UploadEvent ue = (UploadEvent) event;
+			UploadEvent ue = (UploadEvent) event;
 
-	        Media media = ue.getMedia(); // single upload
-	        if (media == null)
-	            return;
+			Media media = ue.getMedia(); // single upload
+			if (media == null)
+				return;
 
-	        pendingUploadMedia = media;   // STORE IT
-	        promptForOrganisationThenUpload();
-	        return;
-	    }
-
-	/*	if (event.getTarget() == btnSubmit) {
-			doSubmitSelected();
+			pendingUploadMedia = media;   // STORE IT
+			promptForOrganisationThenUpload();
 			return;
 		}
-		*/
 		if (event.getTarget() == btnRefresh) {
 			refreshList();
 			return;
@@ -223,193 +219,182 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 			downloadLatestError(submittedId);
 			return;
 		}
-
-	/*	if ("onRunProcess".equals(event.getName())) {
-			int submittedId = (Integer) event.getData();
-			runValidateImportInBackground(submittedId);
-			return;
-		}
-		*/
 	}
 
 
 	// ---------------- UI Actions ----------------
 	private void promptForOrganisationThenUpload() {
 
-	    List<SdfOrgRow> orgs = getSdfOrganisationsForUser();
-	    if (orgs == null || orgs.isEmpty())
-	        throw new AdempiereException("No organisations are linked to your user.");
+		List<SdfOrgRow> orgs = getSdfOrganisationsForUser();
+		if (orgs == null || orgs.isEmpty())
+			throw new AdempiereException("No organisations are linked to your user.");
 
-	    Window win = new Window();
-	    win.setTitle("Select Organisation");
-	    win.setBorder("normal");
-	    win.setClosable(true);
-	    win.setSizable(false);
+		Window win = new Window();
+		win.setTitle("Select Organisation");
+		win.setBorder("normal");
+		win.setClosable(true);
+		win.setSizable(false);
 
-	    // IMPORTANT: use highlighted, not modal
-	    win.setAttribute(Window.MODE_KEY, Window.MODE_HIGHLIGHTED);
+		// IMPORTANT: use highlighted, not modal
+		win.setAttribute(Window.MODE_KEY, Window.MODE_HIGHLIGHTED);
 
-	    Vlayout body = new Vlayout();
-	    body.setSpacing("10px");
-	    body.setStyle("padding:12px; min-width:360px;");
-	    win.appendChild(body);
+		Vlayout body = new Vlayout();
+		body.setSpacing("10px");
+		body.setStyle("padding:12px; min-width:360px;");
+		win.appendChild(body);
 
-	    // Combo
-	    Listbox lb = new Listbox();
-	    lb.setMold("select");
-	    lb.setRows(0);
-	    ZKUpdateUtil.setHflex(lb, "1");
-	    body.appendChild(lb);
+		// Combo
+		Listbox lb = new Listbox();
+		lb.setMold("select");
+		lb.setRows(0);
+		ZKUpdateUtil.setHflex(lb, "1");
+		body.appendChild(lb);
 
-	    for (SdfOrgRow r : orgs) {
-	        // iDempiere ListItem(label,value)
-	        org.adempiere.webui.component.ListItem li =
-	                new org.adempiere.webui.component.ListItem(r.orgName, r);
-	        lb.appendChild(li);
-	    }
-	    lb.setSelectedIndex(0);
+		for (SdfOrgRow r : orgs) {
+			// iDempiere ListItem(label,value)
+			org.adempiere.webui.component.ListItem li =
+					new org.adempiere.webui.component.ListItem(r.orgName, r);
+			lb.appendChild(li);
+		}
+		lb.setSelectedIndex(0);
 
-	    // Buttons below combo
-	    Hbox buttons = new Hbox();
-	    buttons.setSpacing("10px");
-	    buttons.setPack("end");
-	    body.appendChild(buttons);
+		// Buttons below combo
+		Hbox buttons = new Hbox();
+		buttons.setSpacing("10px");
+		buttons.setPack("end");
+		body.appendChild(buttons);
 
-	    org.adempiere.webui.component.Button ok = new org.adempiere.webui.component.Button("OK");
-	    org.adempiere.webui.component.Button cancel = new org.adempiere.webui.component.Button("Cancel");
-	    buttons.appendChild(ok);
-	    buttons.appendChild(cancel);
+		org.adempiere.webui.component.Button ok = new org.adempiere.webui.component.Button("OK");
+		org.adempiere.webui.component.Button cancel = new org.adempiere.webui.component.Button("Cancel");
+		buttons.appendChild(ok);
+		buttons.appendChild(cancel);
 
-	    // Show with mask (pseudo-modal)
-	    final ISupportMask mask = LayoutUtils.showWindowWithMask(win, (Component) this, LayoutUtils.OVERLAP_PARENT);
+		// Show with mask (pseudo-modal)
+		final ISupportMask mask = LayoutUtils.showWindowWithMask(win, (Component) this, LayoutUtils.OVERLAP_PARENT);
 
-	    // Ensure mask removed when window closes
-	    win.addEventListener(DialogEvents.ON_WINDOW_CLOSE, e -> mask.hideMask());
+		// Ensure mask removed when window closes
+		win.addEventListener(DialogEvents.ON_WINDOW_CLOSE, e -> mask.hideMask());
 
-	    ok.addEventListener(Events.ON_CLICK, e -> {
-	        org.adempiere.webui.component.ListItem sel =
-	                (org.adempiere.webui.component.ListItem) lb.getSelectedItem();
-	        if (sel == null)
-	            throw new AdempiereException("Please select an organisation.");
+		ok.addEventListener(Events.ON_CLICK, e -> {
+			org.adempiere.webui.component.ListItem sel =
+					(org.adempiere.webui.component.ListItem) lb.getSelectedItem();
+			if (sel == null)
+				throw new AdempiereException("Please select an organisation.");
 
-	        SdfOrgRow chosen = (SdfOrgRow) sel.getValue();
+			SdfOrgRow chosen = (SdfOrgRow) sel.getValue();
 
-	        win.detach();        // triggers ON_WINDOW_CLOSE -> hides mask
+			win.detach();        // triggers ON_WINDOW_CLOSE -> hides mask
 
-	        doUploadWithOrganisation(chosen, pendingUploadMedia);
-	        pendingUploadMedia = null;
-	    });
+			doUploadWithOrganisation(chosen, pendingUploadMedia);
+			pendingUploadMedia = null;
+		});
 
-	    cancel.addEventListener(Events.ON_CLICK, e -> win.detach());
+		cancel.addEventListener(Events.ON_CLICK, e -> win.detach());
 	}
 
 	private void doUploadWithOrganisation(SdfOrgRow org, Media media) throws Exception {
-	    if (media == null)
-	        return;
+		if (media == null)
+			return;
 
-	    String filename = media.getName();
-	    if (filename == null || !filename.toLowerCase().endsWith(".xlsm"))
-	        throw new AdempiereException("Please upload an .xlsm file");
+		String filename = media.getName();
+		if (filename == null || !filename.toLowerCase().endsWith(".xlsm"))
+			throw new AdempiereException("Please upload an .xlsm file");
 
-	    if (filename.toLowerCase().startsWith("error")) {
-	        throw new AdempiereException("File Name cannot start with Error, please rename and try again");
-	    }
+		if (filename.toLowerCase().startsWith("error")) {
+			throw new AdempiereException("File Name cannot start with Error, please rename and try again");
+		}
 
-	    byte[] data = getMediaBytes(media);
+		byte[] data = getMediaBytes(media);
 
-	    if (data == null || data.length == 0) {
-	        throw new AdempiereException("Uploaded file is empty: " + filename);
-	    }
+		if (data == null || data.length == 0) {
+			throw new AdempiereException("Uploaded file is empty: " + filename);
+		}
 
-	    // Validate the uploaded file before saving
-	    assertZipLooksFullyValid(data, filename);
+		// Validate the uploaded file before saving
+		assertZipLooksFullyValid(data, filename);
 
-	    log.info("UPLOAD START | file=" + filename
-	            + " | uploadedLen=" + data.length
-	            + " | uploadedSha256=" + sha256Hex(data));
+		log.info("UPLOAD START | file=" + filename
+				+ " | uploadedLen=" + data.length
+				+ " | uploadedSha256=" + sha256Hex(data));
 
-	    String trxName = Trx.createTrxName("WSPATRUpload");
-	    Trx trx = Trx.get(trxName, true);
+		String trxName = Trx.createTrxName("WSPATRUpload");
+		Trx trx = Trx.get(trxName, true);
 
-	    int submittedId = 0;
+		int submittedId = 0;
 
-	    try {
-	        int existingId = findExistingSubmittedIdForOrg(org.zzSdfOrganisationId, trxName);
+		try {
+			int existingId = findExistingSubmittedIdForOrg(org.zzSdfOrganisationId, trxName);
 
-	        MZZWSPATRSubmitted submitted;
-	        if (existingId > 0) {
-	            submitted = new MZZWSPATRSubmitted(Env.getCtx(), existingId, trxName);
+			MZZWSPATRSubmitted submitted;
+			if (existingId > 0) {
+				submitted = new MZZWSPATRSubmitted(Env.getCtx(), existingId, trxName);
 
-	            deleteAllAttachmentsForSubmitted(existingId);
-	            // deleteRelatedRecordsBeforeProcessing(existingId, trxName);
+				deleteAllAttachmentsForSubmitted(existingId);
+				// deleteRelatedRecordsBeforeProcessing(existingId, trxName);
 
-	            submitted.setSubmittedDate(new Timestamp(System.currentTimeMillis()));
-	            submitted.setFileName(filename);
-	            submitted.setName("WSP/ATR " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
-	            submitted.setZZ_Import_Submitted_Data("N");
-	            submitted.setZZSdfOrganisation_ID(org.zzSdfOrganisationId);
-	            submitted.setZZ_DocAction(null);
-	            submitted.setZZ_DocStatus(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating);
-	            submitted.saveEx();
+				submitted.setSubmittedDate(new Timestamp(System.currentTimeMillis()));
+				submitted.setFileName(filename);
+				submitted.setName("WSP/ATR " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+				submitted.setZZ_Import_Submitted_Data("N");
+				submitted.setZZSdfOrganisation_ID(org.zzSdfOrganisationId);
+				submitted.setZZ_DocAction(null);
+				submitted.setZZ_DocStatus(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating);
+				submitted.saveEx();
 
-	            submittedId = existingId;
-	        } else {
-	            submitted = new MZZWSPATRSubmitted(Env.getCtx(), 0, trxName);
-	            submitted.setName("WSP/ATR " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
-	            submitted.setSubmittedDate(new Timestamp(System.currentTimeMillis()));
-	            submitted.setFileName(filename);
-	            submitted.setZZ_Import_Submitted_Data("N");
-	            submitted.setZZSdfOrganisation_ID(org.zzSdfOrganisationId);
-	            submitted.setZZ_DocAction(null);
-	            submitted.setZZ_DocStatus(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating);
-	            submitted.saveEx();
+				submittedId = existingId;
+			} else {
+				submitted = new MZZWSPATRSubmitted(Env.getCtx(), 0, trxName);
+				submitted.setName("WSP/ATR " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+				submitted.setSubmittedDate(new Timestamp(System.currentTimeMillis()));
+				submitted.setFileName(filename);
+				submitted.setZZ_Import_Submitted_Data("N");
+				submitted.setZZSdfOrganisation_ID(org.zzSdfOrganisationId);
+				submitted.setZZ_DocAction(null);
+				submitted.setZZ_DocStatus(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating);
+				submitted.saveEx();
 
-	            submittedId = submitted.get_ID();
-	        }
+				submittedId = submitted.get_ID();
+			}
 
-	        //MAttachment att = new MAttachment(
-	        //        Env.getCtx(),
-	         //       X_ZZ_WSP_ATR_Submitted.Table_ID,
-	         //       submittedId,
-	          //      null,
-	           //     trxName
-	       // );
-	        trx.commit(true);
-	        MAttachment att = submitted.createAttachment();
-	        att.addEntry(filename, data);
-	        att.saveEx();
+			// rebuild child sub levy org rows for this parent submission
+			rebuildSubLevyOrgLinks(submittedId, trxName);
 
-	        // Verify immediately inside the same transaction
-	        verifyAttachmentRoundTrip(submittedId, filename, data);
+			trx.commit(true);
+			MAttachment att = submitted.createAttachment();
+			att.addEntry(filename, data);
+			att.saveEx();
 
-	        //trx.commit(true);
+			// Verify immediately inside the same transaction
+			verifyAttachmentRoundTrip(submittedId, filename, data);
 
-	    } catch (Exception e) {
-	        trx.rollback();
-	        throw e;
-	    } finally {
-	        trx.close();
-	    }
+			//trx.commit(true);
 
-	    // Verify again after commit / fresh reload
-	  //  verifyAttachmentRoundTrip(submittedId, filename, data);
+		} catch (Exception e) {
+			trx.rollback();
+			throw e;
+		} finally {
+			trx.close();
+		}
 
-	    lblSelectedOrg.setValue("Organisation: " + org.orgName);
-	    lblInfo.setValue("Uploaded: " + filename + " (ID " + submittedId + ")");
-	    refreshList();
-	    runValidateImportInBackground(submittedId);
+		// Verify again after commit / fresh reload
+		//  verifyAttachmentRoundTrip(submittedId, filename, data);
+
+		lblSelectedOrg.setValue("Organisation: " + org.orgName);
+		lblInfo.setValue("Uploaded: " + filename + " (ID " + submittedId + ")");
+		refreshList();
+		runValidateImportInBackground(submittedId);
 	}
-	
 
-		
+
+
 	private void refreshList() {
-	    list.getItems().clear();
+		list.getItems().clear();
 
-	    int adUserId = Env.getAD_User_ID(Env.getCtx());
+		int adUserId = Env.getAD_User_ID(Env.getCtx());
 
-	    String sql =
-	        "SELECT s.ZZ_WSP_ATR_Submitted_ID, s.SubmittedDate, s.FileName, " +
-	        "       s.ZZ_Import_Submitted_Data, v.orgname, s.ZZ_DocStatus " +
+		String sql =
+				"SELECT s.ZZ_WSP_ATR_Submitted_ID, s.SubmittedDate, s.FileName, " +
+						"       s.ZZ_Import_Submitted_Data, v.orgname, s.ZZ_DocStatus " +
 
 	        "FROM ZZ_WSP_ATR_Submitted s " +
 	        "LEFT JOIN adempiere.zzsdforganisation_v v " +
@@ -417,141 +402,141 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	        "WHERE v.ad_user_id = ? " +
 	        "ORDER BY s.ZZ_WSP_ATR_Submitted_ID DESC";
 
-	    
-	    List<List<Object>> rows = org.compiere.util.DB.getSQLArrayObjectsEx(null, sql, adUserId);
 
-	    if (rows == null)
-	        return;
+		List<List<Object>> rows = org.compiere.util.DB.getSQLArrayObjectsEx(null, sql, adUserId);
 
-	    for (List<Object> r : rows) {
-	        int id = ((Number) r.get(0)).intValue();
-	        Timestamp submittedDate = (Timestamp) r.get(1);
+		if (rows == null)
+			return;
 
-	        String uploaded = findUploadedFileName(id);
-	        String latestError = findLatestErrorFileName(id);
+		for (List<Object> r : rows) {
+			int id = ((Number) r.get(0)).intValue();
+			Timestamp submittedDate = (Timestamp) r.get(1);
 
-	        String orgName = (String) r.get(4);
-	        String statusCode = (String) r.get(5);
+			String uploaded = findUploadedFileName(id);
+			String latestError = findLatestErrorFileName(id);
 
-	        String status = statusLabel(statusCode);
+			String orgName = (String) r.get(4);
+			String statusCode = (String) r.get(5);
 
-	        addRow(id, orgName, submittedDate, uploaded, latestError, status);
-	    }
+			String status = statusLabel(statusCode);
+
+			addRow(id, orgName, submittedDate, uploaded, latestError, status);
+		}
 	}
-	
+
 	private String statusLabel(String code) {
-	    if (Util.isEmpty(code, true)) return "Draft";	  
-	    switch (code) {
-        case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Draft: return "Draft";
-        case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating: return "Validating";
-        case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_ValidationError: return "Validation Error";
-        case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Importing: return "Importing";
-        case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported: return "Imported";
-        case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_ErrorImporting: return "Error Importing";
-        case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Submitted: return "Submitted";
-        case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Uploaded: return "Uploaded";
-        case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_RecommendedForEvaluation: return "Recommended For Evaluation";
-        case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_RecommendedForApproval: return "Recommended For Approval";
-        case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Approved: return "Approved";
-        
-        
-        
-        default: return code;
-    }
+		if (Util.isEmpty(code, true)) return "Draft";	  
+		switch (code) {
+		case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Draft: return "Draft";
+		case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating: return "Validating";
+		case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_ValidationError: return "Validation Error";
+		case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Importing: return "Importing";
+		case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported: return "Imported";
+		case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_ErrorImporting: return "Error Importing";
+		case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Submitted: return "Submitted";
+		case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Uploaded: return "Uploaded";
+		case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_RecommendedForEvaluation: return "Recommended For Evaluation";
+		case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_RecommendedForApproval: return "Recommended For Approval";
+		case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Approved: return "Approved";
+
+
+
+		default: return code;
+		}
 	}
 
 
 
 	private void addRow(int id, String orgName, Timestamp submittedDate, String uploaded, String latestError, String status) {
 
-	    ListItem item = new ListItem();
-	    item.setValue(Integer.valueOf(id)); // keep ID as row value for actions
-	    
-	    String formattedDate = "";
-	    if (submittedDate != null) {
-	        formattedDate = submittedDate.toLocalDateTime().format(TS_FORMAT);
-	    }
+		ListItem item = new ListItem();
+		item.setValue(Integer.valueOf(id)); // keep ID as row value for actions
 
-	    item.appendChild(new ListCell(!Util.isEmpty(orgName, true) ? orgName : ""));
-	    item.appendChild(new ListCell(submittedDate != null ? formattedDate : ""));
-	    item.appendChild(new ListCell(uploaded != null ? uploaded : ""));
-	    item.appendChild(new ListCell(latestError != null ? latestError : ""));
-	    item.appendChild(new ListCell(status));
+		String formattedDate = "";
+		if (submittedDate != null) {
+			formattedDate = submittedDate.toLocalDateTime().format(TS_FORMAT);
+		}
 
-	    // actions cell stays the same...
-	    ListCell actions = new ListCell();
-	    Hbox hb = new Hbox();
-	    hb.setSpacing("8px");
+		item.appendChild(new ListCell(!Util.isEmpty(orgName, true) ? orgName : ""));
+		item.appendChild(new ListCell(submittedDate != null ? formattedDate : ""));
+		item.appendChild(new ListCell(uploaded != null ? uploaded : ""));
+		item.appendChild(new ListCell(latestError != null ? latestError : ""));
+		item.appendChild(new ListCell(status));
 
-	    
-	    if (!Util.isEmpty(latestError, true)) {
-	        org.adempiere.webui.component.Button dlBtn =
-	                new org.adempiere.webui.component.Button("Download Error");
+		// actions cell stays the same...
+		ListCell actions = new ListCell();
+		Hbox hb = new Hbox();
+		hb.setSpacing("8px");
 
-	        // these classes usually render like the standard purple “Edit” button in iDempiere themes
-	        dlBtn.setSclass("btn btn-sm btn-primary wsp-edit-purple");
 
-	        dlBtn.addEventListener(Events.ON_CLICK, (EventListener<Event>) e ->
-	            Events.postEvent(new Event("onDownloadError", this, Integer.valueOf(id))));
+		if (!Util.isEmpty(latestError, true)) {
+			org.adempiere.webui.component.Button dlBtn =
+					new org.adempiere.webui.component.Button("Download Error");
 
-	        hb.appendChild(dlBtn);
-	    }
+			// these classes usually render like the standard purple “Edit” button in iDempiere themes
+			dlBtn.setSclass("btn btn-sm btn-primary wsp-edit-purple");
 
-	    actions.appendChild(hb);
-	    item.appendChild(actions);
+			dlBtn.addEventListener(Events.ON_CLICK, (EventListener<Event>) e ->
+			Events.postEvent(new Event("onDownloadError", this, Integer.valueOf(id))));
 
-	    list.appendChild(item);
+			hb.appendChild(dlBtn);
+		}
+
+		actions.appendChild(hb);
+		item.appendChild(actions);
+
+		list.appendChild(item);
 	}	
-	
+
 	private void runValidateImportInBackground(final int submittedId) {
-	    final Properties ctx = Env.getCtx();
+		final Properties ctx = Env.getCtx();
 
-	    final MProcess proc = MProcess.get(ctx, PROCESS_VALIDATE_IMPORT_UU);
-	    if (proc == null || proc.getAD_Process_ID() <= 0) {
-	        throw new AdempiereException("Validate/Import process not found (UU=" + PROCESS_VALIDATE_IMPORT_UU + ")");
-	    }
+		final MProcess proc = MProcess.get(ctx, PROCESS_VALIDATE_IMPORT_UU);
+		if (proc == null || proc.getAD_Process_ID() <= 0) {
+			throw new AdempiereException("Validate/Import process not found (UU=" + PROCESS_VALIDATE_IMPORT_UU + ")");
+		}
 
-	    // Optional: prevent duplicate QUEUED for same record/process
-	    int exists = DB.getSQLValue(null,
-	            "SELECT COUNT(*) FROM zz_bg_job_queue " +
-	            "WHERE ad_client_id=? AND ad_process_id=? AND record_id=? " +
-	            "AND status IN ('Q','R') AND isactive='Y'",
-	            Env.getAD_Client_ID(ctx), proc.getAD_Process_ID(), submittedId);
+		// Optional: prevent duplicate QUEUED for same record/process
+		int exists = DB.getSQLValue(null,
+				"SELECT COUNT(*) FROM zz_bg_job_queue " +
+						"WHERE ad_client_id=? AND ad_process_id=? AND record_id=? " +
+						"AND status IN ('Q','R') AND isactive='Y'",
+						Env.getAD_Client_ID(ctx), proc.getAD_Process_ID(), submittedId);
 
-	    if (exists > 0) {
-	        lblInfo.setValue("Already queued/running for Submitted ID " + submittedId);
-	        return;
-	    }
+		if (exists > 0) {
+			lblInfo.setValue("Already queued/running for Submitted ID " + submittedId);
+			return;
+		}
 
-	    // Create queue record (Status='Q')
-	    int queueId = DB.getNextID(ctx, "ZZ_BG_Job_Queue", null);
+		// Create queue record (Status='Q')
+		int queueId = DB.getNextID(ctx, "ZZ_BG_Job_Queue", null);
 
-	    int adClientId = Env.getAD_Client_ID(ctx);
-	    int adOrgId    = Env.getAD_Org_ID(ctx);
-	    int adUserId   = Env.getAD_User_ID(ctx);
-	    int tableID = MTable.getTable_ID(X_ZZ_WSP_ATR_Submitted.Table_Name);
+		int adClientId = Env.getAD_Client_ID(ctx);
+		int adOrgId    = Env.getAD_Org_ID(ctx);
+		int adUserId   = Env.getAD_User_ID(ctx);
+		int tableID = MTable.getTable_ID(X_ZZ_WSP_ATR_Submitted.Table_Name);
 
-	    DB.executeUpdateEx(
-	            "INSERT INTO zz_bg_job_queue " +
-	            "(zz_bg_job_queue_id, ad_client_id, ad_org_id, ad_user_id, ad_process_id, record_id, status, " +
-	            " created, createdby, updated, updatedby, isactive, ad_table_id, zz_bg_job_queue_uu) " +
-	            "VALUES (?, ?, ?, ?, ?, ?, 'Q', now(), ?, now(), ?, 'Y', ?, generate_uuid())",
-	            new Object[] {
-	                    queueId,
-	                    adClientId,
-	                    adOrgId,
-	                    adUserId,
-	                    proc.getAD_Process_ID(),
-	                    submittedId,
-	                    adUserId,         // createdby
-	                    adUserId,         // updatedby
-	                    tableID                 // ad_table_id (optional) - set if you want
-	            },
-	            null
-	    );
+		DB.executeUpdateEx(
+				"INSERT INTO zz_bg_job_queue " +
+						"(zz_bg_job_queue_id, ad_client_id, ad_org_id, ad_user_id, ad_process_id, record_id, status, " +
+						" created, createdby, updated, updatedby, isactive, ad_table_id, zz_bg_job_queue_uu) " +
+						"VALUES (?, ?, ?, ?, ?, ?, 'Q', now(), ?, now(), ?, 'Y', ?, generate_uuid())",
+						new Object[] {
+								queueId,
+								adClientId,
+								adOrgId,
+								adUserId,
+								proc.getAD_Process_ID(),
+								submittedId,
+								adUserId,         // createdby
+								adUserId,         // updatedby
+								tableID                 // ad_table_id (optional) - set if you want
+				},
+						null
+				);
 
-	    lblInfo.setValue("Queued Validate/Import for Submitted ID " + submittedId +
-	            " (Queue ID " + queueId + "). It will run on the next scheduler cycle.");
+		lblInfo.setValue("Queued Validate/Import for Submitted ID " + submittedId +
+				" (Queue ID " + queueId + "). It will run on the next scheduler cycle.");
 	}
 
 
@@ -580,7 +565,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 	// ---------------- Attachments Helpers ----------------
 
-	
+
 
 	private String findUploadedFileName(int submittedId) {
 		MAttachment att = MAttachment.get(Env.getCtx(), X_ZZ_WSP_ATR_Submitted.Table_ID, submittedId);
@@ -621,47 +606,17 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 		return errors.get(errors.size() - 1);
 	}
 
-	// ---------------- Media / IO Helpers ----------------
-/*
 	private byte[] getMediaBytes(Media media) {
 		try {
-			// xlsm should be binary
-			if (media.isBinary()) {
-				return media.getByteData();
+			// Always treat Excel as binary and read the stream fully
+			try (InputStream is = media.getStreamData()) {
+				if (is == null)
+					throw new AdempiereException("Upload stream is null for " + media.getName());
+				return readAllBytes(is);
 			}
-			// fallback (should not happen)
-			return media.getStringData().getBytes("UTF-8");
 		} catch (Exception e) {
-			throw new AdempiereException("Failed to read uploaded file: " + e.getMessage());
+			throw new AdempiereException("Failed to read uploaded file: " + e.getMessage(), e);
 		}
-	}
-	*/
-	
-	private byte[] getMediaBytes(Media media) {
-	    try {
-	        // Always treat Excel as binary and read the stream fully
-	        try (InputStream is = media.getStreamData()) {
-	            if (is == null)
-	                throw new AdempiereException("Upload stream is null for " + media.getName());
-	            return readAllBytes(is);
-	        }
-	    } catch (Exception e) {
-	        throw new AdempiereException("Failed to read uploaded file: " + e.getMessage(), e);
-	    }
-	}
-	
-	
-	private void assertZipLooksValid(byte[] data, String name) {
-	    try (java.util.zip.ZipInputStream zis =
-	             new java.util.zip.ZipInputStream(new java.io.ByteArrayInputStream(data))) {
-	        if (zis.getNextEntry() == null) {
-	            throw new AdempiereException("Uploaded file is corrupt/truncated (not a valid Excel ZIP): " + name);
-	        }
-	    } catch (AdempiereException ex) {
-	        throw ex;
-	    } catch (Exception e) {
-	        throw new AdempiereException("Could not validate uploaded ZIP: " + name + " : " + e.getMessage(), e);
-	    }
 	}
 
 	private byte[] readAllBytes(InputStream is) throws Exception {
@@ -673,207 +628,271 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 		}
 		return bos.toByteArray();
 	}
-	
+
 	private List<SdfOrgRow> getSdfOrganisationsForUser() {
-	    int adUserId = Env.getAD_User_ID(Env.getCtx());
+		int adUserId = Env.getAD_User_ID(Env.getCtx());
 
-	    String sql =
-	        "SELECT zzsdforganisation_v_id, (zz_sdl_no || '-' || orgname) " +
-	        "FROM adempiere.zzsdforganisation_v " +
-	        "WHERE ad_user_id = ? " +
-	        "AND isactive = 'Y' " +
-	        "AND zzsdfroletype = '" + X_ZZSdfOrganisation.ZZSDFROLETYPE_Primary + "' " +
-	        " AND ZZ_DOCStatus <> 'DR' and ZZ_DOCStatus <> 'UnSdfOrg' " + 
-	        "ORDER BY orgname";
+		String sql =
+				"SELECT zzsdforganisation_v_id, (zz_sdl_no || '-' || orgname) " +
+						"FROM adempiere.zzsdforganisation_v " +
+						"WHERE ad_user_id = ? " +
+						"AND isactive = 'Y' " +
+						"AND zzsdfroletype = '" + X_ZZSdfOrganisation.ZZSDFROLETYPE_Primary + "' " +
+						" AND ZZ_DOCStatus <> 'DR' and ZZ_DOCStatus <> 'UnSdfOrg' " + 
+						"ORDER BY orgname";
 
-	    List<List<Object>> rows =
-	            org.compiere.util.DB.getSQLArrayObjectsEx(null, sql, adUserId);
-	    if (rows != null) {
-		    return rows.stream()
-		    	    .map(r -> new SdfOrgRow(
-		    	            ((Number) r.get(0)).intValue(),
-		    	            (String) r.get(1)))
-		    	    .collect(Collectors.toList());
-	    } 
-	    return null;
+		List<List<Object>> rows =
+				org.compiere.util.DB.getSQLArrayObjectsEx(null, sql, adUserId);
+		if (rows != null) {
+			return rows.stream()
+					.map(r -> new SdfOrgRow(
+							((Number) r.get(0)).intValue(),
+							(String) r.get(1)))
+					.collect(Collectors.toList());
+		} 
+		return null;
 
 	}
 
-	
-	
+
+
 	private static class SdfOrgRow {
-	    final int zzSdfOrganisationId;
-	    final String orgName;
+		final int zzSdfOrganisationId;
+		final String orgName;
 
-	    SdfOrgRow(int id, String name) {
-	        this.zzSdfOrganisationId = id;
-	        this.orgName = name;
-	    }
+		SdfOrgRow(int id, String name) {
+			this.zzSdfOrganisationId = id;
+			this.orgName = name;
+		}
 
-	    @Override
-	    public String toString() {
-	        return orgName;
-	    }
+		@Override
+		public String toString() {
+			return orgName;
+		}
 	}
-	
+
 	private int findExistingSubmittedIdForOrg(int zzSdfOrganisationId, String trxName) {
-	    // Prefer a draft/not imported record
-	    int id = org.compiere.util.DB.getSQLValueEx(
-	            trxName,
-	            "SELECT ZZ_WSP_ATR_Submitted_ID " +
-	            "FROM ZZ_WSP_ATR_Submitted " +
-	            "WHERE ZZSDFOrganisation_ID=? " +
-	            "AND COALESCE(ZZ_Import_Submitted_Data,'N')='N' " +
-	            "ORDER BY SubmittedDate DESC NULLS LAST, ZZ_WSP_ATR_Submitted_ID DESC " +
-	            "FETCH FIRST 1 ROWS ONLY",
-	            zzSdfOrganisationId
-	    );
+		// Prefer a draft/not imported record
+		int id = org.compiere.util.DB.getSQLValueEx(
+				trxName,
+				"SELECT ZZ_WSP_ATR_Submitted_ID " +
+						"FROM ZZ_WSP_ATR_Submitted " +
+						"WHERE ZZSDFOrganisation_ID=? " +
+						"AND COALESCE(ZZ_Import_Submitted_Data,'N')='N' " +
+						"ORDER BY SubmittedDate DESC NULLS LAST, ZZ_WSP_ATR_Submitted_ID DESC " +
+						"FETCH FIRST 1 ROWS ONLY",
+						zzSdfOrganisationId
+				);
 
-	    if (id > 0)
-	        return id;
+		if (id > 0)
+			return id;
 
-	    // Fallback: any latest record for the org
-	    return org.compiere.util.DB.getSQLValueEx(
-	            trxName,
-	            "SELECT ZZ_WSP_ATR_Submitted_ID " +
-	            "FROM ZZ_WSP_ATR_Submitted " +
-	            "WHERE ZZSDFOrganisation_ID=? " +
-	            "ORDER BY SubmittedDate DESC NULLS LAST, ZZ_WSP_ATR_Submitted_ID DESC " +
-	            "FETCH FIRST 1 ROWS ONLY",
-	            zzSdfOrganisationId
-	    );
+		// Fallback: any latest record for the org
+		return org.compiere.util.DB.getSQLValueEx(
+				trxName,
+				"SELECT ZZ_WSP_ATR_Submitted_ID " +
+						"FROM ZZ_WSP_ATR_Submitted " +
+						"WHERE ZZSDFOrganisation_ID=? " +
+						"ORDER BY SubmittedDate DESC NULLS LAST, ZZ_WSP_ATR_Submitted_ID DESC " +
+						"FETCH FIRST 1 ROWS ONLY",
+						zzSdfOrganisationId
+				);
 	}
-	
-	
+
+
 	private void deleteAllAttachmentsForSubmitted(int submittedId) {
-	    MAttachment att = MAttachment.get(Env.getCtx(), X_ZZ_WSP_ATR_Submitted.Table_ID, submittedId);
-	    if (att != null) {
-	        att.deleteEx(true);
-	    }
+		MAttachment att = MAttachment.get(Env.getCtx(), X_ZZ_WSP_ATR_Submitted.Table_ID, submittedId);
+		if (att != null) {
+			att.deleteEx(true);
+		}
 	}
 
-	
+
 	private void verifyAttachmentRoundTrip(int submittedId, String filename, byte[] originalData) {
-	    try {
-	        MAttachment savedAtt = MAttachment.get(Env.getCtx(), X_ZZ_WSP_ATR_Submitted.Table_ID, submittedId);
-	        if (savedAtt == null || savedAtt.getEntryCount() <= 0) {
-	            throw new AdempiereException("Attachment was not found immediately after save for record " + submittedId);
-	        }
+		try {
+			MAttachment savedAtt = MAttachment.get(Env.getCtx(), X_ZZ_WSP_ATR_Submitted.Table_ID, submittedId);
+			if (savedAtt == null || savedAtt.getEntryCount() <= 0) {
+				throw new AdempiereException("Attachment was not found immediately after save for record " + submittedId);
+			}
 
-	        MAttachmentEntry matched = null;
-	        for (MAttachmentEntry e : savedAtt.getEntries()) {
-	            if (e != null && filename.equals(e.getName())) {
-	                matched = e;
-	                break;
-	            }
-	        }
+			MAttachmentEntry matched = null;
+			for (MAttachmentEntry e : savedAtt.getEntries()) {
+				if (e != null && filename.equals(e.getName())) {
+					matched = e;
+					break;
+				}
+			}
 
-	        if (matched == null) {
-	            throw new AdempiereException("Saved attachment entry not found: " + filename);
-	        }
+			if (matched == null) {
+				throw new AdempiereException("Saved attachment entry not found: " + filename);
+			}
 
-	        byte[] savedData;
-	        try (InputStream is = matched.getInputStream()) {
-	            savedData = readAllBytes(is);
-	        }
+			byte[] savedData;
+			try (InputStream is = matched.getInputStream()) {
+				savedData = readAllBytes(is);
+			}
 
-	        int originalLen = originalData != null ? originalData.length : -1;
-	        int savedLen = savedData != null ? savedData.length : -1;
+			int originalLen = originalData != null ? originalData.length : -1;
+			int savedLen = savedData != null ? savedData.length : -1;
 
-	        String originalHash = sha256Hex(originalData);
-	        String savedHash = sha256Hex(savedData);
+			String originalHash = sha256Hex(originalData);
+			String savedHash = sha256Hex(savedData);
 
-	        log.info("UPLOAD VERIFY | submittedId=" + submittedId
-	                + " | file=" + filename
-	                + " | originalLen=" + originalLen
-	                + " | savedLen=" + savedLen
-	                + " | originalSha256=" + originalHash
-	                + " | savedSha256=" + savedHash);
+			log.info("UPLOAD VERIFY | submittedId=" + submittedId
+					+ " | file=" + filename
+					+ " | originalLen=" + originalLen
+					+ " | savedLen=" + savedLen
+					+ " | originalSha256=" + originalHash
+					+ " | savedSha256=" + savedHash);
 
-	        if (originalLen != savedLen) {
-	            logFirstDifference(originalData, savedData, "original", "saved");
-	            throw new AdempiereException(
-	                    "Attachment size mismatch after save. Original=" + originalLen + " bytes, Saved=" + savedLen + " bytes");
-	        }
+			if (originalLen != savedLen) {
+				logFirstDifference(originalData, savedData, "original", "saved");
+				throw new AdempiereException(
+						"Attachment size mismatch after save. Original=" + originalLen + " bytes, Saved=" + savedLen + " bytes");
+			}
 
-	        if (!originalHash.equals(savedHash)) {
-	            logFirstDifference(originalData, savedData, "original", "saved");
-	            throw new AdempiereException("Attachment content mismatch after save. SHA-256 differs.");
-	        }
+			if (!originalHash.equals(savedHash)) {
+				logFirstDifference(originalData, savedData, "original", "saved");
+				throw new AdempiereException("Attachment content mismatch after save. SHA-256 differs.");
+			}
 
-	        assertZipLooksFullyValid(savedData, filename);
+			assertZipLooksFullyValid(savedData, filename);
 
-	    } catch (Exception e) {
-	        throw new AdempiereException("Attachment verification failed: " + e.getMessage(), e);
-	    }
+		} catch (Exception e) {
+			throw new AdempiereException("Attachment verification failed: " + e.getMessage(), e);
+		}
 	}
 
 	private String sha256Hex(byte[] data) {
-	    try {
-	        java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
-	        byte[] digest = md.digest(data);
+		try {
+			java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+			byte[] digest = md.digest(data);
 
-	        StringBuilder sb = new StringBuilder(digest.length * 2);
-	        for (byte b : digest) {
-	            sb.append(String.format("%02x", b));
-	        }
-	        return sb.toString();
-	    } catch (Exception e) {
-	        throw new RuntimeException("Could not calculate SHA-256", e);
-	    }
+			StringBuilder sb = new StringBuilder(digest.length * 2);
+			for (byte b : digest) {
+				sb.append(String.format("%02x", b));
+			}
+			return sb.toString();
+		} catch (Exception e) {
+			throw new RuntimeException("Could not calculate SHA-256", e);
+		}
 	}
 
 	private void assertZipLooksFullyValid(byte[] data, String name) {
-	    java.io.File temp = null;
-	    try {
-	        temp = java.io.File.createTempFile("wspatr_", ".xlsm");
-	        try (java.io.FileOutputStream fos = new java.io.FileOutputStream(temp)) {
-	            fos.write(data);
-	        }
+		java.io.File temp = null;
+		try {
+			temp = java.io.File.createTempFile("wspatr_", ".xlsm");
+			try (java.io.FileOutputStream fos = new java.io.FileOutputStream(temp)) {
+				fos.write(data);
+			}
 
-	        try (java.util.zip.ZipFile zf = new java.util.zip.ZipFile(temp)) {
-	            if (zf.size() == 0) {
-	                throw new AdempiereException("ZIP has no entries: " + name);
-	            }
+			try (java.util.zip.ZipFile zf = new java.util.zip.ZipFile(temp)) {
+				if (zf.size() == 0) {
+					throw new AdempiereException("ZIP has no entries: " + name);
+				}
 
-	            if (zf.getEntry("[Content_Types].xml") == null) {
-	                throw new AdempiereException("Not a valid Excel workbook ZIP: missing [Content_Types].xml in " + name);
-	            }
-	        }
-	    } catch (AdempiereException ex) {
-	        throw ex;
-	    } catch (Exception e) {
-	        throw new AdempiereException("ZIP validation failed for " + name + ": " + e.getMessage(), e);
-	    } finally {
-	        if (temp != null && temp.exists()) {
-	            temp.delete();
-	        }
-	    }
+				if (zf.getEntry("[Content_Types].xml") == null) {
+					throw new AdempiereException("Not a valid Excel workbook ZIP: missing [Content_Types].xml in " + name);
+				}
+			}
+		} catch (AdempiereException ex) {
+			throw ex;
+		} catch (Exception e) {
+			throw new AdempiereException("ZIP validation failed for " + name + ": " + e.getMessage(), e);
+		} finally {
+			if (temp != null && temp.exists()) {
+				temp.delete();
+			}
+		}
 	}
 
 	private void logFirstDifference(byte[] a, byte[] b, String labelA, String labelB) {
-	    if (a == null || b == null) {
-	        log.warning("Cannot compare bytes: one array is null");
-	        return;
-	    }
+		if (a == null || b == null) {
+			log.warning("Cannot compare bytes: one array is null");
+			return;
+		}
 
-	    int min = Math.min(a.length, b.length);
-	    for (int i = 0; i < min; i++) {
-	        if (a[i] != b[i]) {
-	            log.warning("First byte difference between " + labelA + " and " + labelB
-	                    + " at offset " + i
-	                    + " | " + labelA + "=" + (a[i] & 0xff)
-	                    + " | " + labelB + "=" + (b[i] & 0xff));
-	            return;
-	        }
-	    }
+		int min = Math.min(a.length, b.length);
+		for (int i = 0; i < min; i++) {
+			if (a[i] != b[i]) {
+				log.warning("First byte difference between " + labelA + " and " + labelB
+						+ " at offset " + i
+						+ " | " + labelA + "=" + (a[i] & 0xff)
+						+ " | " + labelB + "=" + (b[i] & 0xff));
+				return;
+			}
+		}
 
-	    if (a.length != b.length) {
-	        log.warning("No byte difference in first " + min + " bytes, but lengths differ. "
-	                + labelA + "=" + a.length + ", " + labelB + "=" + b.length);
-	    } else {
-	        log.info("No byte differences found between " + labelA + " and " + labelB);
-	    }
+		if (a.length != b.length) {
+			log.warning("No byte difference in first " + min + " bytes, but lengths differ. "
+					+ labelA + "=" + a.length + ", " + labelB + "=" + b.length);
+		} else {
+			log.info("No byte differences found between " + labelA + " and " + labelB);
+		}
+	}
+
+	private void rebuildSubLevyOrgLinks(int parentSubmittedId, String trxName) {
+		// delete existing rows for this parent submission
+		final String deleteSql =
+				"DELETE FROM adempiere.zz_wsp_atr_sub_levy_orgs "
+						+ "WHERE zz_wsp_atr_submitted_id = ?";
+
+		DB.executeUpdateEx(deleteSql, new Object[] { parentSubmittedId }, trxName);
+
+		// find child organisations only (do NOT include parent org)
+		final String sql =
+				"WITH parent AS ( "
+						+ "   SELECT s.zz_wsp_atr_submitted_id AS parent_submitted_id, "
+						+ "          so.c_bpartner_id AS parent_bp "
+						+ "   FROM adempiere.zz_wsp_atr_submitted s "
+						+ "   JOIN adempiere.zzsdforganisation so "
+						+ "     ON so.zzsdforganisation_id = s.zzsdforganisation_id "
+						+ "   WHERE s.zz_wsp_atr_submitted_id = ? "
+						+ "), "
+						+ "children_bp AS ( "
+						+ "   SELECT l.c_bpartner_id AS child_bp "
+						+ "   FROM adempiere.zzorganisationlinkage l "
+						+ "   JOIN parent p "
+						+ "     ON l.bpartner_parent_id = p.parent_bp "
+						+ "   WHERE l.isactive = 'Y' "
+						+ "     AND l.zz_parent_uploads = 'Y' "
+						+ "), "
+						+ "children_orgs AS ( "
+						+ "   SELECT DISTINCT so.zzsdforganisation_id "
+						+ "   FROM adempiere.zzsdforganisation so "
+						+ "   JOIN children_bp cb "
+						+ "     ON cb.child_bp = so.c_bpartner_id "
+						+ "   WHERE so.isactive = 'Y' "
+						+ ") "
+						+ "SELECT zzsdforganisation_id "
+						+ "FROM children_orgs "
+						+ "ORDER BY zzsdforganisation_id";
+
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+
+		try {
+			pstmt = DB.prepareStatement(sql, trxName);
+			pstmt.setInt(1, parentSubmittedId);
+			rs = pstmt.executeQuery();
+
+			while (rs.next()) {
+				int childOrgId = rs.getInt(1);
+
+				X_ZZ_WSP_ATR_Sub_Levy_Orgs rec =
+						new X_ZZ_WSP_ATR_Sub_Levy_Orgs(Env.getCtx(), 0, trxName);
+
+				rec.setZZ_WSP_ATR_Submitted_ID(parentSubmittedId);
+				rec.setZZSdfOrganisation_ID(childOrgId);
+				rec.saveEx();
+			}
+		} catch (Exception e) {
+			throw new AdempiereException("Failed to rebuild sub levy organisations for submitted ID " + parentSubmittedId, e);
+		} finally {
+			DB.close(rs, pstmt);
+			rs = null;
+			pstmt = null;
+		}
 	}
 
 
