@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 6.20.2  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="WSP_ATR_Section_9_Sub_Levy_Orgs" pageWidth="1210" pageHeight="180" whenNoDataType="AllSectionsNoDetail" columnWidth="1210" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="b2d8f9d5-220f-4b8b-a103-8b4f4b06dbbb">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="mqa dev"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<style name="TblHdr" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" fontName="SansSerif" fontSize="12" isBold="true">
+		<box topPadding="4" leftPadding="6" bottomPadding="4" rightPadding="6">
+			<topPen lineWidth="0.75"/>
+			<leftPen lineWidth="0.75"/>
+			<bottomPen lineWidth="0.75"/>
+			<rightPen lineWidth="0.75"/>
+		</box>
+	</style>
+	<style name="TblVal" mode="Opaque" forecolor="#000000" backcolor="#FFFFFF" fontName="SansSerif" fontSize="12">
+		<box topPadding="4" leftPadding="6" bottomPadding="4" rightPadding="6">
+			<topPen lineWidth="0.75"/>
+			<leftPen lineWidth="0.75"/>
+			<bottomPen lineWidth="0.75"/>
+			<rightPen lineWidth="0.75"/>
+		</box>
+	</style>
+	<parameter name="ZZ_WSP_ATR_Submitted_ID" class="java.lang.Integer"/>
+	<queryString>
+		<![CDATA[SELECT
+    COALESCE(v.orgname, bp.name, '<Sub Levy Organisation>') AS organisation_name,
+    COALESCE(v.zz_sdl_no, bp.zz_sdl_no, '<SDL Number>')     AS sdl_number,
+    COALESCE(NULLIF(bp.zzsiccode,''), '<SIC Code>')         AS sic_code,
+    'Y'                                 AS separate_wsp_atr
+FROM adempiere.zz_wsp_atr_sub_levy_orgs slo
+LEFT JOIN adempiere.zzsdforganisation_v v
+  ON v.zzsdforganisation_id = slo.zzsdforganisation_id
+LEFT JOIN adempiere.c_bpartner bp
+  ON bp.isactive = 'Y'
+ AND bp.c_bpartner_id = v.c_bpartner_id
+LEFT JOIN LATERAL (
+    SELECT DISTINCT ON (s.zzsdforganisation_id)
+           s.zz_wsp_atr_submitted_id
+    FROM adempiere.zz_wsp_atr_submitted s
+    WHERE s.zzsdforganisation_id = slo.zzsdforganisation_id
+      AND s.isactive = 'Y'
+      AND s.zz_docstatus IN ('IM','UP','QR','RE','RA','AP')
+    ORDER BY s.zzsdforganisation_id, s.updated DESC, s.zz_wsp_atr_submitted_id DESC
+) child_sub ON true
+WHERE slo.zz_wsp_atr_submitted_id = $P{ZZ_WSP_ATR_Submitted_ID}
+ORDER BY COALESCE(v.orgname, bp.name, ''),
+         COALESCE(v.zz_sdl_no, bp.zz_sdl_no, '')]]>
+	</queryString>
+	<field name="organisation_name" class="java.lang.String"/>
+	<field name="sdl_number" class="java.lang.String"/>
+	<field name="sic_code" class="java.lang.String"/>
+	<field name="separate_wsp_atr" class="java.lang.String"/>
+	<title>
+		<band height="28">
+			<staticText>
+				<reportElement style="TblHdr" x="0" y="0" width="320" height="28" uuid="4b3ecff1-d5a7-4293-b5db-cb85cd59a5d3"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Sub Levy Organisation]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TblHdr" x="320" y="0" width="345" height="28" uuid="5570b4f2-f009-4bf3-ba96-63fdbec02c82"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[SDL Number]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TblHdr" x="665" y="0" width="255" height="28" uuid="47e60d13-2103-4535-9816-d07201c29363"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[SIC Code]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TblHdr" x="920" y="0" width="290" height="28" uuid="ae22b41b-5431-4a97-ad3b-799d3b01cb55"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Separate WSP-ATR?]]></text>
+			</staticText>
+		</band>
+	</title>
+	<detail>
+		<band height="28" splitType="Stretch">
+			<textField>
+				<reportElement style="TblVal" x="0" y="0" width="320" height="28" uuid="ba37afa1-1981-4eef-9b35-38ce8acbe2cc"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{organisation_name}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="TblVal" x="320" y="0" width="345" height="28" uuid="689bd438-2247-47a0-85b8-33aba8bcde76"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{sdl_number}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="TblVal" x="665" y="0" width="255" height="28" uuid="27219f93-41cb-4408-ba1f-2bef42507896"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{sic_code}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="TblVal" x="920" y="0" width="290" height="28" uuid="59376804-88a4-467a-84f2-15475fcbfab7"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{separate_wsp_atr}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>
