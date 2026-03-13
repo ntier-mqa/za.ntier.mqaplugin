@@ -15,7 +15,11 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.adempiere.exceptions.AdempiereException;
+import org.apache.poi.EncryptedDocumentException;
 import org.apache.poi.openxml4j.util.ZipSecureFile;
+import org.apache.poi.poifs.crypt.Decryptor;
+import org.apache.poi.poifs.crypt.EncryptionInfo;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -38,6 +42,7 @@ import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
 		name = "za.co.ntier.wsp_atr.process.ValidateAndImportWspAtrDataFromTemplate")
 public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 
+	private static final String EXCEL_PASSWORD = "Learning2026";
 	private int p_ZZ_WSP_ATR_Submitted_ID;
 	private final ReferenceLookupService refService = new ReferenceLookupService();
 
@@ -331,15 +336,18 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 			if (is == null) {
 				throw new AdempiereException(
 						"Could not open attachment stream for file " + selectedEntry.getName()
-						);
+				);
 			}
 
 			byte[] bytes = org.apache.commons.io.IOUtils.toByteArray(is);
 
-			preCheckXlsmStyleBloat(
-					new ByteArrayInputStream(bytes),
-					selectedEntry.getName()
-					);
+			// Only do ZIP-based precheck if the file is actually a plain ZIP xlsm/xlsx
+			if (looksLikeZip(bytes)) {
+				preCheckXlsmStyleBloat(
+						new ByteArrayInputStream(bytes),
+						selectedEntry.getName()
+				);
+			}
 
 			ZipSecureFile.setMinInflateRatio(0.001);
 			ZipSecureFile.setMaxEntrySize(200L * 1024L * 1024L);
@@ -348,9 +356,42 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 
 			WorkbookLoadResult result = new WorkbookLoadResult();
 			result.sourceFileName = selectedEntry.getName();
-			result.workbook = WorkbookFactory.create(new ByteArrayInputStream(bytes));
+			result.workbook = openWorkbookAuto(bytes, EXCEL_PASSWORD);
 			return result;
 		}
+	}
+	private Workbook openWorkbookAuto(byte[] data, String password) throws Exception {
+		try {
+			return WorkbookFactory.create(new ByteArrayInputStream(data));
+		} catch (EncryptedDocumentException e) {
+			try (POIFSFileSystem fs = new POIFSFileSystem(new ByteArrayInputStream(data))) {
+				EncryptionInfo info = new EncryptionInfo(fs);
+				Decryptor decryptor = Decryptor.getInstance(info);
+
+				if (!decryptor.verifyPassword(password)) {
+					throw new AdempiereException("Invalid Excel password for workbook");
+				}
+
+				try (InputStream decryptedStream = decryptor.getDataStream(fs)) {
+					return WorkbookFactory.create(decryptedStream);
+				}
+			} catch (AdempiereException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				throw new AdempiereException("Failed to decrypt/open Excel workbook: " + ex.getMessage(), ex);
+			}
+		} catch (Exception e) {
+			throw new AdempiereException("Failed to open Excel workbook: " + e.getMessage(), e);
+		}
+	}
+	
+	private boolean looksLikeZip(byte[] data) {
+		return data != null
+				&& data.length >= 4
+				&& data[0] == 0x50
+				&& data[1] == 0x4B
+				&& data[2] == 0x03
+				&& data[3] == 0x04;
 	}
 
 	private void preCheckXlsmStyleBloat(InputStream rawIs, String fileName) {

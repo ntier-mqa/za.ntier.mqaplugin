@@ -1,5 +1,6 @@
 package za.co.ntier.wsp_atr.form;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.sql.PreparedStatement;
@@ -14,6 +15,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.adempiere.webui.AdempiereWebUI;
@@ -30,6 +33,14 @@ import org.adempiere.webui.component.Window;
 import org.adempiere.webui.event.DialogEvents;
 import org.adempiere.webui.panel.ADForm;
 import org.adempiere.webui.util.ZKUpdateUtil;
+import org.apache.poi.EncryptedDocumentException;
+import org.apache.poi.poifs.crypt.Decryptor;
+import org.apache.poi.poifs.crypt.EncryptionInfo;
+import org.apache.poi.poifs.filesystem.DirectoryNode;
+import org.apache.poi.poifs.filesystem.OfficeXmlFileException;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.compiere.model.MAttachment;
 import org.compiere.model.MAttachmentEntry;
 import org.compiere.model.MProcess;
@@ -61,6 +72,8 @@ import za.ntier.models.MZZWSPATRSubmitted;
 
 @org.idempiere.ui.zk.annotation.Form(name = "za.co.ntier.wsp_atr.form.WspAtrSubmittedADForm")
 public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event> {
+
+	private static final String EXCEL_PASSWORD = "Learning2026";
 
 	private static final long serialVersionUID = 1L;
 
@@ -309,9 +322,13 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 		if (data == null || data.length == 0) {
 			throw new AdempiereException("Uploaded file is empty: " + filename);
 		}
+				
+		
 
 		// Validate the uploaded file before saving
-		assertZipLooksFullyValid(data, filename);
+		//assertZipLooksFullyValid(data, filename);
+		
+		assertExcelLooksValid(data, filename, EXCEL_PASSWORD);
 
 		log.info("UPLOAD START | file=" + filename
 				+ " | uploadedLen=" + data.length
@@ -629,6 +646,23 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 		}
 		return bos.toByteArray();
 	}
+	
+	private Workbook openWorkbook(byte[] data, String password) throws Exception {
+
+	    try (POIFSFileSystem fs = new POIFSFileSystem(new ByteArrayInputStream(data))) {
+
+	        EncryptionInfo info = new EncryptionInfo(fs);
+	        Decryptor decryptor = Decryptor.getInstance(info);
+
+	        if (!decryptor.verifyPassword(password)) {
+	            throw new AdempiereException("Invalid Excel password");
+	        }
+
+	        try (InputStream decryptedStream = decryptor.getDataStream(fs)) {
+	            return WorkbookFactory.create(decryptedStream);
+	        }
+	    }
+	}
 
 	private List<SdfOrgRow> getSdfOrganisationsForUser() {
 		int adUserId = Env.getAD_User_ID(Env.getCtx());
@@ -756,8 +790,8 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 				logFirstDifference(originalData, savedData, "original", "saved");
 				throw new AdempiereException("Attachment content mismatch after save. SHA-256 differs.");
 			}
-
-			assertZipLooksFullyValid(savedData, filename);
+			
+			assertExcelLooksValid(savedData, filename, EXCEL_PASSWORD);
 
 		} catch (Exception e) {
 			throw new AdempiereException("Attachment verification failed: " + e.getMessage(), e);
@@ -779,6 +813,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 		}
 	}
 
+	/*
 	private void assertZipLooksFullyValid(byte[] data, String name) {
 		java.io.File temp = null;
 		try {
@@ -805,6 +840,118 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 				temp.delete();
 			}
 		}
+	}
+	*/
+	
+	private void assertExcelLooksValid(byte[] data, String name, String password) {
+	    try {
+	        if (data == null || data.length == 0) {
+	            throw new AdempiereException("File is empty: " + name);
+	        }
+
+	        // Case 1: normal XLSX/XLSM ZIP package
+	        if (looksLikeZip(data)) {
+	            assertOpenXmlZipValid(data, name);
+	            return;
+	        }
+
+	        // Case 2: encrypted Office OpenXML file (password protected .xlsx/.xlsm)
+	        if (looksLikeOle2(data)) {
+	            assertEncryptedOfficeFileValid(data, name, password);
+	            return;
+	        }
+
+	        throw new AdempiereException("Unknown Excel file structure for " + name);
+
+	    } catch (AdempiereException ex) {
+	        throw ex;
+	    } catch (Exception e) {
+	        throw new AdempiereException("Excel validation failed for " + name + ": " + e.getMessage(), e);
+	    }
+	}
+	
+	private boolean looksLikeZip(byte[] data) {
+	    return data != null
+	        && data.length >= 4
+	        && data[0] == 0x50
+	        && data[1] == 0x4B
+	        && data[2] == 0x03
+	        && data[3] == 0x04;
+	}
+
+	private boolean looksLikeOle2(byte[] data) {
+	    return data != null
+	        && data.length >= 8
+	        && (data[0] & 0xFF) == 0xD0
+	        && (data[1] & 0xFF) == 0xCF
+	        && (data[2] & 0xFF) == 0x11
+	        && (data[3] & 0xFF) == 0xE0
+	        && (data[4] & 0xFF) == 0xA1
+	        && (data[5] & 0xFF) == 0xB1
+	        && (data[6] & 0xFF) == 0x1A
+	        && (data[7] & 0xFF) == 0xE1;
+	}
+	
+	private void assertOpenXmlZipValid(byte[] data, String name) {
+	    boolean foundContentTypes = false;
+
+	    try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(data))) {
+	        ZipEntry entry;
+	        int entryCount = 0;
+
+	        while ((entry = zis.getNextEntry()) != null) {
+	            entryCount++;
+	            if ("[Content_Types].xml".equals(entry.getName())) {
+	                foundContentTypes = true;
+	            }
+	        }
+
+	        if (entryCount == 0) {
+	            throw new AdempiereException("ZIP has no entries: " + name);
+	        }
+
+	        if (!foundContentTypes) {
+	            throw new AdempiereException("Not a valid Excel workbook ZIP: missing [Content_Types].xml in " + name);
+	        }
+	    } catch (Exception e) {
+	        throw new AdempiereException("ZIP validation failed for " + name + ": " + e.getMessage(), e);
+	    }
+	}
+	
+	
+	private void assertEncryptedOfficeFileValid(byte[] data, String name, String password) {
+	    try (POIFSFileSystem fs = new POIFSFileSystem(new ByteArrayInputStream(data))) {
+
+	        DirectoryNode root = fs.getRoot();
+
+	        if (!root.hasEntry("EncryptionInfo")) {
+	            throw new AdempiereException("Encrypted Office file missing EncryptionInfo: " + name);
+	        }
+
+	        if (!root.hasEntry("EncryptedPackage")) {
+	            throw new AdempiereException("Encrypted Office file missing EncryptedPackage: " + name);
+	        }
+
+	        EncryptionInfo info = new EncryptionInfo(fs);
+	        Decryptor decryptor = Decryptor.getInstance(info);
+
+	        if (!decryptor.verifyPassword(password)) {
+	            throw new AdempiereException("Excel password is invalid for " + name);
+	        }
+
+	        // Optional deeper validation: ensure decrypted package is really a valid OpenXML ZIP
+	        try (InputStream decrypted = decryptor.getDataStream(fs)) {
+	            byte[] decryptedBytes = readAllBytes(decrypted);
+	            assertOpenXmlZipValid(decryptedBytes, name + " (decrypted)");
+	        }
+
+	    } catch (OfficeXmlFileException e) {
+	        throw new AdempiereException("File is not an encrypted Office container: " + name, e);
+	    } catch (EncryptedDocumentException e) {
+	        throw new AdempiereException("Could not decrypt Office file " + name + ": " + e.getMessage(), e);
+	    } catch (Exception e) {
+	        throw new AdempiereException("Encrypted Excel validation failed for " + name + ": " + e.getMessage(), e);
+	    }
 	}
 
 	private void logFirstDifference(byte[] a, byte[] b, String labelA, String labelB) {

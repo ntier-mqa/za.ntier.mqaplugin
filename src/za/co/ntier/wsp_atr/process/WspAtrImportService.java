@@ -1,5 +1,6 @@
 package za.co.ntier.wsp_atr.process;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
@@ -14,7 +15,6 @@ import org.compiere.model.MAttachment;
 import org.compiere.model.MAttachmentEntry;
 import org.compiere.model.Query;
 import org.compiere.process.SvrProcess;
-import org.compiere.util.CLogger;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 
@@ -28,6 +28,8 @@ import za.ntier.models.MZZWSPATRWSP;
 public class WspAtrImportService {
 
     private final ReferenceLookupService refService = new ReferenceLookupService();
+    private static final String EXCEL_PASSWORD = "Learning2026";
+
     
     //private static final CLogger log = CLogger.getCLogger(WspAtrImportService.class);
     
@@ -126,6 +128,7 @@ public class WspAtrImportService {
         }
     }
 
+    /*
     private Workbook loadWorkbook(X_ZZ_WSP_ATR_Submitted submitted) throws Exception {
 
         MAttachment attachment = MAttachment.get(
@@ -158,6 +161,76 @@ public class WspAtrImportService {
             return WorkbookFactory.create(is);
         }
     }
+    
+    */
+    
+    private Workbook loadWorkbook(X_ZZ_WSP_ATR_Submitted submitted) throws Exception {
+
+        MAttachment attachment = MAttachment.get(
+                Env.getCtx(),
+                X_ZZ_WSP_ATR_Submitted.Table_ID,
+                submitted.getZZ_WSP_ATR_Submitted_ID());
+
+        if (attachment == null || attachment.getEntryCount() <= 0) {
+            throw new AdempiereException("No attachment found for WSP/ATR Submitted record.");
+        }
+
+        MAttachmentEntry[] entries = attachment.getEntries();
+        MAttachmentEntry selectedEntry = null;
+
+        if (selectedEntry == null && entries != null && entries.length > 0) {
+            selectedEntry = entries[0];
+        }
+
+        if (selectedEntry == null) {
+            throw new AdempiereException("Attachment has no valid entries.");
+        }
+
+        try (InputStream is = selectedEntry.getInputStream()) {
+            if (is == null) {
+                throw new AdempiereException(
+                        "Could not open attachment stream for file " + selectedEntry.getName());
+            }
+
+            IOUtils.setByteArrayMaxOverride(200 * 1024 * 1024);
+
+            byte[] bytes = org.apache.commons.io.IOUtils.toByteArray(is);
+
+            return openWorkbookAuto(bytes, EXCEL_PASSWORD);
+        }
+    }
+    
+    
+    private Workbook openWorkbookAuto(byte[] data, String password) throws Exception {
+        try {
+            return WorkbookFactory.create(new ByteArrayInputStream(data));
+        } catch (org.apache.poi.EncryptedDocumentException e) {
+            try (org.apache.poi.poifs.filesystem.POIFSFileSystem fs =
+                         new org.apache.poi.poifs.filesystem.POIFSFileSystem(new ByteArrayInputStream(data))) {
+
+                org.apache.poi.poifs.crypt.EncryptionInfo info =
+                        new org.apache.poi.poifs.crypt.EncryptionInfo(fs);
+                org.apache.poi.poifs.crypt.Decryptor decryptor =
+                        org.apache.poi.poifs.crypt.Decryptor.getInstance(info);
+
+                if (!decryptor.verifyPassword(password)) {
+                    throw new AdempiereException("Invalid Excel password for workbook");
+                }
+
+                try (InputStream decryptedStream = decryptor.getDataStream(fs)) {
+                    return WorkbookFactory.create(decryptedStream);
+                }
+            } catch (AdempiereException ex) {
+                throw ex;
+            } catch (Exception ex) {
+                throw new AdempiereException("Failed to decrypt/open Excel workbook: " + ex.getMessage(), ex);
+            }
+        } catch (Exception e) {
+            throw new AdempiereException("Failed to open Excel workbook: " + e.getMessage(), e);
+        }
+    }
+    
+    
     
   
     
