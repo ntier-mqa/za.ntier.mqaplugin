@@ -31,7 +31,7 @@ public class X_ZZ_WSP_ATR_Lookup_Mapping_Detail extends PO implements I_ZZ_WSP_A
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260201L;
+	private static final long serialVersionUID = 20260313L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Lookup_Mapping_Detail (Properties ctx, int ZZ_WSP_ATR_Lookup_Mapping_Detail_ID, String trxName)
@@ -44,6 +44,8 @@ public class X_ZZ_WSP_ATR_Lookup_Mapping_Detail extends PO implements I_ZZ_WSP_A
 			setIsMandatory (false);
 // N
 			setZZ_Create_If_Not_Exists (false);
+// N
+			setZZ_Is_Formula (false);
 // N
 			setZZ_Use_Value (false);
 // N
@@ -63,6 +65,8 @@ public class X_ZZ_WSP_ATR_Lookup_Mapping_Detail extends PO implements I_ZZ_WSP_A
 // N
 			setZZ_Create_If_Not_Exists (false);
 // N
+			setZZ_Is_Formula (false);
+// N
 			setZZ_Use_Value (false);
 // N
 			setZZ_WSP_ATR_Lookup_Mapping_Detail_ID (0);
@@ -81,6 +85,8 @@ public class X_ZZ_WSP_ATR_Lookup_Mapping_Detail extends PO implements I_ZZ_WSP_A
 // N
 			setZZ_Create_If_Not_Exists (false);
 // N
+			setZZ_Is_Formula (false);
+// N
 			setZZ_Use_Value (false);
 // N
 			setZZ_WSP_ATR_Lookup_Mapping_Detail_ID (0);
@@ -98,6 +104,8 @@ public class X_ZZ_WSP_ATR_Lookup_Mapping_Detail extends PO implements I_ZZ_WSP_A
 			setIsMandatory (false);
 // N
 			setZZ_Create_If_Not_Exists (false);
+// N
+			setZZ_Is_Formula (false);
 // N
 			setZZ_Use_Value (false);
 // N
@@ -284,6 +292,28 @@ public class X_ZZ_WSP_ATR_Lookup_Mapping_Detail extends PO implements I_ZZ_WSP_A
 	public String getZZ_Header_Name()
 	{
 		return (String)get_Value(COLUMNNAME_ZZ_Header_Name);
+	}
+
+	/** Set Is Formula.
+		@param ZZ_Is_Formula Is Formula
+	*/
+	public void setZZ_Is_Formula (boolean ZZ_Is_Formula)
+	{
+		set_Value (COLUMNNAME_ZZ_Is_Formula, Boolean.valueOf(ZZ_Is_Formula));
+	}
+
+	/** Get Is Formula.
+		@return Is Formula	  */
+	public boolean isZZ_Is_Formula()
+	{
+		Object oo = get_Value(COLUMNNAME_ZZ_Is_Formula);
+		if (oo != null)
+		{
+			 if (oo instanceof Boolean)
+				 return ((Boolean)oo).booleanValue();
+			return "Y".equals(oo);
+		}
+		return false;
 	}
 
 	/** Set Name Column Letter.

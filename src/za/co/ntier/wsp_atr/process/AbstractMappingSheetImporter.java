@@ -102,19 +102,24 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 			int colIndex,
 			DataFormatter formatter,
 			FormulaEvaluator evaluator) {
-		if (row == null)
+		if (row == null) {
 			return "";
+		}
 
 		Cell cell = row.getCell(colIndex);
-		if (cell == null)
+		if (cell == null) {
 			return "";
+		}
 
 		try {
-			// IMPORTANT: this evaluates formulas and returns the displayed result
-			String value = formatter.formatCellValue(cell, evaluator);
+			String value;
+			if (cell.getCellType() == CellType.FORMULA && evaluator != null) {
+				value = formatter.formatCellValue(cell, evaluator);
+			} else {
+				value = formatter.formatCellValue(cell);
+			}
 			return value != null ? value.trim() : "";
 		} catch (Exception e) {
-			// Fallbacks (very defensive)
 			try {
 				CellType type = cell.getCellType();
 
@@ -126,7 +131,7 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 				case STRING:
 					return cell.getStringCellValue().trim();
 				case NUMERIC:
-					return String.valueOf(cell.getNumericCellValue());
+					return formatter.formatCellValue(cell).trim();
 				case BOOLEAN:
 					return String.valueOf(cell.getBooleanCellValue());
 				default:
@@ -217,7 +222,7 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 			String trxName) {
 		return refService.tryResolveRefId(ctx, column, txt, useValueForRef, trxName);
 	}
-	
+
 	/*
 	protected Integer tryResolveRefId(Properties ctx, MColumn column, String text, boolean useValueForRef, String trxName) {
 		if (Util.isEmpty(text, true))
@@ -263,9 +268,10 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 
 		return (id > 0) ? id : null;
 	}
-	
-	*/
 
+	 */
+
+	/*
 	protected boolean isRowCompletelyEmpty(
 			Row row,
 			Iterable<Integer> colIndexes,
@@ -276,11 +282,30 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 			if (colIndex == null || colIndex < 0)
 				continue;
 
-			String txt = getCellText(row, colIndex, formatter, evaluator);
+			String txt = getCellText(row, colIndex, formatter, evaluator,false);
 			if (!isBlankOrZero(txt)) {
 				return false; // found real data → row is NOT empty
 			}
 		}
+		return true; // all mapped cols empty / zero
+	}
+	 */
+
+	protected boolean isRowCompletelyEmpty(
+			Row row,
+			Iterable<ColumnMeta> metas,
+			DataFormatter formatter,
+			FormulaEvaluator evaluator) {
+
+		for (ColumnMeta meta : metas) {
+
+			String txt = getCellText(row, meta.columnIndex, formatter, evaluator);
+
+			if (isBlankOrZero(txt)) {
+				return false; // 🔴 ignore entire row
+			}
+		}
+
 		return true; // all mapped cols empty / zero
 	}
 
@@ -324,9 +349,10 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 
 	protected static class ColumnMeta {
 		int columnIndex;
-		X_ZZ_WSP_ATR_Lookup_Mapping_Detail detail;
+		//X_ZZ_WSP_ATR_Lookup_Mapping_Detail detail;
 		MColumn column;
 		boolean useValueForRef;
+		boolean isFormular;
 
 		// create-if-missing support
 		boolean createIfNotExist;

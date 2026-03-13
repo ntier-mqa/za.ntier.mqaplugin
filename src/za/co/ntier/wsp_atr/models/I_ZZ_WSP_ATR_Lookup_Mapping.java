@@ -108,6 +108,21 @@ public interface I_ZZ_WSP_ATR_Lookup_Mapping
 	  */
 	public boolean isActive();
 
+    /** Column name SeqNo */
+    public static final String COLUMNNAME_SeqNo = "SeqNo";
+
+	/** Set Sequence.
+	  * Method of ordering records;
+ lowest number comes first
+	  */
+	public void setSeqNo (int SeqNo);
+
+	/** Get Sequence.
+	  * Method of ordering records;
+ lowest number comes first
+	  */
+	public int getSeqNo();
+
     /** Column name Start_Row */
     public static final String COLUMNNAME_Start_Row = "Start_Row";
 

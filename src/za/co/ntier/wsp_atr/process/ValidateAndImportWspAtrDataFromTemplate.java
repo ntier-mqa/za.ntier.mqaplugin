@@ -95,6 +95,7 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 					null,
 					trxName)
 					.setOnlyActiveRecords(true)
+					.setOrderBy("seqNo")
 					.list();
 
 			if (headers == null || headers.isEmpty()) {

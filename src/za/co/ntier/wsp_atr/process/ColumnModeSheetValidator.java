@@ -55,6 +55,8 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
             MColumn column = new MColumn(ctx, det.getAD_Column_ID(), trxName);
 
             ColumnMeta meta = new ColumnMeta();
+            //meta.detail = det;
+            meta.isFormular = det.isZZ_Is_Formula();
             meta.columnIndex = colIndex;
             meta.column = column;
             meta.useValueForRef = det.isZZ_Use_Value();
@@ -101,7 +103,7 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
                 continue;
             }
 
-            if (row == null || isRowCompletelyEmpty(row, colIndexToMeta.keySet(), formatter, evaluator)) {
+            if (row == null || isRowCompletelyEmpty(row, colIndexToMeta.values(), formatter, evaluator)) {
             	emptyRowsInARow++;
 				if (emptyRowsInARow > 10) {
 					break;  // to many empty lines.  Assume the rest are empty

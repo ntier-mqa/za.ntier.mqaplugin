@@ -84,7 +84,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 
 			ColumnMeta meta = new ColumnMeta();
 			meta.columnIndex = colIndex;
-			meta.detail = det;
+			//meta.detail = det;
 
 			int adColumnId = det.getAD_Column_ID();
 			if (adColumnId <= 0) {
@@ -111,6 +111,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 			}
 			meta.mandatory = det.isMandatory(); 
 			meta.ignoreIfBlank = det.isIgnore_If_Blank();
+			meta.isFormular = det.isZZ_Is_Formula();
 
 
 			colIndexToMeta.put(colIndex, meta);
@@ -129,6 +130,8 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 
             preloadSpecs.add(new ReferenceLookupService.LookupSpec(meta.column, meta.useValueForRef));
         }
+        
+        refService.preload(ctx, preloadSpecs, trxName);
 
 
 		int lastRow = sheet.getLastRowNum();
@@ -150,7 +153,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 			// ✅ SINGLE rule: ignore empty rows
 			if (isRowCompletelyEmpty(
 					row,
-					colIndexToMeta.keySet(),
+					colIndexToMeta.values(),
 					formatter,
 					evaluator)) {
 				emptyRowsInARow++;
@@ -170,8 +173,8 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 					evaluator)) {
 				continue;
 			}
-			if (isRowEmptyByMappedColumns(row, colIndexToMeta.keySet(), formatter,evaluator))
-				continue;
+		//	if (isRowEmptyByMappedColumns(row, colIndexToMeta.keySet(), formatter,evaluator))
+		//		continue;
 
 			if (isMissingMandatory(row, colIndexToMeta.values(), formatter,evaluator)) {
 				// optional log
@@ -556,17 +559,19 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 	/**
 	 * Check if a row is effectively empty for all mapped main columns.
 	 */
+	/*
 	private boolean isRowEmptyByMappedColumns(Row row,
 			Iterable<Integer> colIndexes,
 			DataFormatter formatter,
 			FormulaEvaluator evaluator) {
 		for (Integer colIndex : colIndexes) {
-			String txt = getCellText(row, colIndex, formatter,evaluator);
+			String txt = getCellText(row, colIndex, formatter,evaluator,);
 			if (!Util.isEmpty(txt, true))
 				return false;
 		}
 		return true;
 	}
+	*/
 
 	private boolean isMissingMandatory(Row row,
 			Iterable<ColumnMeta> metas,

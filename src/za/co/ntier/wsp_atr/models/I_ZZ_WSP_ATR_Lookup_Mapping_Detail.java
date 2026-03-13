@@ -188,6 +188,15 @@ public interface I_ZZ_WSP_ATR_Lookup_Mapping_Detail
 	/** Get Header Name	  */
 	public String getZZ_Header_Name();
 
+    /** Column name ZZ_Is_Formula */
+    public static final String COLUMNNAME_ZZ_Is_Formula = "ZZ_Is_Formula";
+
+	/** Set Is Formula	  */
+	public void setZZ_Is_Formula (boolean ZZ_Is_Formula);
+
+	/** Get Is Formula	  */
+	public boolean isZZ_Is_Formula();
+
     /** Column name ZZ_Name_Column_Letter */
     public static final String COLUMNNAME_ZZ_Name_Column_Letter = "ZZ_Name_Column_Letter";
 

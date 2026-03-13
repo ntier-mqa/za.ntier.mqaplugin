@@ -33,7 +33,7 @@ public class X_ZZ_WSP_ATR_Lookup_Mapping extends PO implements I_ZZ_WSP_ATR_Look
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260201L;
+	private static final long serialVersionUID = 20260313L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Lookup_Mapping (Properties ctx, int ZZ_WSP_ATR_Lookup_Mapping_ID, String trxName)
@@ -134,6 +134,25 @@ public class X_ZZ_WSP_ATR_Lookup_Mapping extends PO implements I_ZZ_WSP_ATR_Look
 	public int getAD_Table_ID()
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_AD_Table_ID);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
+	}
+
+	/** Set Sequence.
+		@param SeqNo Method of ordering records; lowest number comes first
+	*/
+	public void setSeqNo (int SeqNo)
+	{
+		set_Value (COLUMNNAME_SeqNo, Integer.valueOf(SeqNo));
+	}
+
+	/** Get Sequence.
+		@return Method of ordering records; lowest number comes first
+	  */
+	public int getSeqNo()
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_SeqNo);
 		if (ii == null)
 			 return 0;
 		return ii.intValue();
