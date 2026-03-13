@@ -1,6 +1,7 @@
 package za.co.ntier.wsp_atr.process;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,7 @@ import org.compiere.util.Util;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping_Detail;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
+import za.co.ntier.wsp_atr.process.AbstractMappingSheetImporter.ColumnMeta;
 
 /**
  * Column-mode importer.
@@ -113,6 +115,20 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 
 			colIndexToMeta.put(colIndex, meta);
 		}
+		
+		List<ReferenceLookupService.LookupSpec> preloadSpecs = new ArrayList<>();
+        for (ColumnMeta meta : colIndexToMeta.values()) {
+            int ref = meta.column.getAD_Reference_ID();
+            boolean isRef = (ref == DisplayType.Table
+                    || ref == DisplayType.TableDir
+                    || ref == DisplayType.Search);
+
+            if (!isRef || meta.createIfNotExist) {
+                continue;
+            }
+
+            preloadSpecs.add(new ReferenceLookupService.LookupSpec(meta.column, meta.useValueForRef));
+        }
 
 
 		int lastRow = sheet.getLastRowNum();
@@ -404,7 +420,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 
 		// Prefer Value if we have it and ZZ_Use_Value is true
 		if (useValueForRef && !Util.isEmpty(valueToUse, true)) {
-			foundId = findIdByColumn(ctx, refTableName, "Value", valueToUse, trxName);
+			foundId = refService.findIdByColumn(ctx, refTableName, refTableName + "_ID", "Value", valueToUse, trxName);
 		}
 
 		// If not found and we have a Name, try Name
@@ -414,7 +430,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 
 		// If not found and we still have mainText, try Name=mainText
 		if ((foundId == null || foundId <= 0) && mainText != null) {
-			foundId = findIdByColumn(ctx, refTableName, "Name", mainText, trxName);
+			foundId = refService.findIdByColumn(ctx, refTableName, refTableName + "_ID", "Name", mainText, trxName);
 		}
 
 		if (foundId != null && foundId > 0) {

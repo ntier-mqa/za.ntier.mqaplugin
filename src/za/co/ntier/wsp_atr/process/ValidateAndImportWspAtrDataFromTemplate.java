@@ -116,6 +116,7 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 				boolean isColumns = mapHeader.get_ValueAsBoolean("ZZ_Is_Columns");
 				if (isColumns) {
 					ColumnModeSheetValidator v = new ColumnModeSheetValidator(refService, this);
+					v.setLog(log);
 					totalErrors += v.validate(ctx, wb, submitted, mapHeader, trxName, formatter, evaluator);
 				} else {
 					// Row-mode validator here later
@@ -214,22 +215,6 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 		}
 	}
 
-	private void logHeap(String label) {
-		return;
-		/* For debugging purposes
-		Runtime rt = Runtime.getRuntime();
-		long max = rt.maxMemory();
-		long total = rt.totalMemory();
-		long free = rt.freeMemory();
-		long used = total - free;
-
-		log.warning(label
-				+ " | usedMB=" + (used / 1024 / 1024)
-				+ " totalMB=" + (total / 1024 / 1024)
-				+ " maxMB=" + (max / 1024 / 1024)
-				+ " freeMB=" + (free / 1024 / 1024));
-				*/
-	}
 
 	private void attachErrorWorkbook(X_ZZ_WSP_ATR_Submitted submitted, Workbook wb, String fileName) throws Exception {
 		logHeap("attachErrorWorkbook - start");
@@ -607,5 +592,20 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 	private static class WorkbookLoadResult {
 		private Workbook workbook;
 		private String sourceFileName;
+	}
+	
+	private void logHeap(String label) {
+		Runtime rt = Runtime.getRuntime();
+		long max = rt.maxMemory();
+		long total = rt.totalMemory();
+		long free = rt.freeMemory();
+		long used = total - free;
+
+		log.warning(label
+				+ " | usedMB=" + (used / 1024 / 1024)
+				+ " totalMB=" + (total / 1024 / 1024)
+				+ " maxMB=" + (max / 1024 / 1024)
+				+ " freeMB=" + (free / 1024 / 1024));
+				
 	}
 }

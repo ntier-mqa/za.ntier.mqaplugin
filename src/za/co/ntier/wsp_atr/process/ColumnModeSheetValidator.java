@@ -1,6 +1,7 @@
 package za.co.ntier.wsp_atr.process;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,7 +65,28 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
 
             colIndexToMeta.put(colIndex, meta);
         }
+        
+        logHeap("Before loading reference tables in memory ");
+        
+        List<ReferenceLookupService.LookupSpec> preloadSpecs = new ArrayList<>();
+        for (ColumnMeta meta : colIndexToMeta.values()) {
+            int ref = meta.column.getAD_Reference_ID();
+            boolean isRef = (ref == DisplayType.Table
+                    || ref == DisplayType.TableDir
+                    || ref == DisplayType.Search);
 
+            if (!isRef || meta.createIfNotExist) {
+                continue;
+            }
+
+            preloadSpecs.add(new ReferenceLookupService.LookupSpec(meta.column, meta.useValueForRef));
+        }
+
+        refService.preload(ctx, preloadSpecs, trxName);
+        
+        logHeap("After loading reference tables in memory ");
+
+        int rowCnt = 0;
         int errors = 0;
         int lastRow = sheet.getLastRowNum();
         int startRow = (mappingHeader.getStart_Row() == null) ? 0 : mappingHeader.getStart_Row().intValue();
@@ -87,8 +109,17 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
                 continue;
             }
             
+            rowCnt++;  // just debugging
+            if (rowCnt > 5000) {
+            	rowCnt = 0;
+            	log.warning("Row Number processed : " + row.getRowNum() + " Sheet: " +  sheet.getSheetName());
+            }
             
             emptyRowsInARow = 0;
+            
+            if (row.getRowNum() > 91000) {
+            	log.warning("Row Number over max : " + row.getRowNum() + " Sheet: " +  sheet.getSheetName());
+            }
 
             if (shouldIgnoreRowBecauseOfIgnoreIfBlank(row, colIndexToMeta.values(), formatter, evaluator)) {
                 continue;
@@ -172,4 +203,19 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
                           FormulaEvaluator evaluator) throws IllegalStateException, SQLException {
         return 0;
     }
+    
+    private void logHeap(String label) {
+		Runtime rt = Runtime.getRuntime();
+		long max = rt.maxMemory();
+		long total = rt.totalMemory();
+		long free = rt.freeMemory();
+		long used = total - free;
+
+		log.warning(label
+				+ " | usedMB=" + (used / 1024 / 1024)
+				+ " totalMB=" + (total / 1024 / 1024)
+				+ " maxMB=" + (max / 1024 / 1024)
+				+ " freeMB=" + (free / 1024 / 1024));
+				
+	}
 }
