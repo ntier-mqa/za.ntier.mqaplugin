@@ -116,22 +116,6 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 
 			colIndexToMeta.put(colIndex, meta);
 		}
-		
-		List<ReferenceLookupService.LookupSpec> preloadSpecs = new ArrayList<>();
-        for (ColumnMeta meta : colIndexToMeta.values()) {
-            int ref = meta.column.getAD_Reference_ID();
-            boolean isRef = (ref == DisplayType.Table
-                    || ref == DisplayType.TableDir
-                    || ref == DisplayType.Search);
-
-            if (!isRef || meta.createIfNotExist) {
-                continue;
-            }
-
-            preloadSpecs.add(new ReferenceLookupService.LookupSpec(meta.column, meta.useValueForRef));
-        }
-        
-        refService.preload(ctx, preloadSpecs, trxName);
 
 
 		int lastRow = sheet.getLastRowNum();
@@ -423,7 +407,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 
 		// Prefer Value if we have it and ZZ_Use_Value is true
 		if (useValueForRef && !Util.isEmpty(valueToUse, true)) {
-			foundId = refService.findIdByColumn(ctx, refTableName, refTableName + "_ID", "Value", valueToUse, trxName);
+			foundId = findIdByColumn(ctx, refTableName, "Value", valueToUse, trxName);
 		}
 
 		// If not found and we have a Name, try Name
@@ -433,7 +417,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 
 		// If not found and we still have mainText, try Name=mainText
 		if ((foundId == null || foundId <= 0) && mainText != null) {
-			foundId = refService.findIdByColumn(ctx, refTableName, refTableName + "_ID", "Name", mainText, trxName);
+			foundId = findIdByColumn(ctx, refTableName, "Name", mainText, trxName);
 		}
 
 		if (foundId != null && foundId > 0) {

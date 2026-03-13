@@ -67,28 +67,7 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
 
             colIndexToMeta.put(colIndex, meta);
         }
-        
-        logHeap("Before loading reference tables in memory ");
-        
-        List<ReferenceLookupService.LookupSpec> preloadSpecs = new ArrayList<>();
-        for (ColumnMeta meta : colIndexToMeta.values()) {
-            int ref = meta.column.getAD_Reference_ID();
-            boolean isRef = (ref == DisplayType.Table
-                    || ref == DisplayType.TableDir
-                    || ref == DisplayType.Search);
 
-            if (!isRef || meta.createIfNotExist) {
-                continue;
-            }
-
-            preloadSpecs.add(new ReferenceLookupService.LookupSpec(meta.column, meta.useValueForRef));
-        }
-
-        refService.preload(ctx, preloadSpecs, trxName);
-        
-        logHeap("After loading reference tables in memory ");
-
-        int rowCnt = 0;
         int errors = 0;
         int lastRow = sheet.getLastRowNum();
         int startRow = (mappingHeader.getStart_Row() == null) ? 0 : mappingHeader.getStart_Row().intValue();
@@ -96,6 +75,7 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
             startRow = 4;
         }
 
+        int rowCnt = 0;
         int emptyRowsInARow = 0;
         for (int r = startRow; r <= lastRow; r++) {
             Row row = sheet.getRow(r);

@@ -30,7 +30,7 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 
 	protected final ReferenceLookupService refService;
 	protected final SvrProcess svrProcess;
-
+	
 	CLogger			log = null;
 
 
@@ -198,7 +198,7 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 			po.set_ValueOfColumn(colName, bd);
 		} else if (displayType == DisplayType.Table || displayType == DisplayType.TableDir
 				|| displayType == DisplayType.Search) {
-			Integer id = refService.tryResolveRefId(ctx, column, text, useValueForRef, trxName);
+			Integer id = refService.lookupReferenceId(ctx, column, text, useValueForRef, trxName);
 			if (id == null) {
 				// throw new org.adempiere.exceptions.AdempiereException(
 				//        "No reference record found for text '" + text
@@ -214,16 +214,7 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 			po.set_ValueOfColumn(colName, truncate(text, len > 0 ? len : 200));
 		}
 	}
-
-	protected Integer tryResolveRefId(Properties ctx,
-			MColumn column,
-			String txt,
-			boolean useValueForRef,
-			String trxName) {
-		return refService.tryResolveRefId(ctx, column, txt, useValueForRef, trxName);
-	}
-
-	/*
+	
 	protected Integer tryResolveRefId(Properties ctx, MColumn column, String text, boolean useValueForRef, String trxName) {
 		if (Util.isEmpty(text, true))
 			return null;
@@ -268,29 +259,8 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 
 		return (id > 0) ? id : null;
 	}
-
-	 */
-
-	/*
-	protected boolean isRowCompletelyEmpty(
-			Row row,
-			Iterable<Integer> colIndexes,
-			DataFormatter formatter,
-			FormulaEvaluator evaluator) {
-
-		for (Integer colIndex : colIndexes) {
-			if (colIndex == null || colIndex < 0)
-				continue;
-
-			String txt = getCellText(row, colIndex, formatter, evaluator,false);
-			if (!isBlankOrZero(txt)) {
-				return false; // found real data → row is NOT empty
-			}
-		}
-		return true; // all mapped cols empty / zero
-	}
-	 */
-
+	
+	
 	protected boolean isRowCompletelyEmpty(
 			Row row,
 			Iterable<ColumnMeta> metas,
