@@ -135,11 +135,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 				continue;
 
 			// ✅ SINGLE rule: ignore empty rows
-			if (isRowCompletelyEmpty(
-					row,
-					colIndexToMeta.values(),
-					formatter,
-					evaluator)) {
+			if (isRowCompletelyEmpty(row, colIndexToMeta.values(), evaluator)) {
 				emptyRowsInARow++;
 				if (emptyRowsInARow > 10) {
 					break;  // to many empty lines.  Assume the rest are empty

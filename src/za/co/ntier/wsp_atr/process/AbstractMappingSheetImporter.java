@@ -262,21 +262,52 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 	
 	
 	protected boolean isRowCompletelyEmpty(
-			Row row,
-			Iterable<ColumnMeta> metas,
-			DataFormatter formatter,
-			FormulaEvaluator evaluator) {
+	        Row row,
+	        Iterable<ColumnMeta> metas,
+	        FormulaEvaluator evaluator) {
 
-		for (ColumnMeta meta : metas) {
+	    for (ColumnMeta meta : metas) {
 
-			String txt = getCellText(row, meta.columnIndex, formatter, evaluator);
+	        Cell cell = row.getCell(meta.columnIndex);
 
-			if (isBlankOrZero(txt)) {
-				return false; // 🔴 ignore entire row
-			}
-		}
+	        if (cell == null) {
+	            continue;
+	        }
 
-		return true; // all mapped cols empty / zero
+	        CellType type = cell.getCellType();
+
+	        // Handle formulas
+	        if (type == CellType.FORMULA && evaluator != null) {
+	            type = evaluator.evaluateFormulaCell(cell);
+	        }
+
+	        switch (type) {
+
+	        case STRING:
+	            if (!cell.getStringCellValue().trim().isEmpty()) {
+	                return false;
+	            }
+	            break;
+
+	        case NUMERIC:
+	            if (cell.getNumericCellValue() != 0) {
+	                return false;
+	            }
+	            break;
+
+	        case BOOLEAN:
+	            if (cell.getBooleanCellValue()) {
+	                return false;
+	            }
+	            break;
+
+	        case BLANK:
+	        default:
+	            break;
+	        }
+	    }
+
+	    return true;
 	}
 
 	protected boolean isBlankOrZero(String txt) {

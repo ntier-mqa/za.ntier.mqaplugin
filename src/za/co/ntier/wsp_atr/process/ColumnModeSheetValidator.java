@@ -83,26 +83,18 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
                 continue;
             }
 
-            if (row == null || isRowCompletelyEmpty(row, colIndexToMeta.values(), formatter, evaluator)) {
+            if (isRowCompletelyEmpty(row, colIndexToMeta.values(), evaluator)) {
             	emptyRowsInARow++;
 				if (emptyRowsInARow > 10) {
 					break;  // to many empty lines.  Assume the rest are empty
 				}
                 continue;
             }
-            
-            rowCnt++;  // just debugging
-            if (rowCnt > 5000) {
-            	rowCnt = 0;
-            	log.warning("Row Number processed : " + row.getRowNum() + " Sheet: " +  sheet.getSheetName());
-            }
+                      
             
             emptyRowsInARow = 0;
             
-            if (row.getRowNum() > 91000) {
-            	log.warning("Row Number over max : " + row.getRowNum() + " Sheet: " +  sheet.getSheetName());
-            }
-
+          
             if (shouldIgnoreRowBecauseOfIgnoreIfBlank(row, colIndexToMeta.values(), formatter, evaluator)) {
                 continue;
             }
