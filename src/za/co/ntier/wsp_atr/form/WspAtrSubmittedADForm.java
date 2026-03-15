@@ -561,6 +561,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 	// ---------------- Download Error ----------------
 
+	/*
 	private void downloadLatestError(int submittedId) {
 		MAttachment att = MAttachment.get(Env.getCtx(), X_ZZ_WSP_ATR_Submitted.Table_ID, submittedId);
 		if (att == null || att.getEntryCount() <= 0)
@@ -578,6 +579,36 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 					err.getName());
 		} catch (Exception e) {
 			throw new AdempiereException("Download failed: " + e.getMessage());
+		}
+	}
+	*/
+	
+	private void downloadLatestError(int submittedId) {
+		MAttachment att = MAttachment.get(Env.getCtx(), X_ZZ_WSP_ATR_Submitted.Table_ID, submittedId);
+		if (att == null || att.getEntryCount() <= 0)
+			throw new AdempiereException("No attachment found for record " + submittedId);
+
+		MAttachmentEntry err = findLatestErrorEntry(att);
+		if (err == null)
+			throw new AdempiereException("No error file found for record " + submittedId);
+
+		try (InputStream is = err.getInputStream()) {
+			byte[] data = readAllBytes(is);
+
+			log.warning	("DOWNLOAD CHECK | submittedId=" + submittedId
+					+ " | file=" + err.getName()
+					+ " | len=" + (data != null ? data.length : -1)
+					+ " | sha256=" + sha256Hex(data));
+
+			assertExcelLooksValid(data, err.getName(), EXCEL_PASSWORD);
+
+			Filedownload.save(
+					data,
+					"application/vnd.ms-excel.sheet.macroEnabled.12",
+					err.getName());
+
+		} catch (Exception e) {
+			throw new AdempiereException("Download failed: " + e.getMessage(), e);
 		}
 	}
 

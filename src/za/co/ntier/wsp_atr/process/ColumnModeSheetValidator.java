@@ -64,6 +64,15 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
             meta.ignoreIfBlank = det.isIgnore_If_Blank();
             meta.headerName = det.getZZ_Header_Name();
             meta.createIfNotExist = det.isZZ_Create_If_Not_Exists();
+            String valueColLetter = det.getZZ_Value_Column_Letter();
+			String nameColLetter  = det.getZZ_Name_Column_Letter();
+
+			if (!Util.isEmpty(valueColLetter, true)) {
+				meta.valueColumnIndex = columnLetterToIndex(valueColLetter);
+			}
+			if (!Util.isEmpty(nameColLetter, true)) {
+				meta.nameColumnIndex = columnLetterToIndex(nameColLetter);
+			}
 
             colIndexToMeta.put(colIndex, meta);
         }
@@ -103,6 +112,10 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
             for (ColumnMeta meta : colIndexToMeta.values()) {
                 if (!meta.mandatory) {
                     continue;
+                }
+                
+                if (meta.valueColumnIndex != null && meta.nameColumnIndex != null && meta.valueColumnIndex >= 0 && meta.nameColumnIndex >= 0) {
+                	continue;
                 }
 
                 String txt = getCellText(row, meta.columnIndex, formatter, evaluator);
@@ -178,18 +191,5 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
         return 0;
     }
     
-    private void logHeap(String label) {
-		Runtime rt = Runtime.getRuntime();
-		long max = rt.maxMemory();
-		long total = rt.totalMemory();
-		long free = rt.freeMemory();
-		long used = total - free;
-
-		log.warning(label
-				+ " | usedMB=" + (used / 1024 / 1024)
-				+ " totalMB=" + (total / 1024 / 1024)
-				+ " maxMB=" + (max / 1024 / 1024)
-				+ " freeMB=" + (free / 1024 / 1024));
-				
-	}
+   
 }
