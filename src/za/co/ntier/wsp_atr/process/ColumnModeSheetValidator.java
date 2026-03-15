@@ -1,7 +1,6 @@
 package za.co.ntier.wsp_atr.process;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -113,12 +112,9 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
                 if (!meta.mandatory) {
                     continue;
                 }
-                
-                if (meta.valueColumnIndex != null && meta.nameColumnIndex != null && meta.valueColumnIndex >= 0 && meta.nameColumnIndex >= 0) {
-                	continue;
-                }
+                             
 
-                String txt = getCellText(row, meta.columnIndex, formatter, evaluator);
+                String txt = getCellText(row, meta.columnIndex, formatter);
                 if (Util.isEmpty(txt, true)) {
                     String msg = "Mandatory field is missing (" + meta.column.getColumnName() + ")";
                     marker.markError(wb, sheet, row, meta.columnIndex, msg);
@@ -141,7 +137,7 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
 
             // Reference validation
             for (ColumnMeta meta : colIndexToMeta.values()) {
-                String txt = getCellText(row, meta.columnIndex, formatter, evaluator);
+                String txt = getCellText(row, meta.columnIndex, formatter);
                 if (Util.isEmpty(txt, true)) {
                     continue;
                 }

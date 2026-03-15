@@ -1,7 +1,6 @@
 package za.co.ntier.wsp_atr.process;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +27,6 @@ import org.compiere.util.Util;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping_Detail;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
-import za.co.ntier.wsp_atr.process.AbstractMappingSheetImporter.ColumnMeta;
 
 /**
  * Column-mode importer.
@@ -188,7 +186,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 					ColumnMeta meta = entry.getValue();
 					int colIndex = meta.columnIndex;
 
-					String mainText = getCellText(row, colIndex, formatter,evaluator);
+					String mainText = getCellText(row, colIndex, formatter);
 					String valueText = null;
 					String nameText  = null;
 
@@ -199,10 +197,10 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 
 					if (meta.createIfNotExist && isRefColumn) {
 						if (meta.valueColumnIndex != null) {
-							valueText = getCellText(row, meta.valueColumnIndex, formatter,evaluator);
+							valueText = getCellText(row, meta.valueColumnIndex, formatter);
 						}
 						if (meta.nameColumnIndex != null) {
-							nameText = getCellText(row, meta.nameColumnIndex, formatter,evaluator);
+							nameText = getCellText(row, meta.nameColumnIndex, formatter);
 						}
 
 						if (Util.isEmpty(mainText, true)
@@ -561,7 +559,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 			if (!meta.mandatory)
 				continue;
 
-			String txt = getCellText(row, meta.columnIndex, formatter,evaluator);
+			String txt = getCellText(row, meta.columnIndex, formatter);
 			if (Util.isEmpty(txt, true)) {
 				return true;
 			}

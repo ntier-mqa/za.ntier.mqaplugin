@@ -98,6 +98,7 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 		return po;
 	}
 
+	/*
 	protected String getCellText(Row row,
 			int colIndex,
 			DataFormatter formatter,
@@ -141,6 +142,37 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 				return "";
 			}
 		}
+	}
+	
+	*/
+	
+	protected String getCellText(Row row, int columnIndex, DataFormatter formatter) {
+
+	    Cell cell = row.getCell(columnIndex);
+	    if (cell == null)
+	        return "";
+
+	    if (cell.getCellType() == CellType.FORMULA) {
+	        switch (cell.getCachedFormulaResultType()) {
+
+	            case STRING:
+	                return cell.getStringCellValue();
+
+	            case NUMERIC:
+	                return formatter.formatRawCellContents(
+	                        cell.getNumericCellValue(),
+	                        -1,
+	                        cell.getCellStyle().getDataFormatString());
+
+	            case BOOLEAN:
+	                return String.valueOf(cell.getBooleanCellValue());
+
+	            default:
+	                return "";
+	        }
+	    }
+
+	    return formatter.formatCellValue(cell);
 	}
 
 
@@ -339,7 +371,7 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 			if (!meta.ignoreIfBlank)
 				continue;
 
-			String txt = getCellText(row, meta.columnIndex, formatter, evaluator);
+			String txt = getCellText(row, meta.columnIndex, formatter);
 
 			if (isBlankOrZero(txt)) {
 				return true; // 🔴 ignore entire row
