@@ -7,7 +7,6 @@ import java.util.Properties;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.apache.poi.ss.usermodel.DataFormatter;
-import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.util.IOUtils;
@@ -17,6 +16,7 @@ import org.compiere.model.Query;
 import org.compiere.process.SvrProcess;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
+import org.compiere.util.Util;
 
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
@@ -54,14 +54,13 @@ public class WspAtrImportService {
             logHeap(process, "IMPORT AFTER LOAD WORKBOOK");
 
             DataFormatter formatter = new DataFormatter();
-            FormulaEvaluator evaluator = wb.getCreationHelper().createFormulaEvaluator();
-
             List<X_ZZ_WSP_ATR_Lookup_Mapping> headers = new Query(
                     ctx,
                     X_ZZ_WSP_ATR_Lookup_Mapping.Table_Name,
                     null,
                     trxName)
                     .setOnlyActiveRecords(true)
+                    .setOrderBy("seqNo")
                     .list();
 
             if (headers == null || headers.isEmpty()) {
@@ -85,10 +84,8 @@ public class WspAtrImportService {
                             submitted,
                             mapHeader,
                             trxName,
-                            formatter,
-                            evaluator
+                            formatter
                     );
-                    importer.importData(ctx, wb, submitted, mapHeader, trxName,  formatter,evaluator);
                     totalImported += count;
                     logHeap(process, "AFTER IMPORT TAB: " + mapHeader.getZZ_Tab_Name());
 
@@ -128,7 +125,8 @@ public class WspAtrImportService {
         }
     }
 
-    /*
+  
+    
     private Workbook loadWorkbook(X_ZZ_WSP_ATR_Submitted submitted) throws Exception {
 
         MAttachment attachment = MAttachment.get(
@@ -141,42 +139,28 @@ public class WspAtrImportService {
         }
 
         MAttachmentEntry[] entries = attachment.getEntries();
+        
         MAttachmentEntry selectedEntry = null;
 
-        if (selectedEntry == null && entries != null && entries.length > 0) {
-            selectedEntry = entries[0];
-        }
+        if (entries != null) {
+            for (MAttachmentEntry entry : entries) {
+                if (entry == null) {
+                    continue;
+                }
 
-        if (selectedEntry == null) {
-            throw new AdempiereException("Attachment has no valid entries.");
-        }
+                String name = entry.getName();
+                if (Util.isEmpty(name, true)) {
+                    continue;
+                }
 
-        try (InputStream is = selectedEntry.getInputStream()) {
-            if (is == null) {
-                throw new AdempiereException(
-                        "Could not open attachment stream for file " + selectedEntry.getName());
+                if (name.toUpperCase().startsWith("ERROR")) {
+                    continue;
+                }
+
+                selectedEntry = entry;
+                break;
             }
-
-            IOUtils.setByteArrayMaxOverride(200 * 1024 * 1024);
-            return WorkbookFactory.create(is);
         }
-    }
-    
-    */
-    
-    private Workbook loadWorkbook(X_ZZ_WSP_ATR_Submitted submitted) throws Exception {
-
-        MAttachment attachment = MAttachment.get(
-                Env.getCtx(),
-                X_ZZ_WSP_ATR_Submitted.Table_ID,
-                submitted.getZZ_WSP_ATR_Submitted_ID());
-
-        if (attachment == null || attachment.getEntryCount() <= 0) {
-            throw new AdempiereException("No attachment found for WSP/ATR Submitted record.");
-        }
-
-        MAttachmentEntry[] entries = attachment.getEntries();
-        MAttachmentEntry selectedEntry = null;
 
         if (selectedEntry == null && entries != null && entries.length > 0) {
             selectedEntry = entries[0];

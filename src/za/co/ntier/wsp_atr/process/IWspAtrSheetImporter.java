@@ -26,8 +26,7 @@ public interface IWspAtrSheetImporter {
                    X_ZZ_WSP_ATR_Submitted submitted,
                    X_ZZ_WSP_ATR_Lookup_Mapping mappingHeader,
                    String trxName,
-                   DataFormatter formatter,
-                   FormulaEvaluator evaluator) throws IllegalStateException, SQLException;
+                   DataFormatter formatter) throws IllegalStateException, SQLException;
     
     public CLogger getLog();
 

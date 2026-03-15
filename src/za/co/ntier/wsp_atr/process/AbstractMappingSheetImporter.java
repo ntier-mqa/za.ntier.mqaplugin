@@ -295,8 +295,7 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 	
 	protected boolean isRowCompletelyEmpty(
 	        Row row,
-	        Iterable<ColumnMeta> metas,
-	        FormulaEvaluator evaluator) {
+	        Iterable<ColumnMeta> metas) {
 
 	    for (ColumnMeta meta : metas) {
 
@@ -308,13 +307,12 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 
 	        CellType type = cell.getCellType();
 
-	        // Handle formulas
-	        if (type == CellType.FORMULA && evaluator != null) {
-	            type = evaluator.evaluateFormulaCell(cell);
+	        // Use cached formula result, do not recalculate
+	        if (type == CellType.FORMULA) {
+	            type = cell.getCachedFormulaResultType();
 	        }
 
 	        switch (type) {
-
 	        case STRING:
 	            if (!cell.getStringCellValue().trim().isEmpty()) {
 	                return false;
@@ -364,8 +362,7 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 	protected boolean shouldIgnoreRowBecauseOfIgnoreIfBlank(
 			Row row,
 			Iterable<ColumnMeta> metas,
-			DataFormatter formatter,
-			FormulaEvaluator evaluator) {
+			DataFormatter formatter) {
 
 		for (ColumnMeta meta : metas) {
 			if (!meta.ignoreIfBlank)

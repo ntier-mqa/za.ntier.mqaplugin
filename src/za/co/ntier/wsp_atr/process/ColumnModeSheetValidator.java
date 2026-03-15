@@ -91,7 +91,7 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
                 continue;
             }
 
-            if (isRowCompletelyEmpty(row, colIndexToMeta.values(), evaluator)) {
+            if (isRowCompletelyEmpty(row, colIndexToMeta.values())) {
             	emptyRowsInARow++;
 				if (emptyRowsInARow > 10) {
 					break;  // to many empty lines.  Assume the rest are empty
@@ -103,7 +103,7 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
             emptyRowsInARow = 0;
             
           
-            if (shouldIgnoreRowBecauseOfIgnoreIfBlank(row, colIndexToMeta.values(), formatter, evaluator)) {
+            if (shouldIgnoreRowBecauseOfIgnoreIfBlank(row, colIndexToMeta.values(), formatter)) {
                 continue;
             }
 
@@ -182,8 +182,7 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
                           X_ZZ_WSP_ATR_Submitted submitted,
                           X_ZZ_WSP_ATR_Lookup_Mapping mappingHeader,
                           String trxName,
-                          DataFormatter formatter,
-                          FormulaEvaluator evaluator) throws IllegalStateException, SQLException {
+                          DataFormatter formatter) throws IllegalStateException, SQLException {
         return 0;
     }
     

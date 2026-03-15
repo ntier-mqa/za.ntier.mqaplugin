@@ -11,6 +11,7 @@ import java.util.logging.Level;
 import org.adempiere.exceptions.AdempiereException;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
+//import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -55,8 +56,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 			X_ZZ_WSP_ATR_Submitted submitted,
 			X_ZZ_WSP_ATR_Lookup_Mapping mappingHeader,
 			String trxName,
-			DataFormatter formatter,
-			FormulaEvaluator evaluator) throws IllegalStateException, SQLException {
+			DataFormatter formatter) throws IllegalStateException, SQLException {
 
 		Sheet sheet = getSheetOrThrow(wb, mappingHeader); 
 		List<X_ZZ_WSP_ATR_Lookup_Mapping_Detail> details =
@@ -133,7 +133,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 				continue;
 
 			// ✅ SINGLE rule: ignore empty rows
-			if (isRowCompletelyEmpty(row, colIndexToMeta.values(), evaluator)) {
+			if (isRowCompletelyEmpty(row, colIndexToMeta.values())) {
 				emptyRowsInARow++;
 				if (emptyRowsInARow > 10) {
 					break;  // to many empty lines.  Assume the rest are empty
@@ -147,14 +147,13 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 			if (shouldIgnoreRowBecauseOfIgnoreIfBlank(
 					row,
 					colIndexToMeta.values(),
-					formatter,
-					evaluator)) {
+					formatter)) {
 				continue;
 			}
 		//	if (isRowEmptyByMappedColumns(row, colIndexToMeta.keySet(), formatter,evaluator))
 		//		continue;
 
-			if (isMissingMandatory(row, colIndexToMeta.values(), formatter,evaluator)) {
+			if (isMissingMandatory(row, colIndexToMeta.values(), formatter)) {
 				// optional log
 			//	process.addLog("Skipping row " + (r + 1) + " - mandatory column missing (tab " + mappingHeader.getZZ_Tab_Name() + ")");
 				continue;
@@ -553,8 +552,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 
 	private boolean isMissingMandatory(Row row,
 			Iterable<ColumnMeta> metas,
-			DataFormatter formatter,
-			FormulaEvaluator evaluator) {
+			DataFormatter formatter) {
 		for (ColumnMeta meta : metas) {
 			if (!meta.mandatory)
 				continue;

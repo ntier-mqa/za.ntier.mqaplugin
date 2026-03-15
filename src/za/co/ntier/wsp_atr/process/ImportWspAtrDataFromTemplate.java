@@ -90,7 +90,7 @@ public class ImportWspAtrDataFromTemplate extends SvrProcess {
 
 				int count = 0;
 				try {
-					count = importer.importData(ctx, wb, submitted, mapHeader, trxName,  formatter,evaluator);
+					count = importer.importData(ctx, wb, submitted, mapHeader, trxName,  formatter);
 				} catch (Exception e){
 					// IMPORTANT: rollback resets aborted transaction state in PostgreSQL
 					DB.rollback(true, trxName);
