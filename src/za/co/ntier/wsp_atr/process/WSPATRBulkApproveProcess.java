@@ -6,9 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
-import org.adempiere.base.IProcessFactory;
 import org.adempiere.base.annotation.Process;
 import org.adempiere.exceptions.AdempiereException;
+import org.adempiere.util.ProcessUtil;
 import org.compiere.model.MPInstance;
 import org.compiere.model.MProcess;
 import org.compiere.process.ProcessInfo;
@@ -17,13 +17,10 @@ import org.compiere.process.SvrProcess;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Trx;
-import org.osgi.service.component.annotations.Component;
-import org.adempiere.util.ProcessUtil;
 
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
 import za.ntier.models.MZZWSPATRSubmitted;
 
-@Component(immediate = true, service = IProcessFactory.class, property = { "service.ranking:Integer=5" })
 @Process(name = "za.co.ntier.wsp_atr.process.WSPATRBulkApproveProcess")
 public class WSPATRBulkApproveProcess extends SvrProcess
 {
