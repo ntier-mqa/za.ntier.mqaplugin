@@ -40,7 +40,7 @@ public class TransactionBalanceReportSummary extends SvrProcess {
                 SUM(CASE WHEN t.movementdate BETWEEN ? AND ? AND t.movementtype IN ('V+', 'V-') THEN t.movementqty ELSE 0 END) AS receipts,
                 SUM(CASE WHEN t.movementdate BETWEEN ? AND ? AND t.movementtype IN ('I+', 'I-') THEN (t.movementqty * -1) ELSE 0 END) AS issues,
                 SUM(CASE WHEN t.movementdate < ? THEN t.movementqty ELSE 0 END) +
-                SUM(CASE WHEN t.movementdate BETWEEN ? AND ? AND t.movementtype IN ('V+', 'V-') THEN t.movementqty ELSE 0 END) +                      // issues are negative
+                SUM(CASE WHEN t.movementdate BETWEEN ? AND ? AND t.movementtype IN ('V+', 'V-') THEN t.movementqty ELSE 0 END) +                      
                 SUM(CASE WHEN t.movementdate BETWEEN ? AND ? AND t.movementtype IN ('I+', 'I-') THEN t.movementqty ELSE 0 END) AS closing_balance
             FROM adempiere.m_transaction t
             WHERE t.ad_client_id = ?
