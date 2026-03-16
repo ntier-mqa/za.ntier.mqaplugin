@@ -10,7 +10,6 @@ import java.util.logging.Level;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.apache.poi.ss.usermodel.DataFormatter;
-import org.apache.poi.ss.usermodel.FormulaEvaluator;
 //import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -44,7 +43,10 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 
 	// Data usually starts at row 7 (Excel 1-based) => index 6 (0-based)
 	private static final int DEFAULT_COMMIT_EVERY = 1000; // change as you like
-	
+	private final Map<String, Integer> wspEmployeeIdByValue = new HashMap<>();
+	boolean isBiodataTab = false;
+	boolean isAtrTab = false;
+
 
 	public ColumnModeSheetImporter(ReferenceLookupService refService,SvrProcess svrProcess) {
 		super(refService,svrProcess);
@@ -57,6 +59,9 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 			X_ZZ_WSP_ATR_Lookup_Mapping mappingHeader,
 			String trxName,
 			DataFormatter formatter) throws IllegalStateException, SQLException {
+		
+		isBiodataTab = "Biodata".equalsIgnoreCase(mappingHeader.getZZ_Tab_Name());
+		isAtrTab = "ATR".equalsIgnoreCase(mappingHeader.getZZ_Tab_Name());
 
 		Sheet sheet = getSheetOrThrow(wb, mappingHeader); 
 		List<X_ZZ_WSP_ATR_Lookup_Mapping_Detail> details =
@@ -140,7 +145,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 				}
 				continue;
 			}
-			
+
 			emptyRowsInARow = 0;
 
 			// 2️⃣ Ignore rows based on Ignore_If_Blank
@@ -150,12 +155,12 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 					formatter)) {
 				continue;
 			}
-		//	if (isRowEmptyByMappedColumns(row, colIndexToMeta.keySet(), formatter,evaluator))
-		//		continue;
+			//	if (isRowEmptyByMappedColumns(row, colIndexToMeta.keySet(), formatter,evaluator))
+			//		continue;
 
 			if (isMissingMandatory(row, colIndexToMeta.values(), formatter)) {
 				// optional log
-			//	process.addLog("Skipping row " + (r + 1) + " - mandatory column missing (tab " + mappingHeader.getZZ_Tab_Name() + ")");
+				//	process.addLog("Skipping row " + (r + 1) + " - mandatory column missing (tab " + mappingHeader.getZZ_Tab_Name() + ")");
 				continue;
 			}
 
@@ -163,12 +168,12 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 			int sheetRowNo = r + 1;
 
 			// Restartable: if a line already exists for this Submitted + Row_No, skip
-		//	if (rowAlreadyImported(ctx, targetTableName, submitted.get_ID(), sheetRowNo, trxName)) {
+			//	if (rowAlreadyImported(ctx, targetTableName, submitted.get_ID(), sheetRowNo, trxName)) {
 			//	continue;
-		//	}
-			
+			//	}
+
 			if (existingRowNos.contains(sheetRowNo)) {
-			    continue;
+				continue;
 			}
 
 			PO line = newTargetPO(ctx, submitted, mappingHeader, trxName);
@@ -226,54 +231,56 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 				} 
 			}catch (SkipRowException e) {
 				skipRow = true;
-		//		process.addLog("Skipping row " + (r + 1) + " - " + e.getMessage()
-		//		+ " (tab " + mappingHeader.getZZ_Tab_Name() + ")");
+				//		process.addLog("Skipping row " + (r + 1) + " - " + e.getMessage()
+				//		+ " (tab " + mappingHeader.getZZ_Tab_Name() + ")");
 			}
 
 			if (skipRow) {
 				continue; // ignore entire line
 			}
 
-			
-			try {
-			    line.saveEx();
-			    imported++;
 
-			    if (commitEvery > 0 && (imported % commitEvery) == 0) {
-			        DB.commit(true, trxName);
-			    }
+			try {
+				line.saveEx();
+				imported++;
+				
+				
+
+				if (commitEvery > 0 && (imported % commitEvery) == 0) {
+					DB.commit(true, trxName);
+				}
 
 			} catch (Exception ex) {
-			    // IMPORTANT: rollback resets aborted transaction state in PostgreSQL
-			    DB.rollback(true, trxName);
+				// IMPORTANT: rollback resets aborted transaction state in PostgreSQL
+				DB.rollback(true, trxName);
 
-			    //process.addLog("ERROR row " + (r + 1)
-			    //    + " (tab " + mappingHeader.getZZ_Tab_Name() + "): "
-			    //    + ex.getClass().getSimpleName() + " - " + ex.getMessage());
+				//process.addLog("ERROR row " + (r + 1)
+				//    + " (tab " + mappingHeader.getZZ_Tab_Name() + "): "
+				//    + ex.getClass().getSimpleName() + " - " + ex.getMessage());
 
-			    // optional: also log stacktrace to server log
-			    log.log(Level.SEVERE,
-			        "Import failed at row " + (r + 1) + ", tab " + mappingHeader.getZZ_Tab_Name(),
-			        ex);
+				// optional: also log stacktrace to server log
+				log.log(Level.SEVERE,
+						"Import failed at row " + (r + 1) + ", tab " + mappingHeader.getZZ_Tab_Name(),
+						ex);
 
-			    // Decide: skip row and continue OR rethrow to stop whole import
-			    continue;
+				// Decide: skip row and continue OR rethrow to stop whole import
+				continue;
 			}
 
-			
+
 		}
 
 		// Final commit at end (safe)
-		
+
 		try {
-		    DB.commit(true, trxName);
+			DB.commit(true, trxName);
 		} catch (Exception ex) {
-		    DB.rollback(true, trxName);
-		    log.log(Level.SEVERE, "Final commit failed for tab " + mappingHeader.getZZ_Tab_Name(), ex);
-		    throw ex; // or return imported if you want partial success
+			DB.rollback(true, trxName);
+			log.log(Level.SEVERE, "Final commit failed for tab " + mappingHeader.getZZ_Tab_Name(), ex);
+			throw ex; // or return imported if you want partial success
 		}
 
-	//	process.addLog("Imported " + imported + " rows from tab " + mappingHeader.getZZ_Tab_Name());
+		//	process.addLog("Imported " + imported + " rows from tab " + mappingHeader.getZZ_Tab_Name());
 		return imported;
 	}
 
@@ -289,21 +296,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 		return t.getTableName();
 	}
 
-	/**
-	 * Restartable check: row already imported if a record exists for:
-	 *   Submitted_ID + Row_No
-	 */
-	private boolean rowAlreadyImported(Properties ctx, String tableName, int submittedId, int rowNo, String trxName) {
-		// Assumes both columns exist on the target table:
-		//   ZZ_WSP_ATR_Submitted_ID
-		//   Row_No
-		String where = "ZZ_WSP_ATR_Submitted_ID=? AND Row_No=?";
-		int existingId = new Query(ctx, tableName, where, trxName)
-				.setParameters(submittedId, rowNo)
-				.firstId();
-		return existingId > 0;
-	}
-
+	
 	/**
 	 * Extended version:
 	 *  - If NOT a Table/TableDir, or createIfNotExist=false, just delegates to the old method.
@@ -371,6 +364,15 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 		if (valueToUse == null && nameToUse == null && mainText != null) {
 			nameToUse = mainText;
 		}
+		
+		if (isAtrTab && meta.columnIndex == 1 && !Util.isEmpty(valueToUse, true)) {
+		    Integer empId = wspEmployeeIdByValue.get(norm(valueToUse));
+
+		    if (empId != null) {
+		        po.set_ValueOfColumn(column.getColumnName(), empId);
+		        return;
+		    }
+		}
 
 		// We need the reference table from AD_Reference_Value_ID
 		int adRefTableId = column.getAD_Reference_Value_ID();
@@ -414,6 +416,10 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 		}
 
 		if (foundId != null && foundId > 0) {
+			String k = norm(valueToUse);
+			if (isBiodataTab && meta.columnIndex == 0 && k != null) {
+			    wspEmployeeIdByValue.put(k, foundId);
+			}
 			po.set_ValueOfColumn(column.getColumnName(), foundId);
 			return;
 		}
@@ -434,8 +440,8 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 			}
 			if (svrProcess != null) {
 				//svrProcess.addLog("Skipping create in " + refTableName
-					//	+ " for column " + column.getColumnName()
-					//	+ " - Name column is configured but empty. Sheet value='" + (mainText != null ? mainText : "") + "'");
+				//	+ " for column " + column.getColumnName()
+				//	+ " - Name column is configured but empty. Sheet value='" + (mainText != null ? mainText : "") + "'");
 			}
 			return;
 		}
@@ -482,7 +488,10 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 		if (newId <= 0) {
 			throw new AdempiereException("Failed to create reference record in " + refTableName);
 		}
-
+		String k = norm(valueToUse);
+		if (isBiodataTab && meta.columnIndex == 0 && k != null) {
+		    wspEmployeeIdByValue.put(k, newId);
+		}
 		po.set_ValueOfColumn(column.getColumnName(), newId);
 	}
 
@@ -513,6 +522,15 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 			setValueFromText(ctx, po, column, text, meta.useValueForRef, trxName);
 			return;
 		}
+		
+
+	    if (isAtrTab && meta.columnIndex == 1 && !Util.isEmpty(text, true)) {
+	        Integer empId = wspEmployeeIdByValue.get(norm(text));
+	        if (empId != null && empId > 0) {
+	            po.set_ValueOfColumn(column.getColumnName(), empId);
+	            return;
+	        }
+	    }
 
 		// If not mandatory, keep old behaviour
 		if (!meta.mandatory) {
@@ -529,26 +547,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 
 		po.set_ValueOfColumn(column.getColumnName(), id);
 	}
-
-
-
-
-	/**
-	 * Check if a row is effectively empty for all mapped main columns.
-	 */
-	/*
-	private boolean isRowEmptyByMappedColumns(Row row,
-			Iterable<Integer> colIndexes,
-			DataFormatter formatter,
-			FormulaEvaluator evaluator) {
-		for (Integer colIndex : colIndexes) {
-			String txt = getCellText(row, colIndex, formatter,evaluator,);
-			if (!Util.isEmpty(txt, true))
-				return false;
-		}
-		return true;
-	}
-	*/
+	
 
 	private boolean isMissingMandatory(Row row,
 			Iterable<ColumnMeta> metas,
@@ -571,26 +570,32 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 	private static class SkipRowException extends RuntimeException {
 		SkipRowException(String msg) { super(msg); }
 	}
-	
+
 	private java.util.Set<Integer> loadExistingRowNos(Properties ctx, String tableName, int submittedId, String trxName) {
-	    java.util.Set<Integer> set = new java.util.HashSet<>();
-	    String sql = "SELECT Row_No FROM " + tableName + " WHERE ZZ_WSP_ATR_Submitted_ID=?";
-	    java.sql.PreparedStatement ps = null;
-	    java.sql.ResultSet rs = null;
-	    try {
-	        ps = DB.prepareStatement(sql, trxName);
-	        ps.setInt(1, submittedId);
-	        rs = ps.executeQuery();
-	        while (rs.next()) {
-	            set.add(rs.getInt(1));
-	        }
-	    } catch (Exception e) {
-	        throw new AdempiereException("Failed to load existing Row_No for " + tableName, e);
-	    } finally {
-	        DB.close(rs, ps);
-	    }
-	    return set;
+		java.util.Set<Integer> set = new java.util.HashSet<>();
+		String sql = "SELECT Row_No FROM " + tableName + " WHERE ZZ_WSP_ATR_Submitted_ID=?";
+		java.sql.PreparedStatement ps = null;
+		java.sql.ResultSet rs = null;
+		try {
+			ps = DB.prepareStatement(sql, trxName);
+			ps.setInt(1, submittedId);
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				set.add(rs.getInt(1));
+			}
+		} catch (Exception e) {
+			throw new AdempiereException("Failed to load existing Row_No for " + tableName, e);
+		} finally {
+			DB.close(rs, ps);
+		}
+		return set;
 	}
+	
+	private String norm(String s) {
+	    return Util.isEmpty(s, true) ? null : s.trim();
+	}
+
+	
 
 }
 

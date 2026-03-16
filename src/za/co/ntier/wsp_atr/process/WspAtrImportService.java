@@ -68,13 +68,12 @@ public class WspAtrImportService {
             }
 
             int totalImported = 0;
-
+            IWspAtrSheetImporter importer = new ColumnModeSheetImporter(refService, process);
             for (X_ZZ_WSP_ATR_Lookup_Mapping mapHeader : headers) {
                 if (mapHeader.getAD_Table_ID() <= 0) {
                     continue;
                 }
                 logHeap(process, "BEFORE IMPORT TAB: " + mapHeader.getZZ_Tab_Name());
-                IWspAtrSheetImporter importer = new ColumnModeSheetImporter(refService, process);
                // importer.setLog(process.getLog());
 
                 try {

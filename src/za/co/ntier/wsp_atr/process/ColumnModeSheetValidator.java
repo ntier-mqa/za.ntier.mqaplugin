@@ -25,6 +25,8 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
     private final ExcelErrorMarker marker = new ExcelErrorMarker();
     private final ExcelErrorLogSheet errorLog = new ExcelErrorLogSheet();
     private static final int MAX_ERRORS = 100;
+   
+
 
     public ColumnModeSheetValidator(ReferenceLookupService refService, SvrProcess proc) {
         super(refService, proc);
@@ -187,4 +189,8 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
     }
     
    
+
+   
+   
+    
 }

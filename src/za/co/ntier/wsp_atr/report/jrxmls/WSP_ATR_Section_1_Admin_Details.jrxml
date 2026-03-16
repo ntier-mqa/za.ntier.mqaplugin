@@ -46,9 +46,9 @@
     COALESCE(bp.zzterminatedemployees::text, '<Employees Terminated>')
                                                                   AS employees_terminated,
 
-    COALESCE(NULLIF(bp.zzorgphone,''), bl.phone, '<Organisation Tel No>') AS organisation_tel,
-    COALESCE(NULLIF(bp.zzorgfax,''),   bl.fax,   '<Organisation Fax No>') AS organisation_fax,
-    COALESCE(NULLIF(bp.zzorgemail,''), '<Organisation Email>')            AS organisation_email,
+    COALESCE( bl.phone, '<Organisation Tel No>') AS organisation_tel,
+    COALESCE( bl.fax,   '<Organisation Fax No>') AS organisation_fax,
+    COALESCE(' ','<Organisation Email>')            AS organisation_email,
 
     COALESCE(
       NULLIF(
