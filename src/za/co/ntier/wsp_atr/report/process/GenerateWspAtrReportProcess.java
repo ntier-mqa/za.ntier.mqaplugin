@@ -3,6 +3,7 @@ package za.co.ntier.wsp_atr.report.process;
 import java.util.List;
 import java.util.Properties;
 
+import org.adempiere.base.annotation.Parameter;
 import org.adempiere.exceptions.AdempiereException;
 import org.adempiere.util.Callback;
 import org.adempiere.webui.apps.BackgroundJob;
@@ -22,10 +23,15 @@ import za.ntier.models.MZZWSPATRSubmitted;
 @org.adempiere.base.annotation.Process(
 		name = "za.co.ntier.wsp_atr.report.process.GenerateWspAtrReportProcess")
 public class GenerateWspAtrReportProcess extends SvrProcess {
+	
+	@Parameter(name = "ZZ_ConsolidatedSubmission")
+	private boolean consolidatedSubmission;
 
 	private int p_ZZ_WSP_ATR_Submitted_ID;
 	private Properties ctx = null;
 	private static final String PROCESS_PRINT_REPORT_UU = "0875c375-6e37-49fb-a5c0-798529189260";
+	
+	
 	@Override
 	protected void prepare() {
 		p_ZZ_WSP_ATR_Submitted_ID = getRecord_ID();
@@ -67,7 +73,7 @@ public class GenerateWspAtrReportProcess extends SvrProcess {
 		        ReportSectionBuilderFactory.getBuilders(getCtx(), submitted);
 
 		    for (IReportSectionBuilder b : builders) {
-		        ReportBuildResult r = b.build(report, submitted, get_TrxName());
+		        ReportBuildResult r = b.build(report, submitted, get_TrxName(),consolidatedSubmission);
 		        totalInserted += r.getInsertedCount();
 		        addLog("Section " + b.getSectionCode() +
 		               " - " + b.getName() +

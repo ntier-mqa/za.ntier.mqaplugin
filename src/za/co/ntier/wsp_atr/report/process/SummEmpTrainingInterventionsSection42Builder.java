@@ -46,7 +46,7 @@ public class SummEmpTrainingInterventionsSection42Builder extends AbstractReport
     }
 
     @Override
-    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted, String trxName) throws Exception {
+    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted, String trxName,boolean consolidatedSubmission) throws Exception {
 
         // rerun behaviour: delete all rows for this report+section
         deleteExistingByReportAndSection(TARGET_TABLE, report.getZZ_WSP_ATR_Report_ID(), SECTION, trxName);
@@ -71,7 +71,7 @@ public class SummEmpTrainingInterventionsSection42Builder extends AbstractReport
               + "    d.ZZ_WSP_Employees_ID           AS zz_wsp_employees_id \n"
               + "  FROM " + X_ZZ_WSP_ATR_ATR_Detail.Table_Name + " d \n"
               + "  WHERE d.IsActive='Y' \n"
-              + "    AND d.ZZ_WSP_ATR_Submitted_ID in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),trxName)
+              + "    AND d.ZZ_WSP_ATR_Submitted_ID in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,trxName)
               + "    AND d.ZZ_WSP_Employees_ID IS NOT NULL \n"
               + "    AND d.Qualification_Type_ID IS NOT NULL \n"
               + "    AND d.Learning_Programme_Detail_ID IS NOT NULL \n"
@@ -94,7 +94,7 @@ public class SummEmpTrainingInterventionsSection42Builder extends AbstractReport
               + "  FROM dedup dd \n"
               + "  LEFT JOIN " + X_ZZ_WSP_ATR_Biodata_Detail.Table_Name + " bd \n"
               + "         ON bd.ZZ_WSP_Employees_ID = dd.zz_wsp_employees_id \n"
-              + "        AND bd.ZZ_WSP_ATR_Submitted_ID in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),trxName)
+              + "        AND bd.ZZ_WSP_ATR_Submitted_ID in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,trxName)
               + "        AND bd.IsActive='Y' \n"
               + "  LEFT JOIN ZZ_Equity_Ref  eq   ON eq.ZZ_Equity_Ref_ID  = bd.Race_ID \n"
               + "  LEFT JOIN ZZ_Gender_Ref  g    ON g.ZZ_Gender_Ref_ID   = bd.Gender_ID \n"

@@ -2,6 +2,7 @@ package za.co.ntier.wsp_atr.report.process;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.Properties;
 
 import org.compiere.util.DB;
 
@@ -37,7 +38,7 @@ public class ContractorsTrainingSection7Builder extends AbstractReportSectionBui
     }
 
     @Override
-    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted, String trxName) throws Exception {
+    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted, String trxName,boolean consolidatedSubmission) throws Exception {
 
         deleteExistingByReportAndSection(TARGET_TABLE, report.getZZ_WSP_ATR_Report_ID(), SECTION, trxName);
 
@@ -67,7 +68,7 @@ public class ContractorsTrainingSection7Builder extends AbstractReportSectionBui
             + "    SUM(COALESCE(c.zz_elementary_planned,0))::int        AS elementary_planned, \n"
             + "    SUM(COALESCE(c.zz_learners_planned,0))::int          AS learners_planned \n"
             + "  FROM " + INPUT_TABLE + " c \n"
-            + "  WHERE c.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),trxName)
+            + "  WHERE c.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,trxName)
             + "    AND c.isactive = 'Y' \n"
             + "    AND c.ZZ_Learning_Programme_Type_ID IS NOT NULL \n"
             + "  GROUP BY c.ZZ_Learning_Programme_Type_ID \n"
@@ -129,4 +130,8 @@ public class ContractorsTrainingSection7Builder extends AbstractReportSectionBui
 
         return new ReportBuildResult(inserted);
     }
+
+	
+
+	
 }

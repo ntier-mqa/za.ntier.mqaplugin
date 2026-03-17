@@ -39,7 +39,7 @@ public class NonEmployeesSkillsDevPlanSection64Builder extends AbstractReportSec
     }
 
     @Override
-    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted, String trxName) throws Exception {
+    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted, String trxName,boolean consolidatedSubmission) throws Exception {
 
         deleteExistingByReportAndSection(TARGET_TABLE, report.getZZ_WSP_ATR_Report_ID(), SECTION, trxName);
 
@@ -64,7 +64,7 @@ public class NonEmployeesSkillsDevPlanSection64Builder extends AbstractReportSec
             + "  FROM " + INPUT_TABLE + " t \n"
             + "  LEFT JOIN ZZ_Learning_Programme_Ref lpt \n"
             + "         ON lpt.ZZ_Learning_Programme_Ref_ID = t.zz_learning_programme_type_planned_id \n"
-            + "  WHERE t.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),trxName)
+            + "  WHERE t.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,trxName)
             + "    AND t.isactive = 'Y' \n"
             + "    AND t.zz_learning_programme_type_planned_id IS NOT NULL \n"
             + "    AND ( \n"

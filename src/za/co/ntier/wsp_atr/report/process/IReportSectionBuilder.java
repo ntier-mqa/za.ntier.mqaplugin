@@ -17,11 +17,9 @@ public interface IReportSectionBuilder {
      * Build this report section for the submitted record.
      * Must insert rows linked to report.getZZ_WSP_ATR_Report_ID().
      */
-    ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted, String trxName) throws Exception;
+    ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted, String trxName,boolean consolidatedSubmission) throws Exception;
     
-    String getParentAndChildSubmittedIdsInClause(Properties ctx,
-            int parentSubmittedId,
-            String trxName);
+    
     
     
 }

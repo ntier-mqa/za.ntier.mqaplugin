@@ -39,7 +39,7 @@ public class InductExLeaveRefresherSection44Builder extends AbstractReportSectio
     }
 
     @Override
-    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted, String trxName) throws Exception {
+    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted, String trxName,boolean consolidatedSubmission) throws Exception {
 
         // rerun behaviour: delete rows for this report + section
         deleteExistingByReportAndSection(TARGET_TABLE, report.getZZ_WSP_ATR_Report_ID(), SECTION, trxName);
@@ -66,7 +66,7 @@ public class InductExLeaveRefresherSection44Builder extends AbstractReportSectio
             + "    ON mg.value = left(occ.value, 6) \n"
             + "  JOIN zz_learning_programme_ref lpr \n"
             + "    ON lpr.zz_learning_programme_ref_id = w.zz_learning_programme_type_id \n"
-            + "  WHERE w.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),trxName)
+            + "  WHERE w.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,trxName)
             + "), planned AS ( \n"
             + "  SELECT \n"
             + "    major_group_id, \n"
@@ -97,7 +97,7 @@ public class InductExLeaveRefresherSection44Builder extends AbstractReportSectio
             + "    ON occ.zz_occupations_ref_id = bd.ofo_occupation_code_id \n"
             + "  JOIN zz_wsp_atr_ofo_major_group_ref mg \n"
             + "    ON mg.value = left(occ.value, 6) \n"
-            + "  WHERE d.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),trxName)
+            + "  WHERE d.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,trxName)
             + "    AND d.employee_number_id IS NOT NULL \n"
             + "), trained AS ( \n"
             + "  SELECT \n"

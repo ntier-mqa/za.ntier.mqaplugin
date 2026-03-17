@@ -45,7 +45,7 @@ public class NonEmployeesSkillsDevSection63Builder extends AbstractReportSection
     }
 
     @Override
-    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted, String trxName) throws Exception {
+    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted, String trxName,boolean consolidatedSubmission) throws Exception {
 
         deleteExistingByReportAndSection(TARGET_TABLE, report.getZZ_WSP_ATR_Report_ID(), SECTION, trxName);
 
@@ -66,7 +66,7 @@ public class NonEmployeesSkillsDevSection63Builder extends AbstractReportSection
             + "    SUM(COALESCE(t.zz_disabled_done,0))::numeric(10) AS disabled_cnt \n"
             + "  FROM " + INPUT_TABLE + " t \n"
             + "  LEFT JOIN ZZ_Learning_Programme_Ref lpt ON lpt.ZZ_Learning_Programme_Ref_ID = t.zz_learning_programme_type_done_id"
-            + "  WHERE t.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),trxName)
+            + "  WHERE t.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,trxName)
             + "    AND t.isactive = 'Y' \n"
             + "    AND t.zz_learning_programme_type_done_id IS NOT NULL \n"
             + "    AND COALESCE(lpt.Name,'') NOT ILIKE '%burs%'\n"

@@ -48,7 +48,7 @@
 
     COALESCE( bl.phone, '<Organisation Tel No>') AS organisation_tel,
     COALESCE( bl.fax,   '<Organisation Fax No>') AS organisation_fax,
-    COALESCE(' ','<Organisation Email>')            AS organisation_email,
+    COALESCE(u.email,'<Organisation Email>')            AS organisation_email,
 
     COALESCE(
       NULLIF(
@@ -110,6 +110,10 @@ LEFT JOIN adempiere.zzsdforganisation_v v
 LEFT JOIN adempiere.c_bpartner bp
        ON bp.isactive='Y'
       AND bp.c_bpartner_id = v.c_bpartner_id
+      
+LEFT JOIN adempiere.ad_user u
+     ON bp.C_BPartner_ID = u.C_BPartner_ID
+     LIMIT 1
 
 LEFT JOIN LATERAL (
     SELECT bl.*
