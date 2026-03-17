@@ -128,7 +128,7 @@ public class GenerateWspAtrReportProcess extends SvrProcess {
 	        "SELECT ZZ_WSP_ATR_Report_ID " +
 	        "FROM ZZ_WSP_ATR_Report " +
 	        "WHERE ZZ_WSP_ATR_Submitted_ID=? " +
-	        "and ZZ_ConsolidatedSubmission = " + (consolidatedSubmission ? "Y" : "N") +
+	        "and ZZ_ConsolidatedSubmission = " + (consolidatedSubmission ? "'Y'" : "'N'") +
 	        "and isActive = 'Y'" +
 	        "ORDER BY Created DESC, ZZ_WSP_ATR_Report_ID DESC " +
 	        "FETCH FIRST 1 ROWS ONLY",
