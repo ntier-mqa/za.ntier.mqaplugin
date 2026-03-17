@@ -113,7 +113,6 @@ LEFT JOIN adempiere.c_bpartner bp
       
 LEFT JOIN adempiere.ad_user u
      ON bp.C_BPartner_ID = u.C_BPartner_ID
-     LIMIT 1
 
 LEFT JOIN LATERAL (
     SELECT bl.*
