@@ -148,6 +148,15 @@ public interface I_ZZ_WSP_ATR_Report
 	  */
 	public int getUpdatedBy();
 
+    /** Column name ZZ_ConsolidatedSubmission */
+    public static final String COLUMNNAME_ZZ_ConsolidatedSubmission = "ZZ_ConsolidatedSubmission";
+
+	/** Set Consolidated Submission	  */
+	public void setZZ_ConsolidatedSubmission (boolean ZZ_ConsolidatedSubmission);
+
+	/** Get Consolidated Submission	  */
+	public boolean isZZ_ConsolidatedSubmission();
+
     /** Column name ZZ_Generate_WSP_ATR_Report */
     public static final String COLUMNNAME_ZZ_Generate_WSP_ATR_Report = "ZZ_Generate_WSP_ATR_Report";
 

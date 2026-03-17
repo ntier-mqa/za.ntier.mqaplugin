@@ -55,13 +55,13 @@ public class GenerateWspAtrReportProcess extends SvrProcess {
 		}
 
 		// Step 1: try find existing report
-		X_ZZ_WSP_ATR_Report report = findExistingReport(submitted);
+		X_ZZ_WSP_ATR_Report report = findExistingReport(submitted,consolidatedSubmission);
 
 		boolean isNewReport = false;
 
 		if (report == null) {
 		    // No existing report → create and build
-		    report = createReport(submitted);
+		    report = createReport(submitted,consolidatedSubmission);
 		    isNewReport = true;
 		}
 
@@ -99,7 +99,7 @@ public class GenerateWspAtrReportProcess extends SvrProcess {
 		}
 	}
 
-	private X_ZZ_WSP_ATR_Report createReport(MZZWSPATRSubmitted submitted) {
+	private X_ZZ_WSP_ATR_Report createReport(MZZWSPATRSubmitted submitted,boolean consolidatedSubmission) {
 		X_ZZ_WSP_ATR_Report report = new X_ZZ_WSP_ATR_Report(getCtx(), 0, get_TrxName());
 
 		// Name/Description: make it meaningful for your users
@@ -111,6 +111,7 @@ public class GenerateWspAtrReportProcess extends SvrProcess {
 
 		// optionally set AD_Client_ID / AD_Org_ID explicitly if your table requires it
 		// report.setAD_Org_ID(submitted.getAD_Org_ID());
+		report.setZZ_ConsolidatedSubmission(consolidatedSubmission);
 
 		if (!report.save()) {
 			throw new IllegalStateException("Failed to create ZZ_WSP_ATR_Report: "); // + report.getProcessMsg());
@@ -118,7 +119,7 @@ public class GenerateWspAtrReportProcess extends SvrProcess {
 		return report;
 	}
 	
-	private X_ZZ_WSP_ATR_Report findExistingReport(MZZWSPATRSubmitted submitted) {
+	private X_ZZ_WSP_ATR_Report findExistingReport(MZZWSPATRSubmitted submitted,boolean consolidatedSubmission) {
 
 	    int submittedId = submitted.getZZ_WSP_ATR_Submitted_ID();
 
@@ -127,6 +128,7 @@ public class GenerateWspAtrReportProcess extends SvrProcess {
 	        "SELECT ZZ_WSP_ATR_Report_ID " +
 	        "FROM ZZ_WSP_ATR_Report " +
 	        "WHERE ZZ_WSP_ATR_Submitted_ID=? " +
+	        "and ZZ_ConsolidatedSubmission = " + (consolidatedSubmission ? "Y" : "N") +
 	        "and isActive = 'Y'" +
 	        "ORDER BY Created DESC, ZZ_WSP_ATR_Report_ID DESC " +
 	        "FETCH FIRST 1 ROWS ONLY",

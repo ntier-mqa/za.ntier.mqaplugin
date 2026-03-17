@@ -32,7 +32,7 @@ public class X_ZZ_WSP_ATR_Report extends PO implements I_ZZ_WSP_ATR_Report, I_Pe
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260222L;
+	private static final long serialVersionUID = 20260317L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Report (Properties ctx, int ZZ_WSP_ATR_Report_ID, String trxName)
@@ -41,6 +41,8 @@ public class X_ZZ_WSP_ATR_Report extends PO implements I_ZZ_WSP_ATR_Report, I_Pe
       /** if (ZZ_WSP_ATR_Report_ID == 0)
         {
 			setName (null);
+			setZZ_ConsolidatedSubmission (false);
+// N
 			setZZ_WSP_ATR_Report_ID (0);
         } */
     }
@@ -52,6 +54,8 @@ public class X_ZZ_WSP_ATR_Report extends PO implements I_ZZ_WSP_ATR_Report, I_Pe
       /** if (ZZ_WSP_ATR_Report_ID == 0)
         {
 			setName (null);
+			setZZ_ConsolidatedSubmission (false);
+// N
 			setZZ_WSP_ATR_Report_ID (0);
         } */
     }
@@ -63,6 +67,8 @@ public class X_ZZ_WSP_ATR_Report extends PO implements I_ZZ_WSP_ATR_Report, I_Pe
       /** if (ZZ_WSP_ATR_Report_UU == null)
         {
 			setName (null);
+			setZZ_ConsolidatedSubmission (false);
+// N
 			setZZ_WSP_ATR_Report_ID (0);
         } */
     }
@@ -74,6 +80,8 @@ public class X_ZZ_WSP_ATR_Report extends PO implements I_ZZ_WSP_ATR_Report, I_Pe
       /** if (ZZ_WSP_ATR_Report_UU == null)
         {
 			setName (null);
+			setZZ_ConsolidatedSubmission (false);
+// N
 			setZZ_WSP_ATR_Report_ID (0);
         } */
     }
@@ -152,6 +160,28 @@ public class X_ZZ_WSP_ATR_Report extends PO implements I_ZZ_WSP_ATR_Report, I_Pe
 	public String getName()
 	{
 		return (String)get_Value(COLUMNNAME_Name);
+	}
+
+	/** Set Consolidated Submission.
+		@param ZZ_ConsolidatedSubmission Consolidated Submission
+	*/
+	public void setZZ_ConsolidatedSubmission (boolean ZZ_ConsolidatedSubmission)
+	{
+		set_Value (COLUMNNAME_ZZ_ConsolidatedSubmission, Boolean.valueOf(ZZ_ConsolidatedSubmission));
+	}
+
+	/** Get Consolidated Submission.
+		@return Consolidated Submission	  */
+	public boolean isZZ_ConsolidatedSubmission()
+	{
+		Object oo = get_Value(COLUMNNAME_ZZ_ConsolidatedSubmission);
+		if (oo != null)
+		{
+			 if (oo instanceof Boolean)
+				 return ((Boolean)oo).booleanValue();
+			return "Y".equals(oo);
+		}
+		return false;
 	}
 
 	/** Set Generate WSP ATR Report.
