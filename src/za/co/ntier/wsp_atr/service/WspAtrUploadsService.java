@@ -158,7 +158,7 @@ public class WspAtrUploadsService {
                 para2.setP_String(yesNoParamValue ? "Y" : "N");
                 para2.saveEx();
                 
-                MPInstancePara para3 = new MPInstancePara(instanceLater, 20);
+                MPInstancePara para3 = new MPInstancePara(instanceLater, 30);
                 para3.setParameterName(yesNoParamNameOnlySubs);
                 para3.setP_String(yesNoParamValueOnlySubs ? "Y" : "N");
                 para3.saveEx();
