@@ -39,7 +39,8 @@ public class SummEmpTrainingInterventionsSection51Builder extends AbstractReport
     }
 
     @Override
-    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted, String trxName,boolean consolidatedSubmission) throws Exception {
+    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted,boolean consolidatedSubmission,
+    		boolean onlySubLevyOrgs, String trxName) throws Exception {
 
         deleteExistingByReportAndSection(TARGET_TABLE, report.getZZ_WSP_ATR_Report_ID(), SECTION, trxName);
 
@@ -56,7 +57,8 @@ public class SummEmpTrainingInterventionsSection51Builder extends AbstractReport
             + "  JOIN zz_wsp_atr_biodata_detail bd \n"
             + "    ON bd.zz_wsp_employees_id = d.zz_wsp_employees_id \n"
             + "   AND bd.zz_wsp_atr_submitted_id = d.zz_wsp_atr_submitted_id \n"
-            + "  WHERE d.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,trxName)
+            + "  WHERE d.zz_wsp_atr_submitted_id in " 
+            + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,onlySubLevyOrgs,trxName)
             + "    AND d.zz_wsp_employees_id IS NOT NULL \n"
             + "), txt AS ( \n"
             + "  SELECT \n"

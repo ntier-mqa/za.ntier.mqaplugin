@@ -98,53 +98,7 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 		return po;
 	}
 
-	/*
-	protected String getCellText(Row row,
-			int colIndex,
-			DataFormatter formatter,
-			FormulaEvaluator evaluator) {
-		if (row == null) {
-			return "";
-		}
-
-		Cell cell = row.getCell(colIndex);
-		if (cell == null) {
-			return "";
-		}
-
-		try {
-			String value;
-			if (cell.getCellType() == CellType.FORMULA && evaluator != null) {
-				value = formatter.formatCellValue(cell, evaluator);
-			} else {
-				value = formatter.formatCellValue(cell);
-			}
-			return value != null ? value.trim() : "";
-		} catch (Exception e) {
-			try {
-				CellType type = cell.getCellType();
-
-				if (type == CellType.FORMULA && evaluator != null) {
-					type = evaluator.evaluateFormulaCell(cell);
-				}
-
-				switch (type) {
-				case STRING:
-					return cell.getStringCellValue().trim();
-				case NUMERIC:
-					return formatter.formatCellValue(cell).trim();
-				case BOOLEAN:
-					return String.valueOf(cell.getBooleanCellValue());
-				default:
-					return "";
-				}
-			} catch (Exception ignore) {
-				return "";
-			}
-		}
-	}
 	
-	*/
 	
 	protected String getCellText(Row row, int columnIndex, DataFormatter formatter) {
 

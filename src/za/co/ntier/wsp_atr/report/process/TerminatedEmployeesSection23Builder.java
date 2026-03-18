@@ -25,7 +25,8 @@ public class TerminatedEmployeesSection23Builder extends AbstractReportSectionBu
     }
 
     @Override
-    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted, String trxName,boolean consolidatedSubmission) throws Exception {
+    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted,boolean consolidatedSubmission,
+    		boolean onlySubLevyOrgs, String trxName) throws Exception {
 
         // idempotent rerun: delete by Report_ID only (as you requested)
         deleteExistingByReportAndSection(TARGET_TABLE, report.getZZ_WSP_ATR_Report_ID(), SECTION, trxName);
@@ -52,7 +53,8 @@ public class TerminatedEmployeesSection23Builder extends AbstractReportSectionBu
             + "  LEFT JOIN ZZ_Gender_Ref       g ON g.ZZ_Gender_Ref_ID       = bd.Gender_ID \n"
             + "  LEFT JOIN ZZ_No_Yes_Ref     dis ON dis.ZZ_No_Yes_Ref_ID     = bd.Disabled_ID \n"
             + "  LEFT JOIN ZZ_No_Yes_Ref      sa ON sa.ZZ_No_Yes_Ref_ID      = bd.SA_Citizen_ID \n"
-            + "  WHERE bd.ZZ_WSP_ATR_Submitted_ID in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,trxName)
+            + "  WHERE bd.ZZ_WSP_ATR_Submitted_ID in " 
+            + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,onlySubLevyOrgs,trxName)
             + ") \n"
             + "SELECT \n"
             + "  bd2.Employment_Status_ID AS employment_status_id, \n"

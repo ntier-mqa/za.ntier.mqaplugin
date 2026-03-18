@@ -844,35 +844,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 		}
 	}
 
-	/*
-	private void assertZipLooksFullyValid(byte[] data, String name) {
-		java.io.File temp = null;
-		try {
-			temp = java.io.File.createTempFile("wspatr_", ".xlsm");
-			try (java.io.FileOutputStream fos = new java.io.FileOutputStream(temp)) {
-				fos.write(data);
-			}
-
-			try (java.util.zip.ZipFile zf = new java.util.zip.ZipFile(temp)) {
-				if (zf.size() == 0) {
-					throw new AdempiereException("ZIP has no entries: " + name);
-				}
-
-				if (zf.getEntry("[Content_Types].xml") == null) {
-					throw new AdempiereException("Not a valid Excel workbook ZIP: missing [Content_Types].xml in " + name);
-				}
-			}
-		} catch (AdempiereException ex) {
-			throw ex;
-		} catch (Exception e) {
-			throw new AdempiereException("ZIP validation failed for " + name + ": " + e.getMessage(), e);
-		} finally {
-			if (temp != null && temp.exists()) {
-				temp.delete();
-			}
-		}
-	}
-	*/
+	
 	
 	private void assertExcelLooksValid(byte[] data, String name, String password) {
 	    try {
@@ -1010,7 +982,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 		}
 	}
 
-	private void rebuildSubLevyOrgLinks(int parentSubmittedId, String trxName) {
+	public static void rebuildSubLevyOrgLinks(int parentSubmittedId, String trxName) {
 		// delete existing rows for this parent submission
 		final String deleteSql =
 				"DELETE FROM adempiere.zz_wsp_atr_sub_levy_orgs "
@@ -1074,6 +1046,9 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 			pstmt = null;
 		}
 	}
+	
+	
+	
 
 
 

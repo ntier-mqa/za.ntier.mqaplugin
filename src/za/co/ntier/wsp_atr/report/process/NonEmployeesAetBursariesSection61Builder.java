@@ -43,7 +43,8 @@ public class NonEmployeesAetBursariesSection61Builder extends AbstractReportSect
     }
 
     @Override
-    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted, String trxName,boolean consolidatedSubmission) throws Exception {
+    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted,boolean consolidatedSubmission,
+    		boolean onlySubLevyOrgs, String trxName) throws Exception {
 
         deleteExistingByReportAndSection(TARGET_TABLE, report.getZZ_WSP_ATR_Report_ID(), SECTION, trxName);
 
@@ -56,7 +57,7 @@ public class NonEmployeesAetBursariesSection61Builder extends AbstractReportSect
             + "    t.zz_non_emp_status_done_id       AS status_id, \n"
             + "    SUM(COALESCE(t.zz_male,0) + COALESCE(t.zz_female,0))::numeric(10) AS total_done \n"
             + "  FROM " + INPUT_TABLE + " t \n"
-            + "  WHERE t.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,trxName)
+            + "  WHERE t.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,onlySubLevyOrgs,trxName)
             + "    AND t.isactive = 'Y' \n"
             + "    AND t.zz_learning_programme_done_id IS NOT NULL \n"
             + "    AND t.zz_non_emp_status_done_id IS NOT NULL \n"
@@ -68,7 +69,8 @@ public class NonEmployeesAetBursariesSection61Builder extends AbstractReportSect
             + "    t.zz_non_emp_status_planned_id     AS status_id, \n"
             + "    SUM(COALESCE(t.zz_total_planned,0))::numeric(10) AS total_planned \n"
             + "  FROM " + INPUT_TABLE + " t \n"
-            + "  WHERE t.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,trxName)
+            + "  WHERE t.zz_wsp_atr_submitted_id in " 
+            + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,onlySubLevyOrgs,trxName)
             + "    AND t.isactive = 'Y' \n"
             + "    AND t.zz_learning_programme_planned_id IS NOT NULL \n"
             + "    AND t.zz_non_emp_status_planned_id IS NOT NULL \n"

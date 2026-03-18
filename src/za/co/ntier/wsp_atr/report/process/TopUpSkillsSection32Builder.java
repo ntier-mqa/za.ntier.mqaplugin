@@ -25,7 +25,8 @@ public class TopUpSkillsSection32Builder extends AbstractReportSectionBuilder {
     }
 
     @Override
-    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted, String trxName,boolean consolidatedSubmission) throws Exception {
+    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted,boolean consolidatedSubmission,
+    		boolean onlySubLevyOrgs, String trxName) throws Exception {
 
         deleteExistingByReportAndSection(TARGET_TABLE, report.getZZ_WSP_ATR_Report_ID(), SECTION, trxName);
 
@@ -38,7 +39,8 @@ public class TopUpSkillsSection32Builder extends AbstractReportSectionBuilder {
               + "  t.zz_topupskill_id, \n"
               + "  t.comments \n"
               + "FROM ZZ_WSP_ATR_TopUp_Skills t \n"
-              + "WHERE t.zz_wsp_atr_submitted_id in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,trxName)
+              + "WHERE t.zz_wsp_atr_submitted_id in " 
+              + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,onlySubLevyOrgs,trxName)
               + "ORDER BY t.row_no, t.zz_wsp_atr_topup_skills_id \n";
 
         try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName)) {

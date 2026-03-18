@@ -37,7 +37,8 @@ public class SummPlannedEmpTrainingInterventionsSection431Builder extends Abstra
     }
 
     @Override
-    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted, String trxName,boolean consolidatedSubmission) throws Exception {
+    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted,boolean consolidatedSubmission,
+    		boolean onlySubLevyOrgs, String trxName) throws Exception {
 
         // rerun behaviour: delete rows for this report + this section
         deleteExistingByReportAndSection(TARGET_TABLE, report.getZZ_WSP_ATR_Report_ID(), SECTION, trxName);
@@ -64,7 +65,8 @@ public class SummPlannedEmpTrainingInterventionsSection431Builder extends Abstra
               + "    COALESCE(w.ZZ_White,0)    AS white_cnt, \n"
               + "    COALESCE(w.ZZ_Disabled,0) AS disabled_cnt \n"
               + "  FROM " + X_ZZ_WSP_ATR_WSP.Table_Name + " w \n"
-              + "  WHERE w.ZZ_WSP_ATR_Submitted_ID in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,trxName)
+              + "  WHERE w.ZZ_WSP_ATR_Submitted_ID in " 
+              + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,onlySubLevyOrgs,trxName)
               + "), agg AS ( \n"
               + "  SELECT \n"
               + "    ZZ_OFO_Specialisation_ID, \n"

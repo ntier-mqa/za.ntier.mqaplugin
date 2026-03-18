@@ -34,7 +34,8 @@ public class PlanTrainPerOccGroupSection521Builder extends AbstractReportSection
 	}
 
 	@Override
-    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted, String trxName,boolean consolidatedSubmission) throws Exception {
+    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted,boolean consolidatedSubmission,
+    		boolean onlySubLevyOrgs, String trxName) throws Exception {
 
 		deleteExistingByReportAndSection(
 				TARGET_TABLE,
@@ -61,7 +62,8 @@ public class PlanTrainPerOccGroupSection521Builder extends AbstractReportSection
 								+ "  COALESCE(wsp.ZZ_White,0)    AS white_cnt, \n"
 								+ "  COALESCE(wsp.ZZ_Disabled,0) AS disabled_cnt \n"
 								+ "FROM ZZ_WSP_ATR_WSP wsp \n"
-								+ "WHERE wsp.ZZ_WSP_ATR_Submitted_ID in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,trxName)
+								+ "WHERE wsp.ZZ_WSP_ATR_Submitted_ID in " 
+								+ getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,onlySubLevyOrgs,trxName)
 								+ "ORDER BY wsp.Row_No";
 
 		try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName)) {

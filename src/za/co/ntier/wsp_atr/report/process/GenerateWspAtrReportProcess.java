@@ -26,6 +26,9 @@ public class GenerateWspAtrReportProcess extends SvrProcess {
 	
 	@Parameter(name = "ZZ_ConsolidatedSubmission")
 	private boolean consolidatedSubmission;
+	
+	@Parameter(name = "ZZ_Only_Sub_Levy_Orgs")
+	private boolean p_ZZ_Only_Sub_Levy_Orgs;
 
 	private int p_ZZ_WSP_ATR_Submitted_ID;
 	private Properties ctx = null;
@@ -55,13 +58,13 @@ public class GenerateWspAtrReportProcess extends SvrProcess {
 		}
 
 		// Step 1: try find existing report
-		X_ZZ_WSP_ATR_Report report = findExistingReport(submitted,consolidatedSubmission);
+		X_ZZ_WSP_ATR_Report report = findExistingReport(submitted,consolidatedSubmission,p_ZZ_Only_Sub_Levy_Orgs);
 
 		boolean isNewReport = false;
 
 		if (report == null) {
 		    // No existing report → create and build
-		    report = createReport(submitted,consolidatedSubmission);
+		    report = createReport(submitted,consolidatedSubmission,p_ZZ_Only_Sub_Levy_Orgs);
 		    isNewReport = true;
 		}
 
@@ -73,7 +76,7 @@ public class GenerateWspAtrReportProcess extends SvrProcess {
 		        ReportSectionBuilderFactory.getBuilders(getCtx(), submitted);
 
 		    for (IReportSectionBuilder b : builders) {
-		        ReportBuildResult r = b.build(report, submitted, get_TrxName(),consolidatedSubmission);
+		        ReportBuildResult r = b.build(report, submitted,consolidatedSubmission,p_ZZ_Only_Sub_Levy_Orgs, get_TrxName());
 		        totalInserted += r.getInsertedCount();
 		        addLog("Section " + b.getSectionCode() +
 		               " - " + b.getName() +
@@ -99,7 +102,7 @@ public class GenerateWspAtrReportProcess extends SvrProcess {
 		}
 	}
 
-	private X_ZZ_WSP_ATR_Report createReport(MZZWSPATRSubmitted submitted,boolean consolidatedSubmission) {
+	private X_ZZ_WSP_ATR_Report createReport(MZZWSPATRSubmitted submitted,boolean consolidatedSubmission,boolean p_ZZ_Only_Sub_Levy_Orgs) {
 		X_ZZ_WSP_ATR_Report report = new X_ZZ_WSP_ATR_Report(getCtx(), 0, get_TrxName());
 
 		// Name/Description: make it meaningful for your users
@@ -113,6 +116,7 @@ public class GenerateWspAtrReportProcess extends SvrProcess {
 		// optionally set AD_Client_ID / AD_Org_ID explicitly if your table requires it
 		// report.setAD_Org_ID(submitted.getAD_Org_ID());
 		report.setZZ_ConsolidatedSubmission(consolidatedSubmission);
+		report.setZZ_Only_Sub_Levy_Orgs(p_ZZ_Only_Sub_Levy_Orgs);
 
 		if (!report.save()) {
 			throw new IllegalStateException("Failed to create ZZ_WSP_ATR_Report: "); // + report.getProcessMsg());
@@ -120,19 +124,20 @@ public class GenerateWspAtrReportProcess extends SvrProcess {
 		return report;
 	}
 	
-	private X_ZZ_WSP_ATR_Report findExistingReport(MZZWSPATRSubmitted submitted,boolean consolidatedSubmission) {
+	private X_ZZ_WSP_ATR_Report findExistingReport(MZZWSPATRSubmitted submitted,boolean consolidatedSubmission,boolean p_ZZ_Only_Sub_Levy_Orgs) {
 
 	    int submittedId = submitted.getZZ_WSP_ATR_Submitted_ID();
 
 	    int existingReportId = DB.getSQLValueEx(
 	        get_TrxName(),
 	        "SELECT ZZ_WSP_ATR_Report_ID " +
-	        "FROM ZZ_WSP_ATR_Report " +
-	        "WHERE ZZ_WSP_ATR_Submitted_ID=? " +
-	        "and ZZ_ConsolidatedSubmission = " + (consolidatedSubmission ? "'Y'" : "'N'") +
-	        "and isActive = 'Y'" +
-	        "ORDER BY Created DESC, ZZ_WSP_ATR_Report_ID DESC " +
-	        "FETCH FIRST 1 ROWS ONLY",
+	        " FROM ZZ_WSP_ATR_Report " +
+	        " WHERE ZZ_WSP_ATR_Submitted_ID=? " +
+	        " and ZZ_ConsolidatedSubmission = " + (consolidatedSubmission ? "'Y'" : "'N'") +
+	        " and ZZ_Only_Sub_Levy_Orgs = " + (p_ZZ_Only_Sub_Levy_Orgs ? "'Y'" : "'N'") +
+	        " and isActive = 'Y'" +
+	        " ORDER BY Created DESC, ZZ_WSP_ATR_Report_ID DESC " +
+	        " FETCH FIRST 1 ROWS ONLY",
 	        submittedId
 	    );
 

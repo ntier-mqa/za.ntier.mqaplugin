@@ -121,11 +121,12 @@ public class WspAtrRowUiBuilder {
         hb.appendChild(lblMsg);
         return hb;
     }
-
+  
+    
     private void openPrintPrompt(int submittedId, Button btnPrint, Label lblMsg) {
         Window win = new Window("Generate Report", "normal", true);
         win.setClosable(true);
-        win.setWidth("380px");
+        win.setWidth("420px");
         win.setBorder("normal");
         win.setSizable(false);
         win.setPosition("center,center");
@@ -143,6 +144,21 @@ public class WspAtrRowUiBuilder {
         chkConsolidated.setChecked(false);
         root.appendChild(chkConsolidated);
 
+        Checkbox chkOnlySubLevyOrgs = new Checkbox();
+        chkOnlySubLevyOrgs.setLabel("Only Sub Levy Orgs?");
+        chkOnlySubLevyOrgs.setChecked(false);
+        chkOnlySubLevyOrgs.setDisabled(true);
+        root.appendChild(chkOnlySubLevyOrgs);
+
+        chkConsolidated.addEventListener(Events.ON_CHECK, e -> {
+            boolean consolidated = chkConsolidated.isChecked();
+            chkOnlySubLevyOrgs.setDisabled(!consolidated);
+
+            if (!consolidated) {
+                chkOnlySubLevyOrgs.setChecked(false);
+            }
+        });
+
         Separator sep = new Separator();
         sep.setBar(true);
         root.appendChild(sep);
@@ -158,6 +174,7 @@ public class WspAtrRowUiBuilder {
 
         okBtn.addEventListener(Events.ON_CLICK, e -> {
             boolean consolidatedSubmission = chkConsolidated.isChecked();
+            boolean onlySubLevyOrgs = chkOnlySubLevyOrgs.isChecked();
 
             btnPrint.setLabel("Re Print...");
             lblMsg.setValue("Your report will be emailed to you");
@@ -167,7 +184,7 @@ public class WspAtrRowUiBuilder {
                 "info", btnPrint, "top_center", 3500
             );
 
-            service.generateReport(submittedId, consolidatedSubmission);
+            service.generateReport(submittedId, consolidatedSubmission, onlySubLevyOrgs);
             win.detach();
         });
 

@@ -1,9 +1,13 @@
 package za.co.ntier.wsp_atr.form;
 
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.adempiere.webui.component.Borderlayout;
@@ -14,6 +18,7 @@ import org.adempiere.webui.component.ListItem;
 import org.adempiere.webui.component.Listbox;
 import org.adempiere.webui.panel.ADForm;
 import org.adempiere.webui.util.ZKUpdateUtil;
+import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Util;
 import org.zkoss.util.media.Media;
@@ -24,7 +29,10 @@ import org.zkoss.zk.ui.util.Clients;
 import org.zkoss.zul.Center;
 
 import za.co.ntier.wsp_atr.ui.WspAtrRowUiBuilder;
+import za.ntier.models.MZZWSPATRSubmitted;
+import za.co.ntier.api.model.X_ZZSdfOrganisation;
 import za.co.ntier.wsp_atr.domain.UploadTypeDef;
+import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
 import za.co.ntier.wsp_atr.repo.WspAtrUploadsRepository;
 import za.co.ntier.wsp_atr.service.WspAtrUploadsService;
 
@@ -57,19 +65,6 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
 
         buildList();
         refreshList();
-
-        // Optional button style
-       /* Clients.evalJavaScript(
-            "var s=document.createElement('style');" +
-            "s.innerHTML=`" +
-            ".wsp-edit-purple{background:#2f2d8f!important;border-color:#2f2d8f!important;color:#fff!important;transition:all .15s ease-in-out;}" +
-            ".wsp-edit-purple:hover{background:#3d3ab0!important;border-color:#3d3ab0!important;color:#fff!important;}" +
-            ".wsp-edit-purple:active{background:#ffffff!important;border-color:#2f2d8f!important;color:#2f2d8f!important;box-shadow:inset 0 2px 6px rgba(0,0,0,.25)!important;}" +
-            ".wsp-edit-purple:focus{outline:none!important;box-shadow:0 0 0 2px rgba(47,45,143,.4)!important;}" +
-            "`;" +
-            "document.head.appendChild(s);"
-        );
-        */
         
         Clients.evalJavaScript(
         	    "var s=document.createElement('style');" +
@@ -141,20 +136,23 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
     private void refreshList() {
         list.getItems().clear();
 
-        int adUserId = Env.getAD_User_ID(ctx);
-        List<List<Object>> rows = repo.rawSubmittedRowsForUser(adUserId);
-        if (rows == null) return;
+        List<SdfOrgRow> orgs = getSdfOrganisationsForUser();
+        if (orgs == null || orgs.isEmpty()) {
+            return;
+        }
 
-        for (List<Object> r : rows) {
-            int submittedId = ((Number) r.get(0)).intValue();
-            Timestamp submittedDate = (Timestamp) r.get(1);
-            String orgName = (String) r.get(2);
-            String statusCode = (String) r.get(3);
+        for (SdfOrgRow org : orgs) {
+            MZZWSPATRSubmitted submitted = getOrCreateSubmittedForOrg(org);
+            if (submitted == null || submitted.get_ID() <= 0) {
+                continue;
+            }
 
-            addRow(submittedId,
-                !Util.isEmpty(orgName, true) ? orgName : "",
-                submittedDate,
-                statusLabel(statusCode));
+            addRow(
+                    submitted.getZZ_WSP_ATR_Submitted_ID(),
+                    !Util.isEmpty(org.displayName, true) ? org.displayName : "",
+                    submitted.getSubmittedDate(),
+                    statusLabel(submitted.getZZ_DocStatus())
+            );
         }
     }
 
@@ -204,5 +202,72 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
         item.appendChild(actionsCell);
 
         list.appendChild(item);
+    }
+    
+    private static class SdfOrgRow {
+        private final int zzSdfOrganisationId;
+        private final String displayName;
+
+        private SdfOrgRow(int zzSdfOrganisationId, String displayName) {
+            this.zzSdfOrganisationId = zzSdfOrganisationId;
+            this.displayName = displayName;
+        }
+    }
+    
+    private List<SdfOrgRow> getSdfOrganisationsForUser() {
+        int adUserId = Env.getAD_User_ID(ctx);
+
+        String sql =
+                "SELECT zzsdforganisation_v_id, (zz_sdl_no || ' - ' || orgname) AS display_name " +
+                "FROM adempiere.zzsdforganisation_v " +
+                "WHERE ad_user_id = ? " +
+                "AND isactive = 'Y' " +
+                "AND zzsdfroletype = ? " +
+                "AND COALESCE(zz_docstatus, '') <> 'DR' " +
+                "AND COALESCE(zz_docstatus, '') <> 'UnSdfOrg' " +
+                "ORDER BY orgname";
+
+        List<List<Object>> rows = DB.getSQLArrayObjectsEx(null, sql,
+                adUserId,
+                X_ZZSdfOrganisation.ZZSDFROLETYPE_Primary);
+
+        if (rows == null || rows.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        return rows.stream()
+                .map(r -> new SdfOrgRow(
+                        ((Number) r.get(0)).intValue(),
+                        (String) r.get(1)))
+                .collect(Collectors.toList());
+    }
+    
+    private MZZWSPATRSubmitted getOrCreateSubmittedForOrg(SdfOrgRow org) {
+        String trxName = null;
+
+        int submittedId = DB.getSQLValueEx(trxName,
+                "SELECT zz_wsp_atr_submitted_id " +
+                "FROM zz_wsp_atr_submitted " +
+                "WHERE zzsdforganisation_id = ? " +
+                "ORDER BY created DESC " +
+                "LIMIT 1",
+                org.zzSdfOrganisationId);
+
+        MZZWSPATRSubmitted submitted;
+        if (submittedId > 0) {
+            submitted = new MZZWSPATRSubmitted(ctx, submittedId, trxName);
+        } else {
+            submitted = new MZZWSPATRSubmitted(ctx, 0, trxName);
+            submitted.setName("WSP/ATR " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+            submitted.setSubmittedDate(new Timestamp(System.currentTimeMillis()));
+            submitted.setZZ_Import_Submitted_Data("N");
+            submitted.setZZSdfOrganisation_ID(org.zzSdfOrganisationId);
+            submitted.setZZ_DocAction(null);
+            submitted.setZZ_DocStatus(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Draft);
+            submitted.saveEx();
+            WspAtrSubmittedADForm.rebuildSubLevyOrgLinks(submitted.getZZ_WSP_ATR_Submitted_ID(), trxName);
+        }
+
+        return submitted;
     }
 }

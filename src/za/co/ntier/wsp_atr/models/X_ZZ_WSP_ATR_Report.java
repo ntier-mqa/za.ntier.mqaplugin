@@ -32,7 +32,7 @@ public class X_ZZ_WSP_ATR_Report extends PO implements I_ZZ_WSP_ATR_Report, I_Pe
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260317L;
+	private static final long serialVersionUID = 20260318L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Report (Properties ctx, int ZZ_WSP_ATR_Report_ID, String trxName)
@@ -42,6 +42,8 @@ public class X_ZZ_WSP_ATR_Report extends PO implements I_ZZ_WSP_ATR_Report, I_Pe
         {
 			setName (null);
 			setZZ_ConsolidatedSubmission (false);
+// N
+			setZZ_Only_Sub_Levy_Orgs (false);
 // N
 			setZZ_WSP_ATR_Report_ID (0);
         } */
@@ -56,6 +58,8 @@ public class X_ZZ_WSP_ATR_Report extends PO implements I_ZZ_WSP_ATR_Report, I_Pe
 			setName (null);
 			setZZ_ConsolidatedSubmission (false);
 // N
+			setZZ_Only_Sub_Levy_Orgs (false);
+// N
 			setZZ_WSP_ATR_Report_ID (0);
         } */
     }
@@ -69,6 +73,8 @@ public class X_ZZ_WSP_ATR_Report extends PO implements I_ZZ_WSP_ATR_Report, I_Pe
 			setName (null);
 			setZZ_ConsolidatedSubmission (false);
 // N
+			setZZ_Only_Sub_Levy_Orgs (false);
+// N
 			setZZ_WSP_ATR_Report_ID (0);
         } */
     }
@@ -81,6 +87,8 @@ public class X_ZZ_WSP_ATR_Report extends PO implements I_ZZ_WSP_ATR_Report, I_Pe
         {
 			setName (null);
 			setZZ_ConsolidatedSubmission (false);
+// N
+			setZZ_Only_Sub_Levy_Orgs (false);
 // N
 			setZZ_WSP_ATR_Report_ID (0);
         } */
@@ -197,6 +205,29 @@ public class X_ZZ_WSP_ATR_Report extends PO implements I_ZZ_WSP_ATR_Report, I_Pe
 	public String getZZ_Generate_WSP_ATR_Report()
 	{
 		return (String)get_Value(COLUMNNAME_ZZ_Generate_WSP_ATR_Report);
+	}
+
+	/** Set Only Sub Levy Orgs.
+		@param ZZ_Only_Sub_Levy_Orgs Parent Organisation is not included
+	*/
+	public void setZZ_Only_Sub_Levy_Orgs (boolean ZZ_Only_Sub_Levy_Orgs)
+	{
+		set_Value (COLUMNNAME_ZZ_Only_Sub_Levy_Orgs, Boolean.valueOf(ZZ_Only_Sub_Levy_Orgs));
+	}
+
+	/** Get Only Sub Levy Orgs.
+		@return Parent Organisation is not included
+	  */
+	public boolean isZZ_Only_Sub_Levy_Orgs()
+	{
+		Object oo = get_Value(COLUMNNAME_ZZ_Only_Sub_Levy_Orgs);
+		if (oo != null)
+		{
+			 if (oo instanceof Boolean)
+				 return ((Boolean)oo).booleanValue();
+			return "Y".equals(oo);
+		}
+		return false;
 	}
 
 	/** Set WSP ATR Report .

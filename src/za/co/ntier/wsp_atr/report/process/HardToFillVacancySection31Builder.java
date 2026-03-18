@@ -26,7 +26,8 @@ public class HardToFillVacancySection31Builder extends AbstractReportSectionBuil
     }
 
     @Override
-    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted, String trxName,boolean consolidatedSubmission) throws Exception {
+    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted,boolean consolidatedSubmission,
+    		boolean onlySubLevyOrgs, String trxName) throws Exception {
 
         // rerun-safe: delete by report only (as per your base class)
         deleteExistingByReportAndSection(TARGET_TABLE, report.getZZ_WSP_ATR_Report_ID(), SECTION, trxName);
@@ -54,7 +55,8 @@ public class HardToFillVacancySection31Builder extends AbstractReportSectionBuil
               + "LEFT JOIN ZZ_Scarce_Reason_Ref sr   ON sr.ZZ_Scarce_Reason_Ref_ID = h.ZZ_Scarce_Reason_ID \n"
               + "LEFT JOIN ZZ_Scarce_Reason_Ref fsr1 ON fsr1.ZZ_Scarce_Reason_Ref_ID = h.ZZ_Further_Scarce_Reason_ID \n"
               + "LEFT JOIN ZZ_Scarce_Reason_Ref fsr2 ON fsr2.ZZ_Scarce_Reason_Ref_ID = h.ZZ_Further_Scarce_Reason2_ID \n"
-              + "WHERE h.ZZ_WSP_ATR_Submitted_ID in " + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,trxName)
+              + "WHERE h.ZZ_WSP_ATR_Submitted_ID in " 
+              + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,onlySubLevyOrgs,trxName)
               + "ORDER BY h.Row_No, h.ZZ_WSP_ATR_HTVF_ID \n";
 
         try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName)) {

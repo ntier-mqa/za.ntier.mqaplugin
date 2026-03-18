@@ -96,11 +96,11 @@ public class WspAtrUploadsService {
         }
     }
 
-    public void generateReport(int submittedId, boolean consolidatedSubmission) {
-        printLatestReportInBackground(submittedId, consolidatedSubmission);
+    public void generateReport(int submittedId, boolean consolidatedSubmission, boolean onlySubLevyOrgs) {
+        printLatestReportInBackground(submittedId, consolidatedSubmission, onlySubLevyOrgs);
     }
 
-    public void printLatestReportInBackground(int submittedId, boolean consolidatedSubmission) {
+    public void printLatestReportInBackground(int submittedId, boolean consolidatedSubmission, boolean onlySubLevyOrgs) {
         int reportId = repo.findLatestReportIdForSubmitted(submittedId);
         // if (reportId <= 0) throw new AdempiereException("No ZZ_WSP_ATR_Report found
         // for Submitted ID " + submittedId);
@@ -111,6 +111,8 @@ public class WspAtrUploadsService {
                 reportId,
                 "ZZ_ConsolidatedSubmission",
                 consolidatedSubmission,
+                "ZZ_Only_Sub_Levy_Orgs",
+                onlySubLevyOrgs,
                 submittedId);
     }
 
@@ -120,6 +122,8 @@ public class WspAtrUploadsService {
             int intParamValue,
             String yesNoParamName,
             boolean yesNoParamValue,
+            String yesNoParamNameOnlySubs,
+            boolean yesNoParamValueOnlySubs,
             int recordIdForInstance) {
 
         MProcess proc = MProcess.get(ctx, adProcessUU);
@@ -153,6 +157,11 @@ public class WspAtrUploadsService {
                 para2.setParameterName(yesNoParamName);
                 para2.setP_String(yesNoParamValue ? "Y" : "N");
                 para2.saveEx();
+                
+                MPInstancePara para3 = new MPInstancePara(instanceLater, 20);
+                para3.setParameterName(yesNoParamNameOnlySubs);
+                para3.setP_String(yesNoParamValueOnlySubs ? "Y" : "N");
+                para3.saveEx();
             }
         };
 

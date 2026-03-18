@@ -166,6 +166,19 @@ public interface I_ZZ_WSP_ATR_Report
 	/** Get Generate WSP ATR Report	  */
 	public String getZZ_Generate_WSP_ATR_Report();
 
+    /** Column name ZZ_Only_Sub_Levy_Orgs */
+    public static final String COLUMNNAME_ZZ_Only_Sub_Levy_Orgs = "ZZ_Only_Sub_Levy_Orgs";
+
+	/** Set Only Sub Levy Orgs.
+	  * Parent Organisation is not included
+	  */
+	public void setZZ_Only_Sub_Levy_Orgs (boolean ZZ_Only_Sub_Levy_Orgs);
+
+	/** Get Only Sub Levy Orgs.
+	  * Parent Organisation is not included
+	  */
+	public boolean isZZ_Only_Sub_Levy_Orgs();
+
     /** Column name ZZ_WSP_ATR_Report_ID */
     public static final String COLUMNNAME_ZZ_WSP_ATR_Report_ID = "ZZ_WSP_ATR_Report_ID";
 

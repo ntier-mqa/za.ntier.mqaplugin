@@ -36,7 +36,9 @@ public class FinanceTrainingComparisonSection8Builder extends AbstractReportSect
     }
 
     
-    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted, String trxName,boolean consolidatedSubmission) throws Exception {
+    @Override
+    public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted,boolean consolidatedSubmission,
+    		boolean onlySubLevyOrgs, String trxName) throws Exception {
 
         deleteExistingByReportAndSection(TARGET_TABLE, report.getZZ_WSP_ATR_Report_ID(), SECTION, trxName);
 
@@ -74,7 +76,8 @@ public class FinanceTrainingComparisonSection8Builder extends AbstractReportSect
             + "            DISTINCT NULLIF(TRIM(COALESCE(f.ZZ_Finance_Value, '')), ''), ', '\n"
             + "        ) AS concat_value\n"
             + "    FROM " + INPUT_TABLE + " f\n"
-            + "    WHERE f.ZZ_WSP_ATR_Submitted_ID IN " + getParentAndChildSubmittedIdsInClause(report.getCtx(), submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission, trxName)
+            + "    WHERE f.ZZ_WSP_ATR_Submitted_ID IN "
+            +  getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,onlySubLevyOrgs,trxName)
             + "      AND f.IsActive = 'Y'\n"
             + "    GROUP BY \n"
             + "        COALESCE(f.Row_No, 0),\n"

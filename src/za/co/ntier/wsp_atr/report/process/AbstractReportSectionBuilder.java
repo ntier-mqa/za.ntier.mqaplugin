@@ -23,64 +23,69 @@ public abstract class AbstractReportSectionBuilder implements IReportSectionBuil
 	
 		
 	protected String getParentAndChildSubmittedIdsInClause(
-            Properties ctx,
-            int parentSubmittedId,
-            boolean consolidatedSubmission,
-            String trxName) {
+	        Properties ctx,
+	        int parentSubmittedId,
+	        boolean consolidatedSubmission,
+	        boolean onlySubLevyOrgs,
+	        String trxName) {
 
-        if (!consolidatedSubmission) {
-            return "(" + parentSubmittedId + ")";
-        }
+	    if (!consolidatedSubmission) {
+	        return "(" + parentSubmittedId + ")";
+	    }
 
-        final String sql =
-              "SELECT q.zz_wsp_atr_submitted_id "
-            + "FROM ( "
-            + "    SELECT ? AS zz_wsp_atr_submitted_id, 0 AS sort_no "
-            + "    UNION "
-            + "    SELECT sub.zz_wsp_atr_submitted_id, 1 AS sort_no "
-            + "    FROM ( "
-            + "        SELECT DISTINCT ON (s.zzsdforganisation_id) "
-            + "               s.zz_wsp_atr_submitted_id, "
-            + "               s.zzsdforganisation_id "
-            + "        FROM adempiere.zz_wsp_atr_sub_levy_orgs slo "
-            + "        JOIN adempiere.zz_wsp_atr_submitted s "
-            + "          ON s.zzsdforganisation_id = slo.zzsdforganisation_id "
-            + "        WHERE slo.zz_wsp_atr_submitted_id = ? "
-            + "          AND s.isactive = 'Y' "
-            + "          AND s.zz_docstatus IN ('"
-            + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported + "','"
-            + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Uploaded + "','"
-            + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Query + "') "
-            + "        ORDER BY s.zzsdforganisation_id, "
-            + "                 s.updated DESC, "
-            + "                 s.zz_wsp_atr_submitted_id DESC "
-            + "    ) sub "
-            + ") q "
-            + "ORDER BY q.sort_no, q.zz_wsp_atr_submitted_id";
+	    final String sql =
+	          "SELECT sub.zz_wsp_atr_submitted_id "
+	        + "FROM ( "
+	        + "    SELECT DISTINCT ON (s.zzsdforganisation_id) "
+	        + "           s.zz_wsp_atr_submitted_id, "
+	        + "           s.zzsdforganisation_id "
+	        + "    FROM adempiere.zz_wsp_atr_sub_levy_orgs slo "
+	        + "    JOIN adempiere.zz_wsp_atr_submitted s "
+	        + "      ON s.zzsdforganisation_id = slo.zzsdforganisation_id "
+	        + "    WHERE slo.zz_wsp_atr_submitted_id = ? "
+	        + "      AND s.isactive = 'Y' "
+	        + "      AND s.zz_docstatus IN ('"
+	        + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported + "','"
+	        + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Uploaded + "','"
+	        + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Query + "') "
+	        + "    ORDER BY s.zzsdforganisation_id, "
+	        + "             s.updated DESC, "
+	        + "             s.zz_wsp_atr_submitted_id DESC "
+	        + ") sub "
+	        + "ORDER BY sub.zz_wsp_atr_submitted_id";
 
-        List<Integer> ids = new ArrayList<>();
+	    List<Integer> ids = new ArrayList<>();
 
-        try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName)) {
-            pstmt.setInt(1, parentSubmittedId);
-            pstmt.setInt(2, parentSubmittedId);
+	    try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName)) {
+	        pstmt.setInt(1, parentSubmittedId);
 
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
-                    ids.add(rs.getInt(1));
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(
-                "Failed to load parent/child submitted ids for " + parentSubmittedId + ": " + e.getMessage(), e);
-        }
+	        try (ResultSet rs = pstmt.executeQuery()) {
+	            while (rs.next()) {
+	                ids.add(rs.getInt(1));
+	            }
+	        }
+	    } catch (Exception e) {
+	        throw new RuntimeException(
+	            "Failed to load parent/child submitted ids for " + parentSubmittedId + ": " + e.getMessage(), e);
+	    }
 
-        if (ids.isEmpty()) {
-            return "(" + parentSubmittedId + ")";
-        }
+	    if (onlySubLevyOrgs) {
+	        if (ids.isEmpty()) {
+	            return "(-1)";
+	        }
 
-        return "(" + ids.stream()
-                .map(String::valueOf)
-                .collect(Collectors.joining(",")) + ")";
-    }
+	        return "(" + ids.stream()
+	                .map(String::valueOf)
+	                .collect(Collectors.joining(",")) + ")";
+	    }
+
+	    // consolidated, including parent
+	    ids.add(0, parentSubmittedId);
+
+	    return "(" + ids.stream()
+	            .distinct()
+	            .map(String::valueOf)
+	            .collect(Collectors.joining(",")) + ")";
+	}
 
 }
