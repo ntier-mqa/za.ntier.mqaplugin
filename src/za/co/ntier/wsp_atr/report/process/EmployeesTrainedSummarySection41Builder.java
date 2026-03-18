@@ -68,7 +68,7 @@ public class EmployeesTrainedSummarySection41Builder extends AbstractReportSecti
             "), occ AS ( \n" +
             "  SELECT \n" +
             "    bio.*, \n" +
-            "    o.value AS ofo_value \n" +
+            "    sf.value AS ofo_value \n" +
             "  FROM bio \n" +
             "  LEFT JOIN ZZ_Specializations_Ref  sf \n" +
             "    ON sf.ZZ_Specializations_Ref_id = bio.ofo_specialisation_id \n" +
