@@ -105,7 +105,7 @@ public class ExportSubmittedWspAtrToXlsm extends SvrProcess {
         List<PO> columnRows = new Query(getCtx(), MColumn.Table_Name,
                 MColumn.COLUMNNAME_AD_Table_ID + "=? AND " + MColumn.COLUMNNAME_IsActive + "='Y'", get_TrxName())
                 .setParameters(adTableId)
-                .setOrderBy(MColumn.COLUMNNAME_ColumnSeq + ", " + MColumn.COLUMNNAME_AD_Column_ID)
+                .setOrderBy(MColumn.COLUMNNAME_AD_Column_ID + ", " + MColumn.COLUMNNAME_AD_Column_ID)
                 .list();
 
         for (PO columnRow : columnRows) {
