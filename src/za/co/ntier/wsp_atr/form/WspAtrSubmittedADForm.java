@@ -406,7 +406,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	}
 
 	
-	public int getFiscalYear(int adClientId) {
+	public static int getFiscalYear(int adClientId) {
         // choose the “active” configuration row; if you have multiple per org, adjust filters
         List<List<Object>> rows = DB.getSQLArrayObjectsEx(null,
             "SELECT y.C_Year_ID " +

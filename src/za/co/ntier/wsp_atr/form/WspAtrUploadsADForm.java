@@ -264,6 +264,7 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
             submitted.setZZSdfOrganisation_ID(org.zzSdfOrganisationId);
             submitted.setZZ_DocAction(null);
             submitted.setZZ_DocStatus(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Draft);
+            submitted.setZZ_FinYear_ID(WspAtrSubmittedADForm.getFiscalYear(Env.getAD_Client_ID(Env.getCtx())));
             submitted.saveEx();
             WspAtrSubmittedADForm.rebuildSubLevyOrgLinks(submitted.getZZ_WSP_ATR_Submitted_ID(), trxName);
         }
