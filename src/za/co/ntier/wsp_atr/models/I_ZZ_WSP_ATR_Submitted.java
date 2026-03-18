@@ -301,6 +301,17 @@ public interface I_ZZ_WSP_ATR_Submitted
 	/** Get Evaluated Date	  */
 	public Timestamp getZZ_EvaluatedDate();
 
+    /** Column name ZZ_FinYear_ID */
+    public static final String COLUMNNAME_ZZ_FinYear_ID = "ZZ_FinYear_ID";
+
+	/** Set Fin Year	  */
+	public void setZZ_FinYear_ID (int ZZ_FinYear_ID);
+
+	/** Get Fin Year	  */
+	public int getZZ_FinYear_ID();
+
+	public org.compiere.model.I_C_Year getZZ_FinYear() throws RuntimeException;
+
     /** Column name ZZ_Generate_WSP_ATR_Report */
     public static final String COLUMNNAME_ZZ_Generate_WSP_ATR_Report = "ZZ_Generate_WSP_ATR_Report";
 

@@ -32,7 +32,7 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260227L;
+	private static final long serialVersionUID = 20260318L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Submitted (Properties ctx, int ZZ_WSP_ATR_Submitted_ID, String trxName)
@@ -347,6 +347,8 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	public static final String ZZ_DOCACTION_Evaluate = "EV";
 	/** Final Approval/Do not Approve = FA */
 	public static final String ZZ_DOCACTION_FinalApprovalDoNotApprove = "FA";
+	/** PrepareCEO = PC */
+	public static final String ZZ_DOCACTION_PrepareCEO = "PC";
 	/** Recommend = RE */
 	public static final String ZZ_DOCACTION_Recommend = "RE";
 	/** Re-Submit = RS */
@@ -373,6 +375,8 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	public static final String ZZ_DOCACTION_SubmitToSnrMgrSRU = "SS";
 	/** Submit to Line Manager = SU */
 	public static final String ZZ_DOCACTION_SubmitToLineManager = "SU";
+	/** Update = UP */
+	public static final String ZZ_DOCACTION_Update = "UP";
 	/** Verify = VE */
 	public static final String ZZ_DOCACTION_Verify = "VE";
 	/** Set Document Action.
@@ -395,6 +399,8 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	public static final String ZZ_DOCSTATUS_ApprovedByManagerFinanceConsumables = "AC";
 	/** Approved = AP */
 	public static final String ZZ_DOCSTATUS_Approved = "AP";
+	/** Prepared for CEO = CF */
+	public static final String ZZ_DOCSTATUS_PreparedForCEO = "CF";
 	/** Completed = CO */
 	public static final String ZZ_DOCSTATUS_Completed = "CO";
 	/** Draft = DR */
@@ -445,6 +451,8 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	public static final String ZZ_DOCSTATUS_RecommendedByCOO = "R2";
 	/** Recommended By CFO = R3 */
 	public static final String ZZ_DOCSTATUS_RecommendedByCFO = "R3";
+	/** Recommended By CEO = R4 */
+	public static final String ZZ_DOCSTATUS_RecommendedByCEO = "R4";
 	/** Recommended for Approval = RA */
 	public static final String ZZ_DOCSTATUS_RecommendedForApproval = "RA";
 	/** Recommended = RC */
@@ -463,6 +471,10 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	public static final String ZZ_DOCSTATUS_SubmittedToITAdmin = "ST";
 	/** Submitted = SU */
 	public static final String ZZ_DOCSTATUS_Submitted = "SU";
+	/** Transfer Out = TO */
+	public static final String ZZ_DOCSTATUS_TransferOut = "TO";
+	/** Updated by SDR Admin = UA */
+	public static final String ZZ_DOCSTATUS_UpdatedBySDRAdmin = "UA";
 	/** Uploaded = UP */
 	public static final String ZZ_DOCSTATUS_Uploaded = "UP";
 	/** Delinked = UnSdfOrg */
@@ -569,6 +581,33 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	public Timestamp getZZ_EvaluatedDate()
 	{
 		return (Timestamp)get_Value(COLUMNNAME_ZZ_EvaluatedDate);
+	}
+
+	public org.compiere.model.I_C_Year getZZ_FinYear() throws RuntimeException
+	{
+		return (org.compiere.model.I_C_Year)MTable.get(getCtx(), org.compiere.model.I_C_Year.Table_ID)
+			.getPO(getZZ_FinYear_ID(), get_TrxName());
+	}
+
+	/** Set Fin Year.
+		@param ZZ_FinYear_ID Fin Year
+	*/
+	public void setZZ_FinYear_ID (int ZZ_FinYear_ID)
+	{
+		if (ZZ_FinYear_ID < 1)
+			set_Value (COLUMNNAME_ZZ_FinYear_ID, null);
+		else
+			set_Value (COLUMNNAME_ZZ_FinYear_ID, Integer.valueOf(ZZ_FinYear_ID));
+	}
+
+	/** Get Fin Year.
+		@return Fin Year	  */
+	public int getZZ_FinYear_ID()
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_ZZ_FinYear_ID);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
 	}
 
 	/** Set Generate WSP ATR Report.

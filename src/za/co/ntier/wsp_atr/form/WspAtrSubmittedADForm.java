@@ -68,6 +68,7 @@ import org.zkoss.zul.Vlayout;
 import za.co.ntier.api.model.X_ZZSdfOrganisation;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Sub_Levy_Orgs;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
+import za.co.ntier.wsp_atr.repo.WspAtrUploadsRepository.SdrWindowConfig;
 import za.ntier.models.MZZWSPATRSubmitted;
 
 @org.idempiere.ui.zk.annotation.Form(name = "za.co.ntier.wsp_atr.form.WspAtrSubmittedADForm")
@@ -356,6 +357,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 				submitted.setZZSdfOrganisation_ID(org.zzSdfOrganisationId);
 				submitted.setZZ_DocAction(null);
 				submitted.setZZ_DocStatus(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating);
+				submitted.setZZ_FinYear_ID(getFiscalYear(Env.getAD_Client_ID(Env.getCtx())));
 				submitted.saveEx();
 
 				submittedId = existingId;
@@ -368,6 +370,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 				submitted.setZZSdfOrganisation_ID(org.zzSdfOrganisationId);
 				submitted.setZZ_DocAction(null);
 				submitted.setZZ_DocStatus(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating);
+				submitted.setZZ_FinYear_ID(getFiscalYear(Env.getAD_Client_ID(Env.getCtx())));
 				submitted.saveEx();
 
 				submittedId = submitted.get_ID();
@@ -402,7 +405,24 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 		runValidateImportInBackground(submittedId);
 	}
 
+	
+	public int getFiscalYear(int adClientId) {
+        // choose the “active” configuration row; if you have multiple per org, adjust filters
+        List<List<Object>> rows = DB.getSQLArrayObjectsEx(null,
+            "SELECT y.C_Year_ID " +
+            "FROM zz_sdr_configuration s" +
+            "Join C_Year y on s.ZZ_FinYear_ID = y.C_Year_ID " +
+            "WHERE s.ad_client_id=? AND s.isactive='Y' " +
+            "ORDER BY s.updated DESC " +
+            "FETCH FIRST 1 ROWS ONLY",
+            adClientId
+        );
+        if (rows == null || rows.isEmpty())
+            return -1;
 
+        List<Object> r = rows.get(0);
+        return (int) r.get(0);
+    }
 
 	private void refreshList() {
 		list.getItems().clear();
