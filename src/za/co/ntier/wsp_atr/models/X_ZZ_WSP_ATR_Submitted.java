@@ -32,7 +32,7 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260318L;
+	private static final long serialVersionUID = 20260319L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Submitted (Properties ctx, int ZZ_WSP_ATR_Submitted_ID, String trxName)
@@ -843,6 +843,21 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	public Timestamp getZZ_ResubmittedDate()
 	{
 		return (Timestamp)get_Value(COLUMNNAME_ZZ_ResubmittedDate);
+	}
+
+	/** Set Submission Due Date.
+		@param ZZ_Submission_Due_Date Submission Due Date
+	*/
+	public void setZZ_Submission_Due_Date (Timestamp ZZ_Submission_Due_Date)
+	{
+		set_Value (COLUMNNAME_ZZ_Submission_Due_Date, ZZ_Submission_Due_Date);
+	}
+
+	/** Get Submission Due Date.
+		@return Submission Due Date	  */
+	public Timestamp getZZ_Submission_Due_Date()
+	{
+		return (Timestamp)get_Value(COLUMNNAME_ZZ_Submission_Due_Date);
 	}
 
 	public org.compiere.model.I_AD_User getZZ_SubmitRejectedBy() throws RuntimeException

@@ -428,6 +428,15 @@ public interface I_ZZ_WSP_ATR_Submitted
 	/** Get Resubmitted Date	  */
 	public Timestamp getZZ_ResubmittedDate();
 
+    /** Column name ZZ_Submission_Due_Date */
+    public static final String COLUMNNAME_ZZ_Submission_Due_Date = "ZZ_Submission_Due_Date";
+
+	/** Set Submission Due Date	  */
+	public void setZZ_Submission_Due_Date (Timestamp ZZ_Submission_Due_Date);
+
+	/** Get Submission Due Date	  */
+	public Timestamp getZZ_Submission_Due_Date();
+
     /** Column name ZZ_SubmitRejectedBy_ID */
     public static final String COLUMNNAME_ZZ_SubmitRejectedBy_ID = "ZZ_SubmitRejectedBy_ID";
 

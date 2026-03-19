@@ -1,6 +1,7 @@
 package za.ntier.models;
 
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
@@ -51,23 +52,92 @@ public class MZZWSPATRExtensionBatch extends X_ZZ_WSP_ATR_EXTENSION_BATCH
 	@Override
 	protected boolean afterSave(boolean newRecord, boolean success)
 	{
-		boolean ok = super.afterSave(newRecord, success);
+	    boolean ok = super.afterSave(newRecord, success);
 
-		// Check if workflow node has finalized (Status = Approved)
-		if (ok && is_ValueChanged(COLUMNNAME_ZZ_DocStatus) && getZZ_DocStatus() != null
-				&& getZZ_DocStatus().equals("AP"))
-		{
-			try
-			{
-				sendFinalApprovalEmail();
-			}
-			catch (Exception e)
-			{
-				log.log(Level.SEVERE, "Failed to send extension batch approval email: " + e.getMessage(), e);
-			}
-		}
+	    if (ok && is_ValueChanged(COLUMNNAME_ZZ_DocStatus) && "AP".equals(getZZ_DocStatus()))
+	    {
+	        try
+	        {
+	            updateLinkedSubmissionDueDates();
+	        }
+	        catch (Exception e)
+	        {
+	            log.log(Level.SEVERE, "Failed to update linked submission due dates: " + e.getMessage(), e);
+	        }
 
-		return ok;
+	        try
+	        {
+	            sendFinalApprovalEmail();
+	        }
+	        catch (Exception e)
+	        {
+	            log.log(Level.SEVERE, "Failed to send extension batch approval email: " + e.getMessage(), e);
+	        }
+	    }
+
+	    return ok;
+	}
+	
+	private void updateLinkedSubmissionDueDates()
+	{
+	    Timestamp batchExtEndDate = getZZ_WSP_ATR_Ext_End_Date();
+	    if (batchExtEndDate == null)
+	    {
+	        log.warning("Batch extension end date is null for batch ID=" + get_ID());
+	        return;
+	    }
+
+	    List<X_ZZ_WSP_ATR_EXTENSION> extensions = new Query(
+	            getCtx(),
+	            X_ZZ_WSP_ATR_EXTENSION.Table_Name,
+	            "ZZ_WSP_ATR_EXTENSION_BATCH_ID=? AND IsActive='Y'",
+	            get_TrxName())
+	        .setParameters(get_ID())
+	        .list();
+
+	    if (extensions == null || extensions.isEmpty())
+	    {
+	        log.warning("No related extensions found for batch ID=" + get_ID());
+	        return;
+	    }
+
+	    Set<Integer> submittedIds = new HashSet<>();
+	    for (X_ZZ_WSP_ATR_EXTENSION ext : extensions)
+	    {
+	        if (ext.getZZ_WSP_ATR_Submitted_ID() > 0)
+	        {
+	            submittedIds.add(ext.getZZ_WSP_ATR_Submitted_ID());
+	        }
+	    }
+
+	    if (submittedIds.isEmpty())
+	    {
+	        log.info("No linked submitted records found for batch ID=" + get_ID());
+	        return;
+	    }
+
+	    int updatedCount = 0;
+
+	    for (Integer submittedId : submittedIds)
+	    {
+	        MZZWSPATRSubmitted submitted = new MZZWSPATRSubmitted(getCtx(), submittedId, get_TrxName());
+	        if (submitted.get_ID() <= 0 || !submitted.isActive())
+	        {
+	            continue;
+	        }
+
+	        Timestamp currentDueDate = submitted.getZZ_Submission_Due_Date();
+
+	        // only move forward, never backward
+	        if (currentDueDate == null || batchExtEndDate.after(currentDueDate))
+	        {
+	            submitted.setZZ_Submission_Due_Date(batchExtEndDate);
+	            submitted.saveEx();
+	            updatedCount++;
+	        }
+	    }
+
+	    log.info("Updated " + updatedCount + " linked submitted due date(s) for approved extension batch ID=" + get_ID());
 	}
 
 	/**

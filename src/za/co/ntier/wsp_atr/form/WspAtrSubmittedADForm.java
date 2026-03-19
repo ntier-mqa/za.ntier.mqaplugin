@@ -3,7 +3,6 @@ package za.co.ntier.wsp_atr.form;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
@@ -69,6 +68,7 @@ import org.zkoss.zul.Vlayout;
 import za.co.ntier.api.model.X_ZZSdfOrganisation;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Sub_Levy_Orgs;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
+import za.co.ntier.wsp_atr.repo.WspAtrUploadsRepository;
 import za.ntier.models.MZZWSPATRSubmitted;
 
 @org.idempiere.ui.zk.annotation.Form(name = "za.co.ntier.wsp_atr.form.WspAtrSubmittedADForm")
@@ -344,6 +344,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 			int existingId = findExistingSubmittedIdForOrg(org.zzSdfOrganisationId, trxName);
 
 			MZZWSPATRSubmitted submitted;
+			int clientID = Env.getAD_Client_ID(Env.getCtx());
 			if (existingId > 0) {
 				submitted = new MZZWSPATRSubmitted(Env.getCtx(), existingId, trxName);
 
@@ -357,7 +358,8 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 				submitted.setZZSdfOrganisation_ID(org.zzSdfOrganisationId);
 				submitted.setZZ_DocAction(null);
 				submitted.setZZ_DocStatus(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating);
-				submitted.setZZ_FinYear_ID(getFiscalYear(Env.getAD_Client_ID(Env.getCtx())));
+				submitted.setZZ_FinYear_ID(getFiscalYear(clientID));
+				submitted.setZZ_Submission_Due_Date(getWSPATR_Due_Date(clientID,org.zzSdfOrganisationId));
 				submitted.saveEx();
 
 				submittedId = existingId;
@@ -370,7 +372,8 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 				submitted.setZZSdfOrganisation_ID(org.zzSdfOrganisationId);
 				submitted.setZZ_DocAction(null);
 				submitted.setZZ_DocStatus(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating);
-				submitted.setZZ_FinYear_ID(getFiscalYear(Env.getAD_Client_ID(Env.getCtx())));
+				submitted.setZZ_FinYear_ID(getFiscalYear(clientID));
+				submitted.setZZ_Submission_Due_Date(getWSPATR_Due_Date(clientID,org.zzSdfOrganisationId));
 				submitted.saveEx();
 
 				submittedId = submitted.get_ID();
@@ -419,7 +422,33 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 			return yearId;
     }
+	
+	public static Timestamp getWSPATR_Due_Date(int adClientId, int zzSdfOrganisationId) {
 
+	    WspAtrUploadsRepository.SdrWindowConfig cfg =
+	            WspAtrUploadsRepository.getSdrWindowConfig(adClientId);
+
+	    if (cfg == null) {
+	        return null;
+	    }
+
+	    WspAtrUploadsRepository repo = new WspAtrUploadsRepository(Env.getCtx());
+
+	    Timestamp subEnd = cfg.subEnd;
+	    Timestamp extEnd = null;
+
+	    // Only get extension end if org qualifies
+	    if (repo.isOrgInApprovedWspAtrExtensionBatch(zzSdfOrganisationId)) {
+	        extEnd = cfg.extEnd;
+	    }
+
+	    // Return whichever is later
+	    if (subEnd == null) return extEnd;
+	    if (extEnd == null) return subEnd;
+
+	    return subEnd.after(extEnd) ? subEnd : extEnd;
+	}
+	
 	private void refreshList() {
 		list.getItems().clear();
 

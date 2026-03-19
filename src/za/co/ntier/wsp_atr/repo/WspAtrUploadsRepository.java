@@ -113,7 +113,7 @@ public class WspAtrUploadsRepository {
         if (att != null) att.delete(true);
     }
     
-    public SdrWindowConfig getSdrWindowConfig(int adClientId) {
+    public static SdrWindowConfig getSdrWindowConfig(int adClientId) {
         // choose the “active” configuration row; if you have multiple per org, adjust filters
         List<List<Object>> rows = DB.getSQLArrayObjectsEx(null,
             "SELECT zz_wsp_atr_sub_start_date, zz_wsp_atr_sub_end_date, " +
