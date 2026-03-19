@@ -19,59 +19,21 @@
 		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
 	</parameter>
 	<queryString>
-		<![CDATA[SELECT
-    v.orgname                                  AS organisation_name,
-    v.orgname                                  AS trading_name,
-    v.zz_sdl_no                                AS levy_number,
-    to_char(r.created, 'DD FMMonth YYYY')      AS date_generated,
-
-    to_char(
-      CASE
-        WHEN COALESCE(ext.within_ext_window, 0) = 1 THEN ext.ext_end_date
-        ELSE cfg.sub_end
-      END,
-      'DD FMMonth YYYY'
-    ) AS submit_deadline_text
-
-FROM adempiere.zz_wsp_atr_report r
-LEFT JOIN adempiere.zz_wsp_atr_submitted s
-       ON s.zz_wsp_atr_submitted_id = r.zz_wsp_atr_submitted_id
-LEFT JOIN adempiere.zzsdforganisation_v v
-       ON v.zzsdforganisation_id = s.zzsdforganisation_id
-
-LEFT JOIN LATERAL (
-    SELECT
-        c.zz_wsp_atr_sub_start_date AS sub_start,
-        c.zz_wsp_atr_sub_end_date   AS sub_end,
-        c.zz_wsp_atr_ext_start_date AS ext_start,
-        c.zz_wsp_atr_ext_end_date   AS ext_end
-    FROM adempiere.zz_sdr_configuration c
-    WHERE c.ad_client_id = r.ad_client_id
-      AND c.isactive='Y'
-    ORDER BY c.updated DESC
-    LIMIT 1
-) cfg ON true
-
-LEFT JOIN LATERAL (
-    SELECT
-        CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END AS within_ext_window,
-        MAX(b.zz_wsp_atr_ext_end_date)           AS ext_end_date
-    FROM adempiere.c_bpartner bp
-    JOIN adempiere.zz_wsp_atr_extension e
-      ON e.zz_sdl_no = bp.value
-    JOIN adempiere.zz_wsp_atr_extension_batch b
-      ON b.zz_wsp_atr_extension_batch_id = e.zz_wsp_atr_extension_batch_id
-    WHERE bp.c_bpartner_id = v.c_bpartner_id
-      AND bp.isactive = 'Y'
-      AND e.isactive = 'Y'
-      AND b.isactive = 'Y'
-      AND b.zz_docstatus IN ('AP')
-      AND b.zz_wsp_atr_ext_start_date IS NOT NULL
-      AND b.zz_wsp_atr_ext_end_date IS NOT NULL
-      AND CURRENT_TIMESTAMP BETWEEN b.zz_wsp_atr_ext_start_date AND b.zz_wsp_atr_ext_end_date
-) ext ON true
-
-WHERE r.zz_wsp_atr_report_id = $P{ZZ_WSP_ATR_Report_ID};]]>
+		<queryString>
+	<![CDATA[
+	SELECT
+	    v.orgname                             AS organisation_name,
+	    v.orgname                             AS trading_name,
+	    v.zz_sdl_no                           AS levy_number,
+	    to_char(r.created, 'DD FMMonth YYYY') AS date_generated,
+	    to_char(s.zz_wsp_atr_due_date, 'DD FMMonth YYYY') AS submit_deadline_text
+	FROM adempiere.zz_wsp_atr_report r
+	LEFT JOIN adempiere.zz_wsp_atr_submitted s
+	       ON s.zz_wsp_atr_submitted_id = r.zz_wsp_atr_submitted_id
+	LEFT JOIN adempiere.zzsdforganisation_v v
+	       ON v.zzsdforganisation_id = s.zzsdforganisation_id
+	WHERE r.zz_wsp_atr_report_id = $P{ZZ_WSP_ATR_Report_ID}
+	]]>
 	</queryString>
 	<field name="organisation_name" class="java.lang.String"/>
 	<field name="trading_name" class="java.lang.String"/>
