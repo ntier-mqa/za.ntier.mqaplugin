@@ -19,21 +19,18 @@
 		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
 	</parameter>
 	<queryString>
-		<queryString>
-	<![CDATA[
-	SELECT
+		<![CDATA[SELECT
 	    v.orgname                             AS organisation_name,
 	    v.orgname                             AS trading_name,
 	    v.zz_sdl_no                           AS levy_number,
 	    to_char(r.created, 'DD FMMonth YYYY') AS date_generated,
-	    to_char(s.zz_wsp_atr_due_date, 'DD FMMonth YYYY') AS submit_deadline_text
+	    to_char(s.ZZ_Submission_Due_Date, 'DD FMMonth YYYY') AS submit_deadline_text
 	FROM adempiere.zz_wsp_atr_report r
 	LEFT JOIN adempiere.zz_wsp_atr_submitted s
 	       ON s.zz_wsp_atr_submitted_id = r.zz_wsp_atr_submitted_id
 	LEFT JOIN adempiere.zzsdforganisation_v v
 	       ON v.zzsdforganisation_id = s.zzsdforganisation_id
-	WHERE r.zz_wsp_atr_report_id = $P{ZZ_WSP_ATR_Report_ID}
-	]]>
+	WHERE r.zz_wsp_atr_report_id = $P{ZZ_WSP_ATR_Report_ID}]]>
 	</queryString>
 	<field name="organisation_name" class="java.lang.String"/>
 	<field name="trading_name" class="java.lang.String"/>

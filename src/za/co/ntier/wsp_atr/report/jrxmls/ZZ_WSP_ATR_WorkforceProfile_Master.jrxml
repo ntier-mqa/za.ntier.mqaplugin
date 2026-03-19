@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 6.20.1  -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ZZ_WSP_ATR_WorkforceProfile_Master" pageWidth="1310" pageHeight="1851" whenNoDataType="AllSectionsNoDetail" columnWidth="1270" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="472ff82e-dc3d-4e3b-ae25-6f4167465492">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ZZ_WSP_ATR_WorkforceProfile_Master" pageWidth="1310" pageHeight="1861" whenNoDataType="AllSectionsNoDetail" columnWidth="1270" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="472ff82e-dc3d-4e3b-ae25-6f4167465492">
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="mqa dev"/>
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
@@ -21,6 +21,9 @@
 	<parameter name="RESOURCE_DIR" class="java.lang.String" isForPrompting="false">
 		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
 	</parameter>
+	<parameter name="GENERATED_AT" class="java.util.Date">
+		<defaultValueExpression><![CDATA[new java.util.Date()]]></defaultValueExpression>
+	</parameter>
 	<queryString>
 		<![CDATA[SELECT 1 AS dummy]]>
 	</queryString>
@@ -33,7 +36,7 @@
 	<detail>
 		<band height="1801" splitType="Stretch">
 			<subreport>
-				<reportElement x="0" y="0" width="1250" height="1801" uuid="0934bd42-d42a-48e4-bdca-31a16a49d3b5"/>
+				<reportElement x="0" y="0" width="1250" height="1270" uuid="0934bd42-d42a-48e4-bdca-31a16a49d3b5"/>
 				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
 					<subreportParameterExpression><![CDATA[$P{ZZ_WSP_ATR_Report_ID}]]></subreportParameterExpression>
 				</subreportParameter>
@@ -204,7 +207,7 @@
 				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_6_3_non_emp_skills_dev_done.jasper"]]></subreportExpression>
 			</subreport>
 		</band>
-		<band height="1270" splitType="Stretch">
+		<band height="1801" splitType="Stretch">
 			<subreport>
 				<reportElement x="0" y="0" width="1811" height="1270" uuid="bad8eb6f-f1d9-4a40-9c25-f92ad22568e5"/>
 				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
@@ -214,7 +217,7 @@
 				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "section_6_4_non_emp_skills_dev_planned.jasper"]]></subreportExpression>
 			</subreport>
 		</band>
-		<band height="1270" splitType="Stretch">
+		<band height="1801" splitType="Stretch">
 			<subreport>
 				<reportElement x="0" y="0" width="1811" height="1270" uuid="aedf721b-7312-41e1-98b7-7010e1289ed6"/>
 				<subreportParameter name="ZZ_WSP_ATR_Report_ID">
@@ -265,4 +268,30 @@
 			</subreport>
 		</band>
 	</detail>
+	<pageFooter>
+		<band height="20">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<textField>
+				<reportElement style="Normal" x="0" y="3" width="500" height="17" uuid="f3a4a111-1111-4444-8888-111111111111"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Date Generated " + new java.text.SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format($P{GENERATED_AT})]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="1055" y="3" width="95" height="17" uuid="a7480345-29d1-473f-94e9-08fb3487b396"/>
+				<textElement textAlignment="Right">
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="1150" y="3" width="84" height="17" uuid="f1e60c6d-0f88-4d5e-a852-5b775a236f3a"/>
+				<textElement textAlignment="Left">
+					<font size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" of " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
 </jasperReport>
