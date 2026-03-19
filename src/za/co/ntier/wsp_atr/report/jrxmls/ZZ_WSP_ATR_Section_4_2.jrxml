@@ -314,9 +314,9 @@ ORDER BY qt.Name, qd.Name]]>
 		</band>
 	</columnHeader>
 	<detail>
-		<band height="26">
+		<band height="26" splitType="Stretch">
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="CellText" x="0" y="0" width="230" height="26" uuid="5c7f9144-98fd-4516-acca-097aa99b9239"/>
+				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="0" y="0" width="230" height="26" uuid="5c7f9144-98fd-4516-acca-097aa99b9239"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -326,7 +326,7 @@ ORDER BY qt.Name, qd.Name]]>
 				<textFieldExpression><![CDATA[$F{qualification_type_name}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="CellText" x="230" y="0" width="335" height="26" uuid="ac6515e6-a556-4490-8439-c5c930013700"/>
+				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="230" y="0" width="335" height="26" uuid="ac6515e6-a556-4490-8439-c5c930013700"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -336,105 +336,105 @@ ORDER BY qt.Name, qd.Name]]>
 				<textFieldExpression><![CDATA[$F{learning_programme_detail_name}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#0">
-				<reportElement style="CellNum" x="565" y="0" width="42" height="26" uuid="342580e7-66db-4e9d-896f-025740563974"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="565" y="0" width="42" height="26" uuid="342580e7-66db-4e9d-896f-025740563974"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{african_male_cnt}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#0">
-				<reportElement style="CellNum" x="607" y="0" width="42" height="26" uuid="7c43d133-9a4b-4bef-8b13-ff9336439680"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="607" y="0" width="42" height="26" uuid="7c43d133-9a4b-4bef-8b13-ff9336439680"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{african_female_cnt}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#0">
-				<reportElement style="CellNum" x="649" y="0" width="42" height="26" uuid="d905332b-b343-49cd-9dfb-d51fd9f1af1f"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="649" y="0" width="42" height="26" uuid="d905332b-b343-49cd-9dfb-d51fd9f1af1f"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{coloured_male_cnt}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#0">
-				<reportElement style="CellNum" x="691" y="0" width="42" height="26" uuid="5987cf95-b3f9-4426-bec3-0a5354c0d64a"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="691" y="0" width="42" height="26" uuid="5987cf95-b3f9-4426-bec3-0a5354c0d64a"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{coloured_female_cnt}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#0">
-				<reportElement style="CellNum" x="733" y="0" width="42" height="26" uuid="f66d9e00-621c-4fef-a1dd-62e649a5edb3"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="733" y="0" width="42" height="26" uuid="f66d9e00-621c-4fef-a1dd-62e649a5edb3"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{indian_male_cnt}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#0">
-				<reportElement style="CellNum" x="775" y="0" width="42" height="26" uuid="2bc97eb5-e8d6-4dc3-a893-fa6998c7898c"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="775" y="0" width="42" height="26" uuid="2bc97eb5-e8d6-4dc3-a893-fa6998c7898c"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{indian_female_cnt}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#0">
-				<reportElement style="CellNum" x="817" y="0" width="42" height="26" uuid="270b266c-41ec-44db-9761-678f0dde08b2"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="817" y="0" width="42" height="26" uuid="270b266c-41ec-44db-9761-678f0dde08b2"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{white_male_cnt}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#0">
-				<reportElement style="CellNum" x="859" y="0" width="42" height="26" uuid="bf477517-a802-426b-9a20-2beaac4dddeb"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="859" y="0" width="42" height="26" uuid="bf477517-a802-426b-9a20-2beaac4dddeb"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{white_female_cnt}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#0">
-				<reportElement style="CellNum" x="901" y="0" width="42" height="26" uuid="516659c9-773e-41b8-a780-56f4dcdbbe6c"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="901" y="0" width="42" height="26" uuid="516659c9-773e-41b8-a780-56f4dcdbbe6c"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{total_male_cnt}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#0">
-				<reportElement style="CellNum" x="943" y="0" width="42" height="26" uuid="b2fc1bbe-0ba9-426c-8c98-9172ff68dfce"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="943" y="0" width="42" height="26" uuid="b2fc1bbe-0ba9-426c-8c98-9172ff68dfce"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{total_female_cnt}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#0">
-				<reportElement style="CellNum" x="985" y="0" width="45" height="26" uuid="634036b7-ec0c-45e9-8455-c1c1c9878959"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="985" y="0" width="45" height="26" uuid="634036b7-ec0c-45e9-8455-c1c1c9878959"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{disabled_cnt}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#0">
-				<reportElement style="CellNum" x="1030" y="0" width="45" height="26" uuid="b0a4ace2-9058-4a7d-af2f-4e58438162b3"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="1030" y="0" width="45" height="26" uuid="b0a4ace2-9058-4a7d-af2f-4e58438162b3"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{nonsa_cnt}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#0">
-				<reportElement style="CellNum" x="1075" y="0" width="45" height="26" uuid="1f676c6a-cf4b-47e3-a860-557133325941"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="1075" y="0" width="45" height="26" uuid="1f676c6a-cf4b-47e3-a860-557133325941"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{age_u35_cnt}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#0">
-				<reportElement style="CellNum" x="1120" y="0" width="45" height="26" uuid="2e08d05d-a7f9-4b24-aad8-f5f9b727e3d9"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="1120" y="0" width="45" height="26" uuid="2e08d05d-a7f9-4b24-aad8-f5f9b727e3d9"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{age_35_55_cnt}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#0">
-				<reportElement style="CellNum" x="1165" y="0" width="45" height="26" uuid="78a17105-135a-4249-a29b-e7c1aacc39bb"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="1165" y="0" width="45" height="26" uuid="78a17105-135a-4249-a29b-e7c1aacc39bb"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
