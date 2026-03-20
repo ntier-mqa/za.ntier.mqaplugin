@@ -19,7 +19,7 @@ import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping;
 
 final class WspAtrExportPlanBuilder {
 
-    private static final String WINDOW_UU = "406eaf0a-7d74-4942-9429-07f09ffeed85";
+    private static final String SUBMITTED_WINDOW_UU = "406eaf0a-7d74-4942-9429-07f09ffeed85";
     private static final String SUBMITTED_TAB_UU = "b3369b7f-fd0c-4e13-bdcc-b1b042bc2c65";
     private static final int LEVEL_ONE = 1;
     private static final int LEVEL_TWO = 2;
@@ -48,13 +48,13 @@ final class WspAtrExportPlanBuilder {
 
     private WindowRuntime resolveWindow() {
         PO adWindow = new Query(process.getCtx(), "AD_Window", "AD_Window_UU=? AND IsActive='Y'", process.get_TrxName())
-                .setParameters(WINDOW_UU)
+                .setParameters(SUBMITTED_WINDOW_UU)
                 .firstOnly();
         if (adWindow == null) {
-            throw new IllegalStateException("Unable to resolve AD_Window_UU=" + WINDOW_UU);
+            throw new IllegalStateException("Unable to resolve AD_Window_UU=" + SUBMITTED_WINDOW_UU);
         }
 
-        return new WindowRuntime(adWindow.get_ID(), WINDOW_UU);
+        return new WindowRuntime(adWindow.get_ID(), SUBMITTED_WINDOW_UU);
     }
 
     private WspAtrExportTab buildSubmittedTab(WindowRuntime window) {
