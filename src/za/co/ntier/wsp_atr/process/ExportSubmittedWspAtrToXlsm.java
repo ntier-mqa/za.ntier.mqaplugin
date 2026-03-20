@@ -10,8 +10,12 @@ import java.sql.Timestamp;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.adempiere.base.annotation.Process;
 import org.apache.poi.ss.usermodel.Cell;
@@ -32,13 +36,21 @@ import org.compiere.util.DisplayType;
 import org.compiere.util.Util;
 
 import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Submitted;
-import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
 
 @Process(name = "za.co.ntier.wsp_atr.process.ExportSubmittedWspAtrToXlsm")
 public class ExportSubmittedWspAtrToXlsm extends SvrProcess {
 
     private static final DateTimeFormatter TIMESTAMP_FORMAT =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+    private static final String SUBMITTED_WINDOW_UU = "406eaf0a-7d74-4942-9429-07f09ffeed85";
+    private static final String SUBMITTED_TAB_UU = "b3369b7f-fd0c-4e13-bdcc-b1b042bc2c65";
+    private static final Set<String> IGNORED_STANDARD_COLUMNS = Set.of(
+            "IsActive",
+            "Created",
+            "CreatedBy",
+            "Updated",
+            "UpdatedBy",
+            "UUID");
 
     @Override
     protected void prepare() {
@@ -46,46 +58,27 @@ public class ExportSubmittedWspAtrToXlsm extends SvrProcess {
 
     @Override
     protected String doIt() throws Exception {
-        MTable submittedTable = MTable.get(getCtx(), I_ZZ_WSP_ATR_Submitted.Table_Name);
-        if (submittedTable == null || submittedTable.getAD_Table_ID() <= 0) {
-            throw new IllegalStateException("Unable to resolve table " + I_ZZ_WSP_ATR_Submitted.Table_Name);
+        List<ExportTabDefinition> tabDefinitions = buildTabDefinitions();
+        if (tabDefinitions.isEmpty()) {
+            throw new IllegalStateException("No tabs configured for export");
         }
-
-        List<MColumn> columns = getExportColumns(submittedTable.getAD_Table_ID());
-        if (columns.isEmpty()) {
-            throw new IllegalStateException("No active columns found for " + I_ZZ_WSP_ATR_Submitted.Table_Name);
-        }
-
-        List<PO> submittedRows = new Query(getCtx(), I_ZZ_WSP_ATR_Submitted.Table_Name, null, get_TrxName())
-                .setOrderBy(X_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_WSP_ATR_Submitted_ID)
-                .list();
 
         Path exportPath = uniqueTempXlsm("ZZ_WSP_ATR_Submitted_Export");
+        int totalRowsExported = 0;
 
         try (Workbook workbook = new XSSFWorkbook()) {
-            Sheet sheet = workbook.createSheet("ZZ_WSP_ATR_Submitted");
             CellStyle headerStyle = createHeaderStyle(workbook);
 
-            Row headerRow = sheet.createRow(0);
-            for (int col = 0; col < columns.size(); col++) {
-                Cell headerCell = headerRow.createCell(col);
-                headerCell.setCellValue(columns.get(col).getColumnName());
-                headerCell.setCellStyle(headerStyle);
-            }
-
-            int rowIndex = 1;
-            for (PO submittedRow : submittedRows) {
-                X_ZZ_WSP_ATR_Submitted submitted = (X_ZZ_WSP_ATR_Submitted) submittedRow;
-                Row row = sheet.createRow(rowIndex++);
-                for (int col = 0; col < columns.size(); col++) {
-                    MColumn column = columns.get(col);
-                    Cell cell = row.createCell(col);
-                    writeCellValue(cell, column, submitted);
+            for (ExportTabDefinition tabDefinition : tabDefinitions) {
+                TabRuntimeContext runtimeContext = resolveTabRuntimeContext(tabDefinition);
+                List<SheetColumn> columns = resolveSheetColumns(tabDefinition, runtimeContext);
+                if (columns.isEmpty()) {
+                    throw new IllegalStateException("No exportable columns found for tab " + tabDefinition.tabUu);
                 }
-            }
 
-            for (int col = 0; col < columns.size(); col++) {
-                sheet.autoSizeColumn(col);
+                List<PO> records = tabDefinition.recordProvider.fetch(this, runtimeContext);
+                totalRowsExported += records.size();
+                writeSheet(workbook, headerStyle, tabDefinition.sheetName, columns, records);
             }
 
             try (OutputStream os = Files.newOutputStream(exportPath)) {
@@ -97,25 +90,133 @@ public class ExportSubmittedWspAtrToXlsm extends SvrProcess {
             processUI.download(exportPath.toFile());
         }
 
-        return "Exported " + submittedRows.size() + " records to " + exportPath.getFileName();
+        return "Exported " + totalRowsExported + " record(s) across " + tabDefinitions.size()
+                + " tab(s) to " + exportPath.getFileName();
     }
 
-    private List<MColumn> getExportColumns(int adTableId) {
-        List<MColumn> columns = new ArrayList<>();
-        List<PO> columnRows = new Query(getCtx(), MColumn.Table_Name,
-                MColumn.COLUMNNAME_AD_Table_ID + "=? AND " + MColumn.COLUMNNAME_IsActive + "='Y'", get_TrxName())
-                .setParameters(adTableId)
-                .setOrderBy(MColumn.COLUMNNAME_AD_Column_ID + ", " + MColumn.COLUMNNAME_AD_Column_ID)
+    private List<ExportTabDefinition> buildTabDefinitions() {
+        List<ExportTabDefinition> tabDefinitions = new ArrayList<>();
+        tabDefinitions.add(ExportTabDefinition.levelZeroSubmittedTab());
+        return tabDefinitions;
+    }
+
+    private TabRuntimeContext resolveTabRuntimeContext(ExportTabDefinition definition) {
+        PO adTab = new Query(getCtx(), "AD_Tab", "AD_Tab_UU=? AND IsActive='Y'", get_TrxName())
+                .setParameters(definition.tabUu)
+                .first();
+        if (adTab == null) {
+            throw new IllegalStateException("Unable to resolve AD_Tab_UU=" + definition.tabUu);
+        }
+
+        int windowId = adTab.get_ValueAsInt("AD_Window_ID");
+        PO adWindow = new Query(getCtx(), "AD_Window", "AD_Window_ID=? AND AD_Window_UU=? AND IsActive='Y'", get_TrxName())
+                .setParameters(windowId, definition.windowUu)
+                .first();
+        if (adWindow == null) {
+            throw new IllegalStateException("AD_Tab_UU=" + definition.tabUu + " does not belong to AD_Window_UU="
+                    + definition.windowUu);
+        }
+
+        int tableId = adTab.get_ValueAsInt("AD_Table_ID");
+        MTable table = MTable.get(getCtx(), tableId);
+        if (table == null || table.getAD_Table_ID() <= 0) {
+            throw new IllegalStateException("Unable to resolve AD_Table_ID=" + tableId + " for AD_Tab_UU=" + definition.tabUu);
+        }
+
+        return new TabRuntimeContext(adTab.get_ID(), table);
+    }
+
+    private List<SheetColumn> resolveSheetColumns(ExportTabDefinition definition, TabRuntimeContext runtimeContext) {
+        Map<String, SheetColumn> orderedColumns = new LinkedHashMap<>();
+
+        List<PO> fieldRows = new Query(getCtx(), "AD_Field", "AD_Tab_ID=? AND IsActive='Y' AND IsDisplayed='Y'", get_TrxName())
+                .setParameters(runtimeContext.adTabId)
+                .setOrderBy("SeqNo, AD_Field_ID")
                 .list();
 
-        for (PO columnRow : columnRows) {
-            MColumn column = (MColumn) columnRow;
-            if (column.isVirtualColumn()) {
+        for (PO fieldRow : fieldRows) {
+            int columnId = fieldRow.get_ValueAsInt("AD_Column_ID");
+            if (columnId <= 0) {
                 continue;
             }
-            columns.add(column);
+
+            MColumn column = new MColumn(getCtx(), columnId, get_TrxName());
+            if (column.getAD_Column_ID() <= 0 || column.isVirtualColumn() || shouldIgnoreColumn(runtimeContext.table, column)) {
+                continue;
+            }
+
+            orderedColumns.putIfAbsent(normalizeColumnKey(column.getColumnName()), new TableColumn(column));
         }
-        return columns;
+
+        for (String mandatoryColumnName : definition.mandatoryTableColumns) {
+            PO mandatoryColumnRow = new Query(getCtx(), MColumn.Table_Name,
+                    MColumn.COLUMNNAME_AD_Table_ID + "=? AND " + MColumn.COLUMNNAME_ColumnName + "=? AND "
+                            + MColumn.COLUMNNAME_IsActive + "='Y'",
+                    get_TrxName())
+                            .setParameters(runtimeContext.table.getAD_Table_ID(), mandatoryColumnName)
+                            .firstOnly();
+            if (mandatoryColumnRow == null) {
+                continue;
+            }
+
+            MColumn mandatoryColumn = mandatoryColumnRow instanceof MColumn
+                    ? (MColumn) mandatoryColumnRow
+                    : new MColumn(getCtx(), mandatoryColumnRow.get_ID(), get_TrxName());
+            if (mandatoryColumn.getAD_Column_ID() <= 0 || shouldIgnoreColumn(runtimeContext.table, mandatoryColumn)) {
+                continue;
+            }
+
+            orderedColumns.putIfAbsent(normalizeColumnKey(mandatoryColumnName), new TableColumn(mandatoryColumn));
+        }
+
+        for (SyntheticColumn syntheticColumn : definition.syntheticColumns) {
+            orderedColumns.putIfAbsent(normalizeColumnKey(syntheticColumn.getHeader()), syntheticColumn);
+        }
+
+        return new ArrayList<>(orderedColumns.values());
+    }
+
+    private boolean shouldIgnoreColumn(MTable table, MColumn column) {
+        String columnName = column.getColumnName();
+        if (Util.isEmpty(columnName, true)) {
+            return true;
+        }
+
+        if (IGNORED_STANDARD_COLUMNS.stream().anyMatch(ignoredColumn -> ignoredColumn.equalsIgnoreCase(columnName))) {
+            return true;
+        }
+
+        String tableName = table.getTableName();
+        return columnName.equalsIgnoreCase(tableName + "_ID")
+                || columnName.equalsIgnoreCase(tableName + "_UU");
+    }
+
+    private String normalizeColumnKey(String columnName) {
+        return columnName == null ? "" : columnName.trim().toUpperCase();
+    }
+
+    private void writeSheet(Workbook workbook, CellStyle headerStyle, String sheetName, List<SheetColumn> columns, List<PO> records) {
+        Sheet sheet = workbook.createSheet(sheetName);
+        Row headerRow = sheet.createRow(0);
+
+        for (int col = 0; col < columns.size(); col++) {
+            Cell headerCell = headerRow.createCell(col);
+            headerCell.setCellValue(columns.get(col).getHeader());
+            headerCell.setCellStyle(headerStyle);
+        }
+
+        int rowIndex = 1;
+        for (PO record : records) {
+            Row row = sheet.createRow(rowIndex++);
+            for (int col = 0; col < columns.size(); col++) {
+                Cell cell = row.createCell(col);
+                columns.get(col).writeCell(this, cell, record);
+            }
+        }
+
+        for (int col = 0; col < columns.size(); col++) {
+            sheet.autoSizeColumn(col);
+        }
     }
 
     private CellStyle createHeaderStyle(Workbook workbook) {
@@ -126,20 +227,19 @@ public class ExportSubmittedWspAtrToXlsm extends SvrProcess {
         return headerStyle;
     }
 
-    private void writeCellValue(Cell cell, MColumn column, PO record) {
-        Object value = record.get_Value(column.getColumnName());
+    private void writeResolvedValue(Cell cell, MColumn column, Object value) {
         if (value == null) {
             cell.setCellValue("");
             return;
         }
 
-        int displayType = column.getAD_Reference_ID();
+        int displayType = column != null ? column.getAD_Reference_ID() : DisplayType.String;
         if (value instanceof Timestamp) {
             cell.setCellValue(formatTimestamp((Timestamp) value));
             return;
         }
 
-        if (isReferenceColumn(column)) {
+        if (column != null && isReferenceColumn(column)) {
             cell.setCellValue(resolveReferenceDisplay(getCtx(), column, value, get_TrxName()));
             return;
         }
@@ -267,6 +367,101 @@ public class ExportSubmittedWspAtrToXlsm extends SvrProcess {
                 return Files.createFile(candidate);
             } catch (FileAlreadyExistsException ignore) {
             }
+        }
+    }
+
+    private interface SheetColumn {
+        String getHeader();
+
+        void writeCell(ExportSubmittedWspAtrToXlsm process, Cell cell, PO record);
+    }
+
+    private interface RecordProvider {
+        List<PO> fetch(ExportSubmittedWspAtrToXlsm process, TabRuntimeContext runtimeContext);
+    }
+
+    private interface SyntheticValueProvider {
+        Object getValue(PO record);
+    }
+
+    private static final class ExportTabDefinition {
+        private final String windowUu;
+        private final String tabUu;
+        private final String sheetName;
+        private final RecordProvider recordProvider;
+        private final List<SyntheticColumn> syntheticColumns;
+        private final Set<String> mandatoryTableColumns;
+
+        private ExportTabDefinition(String windowUu, String tabUu, String sheetName, RecordProvider recordProvider,
+                List<SyntheticColumn> syntheticColumns, Set<String> mandatoryTableColumns) {
+            this.windowUu = windowUu;
+            this.tabUu = tabUu;
+            this.sheetName = sheetName;
+            this.recordProvider = recordProvider;
+            this.syntheticColumns = syntheticColumns;
+            this.mandatoryTableColumns = mandatoryTableColumns;
+        }
+
+        private static ExportTabDefinition levelZeroSubmittedTab() {
+            return new ExportTabDefinition(
+                    SUBMITTED_WINDOW_UU,
+                    SUBMITTED_TAB_UU,
+                    I_ZZ_WSP_ATR_Submitted.Table_Name,
+                    (process, runtimeContext) -> new Query(process.getCtx(), runtimeContext.table.getTableName(), null,
+                            process.get_TrxName())
+                                    .setOrderBy(runtimeContext.table.getTableName() + "_ID")
+                                    .list(),
+                    List.of(new SyntheticColumn(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_DocumentNo,
+                            record -> record.get_Value(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_DocumentNo))),
+                    new LinkedHashSet<>(List.of(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_DocumentNo)));
+        }
+    }
+
+    private static final class TabRuntimeContext {
+        private final int adTabId;
+        private final MTable table;
+
+        private TabRuntimeContext(int adTabId, MTable table) {
+            this.adTabId = adTabId;
+            this.table = table;
+        }
+    }
+
+    private static final class TableColumn implements SheetColumn {
+        private final MColumn column;
+
+        private TableColumn(MColumn column) {
+            this.column = column;
+        }
+
+        @Override
+        public String getHeader() {
+            return column.getColumnName();
+        }
+
+        @Override
+        public void writeCell(ExportSubmittedWspAtrToXlsm process, Cell cell, PO record) {
+            process.writeResolvedValue(cell, column, record.get_Value(column.getColumnName()));
+        }
+    }
+
+    private static final class SyntheticColumn implements SheetColumn {
+        private final String header;
+        private final SyntheticValueProvider valueProvider;
+
+        private SyntheticColumn(String header, SyntheticValueProvider valueProvider) {
+            this.header = header;
+            this.valueProvider = valueProvider;
+        }
+
+        @Override
+        public String getHeader() {
+            return header;
+        }
+
+        @Override
+        public void writeCell(ExportSubmittedWspAtrToXlsm process, Cell cell, PO record) {
+            process.writeResolvedValue(cell, null, valueProvider.getValue(record));
         }
     }
 }
