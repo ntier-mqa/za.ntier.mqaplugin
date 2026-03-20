@@ -147,6 +147,7 @@ public class GenerateWspAtrReportProcess extends SvrProcess {
 	    	if (!report.save()) {
 				throw new IllegalStateException("Failed to save ZZ_WSP_ATR_Report: "); // + report.getProcessMsg());
 			}
+	    	return report;
 	    }
 
 	    return null;

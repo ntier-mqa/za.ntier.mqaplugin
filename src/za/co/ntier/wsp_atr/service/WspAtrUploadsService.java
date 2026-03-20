@@ -191,7 +191,7 @@ public class WspAtrUploadsService {
         int clientId = Env.getAD_Client_ID(ctx);
         int orgId = repo.getSubmittedOrgId(submittedId);
 
-        WspAtrUploadsRepository.SdrWindowConfig cfg = repo.getSdrWindowConfig(clientId);
+        WspAtrUploadsRepository.SdrWindowConfig cfg = WspAtrUploadsRepository.getSdrWindowConfig(clientId);
         if (cfg == null)
             return false;
 
