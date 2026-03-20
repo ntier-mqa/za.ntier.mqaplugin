@@ -119,10 +119,10 @@ public class ImportQCTOAllocationsProcess extends SvrProcess
 				header.setZZ_FileMonth(monthName);
 			}
 
-			int yearNum = extractYear(searchStr);
-			if (yearNum > 0)
+			int yearId = extractYear(searchStr);
+			if (yearId > 0)
 			{
-				header.setZZ_FileYear(yearNum);
+				header.setC_Year_ID(yearId);
 			}
 			header.saveEx();
 
@@ -210,8 +210,19 @@ public class ImportQCTOAllocationsProcess extends SvrProcess
 				String saqaId = getMappedValue(row, colMap, "SAQAId");
 				String nqfLevel = getMappedValue(row, colMap, "NQFLevel");
 				String qualityPartner = getMappedValue(row, colMap, "QualityPartner");
-				String allocationMonth = getMappedValue(row, colMap, "AllocationMonth");
+				String allocationMonthStr = getMappedValue(row, colMap, "AllocationMonth");
 				String siteVisitDateStr = getMappedValue(row, colMap, "SiteVisitDate");
+
+				String finalAllocMonth = allocationMonthStr;
+				Timestamp allocMonthDate = parseDate(allocationMonthStr);
+				if (allocMonthDate != null)
+				{
+					String periodName = getAllocationMonthFromPeriod(allocMonthDate);
+					if (periodName != null && !periodName.isEmpty())
+					{
+						finalAllocMonth = periodName;
+					}
+				}
 
 				// Basic validation to break loop if we hit an empty line at the
 				// end of the file
@@ -266,7 +277,7 @@ public class ImportQCTOAllocationsProcess extends SvrProcess
 					allocLine.setZZ_SAQAIDOrSPID(saqaId);
 					allocLine.setZZ_NQF_Level(getNQFLevelValue(nqfLevel));
 					allocLine.setZZ_QualityPartner(qualityPartner);
-					allocLine.setZZ_AllocationMonth(allocationMonth);
+					allocLine.setZZ_AllocationMonth(finalAllocMonth);
 
 					if (siteVisitDateStr != null && !siteVisitDateStr.isEmpty())
 					{
@@ -322,7 +333,7 @@ public class ImportQCTOAllocationsProcess extends SvrProcess
 					allocLine.setZZ_SAQAIDOrSPID(saqaId);
 					allocLine.setZZ_NQF_Level(getNQFLevelValue(nqfLevel));
 					allocLine.setZZ_QualityPartner(qualityPartner);
-					allocLine.setZZ_AllocationMonth(allocationMonth);
+					allocLine.setZZ_AllocationMonth(finalAllocMonth);
 
 					if (siteVisitDateStr != null && !siteVisitDateStr.isEmpty())
 					{
@@ -378,7 +389,7 @@ public class ImportQCTOAllocationsProcess extends SvrProcess
 					allocLine.setZZ_SAQAIDOrSPID(saqaId);
 					allocLine.setZZ_NQF_Level(getNQFLevelValue(nqfLevel));
 					allocLine.setZZ_QualityPartner(qualityPartner);
-					allocLine.setZZ_AllocationMonth(allocationMonth);
+					allocLine.setZZ_AllocationMonth(finalAllocMonth);
 
 					if (siteVisitDateStr != null && !siteVisitDateStr.isEmpty())
 					{
@@ -578,29 +589,29 @@ public class ImportQCTOAllocationsProcess extends SvrProcess
 			return null;
 		text = text.toLowerCase();
 		if (text.contains("january") || text.contains("jan "))
-			return "January";
+			return "01";
 		if (text.contains("february") || text.contains("feb "))
-			return "February";
+			return "02";
 		if (text.contains("march") || text.contains("mar "))
-			return "March";
+			return "03";
 		if (text.contains("april") || text.contains("apr "))
-			return "April";
+			return "04";
 		if (text.contains("may") || text.contains("may "))
-			return "May";
+			return "05";
 		if (text.contains("june") || text.contains("jun "))
-			return "June";
+			return "06";
 		if (text.contains("july") || text.contains("jul "))
-			return "July";
+			return "07";
 		if (text.contains("august") || text.contains("aug "))
-			return "August";
+			return "08";
 		if (text.contains("september") || text.contains("sep "))
-			return "September";
+			return "09";
 		if (text.contains("october") || text.contains("oct "))
-			return "October";
+			return "10";
 		if (text.contains("november") || text.contains("nov "))
-			return "November";
+			return "11";
 		if (text.contains("december") || text.contains("dec "))
-			return "December";
+			return "12";
 		return null;
 	}
 
@@ -611,9 +622,39 @@ public class ImportQCTOAllocationsProcess extends SvrProcess
 		java.util.regex.Matcher m = java.util.regex.Pattern.compile("(20\\d{2})").matcher(text);
 		if (m.find())
 		{
-			return Integer.parseInt(m.group(1));
+			String yearStr = m.group(1);
+			int yearId = DB.getSQLValue(get_TrxName(), 
+				"SELECT C_Year_ID FROM C_Year WHERE FiscalYear=? AND AD_Client_ID=?", yearStr, getAD_Client_ID());
+			if (yearId <= 0) {
+				yearId = DB.getSQLValue(get_TrxName(), 
+					"SELECT C_Year_ID FROM C_Year WHERE Year=? AND AD_Client_ID=0", yearStr);
+			}
+			return yearId > 0 ? yearId : 0;
 		}
 		return 0;
+	}
+
+	private String getAllocationMonthFromPeriod(Timestamp date)
+	{
+		if (date == null)
+			return null;
+			
+		String name = DB.getSQLValueString(get_TrxName(),
+				"SELECT Name FROM C_Period WHERE ? BETWEEN StartDate AND EndDate AND AD_Client_ID=?",
+				date, getAD_Client_ID());
+				
+		if (name == null || name.isEmpty())
+		{
+			name = DB.getSQLValueString(get_TrxName(),
+					"SELECT Name FROM C_Period WHERE ? BETWEEN StartDate AND EndDate AND AD_Client_ID=0",
+					date);
+		}
+		
+		if (name == null || name.isEmpty())
+		{
+			return new SimpleDateFormat("MMM-yyyy").format(date);
+		}
+		return name;
 	}
 
 	/**
