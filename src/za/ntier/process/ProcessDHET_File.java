@@ -157,34 +157,34 @@ public class ProcessDHET_File extends SvrProcess {
 			return;
 		}
 
-		MBPartnerLocation existingLocationLink = findPartnerLocation(bp, locationName);
-		if (existingLocationLink == null) {
-			MLocation newLocation = new MLocation(getCtx(), 0, get_TrxName());
-			applyImportedAddress(newLocation, address1, address2, address3, address4, postal);
-			newLocation.saveEx();
-
-			MBPartnerLocation newPartnerLocation = new MBPartnerLocation(bp);
-			newPartnerLocation.setC_Location_ID(newLocation.getC_Location_ID());
-			newPartnerLocation.setName(locationName);
-			newPartnerLocation.saveEx();
+		MBPartnerLocation existingLocationLink = findPartnerLocation(bp);
+		if (existingLocationLink != null) {
+			MLocation existingLocation = new MLocation(getCtx(), existingLocationLink.getC_Location_ID(), get_TrxName());
+			if (existingLocation.get_ID() <= 0 || isMostlyBlank(existingLocation)) {
+				if (existingLocation.get_ID() <= 0) {
+					existingLocation = new MLocation(getCtx(), 0, get_TrxName());
+				}
+				applyImportedAddress(existingLocation, address1, address2, address3, address4, postal);
+				existingLocation.saveEx();
+				existingLocationLink.setC_Location_ID(existingLocation.getC_Location_ID());
+				existingLocationLink.saveEx();
+			}
 			return;
 		}
 
-		MLocation existingLocation = new MLocation(getCtx(), existingLocationLink.getC_Location_ID(), get_TrxName());
-		if (existingLocation.get_ID() <= 0 || isMostlyBlank(existingLocation)) {
-			if (existingLocation.get_ID() <= 0) {
-				existingLocation = new MLocation(getCtx(), 0, get_TrxName());
-			}
-			applyImportedAddress(existingLocation, address1, address2, address3, address4, postal);
-			existingLocation.saveEx();
-			existingLocationLink.setC_Location_ID(existingLocation.getC_Location_ID());
-			existingLocationLink.saveEx();
-		}
+		MLocation newLocation = new MLocation(getCtx(), 0, get_TrxName());
+		applyImportedAddress(newLocation, address1, address2, address3, address4, postal);
+		newLocation.saveEx();
+
+		MBPartnerLocation newPartnerLocation = new MBPartnerLocation(bp);
+		newPartnerLocation.setC_Location_ID(newLocation.getC_Location_ID());
+		newPartnerLocation.setName(locationName);
+		newPartnerLocation.saveEx();
 	}
 
-	private MBPartnerLocation findPartnerLocation(MBPartner_New bp, String locationName) {
+	private MBPartnerLocation findPartnerLocation(MBPartner_New bp) {
 		for (MBPartnerLocation location : bp.getLocations(false)) {
-			if (locationName.equals(location.getName())) {
+			if (location.isActive()) {
 				return location;
 			}
 		}
