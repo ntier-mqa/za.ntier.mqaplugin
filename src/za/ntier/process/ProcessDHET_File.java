@@ -168,8 +168,8 @@ public class ProcessDHET_File extends SvrProcess {
 				existingLocation.saveEx();
 				existingLocationLink.setC_Location_ID(existingLocation.getC_Location_ID());
 				existingLocationLink.saveEx();
-				return;
 			}
+			return;
 		}
 
 		MLocation newLocation = new MLocation(getCtx(), 0, get_TrxName());
