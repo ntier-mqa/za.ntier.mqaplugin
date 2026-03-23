@@ -194,7 +194,7 @@ public class ProcessDHET_File extends SvrProcess {
 			return;
 		}
 
-		MBPartnerLocation existingLocationLink = findPartnerLocation(bp);
+		MBPartnerLocation existingLocationLink = findPartnerLocation(bp, locationName);
 		if (existingLocationLink == null) {
 			MLocation newLocation = new MLocation(getCtx(), 0, get_TrxName());
 			applyImportedAddress(newLocation, address1, address2, address3, address4, postal);
@@ -205,6 +205,11 @@ public class ProcessDHET_File extends SvrProcess {
 			newPartnerLocation.setName(locationName);
 			newPartnerLocation.saveEx();
 			return;
+		}
+
+		if (!locationName.equals(existingLocationLink.getName())) {
+			existingLocationLink.setName(locationName);
+			existingLocationLink.saveEx();
 		}
 
 		MLocation existingLocation = new MLocation(getCtx(), existingLocationLink.getC_Location_ID(), get_TrxName());
@@ -219,11 +224,17 @@ public class ProcessDHET_File extends SvrProcess {
 		}
 	}
 
-	private MBPartnerLocation findPartnerLocation(MBPartner_New bp) {
+	private MBPartnerLocation findPartnerLocation(MBPartner_New bp, String locationName) {
+		MBPartnerLocation firstEmptyLocation = null;
 		for (MBPartnerLocation location : bp.getLocations(false)) {
-			return location;
+			if (locationName.equals(location.getName())) {
+				return location;
+			}
+			if (firstEmptyLocation == null && !isMeaningful(location.getName())) {
+				firstEmptyLocation = location;
+			}
 		}
-		return null;
+		return firstEmptyLocation;
 	}
 
 	private void applyImportedAddress(MLocation location,
