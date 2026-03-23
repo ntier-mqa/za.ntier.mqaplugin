@@ -3,6 +3,8 @@ package za.ntier.process;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.adempiere.base.annotation.Parameter;
 import org.compiere.model.MBPartnerLocation;
@@ -43,28 +45,43 @@ public class ProcessDHET_File extends SvrProcess {
 	    int cntBPsUpdated = 0;
 		try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
 			String line;
-			boolean isFirstLine = true;
+			Map<String, Integer> headerIndexes = null;
 
 			while ((line = reader.readLine()) != null) {
-				if (isFirstLine) {
-					isFirstLine = false; // Skip header
+				if (headerIndexes == null) {
+					headerIndexes = buildHeaderIndexes(parseCSVLine(line));
+					validateRequiredHeaders(headerIndexes);
 					continue;
 				}
 
 				String[] fields = parseCSVLine(line);
-				if (fields.length < 59) {
-					log.warning("Skipping invalid line: " + line);
-					continue;
-				}
 
-				String sdlNumber = unquote(fields[0]);
+				String sdlNumber = getField(fields, headerIndexes, "SDL Number");
 				if (sdlNumber == null || sdlNumber.length() <= 0) {
 					log.warning("Skipping invalid line with no sdlNumber: " + line);
 					continue;
 				}
-				String name = unquote(fields[4]);
-				String numEmployeesStr = unquote(fields[46]);
-				String regNo = unquote(fields[9]);
+				String name = getField(fields, headerIndexes, "Name");
+				String numEmployeesStr = getField(fields, headerIndexes, "Number of Employees");
+				String regNo = getField(fields, headerIndexes, "Registration Number");
+
+				String businessAddress1 = getField(fields, headerIndexes, "Business Address 1");
+				String businessAddress2 = getField(fields, headerIndexes, "Business Address 2");
+				String businessAddress3 = getField(fields, headerIndexes, "Business Address 3");
+				String businessAddress4 = getField(fields, headerIndexes, "Business Address 4");
+				String businessPostal = getField(fields, headerIndexes, "Business Postal Code");
+
+				String residentialAddress1 = getField(fields, headerIndexes, "Residential Address 1");
+				String residentialAddress2 = getField(fields, headerIndexes, "Residential Address 2");
+				String residentialAddress3 = getField(fields, headerIndexes, "Residential Address 3");
+				String residentialAddress4 = getField(fields, headerIndexes, "Residential Address 4");
+				String residentialPostal = getField(fields, headerIndexes, "Residential Postal Code");
+
+				String postalAddress1 = getField(fields, headerIndexes, "Postal Address 1");
+				String postalAddress2 = getField(fields, headerIndexes, "Postal Address 2");
+				String postalAddress3 = getField(fields, headerIndexes, "Postal Address 3");
+				String postalAddress4 = getField(fields, headerIndexes, "Postal Address 4");
+				String postalPostal = getField(fields, headerIndexes, "Postal Code");
 
 				String businessAddress1 = unquote(fields[27]);
 				String businessAddress2 = unquote(fields[28]);
@@ -151,40 +168,78 @@ public class ProcessDHET_File extends SvrProcess {
 		return "CSV file processed and Business Partners created.";
 	}
 
+	private Map<String, Integer> buildHeaderIndexes(String[] headers) {
+		Map<String, Integer> headerIndexes = new HashMap<>();
+		for (int i = 0; i < headers.length; i++) {
+			headerIndexes.put(normalizeHeader(headers[i]), i);
+		}
+		return headerIndexes;
+	}
+
+	private void validateRequiredHeaders(Map<String, Integer> headerIndexes) {
+		String[] requiredHeaders = {
+				"SDL Number", "Name", "Number of Employees", "Registration Number",
+				"Residential Address 1", "Residential Address 2", "Residential Address 3", "Residential Address 4", "Residential Postal Code",
+				"Business Address 1", "Business Address 2", "Business Address 3", "Business Address 4", "Business Postal Code",
+				"Postal Address 1", "Postal Address 2", "Postal Address 3", "Postal Address 4", "Postal Code"
+		};
+
+		for (String header : requiredHeaders) {
+			if (!headerIndexes.containsKey(normalizeHeader(header))) {
+				throw new IllegalArgumentException("Missing required column header: " + header);
+			}
+		}
+	}
+
+	private String getField(String[] fields, Map<String, Integer> headerIndexes, String headerName) {
+		Integer index = headerIndexes.get(normalizeHeader(headerName));
+		if (index == null || index < 0 || index >= fields.length) {
+			return null;
+		}
+		return unquote(fields[index]);
+	}
+
+	private String normalizeHeader(String header) {
+		if (header == null) {
+			return "";
+		}
+		return unquote(header).replace("\uFEFF", "").trim().toLowerCase().replaceAll("\\s+", " ");
+	}
+
 	private void ensurePartnerLocation(MBPartner_New bp, String locationName,
 			String address1, String address2, String address3, String address4, String postal) {
 		if (!hasImportedAddress(address1, address2, address3, address4, postal)) {
 			return;
 		}
 
-		MBPartnerLocation existingLocationLink = findPartnerLocation(bp);
-		if (existingLocationLink != null) {
-			MLocation existingLocation = new MLocation(getCtx(), existingLocationLink.getC_Location_ID(), get_TrxName());
-			if (existingLocation.get_ID() <= 0 || isMostlyBlank(existingLocation)) {
-				if (existingLocation.get_ID() <= 0) {
-					existingLocation = new MLocation(getCtx(), 0, get_TrxName());
-				}
-				applyImportedAddress(existingLocation, address1, address2, address3, address4, postal);
-				existingLocation.saveEx();
-				existingLocationLink.setC_Location_ID(existingLocation.getC_Location_ID());
-				existingLocationLink.saveEx();
-			}
+		MBPartnerLocation existingLocationLink = findPartnerLocation(bp, locationName);
+		if (existingLocationLink == null) {
+			MLocation newLocation = new MLocation(getCtx(), 0, get_TrxName());
+			applyImportedAddress(newLocation, address1, address2, address3, address4, postal);
+			newLocation.saveEx();
+
+			MBPartnerLocation newPartnerLocation = new MBPartnerLocation(bp);
+			newPartnerLocation.setC_Location_ID(newLocation.getC_Location_ID());
+			newPartnerLocation.setName(locationName);
+			newPartnerLocation.saveEx();
 			return;
 		}
 
-		MLocation newLocation = new MLocation(getCtx(), 0, get_TrxName());
-		applyImportedAddress(newLocation, address1, address2, address3, address4, postal);
-		newLocation.saveEx();
-
-		MBPartnerLocation newPartnerLocation = new MBPartnerLocation(bp);
-		newPartnerLocation.setC_Location_ID(newLocation.getC_Location_ID());
-		newPartnerLocation.setName(locationName);
-		newPartnerLocation.saveEx();
+		MLocation existingLocation = new MLocation(getCtx(), existingLocationLink.getC_Location_ID(), get_TrxName());
+		if (existingLocation.get_ID() <= 0 || isMostlyBlank(existingLocation)) {
+			if (existingLocation.get_ID() <= 0) {
+				existingLocation = new MLocation(getCtx(), 0, get_TrxName());
+			}
+			applyImportedAddress(existingLocation, address1, address2, address3, address4, postal);
+			existingLocation.saveEx();
+			existingLocationLink.setC_Location_ID(existingLocation.getC_Location_ID());
+			existingLocationLink.saveEx();
+		}
 	}
 
-	private MBPartnerLocation findPartnerLocation(MBPartner_New bp) {
+	private MBPartnerLocation findPartnerLocation(MBPartner_New bp, String locationName) {
 		for (MBPartnerLocation location : bp.getLocations(false)) {
-			if (location.isActive()) {
+			if (locationName.equals(location.getName())) {
 				return location;
 			}
 		}
