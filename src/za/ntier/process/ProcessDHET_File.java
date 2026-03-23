@@ -170,6 +170,10 @@ public class ProcessDHET_File extends SvrProcess {
 			return;
 		}
 
+		if (!locationName.equals(existingLocationLink.getName())) {
+			existingLocationLink.setName(locationName);
+		}
+
 		MLocation existingLocation = new MLocation(getCtx(), existingLocationLink.getC_Location_ID(), get_TrxName());
 		if (existingLocation.get_ID() <= 0 || isMostlyBlank(existingLocation)) {
 			if (existingLocation.get_ID() <= 0) {
@@ -178,17 +182,29 @@ public class ProcessDHET_File extends SvrProcess {
 			applyImportedAddress(existingLocation, address1, address2, address3, address4, postal);
 			existingLocation.saveEx();
 			existingLocationLink.setC_Location_ID(existingLocation.getC_Location_ID());
-			existingLocationLink.saveEx();
 		}
+		existingLocationLink.saveEx();
 	}
 
 	private MBPartnerLocation findPartnerLocation(MBPartner_New bp, String locationName) {
+		MBPartnerLocation fallbackLocation = null;
 		for (MBPartnerLocation location : bp.getLocations(false)) {
+			if (!location.isActive()) {
+				continue;
+			}
 			if (locationName.equals(location.getName())) {
 				return location;
 			}
+			if (fallbackLocation == null && BUSINESS_ADDRESS.equals(locationName) && canReuseAsBusinessLocation(location)) {
+				fallbackLocation = location;
+			}
 		}
-		return null;
+		return fallbackLocation;
+	}
+
+	private boolean canReuseAsBusinessLocation(MBPartnerLocation location) {
+		return !isMeaningful(location.getName())
+				&& (location.isBillTo() || location.isShipTo() || location.isPayFrom() || location.isRemitTo());
 	}
 
 	private void applyImportedAddress(MLocation location,
