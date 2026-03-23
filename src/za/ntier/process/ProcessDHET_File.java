@@ -83,24 +83,6 @@ public class ProcessDHET_File extends SvrProcess {
 				String postalAddress4 = getField(fields, headerIndexes, "Postal Address 4");
 				String postalPostal = getField(fields, headerIndexes, "Postal Code");
 
-				String businessAddress1 = unquote(fields[27]);
-				String businessAddress2 = unquote(fields[28]);
-				String businessAddress3 = unquote(fields[29]);
-				String businessAddress4 = unquote(fields[30]);
-				String businessPostal = unquote(fields[31]);
-
-				String residentialAddress1 = unquote(fields[16]);
-				String residentialAddress2 = unquote(fields[17]);
-				String residentialAddress3 = unquote(fields[18]);
-				String residentialAddress4 = unquote(fields[19]);
-				String residentialPostal = unquote(fields[20]);
-
-				String postalAddress1 = unquote(fields[37]);
-				String postalAddress2 = unquote(fields[38]);
-				String postalAddress3 = unquote(fields[39]);
-				String postalAddress4 = unquote(fields[40]);
-				String postalPostal = unquote(fields[41]);
-
 				// Check if BP exists
 				MBPartner_New bp = null;
 				int cnt =  DB.getSQLValue(get_TrxName(),"Select count(*) from C_Bpartner bp where bp.value = ?",sdlNumber);
@@ -212,7 +194,7 @@ public class ProcessDHET_File extends SvrProcess {
 			return;
 		}
 
-		MBPartnerLocation existingLocationLink = findPartnerLocation(bp, locationName);
+		MBPartnerLocation existingLocationLink = findPartnerLocation(bp);
 		if (existingLocationLink == null) {
 			MLocation newLocation = new MLocation(getCtx(), 0, get_TrxName());
 			applyImportedAddress(newLocation, address1, address2, address3, address4, postal);
@@ -237,11 +219,9 @@ public class ProcessDHET_File extends SvrProcess {
 		}
 	}
 
-	private MBPartnerLocation findPartnerLocation(MBPartner_New bp, String locationName) {
+	private MBPartnerLocation findPartnerLocation(MBPartner_New bp) {
 		for (MBPartnerLocation location : bp.getLocations(false)) {
-			if (locationName.equals(location.getName())) {
-				return location;
-			}
+			return location;
 		}
 		return null;
 	}
