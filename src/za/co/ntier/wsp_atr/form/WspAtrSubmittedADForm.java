@@ -748,7 +748,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 						"FROM adempiere.zzsdforganisation_v " +
 						"WHERE ad_user_id = ? " +
 						"AND isactive = 'Y' " +
-						"AND zzsdfroletype = '" + X_ZZSdfOrganisation.ZZSDFROLETYPE_Primary + "' " +
+						"AND zzsdfroletype = '" + X_ZZSdfOrganisation.ZZSDFROLETYPE_PrimarySDF + "' " +
 						" AND ZZ_DOCStatus <> 'DR' and ZZ_DOCStatus <> 'UnSdfOrg' " + 
 						"ORDER BY orgname";
 

@@ -229,7 +229,7 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
 
         List<List<Object>> rows = DB.getSQLArrayObjectsEx(null, sql,
                 adUserId,
-                X_ZZSdfOrganisation.ZZSDFROLETYPE_Primary);
+                X_ZZSdfOrganisation.ZZSDFROLETYPE_PrimarySDF);
 
         if (rows == null || rows.isEmpty()) {
             return new ArrayList<>();
