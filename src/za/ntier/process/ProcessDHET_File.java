@@ -230,8 +230,12 @@ public class ProcessDHET_File extends SvrProcess {
 			if (locationName.equals(location.getName())) {
 				return location;
 			}
-			if (firstEmptyLocation == null && !isMeaningful(location.getName())) {
-				firstEmptyLocation = location;
+
+			if (firstEmptyLocation == null) {
+				MLocation existingLocation = new MLocation(getCtx(), location.getC_Location_ID(), get_TrxName());
+				if (existingLocation.get_ID() <= 0 || isMostlyBlank(existingLocation)) {
+					firstEmptyLocation = location;
+				}
 			}
 		}
 		return firstEmptyLocation;
