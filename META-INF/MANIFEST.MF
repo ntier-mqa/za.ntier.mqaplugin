@@ -44,7 +44,8 @@ Service-Component: OSGI-INF/org.adempiere.webui.factory.NtierEditorFactory.xml,
  OSGI-INF/za.ntier.models.MyDocumentFactory.xml,
  OSGI-INF/za.ntier.models.MyModelFactory.xml,
  OSGI-INF/za.ntier.process.MyProcessFactory.xml,
- OSGI-INF/za.ntier.report.jasper.ProcessFactory.xml
+ OSGI-INF/za.ntier.report.jasper.ProcessFactory.xml,
+ OSGI-INF/CustomInfoFactory.xml
 Automatic-Module-Name: za.ntier.rgnplugin
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
