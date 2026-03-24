@@ -2,6 +2,8 @@ package za.co.ntier.wsp_atr.report.process;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.compiere.util.DB;
 
@@ -10,14 +12,14 @@ import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Report;
 import za.ntier.models.MZZWSPATRSubmitted;
 
 /**
- * Section 6.4 - Skills Development Related Community Social Programme Planned in 2025
+ * Section 6.4 - Skills Development Related Community Social Programme Planned in fiscal year
  * (Excluding Bursary, AET & HET)
  *
  * Input : ZZ_WSP_ATR_Non_Employees_Training (filtered by ZZ_WSP_ATR_Submitted_ID)
  * Output: ZZ_WSP_ATR_Non_Emp_Skills_Dev_Plan_Rep (linked to ZZ_WSP_ATR_Report_ID)
  *
  * Exclusions:
- * - Exclude programme types where ref name indicates bursary/aet/het (case-insensitive).
+ * - Exclude programme types named Bursary and Adult_Education_and_Training.
  *
  * Counts:
  * - Use integer values (rs.getInt).
@@ -27,10 +29,14 @@ public class NonEmployeesSkillsDevPlanSection64Builder extends AbstractReportSec
     private static final String SECTION = "6.4";
     private static final String TARGET_TABLE = "ZZ_WSP_ATR_Non_Emp_Skills_Dev_Plan_Rep";
     private static final String INPUT_TABLE  = "ZZ_WSP_ATR_Non_Employees_Training";
+    private static final String BASE_NAME =
+            "Skills Development Related Community Social Programme Planned in %s (Excluding Bursary, AET & HET)";
+    private static final Pattern YEAR_PATTERN = Pattern.compile("(\\d{4})");
+    private String sectionName = String.format(BASE_NAME, "financial year");
 
     @Override
     public String getName() {
-        return "Skills Development Related Community Social Programme Planned in 2025 (Excluding Bursary, AET & HET)";
+        return sectionName;
     }
 
     @Override
@@ -41,6 +47,7 @@ public class NonEmployeesSkillsDevPlanSection64Builder extends AbstractReportSec
     @Override
     public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted,boolean consolidatedSubmission,
     		boolean onlySubLevyOrgs, String trxName) throws Exception {
+        sectionName = resolveSectionName(submitted, trxName);
 
         deleteExistingByReportAndSection(TARGET_TABLE, report.getZZ_WSP_ATR_Report_ID(), SECTION, trxName);
 
@@ -52,7 +59,7 @@ public class NonEmployeesSkillsDevPlanSection64Builder extends AbstractReportSec
          * - planned learning programme (details ref) => used for "Specify ..." in report
          * - planned target beneficiary
          *
-         * Exclude Bursary/AET/HET using programme type name from reference table (no hardcoded IDs).
+         * Exclude Bursary/AET using programme type name from reference table.
          */
         final String sql =
               "WITH src AS ( \n"
@@ -63,17 +70,13 @@ public class NonEmployeesSkillsDevPlanSection64Builder extends AbstractReportSec
             + "    SUM(COALESCE(t.zz_total_planned,0))::int        AS total_planned, \n"
             + "    SUM(COALESCE(t.zz_disabled_planned,0))::int     AS disabled_planned \n"
             + "  FROM " + INPUT_TABLE + " t \n"
-            + "  LEFT JOIN ZZ_Learning_Programme_Ref lpt \n"
-            + "         ON lpt.ZZ_Learning_Programme_Ref_ID = t.zz_learning_programme_type_planned_id \n"
+            + "  INNER JOIN ZZ_Learning_Programme_Ref lpt \n"
+            + "          ON lpt.ZZ_Learning_Programme_Ref_ID = t.zz_learning_programme_type_planned_id \n"
             + "  WHERE t.zz_wsp_atr_submitted_id in " 
             + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,onlySubLevyOrgs,trxName)
             + "    AND t.isactive = 'Y' \n"
             + "    AND t.zz_learning_programme_type_planned_id IS NOT NULL \n"
-            + "    AND ( \n"
-            + "         COALESCE(lpt.Name,'') NOT ILIKE '%burs%' \n"
-            + "     AND COALESCE(lpt.Name,'') NOT ILIKE '%aet%'  \n"
-            + "     AND COALESCE(lpt.Name,'') NOT ILIKE '%het%'  \n"
-            + "    ) \n"
+            + "    AND TRIM(COALESCE(lpt.name, '')) NOT IN ('Bursary', 'Adult_Education_and_Training') \n"
             + "  GROUP BY t.zz_learning_programme_type_planned_id, \n"
             + "           t.zz_learning_programme_planned_id, \n"
             + "           t.zz_target_ben_planned_id \n"
@@ -120,5 +123,23 @@ public class NonEmployeesSkillsDevPlanSection64Builder extends AbstractReportSec
         }
 
         return new ReportBuildResult(inserted);
+    }
+
+    private String resolveSectionName(MZZWSPATRSubmitted submitted, String trxName) {
+        String fiscalYear = DB.getSQLValueStringEx(
+                trxName,
+                "SELECT FiscalYear FROM C_Year WHERE C_Year_ID=?",
+                submitted.getZZ_FinYear_ID()
+        );
+        if (fiscalYear == null) {
+            return String.format(BASE_NAME, "financial year");
+        }
+
+        Matcher matcher = YEAR_PATTERN.matcher(fiscalYear.trim());
+        if (!matcher.find()) {
+            return String.format(BASE_NAME, "financial year");
+        }
+
+        return String.format(BASE_NAME, matcher.group(1));
     }
 }
