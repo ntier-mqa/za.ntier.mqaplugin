@@ -2,6 +2,8 @@ package za.co.ntier.wsp_atr.report.process;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.compiere.util.DB;
 
@@ -10,7 +12,7 @@ import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Report;
 import za.ntier.models.MZZWSPATRSubmitted;
 
 /**
- * Section 6.3 - Skills Development Related Community Social Programmes Done in 2024
+ * Section 6.3 - Skills Development Related Community Social Programmes Done in prior fiscal year
  * (Excluding Bursary, AET & HET)
  *
  * Output: ZZ_WSP_ATR_Non_Emp_Skills_Dev_Rep
@@ -33,10 +35,14 @@ public class NonEmployeesSkillsDevSection63Builder extends AbstractReportSection
     private static final String SECTION = "6.3";
     private static final String TARGET_TABLE = "ZZ_WSP_ATR_Non_Emp_Skills_Dev_Rep";
     private static final String INPUT_TABLE  = "ZZ_WSP_ATR_Non_Employees_Training";
+    private static final String BASE_NAME =
+            "Skills Development Related Community Social Programmes Done in %s (Excluding Bursary, AET & HET)";
+    private static final Pattern YEAR_PATTERN = Pattern.compile("(\\d{4})");
+    private String sectionName = String.format(BASE_NAME, "previous financial year");
 
     @Override
     public String getName() {
-        return "Skills Development Related Community Social Programmes Done in 2024 (Excluding Bursary, AET & HET)";
+        return sectionName;
     }
 
     @Override
@@ -47,6 +53,7 @@ public class NonEmployeesSkillsDevSection63Builder extends AbstractReportSection
     @Override
     public ReportBuildResult build(X_ZZ_WSP_ATR_Report report, MZZWSPATRSubmitted submitted,boolean consolidatedSubmission,
     		boolean onlySubLevyOrgs, String trxName) throws Exception {
+        sectionName = resolveSectionName(submitted, trxName);
 
         deleteExistingByReportAndSection(TARGET_TABLE, report.getZZ_WSP_ATR_Report_ID(), SECTION, trxName);
 
@@ -66,14 +73,13 @@ public class NonEmployeesSkillsDevSection63Builder extends AbstractReportSection
             + "    SUM(COALESCE(t.zz_white,0))::numeric(10)     AS white_cnt, \n"
             + "    SUM(COALESCE(t.zz_disabled_done,0))::numeric(10) AS disabled_cnt \n"
             + "  FROM " + INPUT_TABLE + " t \n"
-            + "  LEFT JOIN ZZ_Learning_Programme_Ref lpt ON lpt.ZZ_Learning_Programme_Ref_ID = t.zz_learning_programme_type_done_id"
+            + "  INNER JOIN ZZ_Learning_Programme_Ref lpt \n"
+            + "    ON lpt.ZZ_Learning_Programme_Ref_ID = t.zz_learning_programme_type_done_id \n"
             + "  WHERE t.zz_wsp_atr_submitted_id in " 
             + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,onlySubLevyOrgs,trxName)
             + "    AND t.isactive = 'Y' \n"
             + "    AND t.zz_learning_programme_type_done_id IS NOT NULL \n"
-            + "    AND COALESCE(lpt.Name,'') NOT ILIKE '%burs%'\n"
-            + "    AND COALESCE(lpt.Name,'') NOT ILIKE '%aet%'\n"
-            + "    AND COALESCE(lpt.Name,'') NOT ILIKE '%het%'"
+            + "    AND TRIM(COALESCE(lpt.name, '')) NOT IN ('Bursary', 'Adult_Education_and_Training') \n"
             + "  GROUP BY t.zz_learning_programme_type_done_id, \n"
             + "           NULLIF(trim(COALESCE(t.zz_lp_other_done, '')), ''), \n"
             + "           t.zz_target_ben_done_id \n"
@@ -133,5 +139,24 @@ public class NonEmployeesSkillsDevSection63Builder extends AbstractReportSection
         }
 
         return new ReportBuildResult(inserted);
+    }
+
+    private String resolveSectionName(MZZWSPATRSubmitted submitted, String trxName) {
+        String fiscalYear = DB.getSQLValueStringEx(
+                trxName,
+                "SELECT FiscalYear FROM C_Year WHERE C_Year_ID=?",
+                submitted.getZZ_FinYear_ID()
+        );
+        if (fiscalYear == null) {
+            return String.format(BASE_NAME, "previous financial year");
+        }
+
+        Matcher matcher = YEAR_PATTERN.matcher(fiscalYear.trim());
+        if (!matcher.find()) {
+            return String.format(BASE_NAME, "previous financial year");
+        }
+
+        int atrYear = Integer.parseInt(matcher.group(1)) - 1;
+        return String.format(BASE_NAME, atrYear);
     }
 }
