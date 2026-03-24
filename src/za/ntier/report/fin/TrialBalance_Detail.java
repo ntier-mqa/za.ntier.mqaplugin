@@ -407,9 +407,7 @@ public class TrialBalance_Detail extends SvrProcess
 		sumSQL.append(" where ")
 		.append(" fp.ad_client_id = f.ad_client_id");
 		if (useParent) {
-			// Correlate to the parent account selected in the outer query.
-			// Comparing fp.Account_ID to ev1 (parent) forces child==parent and returns zero for normal parent/child trees.
-			sumSQL.append(" AND ev1.C_ElementValue_ID = pev.C_ElementValue_ID" );
+			sumSQL.append(" AND fp.Account_ID = ev1.C_ElementValue_ID" );
 		} else {
 			if (groupBy == null) {
 				sumSQL.append(" AND fp.Account_ID = f.Account_ID" );
