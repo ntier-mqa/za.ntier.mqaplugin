@@ -593,14 +593,8 @@ ORDER BY COALESCE(lp.Value, lp.Name), COALESCE(det.Name, det.Value)]]>
 					<pen lineWidth="0.5"/>
 				</graphicElement>
 			</rectangle>
-			<rectangle>
-				<reportElement x="1075" y="28" width="90" height="28" uuid="52b27f3a-608e-45cb-863d-ec642fb545a5"/>
-				<graphicElement>
-					<pen lineWidth="0.5"/>
-				</graphicElement>
-			</rectangle>
 			<textField>
-				<reportElement style="CellNum" x="1165" y="28" width="45" height="28" uuid="8cd49b7e-e139-47f3-ad50-d8fba2221e90"/>
+				<reportElement style="CellNum" x="1075" y="28" width="135" height="28" uuid="8cd49b7e-e139-47f3-ad50-d8fba2221e90"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
