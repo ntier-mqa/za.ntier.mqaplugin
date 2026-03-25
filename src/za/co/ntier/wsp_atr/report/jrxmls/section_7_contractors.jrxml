@@ -20,6 +20,14 @@
 	<queryString language="SQL">
 		<![CDATA[SELECT
     COALESCE(lp.Name,'') AS programme_name,
+    COALESCE(y.FiscalYear,'') AS fiscal_year,
+    COALESCE(
+        CASE
+            WHEN NULLIF(regexp_replace(y.FiscalYear, '[^0-9]', '', 'g'), '') IS NOT NULL
+            THEN CAST(NULLIF(regexp_replace(y.FiscalYear, '[^0-9]', '', 'g'), '') AS INTEGER) - 1
+        END,
+        0
+    ) AS atr_year,
 
     COALESCE(t.ZZ_Managers_Trained,0)        AS managers_trained,
     COALESCE(t.ZZ_Professionals_Trained,0)   AS professionals_trained,
@@ -45,11 +53,19 @@
 FROM ZZ_WSP_ATR_Contractors_Training_Rep t
 LEFT JOIN ZZ_Contractors_Learning_Programme_Ref lp
        ON lp.ZZ_Contractors_Learning_Programme_Ref_ID = t.ZZ_Learning_Programme_Type_ID
+LEFT JOIN ZZ_WSP_ATR_Report r
+       ON r.ZZ_WSP_ATR_Report_ID = t.ZZ_WSP_ATR_Report_ID
+LEFT JOIN ZZ_WSP_ATR_Submitted s
+       ON s.ZZ_WSP_ATR_Submitted_ID = r.ZZ_WSP_ATR_Submitted_ID
+LEFT JOIN C_Year y
+       ON y.C_Year_ID = s.ZZ_FinYear_ID
 WHERE t.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
   AND COALESCE(t.ZZ_Report_Section,'') = '7'
 ORDER BY programme_name]]>
 	</queryString>
 	<field name="programme_name" class="java.lang.String"/>
+	<field name="fiscal_year" class="java.lang.String"/>
+	<field name="atr_year" class="java.lang.Integer"/>
 	<field name="managers_trained" class="java.lang.Integer"/>
 	<field name="professionals_trained" class="java.lang.Integer"/>
 	<field name="technicians_trained" class="java.lang.Integer"/>
@@ -97,14 +113,17 @@ ORDER BY programme_name]]>
 				</textElement>
 				<text><![CDATA[Section 7: Contractors]]></text>
 			</staticText>
-			<staticText>
+			<textField>
 				<reportElement x="0" y="36" width="1210" height="18" uuid="9b8543ba-d341-4270-b64c-e338fb32a0bc"/>
 				<textElement verticalAlignment="Middle">
 					<font size="12" isBold="true"/>
 					<paragraph leftIndent="8" rightIndent="8"/>
 				</textElement>
-				<text><![CDATA[Contractors: Received Training in 2024 and Planned Training for 2025]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA["Contractors: Received Training in "
+ + ($F{atr_year} == null || $F{atr_year}.intValue() <= 0 ? "previous financial year" : $F{atr_year}.toString())
+ + " and Planned Training for "
+ + ($F{fiscal_year} == null || $F{fiscal_year}.trim().isEmpty() ? "financial year" : $F{fiscal_year})]]></textFieldExpression>
+			</textField>
 		</band>
 	</title>
 	<columnHeader>
@@ -116,20 +135,24 @@ ORDER BY programme_name]]>
 				</box>
 				<text><![CDATA[Name of Programme]]></text>
 			</staticText>
-			<staticText>
+			<textField>
 				<reportElement style="Hdr" x="280" y="0" width="465" height="40" uuid="3b34640c-f7bb-4a59-9346-47d436169266"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
-				<text><![CDATA[Number Trained in 2024, Per Occupational Group]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA["Number Trained in "
+ + ($F{atr_year} == null || $F{atr_year}.intValue() <= 0 ? "previous financial year" : $F{atr_year}.toString())
+ + ", Per Occupational Group"]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement style="Hdr" x="745" y="0" width="465" height="40" uuid="6fef1ac3-4a6d-4e7f-9dfb-a70df39c36f7"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
-				<text><![CDATA[Planned Number to be Trained in 2025, Per Occupational Group]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA["Planned Number to be Trained in "
+ + ($F{fiscal_year} == null || $F{fiscal_year}.trim().isEmpty() ? "financial year" : $F{fiscal_year})
+ + ", Per Occupational Group"]]></textFieldExpression>
+			</textField>
 			<staticText>
 				<reportElement style="HdrRot" x="280" y="40" width="45" height="180" uuid="b897828d-8283-464d-aed1-3711c9139343"/>
 				<box>
