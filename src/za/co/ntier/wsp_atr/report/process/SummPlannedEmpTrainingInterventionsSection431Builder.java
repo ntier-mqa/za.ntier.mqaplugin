@@ -47,8 +47,7 @@ public class SummPlannedEmpTrainingInterventionsSection431Builder extends Abstra
 
         /*
          * Aggregate by occupational group + programme type + programme + qualification text.
-         * If later you need to exclude Refresher/Induction/Ex-leave, add predicates in the "src" WHERE clause below
-         * once you confirm which input column indicates that category.
+         * Exclude Refresher/Induction/Ex-leave based on learning programme type name.
          */
         final String sql =
                 "WITH src AS ( \n"
@@ -65,8 +64,11 @@ public class SummPlannedEmpTrainingInterventionsSection431Builder extends Abstra
               + "    COALESCE(w.ZZ_White,0)    AS white_cnt, \n"
               + "    COALESCE(w.ZZ_Disabled,0) AS disabled_cnt \n"
               + "  FROM " + X_ZZ_WSP_ATR_WSP.Table_Name + " w \n"
+              + "  LEFT JOIN zz_learning_programme_ref lp \n"
+              + "    ON lp.zz_learning_programme_ref_id = w.zz_learning_programme_type_id \n"
               + "  WHERE w.ZZ_WSP_ATR_Submitted_ID in " 
               + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,onlySubLevyOrgs,trxName)
+              + "    AND COALESCE(REPLACE(UPPER(lp.name), '_', ' '), '') NOT IN ('REFRESHER TRAINING', 'INDUCTION TRAINING', 'EX-LEAVE TRAINING') \n"
               + "), agg AS ( \n"
               + "  SELECT \n"
               + "    ZZ_OFO_Specialisation_ID, \n"
