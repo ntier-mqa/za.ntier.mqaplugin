@@ -18,6 +18,11 @@
 	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
 	<queryString language="SQL">
 		<![CDATA[SELECT
+    COALESCE((SELECT y.FiscalYear
+              FROM ZZ_WSP_ATR_Report r2
+              LEFT JOIN ZZ_WSP_ATR_Submitted s2 ON s2.ZZ_WSP_ATR_Submitted_ID = r2.ZZ_WSP_ATR_Submitted_ID
+              LEFT JOIN C_Year y ON y.C_Year_ID = s2.ZZ_FinYear_ID
+              WHERE r2.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}), '') AS fiscal_year,
     t.Row_No,
     occ.Name  AS specialisation,
     occ.Value AS code,
@@ -43,6 +48,7 @@ WHERE t.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
   AND COALESCE(t.ZZ_Report_Section,'') = '5.2.1'
 ORDER BY t.Row_No]]>
 	</queryString>
+	<field name="fiscal_year" class="java.lang.String"/>
 	<field name="Row_No" class="java.lang.Integer"/>
 	<field name="specialisation" class="java.lang.String"/>
 	<field name="code" class="java.lang.String"/>
@@ -94,14 +100,15 @@ ORDER BY t.Row_No]]>
 				</textElement>
 				<text><![CDATA[Section 5: Pivotal Programme Report]]></text>
 			</staticText>
-			<staticText>
+			<textField>
 				<reportElement x="0" y="36" width="1210" height="18" uuid="0a9f1a8a-9d5e-4a7f-8e3b-3c2f8f2c4f20"/>
 				<textElement verticalAlignment="Middle">
 					<font size="12" isBold="true"/>
 					<paragraph leftIndent="8" rightIndent="8"/>
 				</textElement>
-				<text><![CDATA[5.2 Summary of Planned Employee Training Interventions for the period of 2025]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA["5.2 Summary of Planned Employee Training Interventions for the period of "
+ + ($F{fiscal_year} == null || $F{fiscal_year}.trim().isEmpty() ? "financial year" : $F{fiscal_year})]]></textFieldExpression>
+			</textField>
 			<staticText>
 				<reportElement x="0" y="58" width="1210" height="18" uuid="0a9f1a8a-9d5e-4a7f-8e3b-3c2f8f2c4f21"/>
 				<textElement verticalAlignment="Middle">

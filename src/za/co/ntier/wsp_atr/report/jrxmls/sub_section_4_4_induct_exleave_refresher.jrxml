@@ -20,6 +20,14 @@
 		<![CDATA[SELECT
     mg.value AS major_group_value,
     mg.name  AS occupational_category,
+    COALESCE(y.FiscalYear,'') AS fiscal_year,
+    COALESCE(
+        CASE
+            WHEN NULLIF(regexp_replace(y.FiscalYear, '[^0-9]', '', 'g'), '') IS NOT NULL
+            THEN CAST(NULLIF(regexp_replace(y.FiscalYear, '[^0-9]', '', 'g'), '') AS INTEGER) - 1
+        END,
+        0
+    ) AS atr_year,
 
     COALESCE(t.ZZ_Induction_Trained_Cnt,0)::int AS induction_trained,
     COALESCE(t.ZZ_Ex_Leave_Trained_Cnt,0)::int  AS exleave_trained,
@@ -32,12 +40,20 @@
 FROM ZZ_WSP_ATR_Induct_Ex_Leave_Training_Rep t
 JOIN zz_wsp_atr_ofo_major_group_ref mg
   ON mg.zz_wsp_atr_ofo_major_group_ref_id = t.ZZ_WSP_ATR_OFO_Major_Group_Ref_ID
+LEFT JOIN ZZ_WSP_ATR_Report r
+  ON r.ZZ_WSP_ATR_Report_ID = t.ZZ_WSP_ATR_Report_ID
+LEFT JOIN ZZ_WSP_ATR_Submitted s
+  ON s.ZZ_WSP_ATR_Submitted_ID = r.ZZ_WSP_ATR_Submitted_ID
+LEFT JOIN C_Year y
+  ON y.C_Year_ID = s.ZZ_FinYear_ID
 WHERE t.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
   AND COALESCE(t.ZZ_Report_Section,'') = '4.4'
 ORDER BY mg.value]]>
 	</queryString>
 	<field name="major_group_value" class="java.lang.String"/>
 	<field name="occupational_category" class="java.lang.String"/>
+	<field name="fiscal_year" class="java.lang.String"/>
+	<field name="atr_year" class="java.lang.Integer"/>
 	<field name="induction_trained" class="java.lang.Integer"/>
 	<field name="exleave_trained" class="java.lang.Integer"/>
 	<field name="refresher_trained" class="java.lang.Integer"/>
@@ -81,14 +97,18 @@ ORDER BY mg.value]]>
 				</textElement>
 				<text><![CDATA[Section 4: Employees Trained and Planned]]></text>
 			</staticText>
-			<staticText>
+			<textField>
 				<reportElement x="0" y="36" width="1210" height="18" uuid="84a4a9f7-c5c4-46db-ab4d-ac2d17f5aa05"/>
 				<textElement verticalAlignment="Middle">
 					<font size="12" isBold="true"/>
 					<paragraph leftIndent="8" rightIndent="8"/>
 				</textElement>
-				<text><![CDATA[4.4 Induction, Ex-leave and Refresher training done (2024) and planned (2025)]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA["4.4 Induction, Ex-leave and Refresher training done ("
+ + ($F{atr_year} == null || $F{atr_year}.intValue() <= 0 ? "previous financial year" : $F{atr_year}.toString())
+ + ") and planned ("
+ + ($F{fiscal_year} == null || $F{fiscal_year}.trim().isEmpty() ? "financial year" : $F{fiscal_year})
+ + ")"]]></textFieldExpression>
+			</textField>
 			<staticText>
 				<reportElement x="0" y="58" width="1210" height="36" uuid="84a4a9f7-c5c4-46db-ab4d-ac2d17f5aa06"/>
 				<textElement verticalAlignment="Middle">
@@ -111,20 +131,22 @@ ORDER BY mg.value]]>
 				</textElement>
 				<text><![CDATA[Occupational Category]]></text>
 			</staticText>
-			<staticText>
+			<textField>
 				<reportElement style="HdrSmall" x="490" y="0" width="360" height="30" uuid="6c5b0305-c4e9-497f-ba4b-324553830917"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
-				<text><![CDATA[Total Trained 2024]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA["Total Trained "
+ + ($F{atr_year} == null || $F{atr_year}.intValue() <= 0 ? "previous financial year" : $F{atr_year}.toString())]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement style="HdrSmall" x="850" y="0" width="360" height="30" uuid="3e18c554-7e43-40c6-834e-7fe0be8b8299"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
-				<text><![CDATA[Total Planned Training 2025]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA["Total Planned Training "
+ + ($F{fiscal_year} == null || $F{fiscal_year}.trim().isEmpty() ? "financial year" : $F{fiscal_year})]]></textFieldExpression>
+			</textField>
 			<staticText>
 				<reportElement style="HdrSmall" x="490" y="30" width="120" height="40" uuid="1a2c06e2-0a87-4885-9071-149d65c26538"/>
 				<box>

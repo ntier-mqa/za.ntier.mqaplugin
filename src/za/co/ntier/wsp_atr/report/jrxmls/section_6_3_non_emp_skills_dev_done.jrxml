@@ -19,6 +19,14 @@
 	<queryString language="SQL">
 		<![CDATA[SELECT
     COALESCE(lpt.Name,'') AS programme_type,
+    COALESCE(y.FiscalYear,'') AS fiscal_year,
+    COALESCE(
+        CASE
+            WHEN NULLIF(regexp_replace(y.FiscalYear, '[^0-9]', '', 'g'), '') IS NOT NULL
+            THEN CAST(NULLIF(regexp_replace(y.FiscalYear, '[^0-9]', '', 'g'), '') AS INTEGER) - 1
+        END,
+        0
+    ) AS atr_year,
     COALESCE(t.ZZ_LP_Other_Done,'') AS specify_txt,
     COALESCE(tb.Name,'') AS target_beneficiaries,
 
@@ -38,11 +46,19 @@ LEFT JOIN ZZ_Learning_Programme_Ref lpt
        ON lpt.ZZ_Learning_Programme_Ref_ID = t.ZZ_Learning_Programme_Type_Done_ID
 LEFT JOIN ZZ_Target_Beneficiary_Ref tb
        ON tb.ZZ_Target_Beneficiary_Ref_ID = t.ZZ_Target_Ben_Done_ID
+LEFT JOIN ZZ_WSP_ATR_Report r
+       ON r.ZZ_WSP_ATR_Report_ID = t.ZZ_WSP_ATR_Report_ID
+LEFT JOIN ZZ_WSP_ATR_Submitted s
+       ON s.ZZ_WSP_ATR_Submitted_ID = r.ZZ_WSP_ATR_Submitted_ID
+LEFT JOIN C_Year y
+       ON y.C_Year_ID = s.ZZ_FinYear_ID
 WHERE t.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
   AND COALESCE(t.ZZ_Report_Section,'') = '6.3'
 ORDER BY programme_type, specify_txt, target_beneficiaries]]>
 	</queryString>
 	<field name="programme_type" class="java.lang.String"/>
+	<field name="fiscal_year" class="java.lang.String"/>
+	<field name="atr_year" class="java.lang.Integer"/>
 	<field name="specify_txt" class="java.lang.String"/>
 	<field name="target_beneficiaries" class="java.lang.String"/>
 	<field name="male_cnt" class="java.math.BigDecimal"/>
@@ -90,14 +106,16 @@ ORDER BY programme_type, specify_txt, target_beneficiaries]]>
 				</textElement>
 				<text><![CDATA[Section 6: Non-Employees AET and Bursaries]]></text>
 			</staticText>
-			<staticText>
+			<textField>
 				<reportElement x="0" y="36" width="1210" height="18" uuid="52d1f0a2-6e7b-4f33-9d08-ef6b4f64b302"/>
 				<textElement verticalAlignment="Middle">
 					<font size="12" isBold="true"/>
 					<paragraph leftIndent="8" rightIndent="8"/>
 				</textElement>
-				<text><![CDATA[6.3 Skills Development Related Community Social Programmes Done in 2024 (Excluding Bursary, AET & HET)]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA["6.3 Skills Development Related Community Social Programmes Done in "
+ + ($F{atr_year} == null || $F{atr_year}.intValue() <= 0 ? "previous financial year" : $F{atr_year}.toString())
+ + " (Excluding Bursary, AET & HET)"]]></textFieldExpression>
+			</textField>
 		</band>
 	</title>
 	<columnHeader>
