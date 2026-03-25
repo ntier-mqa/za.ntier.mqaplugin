@@ -528,11 +528,25 @@ ORDER BY COALESCE(lp.Value, lp.Name), COALESCE(det.Name, det.Value)]]>
 				<textFieldExpression><![CDATA[$V{Sum_NonSA}]]></textFieldExpression>
 			</textField>
 				<textField>
-					<reportElement style="CellNum" x="1075" y="0" width="135" height="28" uuid="ef185c79-40cf-48f9-aac6-5a13f4ede238"/>
+					<reportElement style="CellNum" x="1075" y="0" width="45" height="28" uuid="ef185c79-40cf-48f9-aac6-5a13f4ede238"/>
 					<box>
 						<pen lineWidth="0.5"/>
 					</box>
 					<textFieldExpression><![CDATA[$V{Sum_Age_U35}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement style="CellNum" x="1120" y="0" width="45" height="28" uuid="06a09456-c671-4a74-91fb-45e50e6f265f"/>
+					<box>
+						<pen lineWidth="0.5"/>
+					</box>
+					<textFieldExpression><![CDATA[$V{Sum_Age_35_55}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement style="CellNum" x="1165" y="0" width="45" height="28" uuid="8eb0ca23-fafc-4f7c-bde2-499beacc3748"/>
+					<box>
+						<pen lineWidth="0.5"/>
+					</box>
+					<textFieldExpression><![CDATA[$V{Sum_Age_O55}]]></textFieldExpression>
 				</textField>
 			<staticText>
 				<reportElement style="HdrSmall" x="0" y="28" width="565" height="28" uuid="52b27f3a-608e-45cb-863d-ec642fb545a2"/>
@@ -563,19 +577,13 @@ ORDER BY COALESCE(lp.Value, lp.Name), COALESCE(det.Name, det.Value)]]>
 					<pen lineWidth="0.5"/>
 				</graphicElement>
 			</rectangle>
-			<rectangle>
-				<reportElement x="1075" y="28" width="90" height="28" uuid="52b27f3a-608e-45cb-863d-ec642fb545a5"/>
-				<graphicElement>
-					<pen lineWidth="0.5"/>
-				</graphicElement>
-			</rectangle>
-			<textField>
-				<reportElement style="CellNum" x="1165" y="28" width="45" height="28" uuid="8cd49b7e-e139-47f3-ad50-d8fba2221e90"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textFieldExpression><![CDATA[$V{Grand_Total_Employees}]]></textFieldExpression>
-			</textField>
+				<textField>
+					<reportElement style="CellNum" x="1075" y="28" width="135" height="28" uuid="8cd49b7e-e139-47f3-ad50-d8fba2221e90"/>
+					<box>
+						<pen lineWidth="0.5"/>
+					</box>
+					<textFieldExpression><![CDATA[$V{Grand_Total_Employees}]]></textFieldExpression>
+				</textField>
 		</band>
 	</summary>
 </jasperReport>
