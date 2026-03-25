@@ -18,6 +18,11 @@
 	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
 	<queryString language="SQL">
 		<![CDATA[SELECT
+    COALESCE((SELECT y.FiscalYear
+              FROM ZZ_WSP_ATR_Report r2
+              LEFT JOIN ZZ_WSP_ATR_Submitted s2 ON s2.ZZ_WSP_ATR_Submitted_ID = r2.ZZ_WSP_ATR_Submitted_ID
+              LEFT JOIN C_Year y ON y.C_Year_ID = s2.ZZ_FinYear_ID
+              WHERE r2.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}), '') AS fiscal_year,
     COALESCE(occ.Value, '') AS occ_code,
     COALESCE(occ.Name,  '') AS occ_title,
 
@@ -55,6 +60,7 @@ WHERE t.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
 
 ORDER BY t.Row_No, occ.Value, lp.Name]]>
 	</queryString>
+	<field name="fiscal_year" class="java.lang.String"/>
 	<field name="occ_code" class="java.lang.String"/>
 	<field name="occ_title" class="java.lang.String"/>
 	<field name="programme_type" class="java.lang.String"/>
@@ -101,22 +107,26 @@ ORDER BY t.Row_No, occ.Value, lp.Name]]>
 				</textElement>
 				<text><![CDATA[Section 4: Employees Trained and Planned]]></text>
 			</staticText>
-			<staticText>
+			<textField>
 				<reportElement x="0" y="36" width="1210" height="18" uuid="bca6418e-6750-412d-9657-04f765a3c122"/>
 				<textElement verticalAlignment="Middle">
 					<font size="12" isBold="true"/>
 					<paragraph leftIndent="8" rightIndent="8"/>
 				</textElement>
-				<text><![CDATA[4.3 Summary of Planned Employee Training Interventions for the period of 2025 (excludes Refresher, Induction and Ex-leave training)]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA["4.3 Summary of Planned Employee Training Interventions for the period of "
+ + ($F{fiscal_year} == null || $F{fiscal_year}.trim().isEmpty() ? "financial year" : $F{fiscal_year})
+ + " (excludes Refresher, Induction and Ex-leave training)"]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="0" y="58" width="1210" height="18" uuid="bca6418e-6750-412d-9657-04f765a3c123"/>
 				<textElement verticalAlignment="Middle">
 					<font size="12" isBold="true"/>
 					<paragraph leftIndent="8" rightIndent="8"/>
 				</textElement>
-				<text><![CDATA[4.3.1 Summary of Planned Employee Training Interventions for the period of 2025 (Occupational Group)]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA["4.3.1 Summary of Planned Employee Training Interventions for the period of "
+ + ($F{fiscal_year} == null || $F{fiscal_year}.trim().isEmpty() ? "financial year" : $F{fiscal_year})
+ + " (Occupational Group)"]]></textFieldExpression>
+			</textField>
 		</band>
 	</title>
 	<columnHeader>

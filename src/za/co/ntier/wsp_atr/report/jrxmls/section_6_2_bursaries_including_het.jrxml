@@ -21,13 +21,27 @@
     t.Row_No,
     qd.Name AS programme_name,
     st.Name AS non_emp_status,
-    COALESCE(t.ZZ_Total_Done,0)    AS total_done_2024,
-    COALESCE(t.ZZ_Total_Planned,0) AS total_planned_2025
+    COALESCE(y.FiscalYear,'') AS fiscal_year,
+    COALESCE(
+        CASE
+            WHEN NULLIF(regexp_replace(y.FiscalYear, '[^0-9]', '', 'g'), '') IS NOT NULL
+            THEN CAST(NULLIF(regexp_replace(y.FiscalYear, '[^0-9]', '', 'g'), '') AS INTEGER) - 1
+        END,
+        0
+    ) AS atr_year,
+    COALESCE(t.ZZ_Total_Done,0)    AS total_done,
+    COALESCE(t.ZZ_Total_Planned,0) AS total_planned
 FROM ZZ_WSP_ATR_Non_Emp_Burs_Rep t
 LEFT JOIN ZZ_Qualification_Type_Details_Ref qd
        ON qd.ZZ_Qualification_Type_Details_Ref_ID = t.ZZ_Learning_Programme_Done_ID
 LEFT JOIN ZZ_WSP_Non_Employee_Status_Ref st
        ON st.ZZ_WSP_Non_Employee_Status_Ref_ID = t.ZZ_Non_Emp_Status_Done_ID
+LEFT JOIN ZZ_WSP_ATR_Report r
+       ON r.ZZ_WSP_ATR_Report_ID = t.ZZ_WSP_ATR_Report_ID
+LEFT JOIN ZZ_WSP_ATR_Submitted s
+       ON s.ZZ_WSP_ATR_Submitted_ID = r.ZZ_WSP_ATR_Submitted_ID
+LEFT JOIN C_Year y
+       ON y.C_Year_ID = s.ZZ_FinYear_ID
 WHERE t.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
   AND COALESCE(t.ZZ_Report_Section,'') = '6.2'
 ORDER BY t.Row_No]]>
@@ -35,13 +49,15 @@ ORDER BY t.Row_No]]>
 	<field name="Row_No" class="java.lang.Integer"/>
 	<field name="programme_name" class="java.lang.String"/>
 	<field name="non_emp_status" class="java.lang.String"/>
-	<field name="total_done_2024" class="java.math.BigDecimal"/>
-	<field name="total_planned_2025" class="java.math.BigDecimal"/>
+	<field name="fiscal_year" class="java.lang.String"/>
+	<field name="atr_year" class="java.lang.Integer"/>
+	<field name="total_done" class="java.math.BigDecimal"/>
+	<field name="total_planned" class="java.math.BigDecimal"/>
 	<variable name="Sum_Done" class="java.math.BigDecimal" calculation="Sum">
-		<variableExpression><![CDATA[$F{total_done_2024}]]></variableExpression>
+		<variableExpression><![CDATA[$F{total_done}]]></variableExpression>
 	</variable>
 	<variable name="Sum_Planned" class="java.math.BigDecimal" calculation="Sum">
-		<variableExpression><![CDATA[$F{total_planned_2025}]]></variableExpression>
+		<variableExpression><![CDATA[$F{total_planned}]]></variableExpression>
 	</variable>
 	<title>
 		<band height="120">
@@ -78,20 +94,22 @@ ORDER BY t.Row_No]]>
 				</box>
 				<text><![CDATA[Non-Employee Status]]></text>
 			</staticText>
-			<staticText>
+			<textField>
 				<reportElement style="Hdr" x="760" y="0" width="225" height="40" uuid="c8a7a4d2-6cba-4b08-91d9-9d9f9e9e9e01"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
-				<text><![CDATA[Total Trained 2024]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA["Total Trained "
+ + ($F{atr_year} == null || $F{atr_year}.intValue() <= 0 ? "previous financial year" : $F{atr_year}.toString())]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement style="Hdr" x="985" y="0" width="225" height="40" uuid="a7b6c5d4-e3f2-4a11-8b22-334455667788"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
-				<text><![CDATA[Total to be Trained/Planned 2025]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA["Total to be Trained/Planned "
+ + ($F{fiscal_year} == null || $F{fiscal_year}.trim().isEmpty() ? "financial year" : $F{fiscal_year})]]></textFieldExpression>
+			</textField>
 		</band>
 	</columnHeader>
 	<detail>
@@ -121,14 +139,14 @@ ORDER BY t.Row_No]]>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
-				<textFieldExpression><![CDATA[$F{total_done_2024}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{total_done}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="985" y="0" width="225" height="26" uuid="01111111-2222-3333-4444-888888888888"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
-				<textFieldExpression><![CDATA[$F{total_planned_2025}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{total_planned}]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>

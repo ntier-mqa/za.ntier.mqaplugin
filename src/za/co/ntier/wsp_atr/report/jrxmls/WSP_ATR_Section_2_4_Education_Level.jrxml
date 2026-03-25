@@ -18,7 +18,14 @@
 	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
 	<queryString language="SQL">
 		<![CDATA[SELECT
-    2024 AS report_year,
+    COALESCE((SELECT CASE
+                        WHEN NULLIF(regexp_replace(y.FiscalYear, '[^0-9]', '', 'g'), '') IS NOT NULL
+                        THEN CAST(NULLIF(regexp_replace(y.FiscalYear, '[^0-9]', '', 'g'), '') AS INTEGER) - 1
+                     END
+              FROM ZZ_WSP_ATR_Report r2
+              LEFT JOIN ZZ_WSP_ATR_Submitted s2 ON s2.ZZ_WSP_ATR_Submitted_ID = r2.ZZ_WSP_ATR_Submitted_ID
+              LEFT JOIN C_Year y ON y.C_Year_ID = s2.ZZ_FinYear_ID
+              WHERE r2.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}), 0) AS report_year,
     COALESCE(qt.Name, 'Unknown') AS qual_name,
     COALESCE(e.ZZ_African_Male_Cnt, 0)    AS ZZ_African_Male_Cnt,
     COALESCE(e.ZZ_African_Female_Cnt, 0)  AS ZZ_African_Female_Cnt,

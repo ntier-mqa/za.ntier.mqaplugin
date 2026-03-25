@@ -113,7 +113,9 @@
 			<textField textAdjust="StretchHeight">
 				<reportElement style="Normal" x="40" y="452" width="722" height="38" uuid="1ad89576-6436-41ef-a8f8-6824b5a6b728"/>
 				<textElement verticalAlignment="Top"/>
-				<textFieldExpression><![CDATA["The WSP-ATR must be submitted to MQA by 30 April 2025. Please note that your submission is incomplete unless the signature and declaration pages (with all the required signatures) are completed.\n"
+				<textFieldExpression><![CDATA["The WSP-ATR must be submitted to MQA by 30 April "
++ java.time.Year.now().toString()
++ ". Please note that your submission is incomplete unless the signature and declaration pages (with all the required signatures) are completed.\n"
 + "Organisations with less than 50 employees do not have to submit signatures of consulted parties."]]></textFieldExpression>
 			</textField>
 		</band>

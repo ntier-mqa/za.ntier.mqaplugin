@@ -19,6 +19,7 @@
 	<queryString language="SQL">
 		<![CDATA[SELECT
     COALESCE(lpt.Name,'') AS programme_type,
+    COALESCE(y.FiscalYear,'') AS fiscal_year,
     COALESCE(lp.Name,'')  AS specify_txt,
     COALESCE(tb.Name,'')  AS target_beneficiaries,
     COALESCE(t.ZZ_Total_Planned,0)    AS total_planned,
@@ -30,10 +31,17 @@ LEFT JOIN ZZ_Qualification_Type_Details_Ref lp
        ON lp.ZZ_Qualification_Type_Details_Ref_ID = t.ZZ_Learning_Programme_Planned_ID
 LEFT JOIN ZZ_Target_Beneficiary_Ref tb
        ON tb.ZZ_Target_Beneficiary_Ref_ID = t.ZZ_Target_Ben_Planned_ID
+LEFT JOIN ZZ_WSP_ATR_Report r
+       ON r.ZZ_WSP_ATR_Report_ID = t.ZZ_WSP_ATR_Report_ID
+LEFT JOIN ZZ_WSP_ATR_Submitted s
+       ON s.ZZ_WSP_ATR_Submitted_ID = r.ZZ_WSP_ATR_Submitted_ID
+LEFT JOIN C_Year y
+       ON y.C_Year_ID = s.ZZ_FinYear_ID
 WHERE t.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
 ORDER BY programme_type, specify_txt, target_beneficiaries]]>
 	</queryString>
 	<field name="programme_type" class="java.lang.String"/>
+	<field name="fiscal_year" class="java.lang.String"/>
 	<field name="specify_txt" class="java.lang.String"/>
 	<field name="target_beneficiaries" class="java.lang.String"/>
 	<field name="total_planned" class="java.lang.Integer"/>
@@ -55,14 +63,16 @@ ORDER BY programme_type, specify_txt, target_beneficiaries]]>
 				</textElement>
 				<text><![CDATA[Section 6: Non-Employees AET and Bursaries]]></text>
 			</staticText>
-			<staticText>
+			<textField>
 				<reportElement x="0" y="36" width="1210" height="18" uuid="ae232c1c-5101-40ba-be0b-61dad34faeb9"/>
 				<textElement verticalAlignment="Middle">
 					<font size="12" isBold="true"/>
 					<paragraph leftIndent="8" rightIndent="8"/>
 				</textElement>
-				<text><![CDATA[6.4 Skills Development Related Community Social Programme Planned in 2025 (Excluding Bursary, AET & HET)]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA["6.4 Skills Development Related Community Social Programme Planned in "
+ + ($F{fiscal_year} == null || $F{fiscal_year}.trim().isEmpty() ? "financial year" : $F{fiscal_year})
+ + " (Excluding Bursary, AET & HET)"]]></textFieldExpression>
+			</textField>
 		</band>
 	</title>
 	<columnHeader>

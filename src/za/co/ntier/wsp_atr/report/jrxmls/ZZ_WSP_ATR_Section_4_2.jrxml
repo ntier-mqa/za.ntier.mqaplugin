@@ -18,6 +18,19 @@
 	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
 	<queryString language="SQL">
 		<![CDATA[SELECT
+  COALESCE((SELECT y.FiscalYear
+            FROM ZZ_WSP_ATR_Report r2
+            LEFT JOIN ZZ_WSP_ATR_Submitted s2 ON s2.ZZ_WSP_ATR_Submitted_ID = r2.ZZ_WSP_ATR_Submitted_ID
+            LEFT JOIN C_Year y ON y.C_Year_ID = s2.ZZ_FinYear_ID
+            WHERE r2.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}), '') AS fiscal_year,
+  COALESCE((SELECT CASE
+                      WHEN NULLIF(regexp_replace(y.FiscalYear, '[^0-9]', '', 'g'), '') IS NOT NULL
+                      THEN CAST(NULLIF(regexp_replace(y.FiscalYear, '[^0-9]', '', 'g'), '') AS INTEGER) - 1
+                   END
+            FROM ZZ_WSP_ATR_Report r2
+            LEFT JOIN ZZ_WSP_ATR_Submitted s2 ON s2.ZZ_WSP_ATR_Submitted_ID = r2.ZZ_WSP_ATR_Submitted_ID
+            LEFT JOIN C_Year y ON y.C_Year_ID = s2.ZZ_FinYear_ID
+            WHERE r2.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}), 0) AS atr_year,
   qt.Name AS qualification_type_name,
   qd.Name AS learning_programme_detail_name,
 
@@ -49,6 +62,8 @@ WHERE r.zz_wsp_atr_report_id = $P{ZZ_WSP_ATR_Report_ID}
   AND r.zz_report_section = '4.2'
 ORDER BY qt.Name, qd.Name]]>
 	</queryString>
+	<field name="fiscal_year" class="java.lang.String"/>
+	<field name="atr_year" class="java.lang.Integer"/>
 	<field name="qualification_type_name" class="java.lang.String"/>
 	<field name="learning_programme_detail_name" class="java.lang.String"/>
 	<field name="african_male_cnt" class="java.math.BigDecimal"/>
@@ -124,14 +139,15 @@ ORDER BY qt.Name, qd.Name]]>
 				</textElement>
 				<text><![CDATA[Section 4: Employees Trained and Planned]]></text>
 			</staticText>
-			<staticText>
+			<textField>
 				<reportElement x="0" y="36" width="1210" height="18" uuid="e85fb118-d40d-478a-a832-cf0ece62ef38"/>
 				<textElement verticalAlignment="Middle">
 					<font size="12" isBold="true"/>
 					<paragraph leftIndent="8" rightIndent="8"/>
 				</textElement>
-				<text><![CDATA[4.2 Summary of employee training interventions for the period 2024]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA["4.2 Summary of employee training interventions for the period "
+ + ($F{atr_year} == null || $F{atr_year}.intValue() <= 0 ? "previous financial year" : $F{atr_year}.toString())]]></textFieldExpression>
+			</textField>
 			<staticText>
 				<reportElement x="0" y="58" width="1210" height="36" uuid="e85fb118-d40d-478a-a832-cf0ece62ef39"/>
 				<textElement verticalAlignment="Middle">

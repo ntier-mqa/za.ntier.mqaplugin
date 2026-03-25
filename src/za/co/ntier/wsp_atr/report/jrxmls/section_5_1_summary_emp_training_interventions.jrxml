@@ -18,6 +18,19 @@
 	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
 	<queryString language="SQL">
 		<![CDATA[SELECT
+    COALESCE((SELECT y.FiscalYear
+              FROM ZZ_WSP_ATR_Report r2
+              LEFT JOIN ZZ_WSP_ATR_Submitted s2 ON s2.ZZ_WSP_ATR_Submitted_ID = r2.ZZ_WSP_ATR_Submitted_ID
+              LEFT JOIN C_Year y ON y.C_Year_ID = s2.ZZ_FinYear_ID
+              WHERE r2.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}), '') AS fiscal_year,
+    COALESCE((SELECT CASE
+                        WHEN NULLIF(regexp_replace(y.FiscalYear, '[^0-9]', '', 'g'), '') IS NOT NULL
+                        THEN CAST(NULLIF(regexp_replace(y.FiscalYear, '[^0-9]', '', 'g'), '') AS INTEGER) - 1
+                     END
+              FROM ZZ_WSP_ATR_Report r2
+              LEFT JOIN ZZ_WSP_ATR_Submitted s2 ON s2.ZZ_WSP_ATR_Submitted_ID = r2.ZZ_WSP_ATR_Submitted_ID
+              LEFT JOIN C_Year y ON y.C_Year_ID = s2.ZZ_FinYear_ID
+              WHERE r2.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}), 0) AS atr_year,
     COALESCE(lp.Value, lp.Name) AS learning_programme_type,
     COALESCE(det.Name, det.Value) AS skills_programme,
 
@@ -45,6 +58,8 @@ WHERE t.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
   AND (t.ZZ_Report_Section IS NULL OR t.ZZ_Report_Section = '5.1')
 ORDER BY COALESCE(lp.Value, lp.Name), COALESCE(det.Name, det.Value)]]>
 	</queryString>
+	<field name="fiscal_year" class="java.lang.String"/>
+	<field name="atr_year" class="java.lang.Integer"/>
 	<field name="learning_programme_type" class="java.lang.String"/>
 	<field name="skills_programme" class="java.lang.String"/>
 	<field name="ZZ_African_Male_Cnt" class="java.lang.Integer"/>
@@ -121,14 +136,15 @@ ORDER BY COALESCE(lp.Value, lp.Name), COALESCE(det.Name, det.Value)]]>
 				</textElement>
 				<text><![CDATA[Section 5: Pivotal Programme Report]]></text>
 			</staticText>
-			<staticText>
+			<textField>
 				<reportElement x="0" y="36" width="1210" height="18" uuid="7d88b35b-9db8-4d12-8f5e-5d3b3a9cb6b7"/>
 				<textElement verticalAlignment="Middle">
 					<font size="12" isBold="true"/>
 					<paragraph leftIndent="8" rightIndent="8"/>
 				</textElement>
-				<text><![CDATA[5.1 Summary of employee training interventions for the period 2024]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA["5.1 Summary of employee training interventions for the period "
+ + ($F{atr_year} == null || $F{atr_year}.intValue() <= 0 ? "previous financial year" : $F{atr_year}.toString())]]></textFieldExpression>
+			</textField>
 		</band>
 	</title>
 	<columnHeader>
