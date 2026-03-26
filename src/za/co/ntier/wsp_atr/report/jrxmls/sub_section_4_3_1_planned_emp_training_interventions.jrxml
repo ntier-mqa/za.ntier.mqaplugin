@@ -170,70 +170,82 @@ ORDER BY t.Row_No, occ.Value, lp.Name]]>
 				<text><![CDATA[Please specify if study leading to applied and assessed in workplace / not in previous column]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="700" y="0" width="96" height="30" uuid="5fa771c3-6cb1-4948-bba7-45a3d376df5b"/>
+				<reportElement style="HdrSmall" x="700" y="0" width="104" height="30" uuid="5fa771c3-6cb1-4948-bba7-45a3d376df5b"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Gender]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="796" y="0" width="192" height="30" uuid="a77b4bf5-cc3f-47de-bacd-5bc90e4bb3d2"/>
+				<reportElement style="HdrSmall" x="804" y="0" width="208" height="30" uuid="a77b4bf5-cc3f-47de-bacd-5bc90e4bb3d2"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Race]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="988" y="0" width="57" height="70" uuid="549e5c8b-37c8-45f3-b398-2edcc61a8d45"/>
+				<reportElement style="HdrSmall" x="1012" y="0" width="62" height="70" uuid="549e5c8b-37c8-45f3-b398-2edcc61a8d45"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Disabled]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="1045" y="0" width="165" height="70" uuid="5d392489-9ab5-40d7-8266-8cc01f71bb8a"/>
+				<reportElement style="HdrSmall" x="1074" y="0" width="136" height="70" uuid="5d392489-9ab5-40d7-8266-8cc01f71bb8a"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Total to be Trained/Planned]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="700" y="30" width="48" height="40" uuid="048508a0-e886-4b9c-8683-869b86adab7f"/>
+				<reportElement style="HdrSmall" x="700" y="30" width="52" height="40" uuid="048508a0-e886-4b9c-8683-869b86adab7f">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Male]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="748" y="30" width="48" height="40" uuid="7180874b-b206-4c3c-b72f-65c6f1d39e0c"/>
+				<reportElement style="HdrSmall" x="752" y="30" width="52" height="40" uuid="7180874b-b206-4c3c-b72f-65c6f1d39e0c">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Female]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="796" y="30" width="48" height="40" uuid="b7d6fde8-43f6-47ea-bf85-0799a41696bc"/>
+				<reportElement style="HdrSmall" x="804" y="30" width="52" height="40" uuid="b7d6fde8-43f6-47ea-bf85-0799a41696bc">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[African]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="844" y="30" width="48" height="40" uuid="0d875ef0-b7ba-42f3-aea4-72f9571b1746"/>
+				<reportElement style="HdrSmall" x="856" y="30" width="52" height="40" uuid="0d875ef0-b7ba-42f3-aea4-72f9571b1746">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Coloured]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="892" y="30" width="48" height="40" uuid="7542b2c4-cfb7-407f-808f-46331d1c8f02"/>
+				<reportElement style="HdrSmall" x="908" y="30" width="52" height="40" uuid="7542b2c4-cfb7-407f-808f-46331d1c8f02">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Indian]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="940" y="30" width="48" height="40" uuid="75b4b835-a7a1-4bb8-8a00-1330f62f63eb"/>
+				<reportElement style="HdrSmall" x="960" y="30" width="52" height="40" uuid="75b4b835-a7a1-4bb8-8a00-1330f62f63eb">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -294,56 +306,68 @@ ORDER BY t.Row_No, occ.Value, lp.Name]]>
 				<textFieldExpression><![CDATA[""]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="700" y="0" width="48" height="26" uuid="43b44484-9557-48c6-a12b-89234cecb71c"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="700" y="0" width="52" height="26" uuid="43b44484-9557-48c6-a12b-89234cecb71c">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{male_cnt}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="748" y="0" width="48" height="26" uuid="2eef38d3-7bdc-4fe6-9dd1-0b9d235ffa34"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="752" y="0" width="52" height="26" uuid="2eef38d3-7bdc-4fe6-9dd1-0b9d235ffa34">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{female_cnt}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="796" y="0" width="48" height="26" uuid="78fd0f1d-5853-4af7-b5a1-94821acdd069"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="804" y="0" width="52" height="26" uuid="78fd0f1d-5853-4af7-b5a1-94821acdd069">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{african_cnt}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="844" y="0" width="48" height="26" uuid="9453defc-337b-4ada-950e-b67a8c4cc346"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="856" y="0" width="52" height="26" uuid="9453defc-337b-4ada-950e-b67a8c4cc346">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{coloured_cnt}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="892" y="0" width="48" height="26" uuid="705820ac-ef0d-41a7-b6a8-c3430873c03a"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="908" y="0" width="52" height="26" uuid="705820ac-ef0d-41a7-b6a8-c3430873c03a">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{indian_cnt}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="940" y="0" width="48" height="26" uuid="7ebb8537-33a5-4447-adcc-2a56abe9c843"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="960" y="0" width="52" height="26" uuid="7ebb8537-33a5-4447-adcc-2a56abe9c843">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{white_cnt}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="988" y="0" width="57" height="26" uuid="2f384c1d-ffe0-4d30-8bc5-a113660cc217"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="1012" y="0" width="62" height="26" uuid="2f384c1d-ffe0-4d30-8bc5-a113660cc217"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{disabled_cnt}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="1045" y="0" width="165" height="26" uuid="fcd29b5e-c75d-4998-b11e-7e435a3c6883"/>
+				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="1074" y="0" width="136" height="26" uuid="fcd29b5e-c75d-4998-b11e-7e435a3c6883"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -364,56 +388,69 @@ ORDER BY t.Row_No, occ.Value, lp.Name]]>
 				<text><![CDATA[Grand Total]]></text>
 			</staticText>
 			<textField>
-				<reportElement style="CellNum" x="700" y="0" width="48" height="28" uuid="ec826b1b-3bde-482c-9bf2-7ca33806e954"/>
+				<reportElement style="CellNum" x="700" y="0" width="52" height="28" uuid="ec826b1b-3bde-482c-9bf2-7ca33806e954">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_Male}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="CellNum" x="748" y="0" width="48" height="28" uuid="d79e30e6-a0ba-4e9c-87a5-59c23288d233"/>
+				<reportElement style="CellNum" x="752" y="0" width="52" height="28" uuid="d79e30e6-a0ba-4e9c-87a5-59c23288d233">
+					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_Female}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="CellNum" x="796" y="0" width="48" height="28" uuid="902aace6-ca07-405b-ba15-46bdd2874369"/>
+				<reportElement style="CellNum" x="804" y="0" width="52" height="28" uuid="902aace6-ca07-405b-ba15-46bdd2874369">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_African}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="CellNum" x="844" y="0" width="48" height="28" uuid="d21228d8-2b97-4133-bc29-145e096b48b4"/>
+				<reportElement style="CellNum" x="856" y="0" width="52" height="28" uuid="d21228d8-2b97-4133-bc29-145e096b48b4">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_Coloured}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="CellNum" x="892" y="0" width="48" height="28" uuid="411372b1-4b4f-4fdf-8a37-9bbc1478440a"/>
+				<reportElement style="CellNum" x="908" y="0" width="52" height="28" uuid="411372b1-4b4f-4fdf-8a37-9bbc1478440a">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_Indian}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="CellNum" x="940" y="0" width="48" height="28" uuid="23a80b8a-1fd6-4dce-81e8-e4eb1f25a2e5"/>
+				<reportElement style="CellNum" x="960" y="0" width="52" height="28" uuid="23a80b8a-1fd6-4dce-81e8-e4eb1f25a2e5">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_White}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="CellNum" x="988" y="0" width="57" height="28" uuid="cb7eafe9-f42b-4734-bcae-0910850d30ab"/>
+				<reportElement style="CellNum" x="1012" y="0" width="62" height="28" uuid="cb7eafe9-f42b-4734-bcae-0910850d30ab"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_Disabled}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="CellNum" x="1045" y="0" width="165" height="28" uuid="858ab748-7f24-48ca-b720-1636da2958f2"/>
+				<reportElement style="CellNum" x="1074" y="0" width="136" height="28" uuid="858ab748-7f24-48ca-b720-1636da2958f2"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
