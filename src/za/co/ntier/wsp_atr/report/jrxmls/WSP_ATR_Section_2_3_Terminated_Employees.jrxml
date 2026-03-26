@@ -712,7 +712,7 @@ ORDER BY ap.Name]]>
 				<text><![CDATA[Grand Total]]></text>
 			</staticText>
 			<textField>
-				<reportElement style="CellNum" x="690" y="28" width="65" height="28" uuid="20000000-0000-0000-0000-000000000077"/>
+				<reportElement style="CellNum" x="690" y="28" width="130" height="28" uuid="20000000-0000-0000-0000-000000000077"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -722,7 +722,7 @@ ORDER BY ap.Name]]>
 				<textFieldExpression><![CDATA[$V{vGrandEmployees}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="CellNum" x="1080" y="28" width="65" height="28" uuid="20000000-0000-0000-0000-000000000078"/>
+				<reportElement style="CellNum" x="950" y="28" width="195" height="28" uuid="20000000-0000-0000-0000-000000000078"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
