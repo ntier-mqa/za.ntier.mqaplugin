@@ -18,8 +18,8 @@ import za.ntier.models.MZZWSPATRSubmitted;
  * Columns:
  * - Name of Programme           => ZZ_Learning_Programme_Done_ID (ref: ZZ_Qualification_Type_Details_Ref)
  * - Non-Employee Status         => ZZ_Non_Emp_Status_Done_ID     (ref: ZZ_WSP_Non_Employee_Status_Ref)
- * - Total Trained 2024          => ZZ_Total_Done   (male + female)
- * - Total to be Trained/Planned 2025 => ZZ_Total_Planned (zz_total_planned)
+ * - Total Trained (prior fiscal year)          => ZZ_Total_Done   (male + female)
+ * - Total to be Trained/Planned (fiscal year)  => ZZ_Total_Planned (zz_total_planned)
  *
  * Notes:
  * - FULL JOIN done vs planned aggregates to keep planned-only rows.
