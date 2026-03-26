@@ -312,42 +312,14 @@ ORDER BY mg.value]]>
 				<text><![CDATA[Grand Total]]></text>
 			</staticText>
 			<textField>
-				<reportElement style="CellNum" x="490" y="28" width="120" height="28" uuid="530837f8-8b10-43ac-af9c-0eb3352766fe"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textFieldExpression><![CDATA[0]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="610" y="28" width="120" height="28" uuid="bc45c05f-246a-4be3-9b23-0051f3fc41e6"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textFieldExpression><![CDATA[0]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="730" y="28" width="120" height="28" uuid="75b1f263-033c-45cf-9213-9d347e488410"/>
+				<reportElement style="CellNum" x="490" y="28" width="360" height="28" uuid="530837f8-8b10-43ac-af9c-0eb3352766fe"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Grand_Total_Trained}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="CellNum" x="850" y="28" width="120" height="28" uuid="7a3b473d-124c-40d9-ae76-1cd9ac513f28"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textFieldExpression><![CDATA[0]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="970" y="28" width="120" height="28" uuid="f723ec00-935f-4da4-b901-ee893b723667"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textFieldExpression><![CDATA[0]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="1090" y="28" width="120" height="28" uuid="7a455876-8baf-45bd-999b-ed8af264bb52"/>
+				<reportElement style="CellNum" x="850" y="28" width="360" height="28" uuid="7a3b473d-124c-40d9-ae76-1cd9ac513f28"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
