@@ -115,6 +115,15 @@ When working on forms or UI logic:
 - Pass parameters clearly and consistently
 - Keep styles centralized and consistent
 
+### 9.  Dev database access
+
+- Connect to the database and RUN queries if neccessary.
+- Postgresql database
+- Host: mqauat.thruhere.net
+- Port: 5401
+- User: postgres
+- Password: dazzle123 
+
 ## Workflow for solving tasks
 
 When solving a problem in this repo:
