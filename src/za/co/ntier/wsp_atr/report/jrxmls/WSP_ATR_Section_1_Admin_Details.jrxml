@@ -24,31 +24,30 @@
 		<![CDATA[SELECT
     r.zz_wsp_atr_submitted_id                                      AS zz_wsp_atr_submitted_id,
 
-    COALESCE(v.orgname, bp.name, '<Organisation Name>')           AS organisation_name,
-    COALESCE(v.zz_sdl_no, bp.zz_sdl_no, '<SDL Number>')           AS sdl_number,
+    COALESCE(v.orgname, bp.name, '')           AS organisation_name,
+    COALESCE(v.zz_sdl_no, bp.zz_sdl_no, '')           AS sdl_number,
 
-    COALESCE(NULLIF(bp.zzsiccode,''), '<SIC Code>')               AS sic_code,
-    COALESCE(sic_rl.name, '<SIC Title>')                          AS sic_title,
+    COALESCE(NULLIF(bp.zzsiccode,''), '')               AS sic_code,
+    COALESCE(sic_rl.name, '')                          AS sic_title,
 
-    COALESCE(NULLIF(bp.name2,''), bp.name, v.orgname, '<Trading Name>') AS trading_name,
+    COALESCE(NULLIF(bp.name2,''), bp.name, v.orgname, '') AS trading_name,
 
     CASE
-      WHEN COALESCE(bp.zz_number_of_employees, bp.zznumberofemployeesprofile, bp.numberemployees) IS NULL THEN '<Organisation Size>'
+      WHEN COALESCE(bp.zz_number_of_employees, bp.zznumberofemployeesprofile, bp.numberemployees) IS NULL THEN ''
       WHEN COALESCE(bp.zz_number_of_employees, bp.zznumberofemployeesprofile, bp.numberemployees) < 50 THEN 'Small'
       WHEN COALESCE(bp.zz_number_of_employees, bp.zznumberofemployeesprofile, bp.numberemployees) < 250 THEN 'Medium'
       ELSE 'Large'
     END                                                           AS organisation_size,
 
-    COALESCE(NULLIF(bp.zzsubsector,''), '<Subsector>')            AS subsector,
+    COALESCE(subsector_rl.name, '')                               AS subsector,
 
-    COALESCE(COALESCE(bp.zz_number_of_employees, bp.zznumberofemployeesprofile, bp.numberemployees)::text, '<Total Employees>')
+    COALESCE(COALESCE(bp.zz_number_of_employees, bp.zznumberofemployeesprofile, bp.numberemployees)::text, '')
                                                                   AS total_employees,
-    COALESCE(bp.zzterminatedemployees::text, '<Employees Terminated>')
+    COALESCE(bp.zzterminatedemployees::text, '')
                                                                   AS employees_terminated,
 
-    COALESCE( bl.phone, '<Organisation Tel No>') AS organisation_tel,
-    COALESCE( bl.fax,   '<Organisation Fax No>') AS organisation_fax,
-    COALESCE(u.email,'<Organisation Email>')            AS organisation_email,
+    COALESCE( bl.phone, '')                  AS organisation_tel,
+    COALESCE(u.email,'')            AS organisation_email,
 
     COALESCE(
       NULLIF(
@@ -59,9 +58,9 @@
           reg.name
         )), ''
       ),
-      '<Organisation Physical Address>'
+      ''
     )                                                             AS organisation_physical_address,
-    COALESCE(NULLIF(loc.postal,''), '<Physical Code>')            AS physical_code,
+    COALESCE(NULLIF(loc.postal,''), '')            AS physical_code,
 
     COALESCE(
       NULLIF(
@@ -72,34 +71,31 @@
           reg.name
         )), ''
       ),
-      '<Organisation Postal Address>'
+      ''
     )                                                             AS organisation_postal_address,
-    COALESCE(NULLIF(loc.postal,''), '<Postal Code>')              AS postal_code,
+    COALESCE(NULLIF(loc.postal,''), '')              AS postal_code,
 
-    COALESCE(NULLIF(TRIM(CONCAT_WS(' - ', reg.name, loc.city)),''), '<Province - Municipality>')
+    COALESCE(NULLIF(TRIM(CONCAT_WS(' - ', reg.name, loc.city)),''), '')
                                                                   AS province_municipality,
 
-    COALESCE(NULLIF(bp.zzorganisationtype,''), '<Type of Organisation>')
+    COALESCE(NULLIF(bp.zzorganisationtype,''), '')
                                                                   AS type_of_organisation,
 
     COALESCE(NULLIF(bp.ZZUnionised,'N'))                           AS unionised,
 
-    COALESCE(NULLIF(bp.description,''), '<Core Business of Organisation>')
-                                                                  AS core_business,
-
-    COALESCE(TRIM(CONCAT(v.zzfirstname, ' ', v.zzmiddlename, ' ', v.zzsurname)), '<SDF Name>')
+    COALESCE(TRIM(CONCAT(v.zzfirstname, ' ', v.zzmiddlename, ' ', v.zzsurname)), '')
                                                                   AS sdf_name,
-    COALESCE(v.phone, '<Phone Number>')                           AS sdf_phone,
-    COALESCE(v.phone2, '<Cell Number>')                           AS sdf_cell,
-    COALESCE(v.email, '<Email Address>')                          AS sdf_email,
-    COALESCE(v.zzsdfroletype, '<SDF Role>')                       AS sdf_role,
+    COALESCE(v.phone, '')                           AS sdf_phone,
+    COALESCE(v.phone2, '')                           AS sdf_cell,
+    COALESCE(v.email, '')                          AS sdf_email,
+    COALESCE(v.zzsdfroletype, '')                       AS sdf_role,
 
-    COALESCE(bd.bankname, '<Bank Name>')                          AS bank_name,
-    COALESCE(bd.accountno, '<Account Number>')                    AS account_number,
-    COALESCE(bd.zzaccountholder, '<Account Holder>')              AS account_holder,
-    COALESCE(bd.accounttype, '<Type of Account>')                 AS account_type,
-    COALESCE(bd.zz_branch_name, '<Branch Name>')                  AS branch_name,
-    COALESCE(bd.zz_branch_number, '<Branch Code>')                AS branch_code
+    COALESCE(bk.name, NULLIF(bd.bankname,''), '')      AS bank_name,
+    COALESCE(bd.accountno, '')                    AS account_number,
+    COALESCE(bd.zzaccountholder, '')              AS account_holder,
+    COALESCE(bd.accounttype, '')                 AS account_type,
+    COALESCE(bd.zz_branch_name, '')                  AS branch_name,
+    COALESCE(bd.zz_branch_number, '')                AS branch_code
 
 FROM adempiere.zz_wsp_atr_report r
 LEFT JOIN adempiere.zz_wsp_atr_submitted s
@@ -144,6 +140,19 @@ LEFT JOIN adempiere.ad_ref_list sic_rl
       AND sic_rl.ad_reference_id = sic_ref.ad_reference_id
       AND sic_rl.value = bp.zzsiccode
 
+LEFT JOIN adempiere.ad_table bp_tab
+       ON bp_tab.tablename = 'C_BPartner'
+LEFT JOIN adempiere.ad_column subsector_col
+       ON subsector_col.ad_table_id = bp_tab.ad_table_id
+      AND LOWER(subsector_col.columnname) = 'subsector'
+LEFT JOIN adempiere.ad_ref_list subsector_rl
+       ON subsector_rl.isactive = 'Y'
+      AND subsector_rl.ad_reference_id = subsector_col.ad_reference_value_id
+      AND subsector_rl.value = bp.zzsubsector
+
+LEFT JOIN adempiere.c_bank bk
+       ON bk.c_bank_id = bd.c_bank_id
+
 WHERE r.zz_wsp_atr_report_id = $P{ZZ_WSP_ATR_Report_ID}]]>
 	</queryString>
 	<field name="zz_wsp_atr_submitted_id" class="java.lang.Integer"/>
@@ -157,7 +166,6 @@ WHERE r.zz_wsp_atr_report_id = $P{ZZ_WSP_ATR_Report_ID}]]>
 	<field name="total_employees" class="java.lang.String"/>
 	<field name="employees_terminated" class="java.lang.String"/>
 	<field name="organisation_tel" class="java.lang.String"/>
-	<field name="organisation_fax" class="java.lang.String"/>
 	<field name="organisation_email" class="java.lang.String"/>
 	<field name="organisation_physical_address" class="java.lang.String"/>
 	<field name="physical_code" class="java.lang.String"/>
@@ -166,7 +174,6 @@ WHERE r.zz_wsp_atr_report_id = $P{ZZ_WSP_ATR_Report_ID}]]>
 	<field name="province_municipality" class="java.lang.String"/>
 	<field name="type_of_organisation" class="java.lang.String"/>
 	<field name="unionised" class="java.lang.String"/>
-	<field name="core_business" class="java.lang.String"/>
 	<field name="sdf_name" class="java.lang.String"/>
 	<field name="sdf_phone" class="java.lang.String"/>
 	<field name="sdf_cell" class="java.lang.String"/>
@@ -297,16 +304,6 @@ WHERE r.zz_wsp_atr_report_id = $P{ZZ_WSP_ATR_Report_ID}]]>
 				<textFieldExpression><![CDATA[$F{organisation_tel}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement style="LblCell" x="0" y="172" width="332" height="18" uuid="71c81b4d-6c08-4d1f-bd63-ff36b5c9d7c0"/>
-				<textElement verticalAlignment="Middle"/>
-				<text><![CDATA[Organisation Fax No]]></text>
-			</staticText>
-			<textField>
-				<reportElement style="ValCell" x="332" y="172" width="878" height="18" uuid="b3f5f8c0-f2f2-44a1-9b41-718a5a3c4b22"/>
-				<textElement verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[$F{organisation_fax}]]></textFieldExpression>
-			</textField>
-			<staticText>
 				<reportElement style="LblCell" x="0" y="190" width="332" height="18" uuid="c0b93166-0a6b-4c1c-b04e-48b5bca1b0e3"/>
 				<textElement verticalAlignment="Middle"/>
 				<text><![CDATA[Organisation Email]]></text>
@@ -385,16 +382,6 @@ WHERE r.zz_wsp_atr_report_id = $P{ZZ_WSP_ATR_Report_ID}]]>
 				<reportElement style="ValCell" x="1089" y="262" width="121" height="18" uuid="d4d5ef2b-9a3d-4a93-bf27-2de0d1cf2c6d"/>
 				<textElement verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{unionised}]]></textFieldExpression>
-			</textField>
-			<staticText>
-				<reportElement style="LblCell" x="0" y="280" width="332" height="18" uuid="d7e0a5ed-1e79-4e49-9b6e-3c146b7d9ed9"/>
-				<textElement verticalAlignment="Middle"/>
-				<text><![CDATA[Core Business of Organisation]]></text>
-			</staticText>
-			<textField>
-				<reportElement style="ValCell" x="332" y="280" width="878" height="18" uuid="b28fa5e3-377b-4fdc-bf65-970ec3fb8db2"/>
-				<textElement verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[$F{core_business}]]></textFieldExpression>
 			</textField>
 			<subreport isUsingCache="true">
 				<reportElement x="0" y="300" width="1210" height="120" uuid="6e90abf0-1c7e-4de2-a38d-5dbf1d6fba91"/>
