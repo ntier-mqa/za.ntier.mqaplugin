@@ -77,13 +77,19 @@ public class EmployeesTrainedSummarySection41Builder extends AbstractReportSecti
             "    ON sf.ZZ_Specializations_Ref_id = bio.ofo_specialisation_id \n" +
             "  LEFT JOIN zz_occupations_ref o \n" +
             "    ON o.zz_occupations_ref_id = sf.zz_occupations_ref_id \n" +
+            "), major_group_map AS ( \n" +
+            "  SELECT \n" +
+            "    value, \n" +
+            "    MIN(ZZ_WSP_ATR_OFO_Major_Group_Ref_ID) AS major_group_id \n" +
+            "  FROM ZZ_WSP_ATR_OFO_Major_Group_Ref \n" +
+            "  GROUP BY value \n" +
             "), mg AS ( \n" +
             "  SELECT \n" +
             "    occ.*, \n" +
-            "    mgref.ZZ_WSP_ATR_OFO_Major_Group_Ref_ID AS major_group_id \n" +
+            "    mgmap.major_group_id AS major_group_id \n" +
             "  FROM occ \n" +
-            "  LEFT JOIN ZZ_WSP_ATR_OFO_Major_Group_Ref mgref \n" +
-            "    ON mgref.value = substring(occ.ofo_value from 1 for 6) \n" +
+            "  LEFT JOIN major_group_map mgmap \n" +
+            "    ON mgmap.value = substring(occ.ofo_value from 1 for 6) \n" +
             ") \n" +
             "SELECT \n" +
             "  mg.major_group_id, \n" +
