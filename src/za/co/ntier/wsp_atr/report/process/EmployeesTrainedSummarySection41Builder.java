@@ -30,6 +30,8 @@ public class EmployeesTrainedSummarySection41Builder extends AbstractReportSecti
 
         deleteExistingByReportAndSection(TARGET_TABLE, report.getZZ_WSP_ATR_Report_ID(), SECTION, trxName);
 
+        int atrYear = resolveAtrYearOrPrevious(submitted, trxName);
+
         /*
          * Notes:
          * - DISTINCT employees comes from ZZ_WSP_ATR_ATR_Detail for this submitted file.
@@ -38,7 +40,7 @@ public class EmployeesTrainedSummarySection41Builder extends AbstractReportSecti
          *   biodata.OFO_Occupation_Code_ID -> ZZ_Occupations_Ref.Value like '2021-111101'
          *   -> take substring(1,6) = '2021-1'
          *   -> lookup ZZ_WSP_ATR_OFO_Major_Group.Value = '2021-1'
-         * - Age buckets from Birth_Year_TRUE: 2024 - birthYear
+         * - Age buckets from Birth_Year_TRUE: ATR year - birthYear
          */
 
         final String sql =
@@ -107,13 +109,13 @@ public class EmployeesTrainedSummarySection41Builder extends AbstractReportSecti
             "  SUM(CASE WHEN sa.value = 'N' THEN 1 ELSE 0 END) AS nonsa_cnt, \n" +
             "  SUM(CASE \n" +
             "        WHEN mg.birth_year_true ~ '^[0-9]{4}$' \n" +
-            "         AND (2024 - mg.birth_year_true::int) < 35 THEN 1 ELSE 0 END) AS age_u35, \n" +
+            "         AND (" + atrYear + " - mg.birth_year_true::int) < 35 THEN 1 ELSE 0 END) AS age_u35, \n" +
             "  SUM(CASE \n" +
             "        WHEN mg.birth_year_true ~ '^[0-9]{4}$' \n" +
-            "         AND (2024 - mg.birth_year_true::int) BETWEEN 35 AND 55 THEN 1 ELSE 0 END) AS age_35_55, \n" +
+            "         AND (" + atrYear + " - mg.birth_year_true::int) BETWEEN 35 AND 55 THEN 1 ELSE 0 END) AS age_35_55, \n" +
             "  SUM(CASE \n" +
             "        WHEN mg.birth_year_true ~ '^[0-9]{4}$' \n" +
-            "         AND (2024 - mg.birth_year_true::int) > 55 THEN 1 ELSE 0 END) AS age_o55 \n" +
+            "         AND (" + atrYear + " - mg.birth_year_true::int) > 55 THEN 1 ELSE 0 END) AS age_o55 \n" +
             "FROM mg \n" +
             "LEFT JOIN zz_equity_ref   eq  ON eq.zz_equity_ref_id   = mg.race_id \n" +
             "LEFT JOIN zz_gender_ref   ge  ON ge.zz_gender_ref_id   = mg.gender_id \n" +
