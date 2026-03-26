@@ -31,7 +31,7 @@
               LEFT JOIN ZZ_WSP_ATR_Submitted s2 ON s2.ZZ_WSP_ATR_Submitted_ID = r2.ZZ_WSP_ATR_Submitted_ID
               LEFT JOIN C_Year y ON y.C_Year_ID = s2.ZZ_FinYear_ID
               WHERE r2.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}), 0) AS atr_year,
-    COALESCE(lp.Value, lp.Name) AS learning_programme_type,
+    COALESCE(lp.Name, lp.Value) AS learning_programme_type,
     COALESCE(det.Name, det.Value) AS skills_programme,
 
     t.ZZ_African_Male_Cnt,
