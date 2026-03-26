@@ -39,15 +39,14 @@
       ELSE 'Large'
     END                                                           AS organisation_size,
 
-    COALESCE(NULLIF(bp.zzsubsector,''), '<Subsector>')            AS subsector,
+    COALESCE(subsector_rl.name, '<Subsector>')                    AS subsector,
 
     COALESCE(COALESCE(bp.zz_number_of_employees, bp.zznumberofemployeesprofile, bp.numberemployees)::text, '<Total Employees>')
                                                                   AS total_employees,
     COALESCE(bp.zzterminatedemployees::text, '<Employees Terminated>')
                                                                   AS employees_terminated,
 
-    COALESCE( bl.phone, '<Organisation Tel No>') AS organisation_tel,
-    COALESCE( bl.fax,   '<Organisation Fax No>') AS organisation_fax,
+    COALESCE( bl.phone, '<Organisation Tel No>')                  AS organisation_tel,
     COALESCE(u.email,'<Organisation Email>')            AS organisation_email,
 
     COALESCE(
@@ -84,9 +83,6 @@
 
     COALESCE(NULLIF(bp.ZZUnionised,'N'))                           AS unionised,
 
-    COALESCE(NULLIF(bp.description,''), '<Core Business of Organisation>')
-                                                                  AS core_business,
-
     COALESCE(TRIM(CONCAT(v.zzfirstname, ' ', v.zzmiddlename, ' ', v.zzsurname)), '<SDF Name>')
                                                                   AS sdf_name,
     COALESCE(v.phone, '<Phone Number>')                           AS sdf_phone,
@@ -94,7 +90,7 @@
     COALESCE(v.email, '<Email Address>')                          AS sdf_email,
     COALESCE(v.zzsdfroletype, '<SDF Role>')                       AS sdf_role,
 
-    COALESCE(bd.bankname, '<Bank Name>')                          AS bank_name,
+    COALESCE(bank_rl.name, NULLIF(bd.bankname,''), '<Bank Name>') AS bank_name,
     COALESCE(bd.accountno, '<Account Number>')                    AS account_number,
     COALESCE(bd.zzaccountholder, '<Account Holder>')              AS account_holder,
     COALESCE(bd.accounttype, '<Type of Account>')                 AS account_type,
@@ -144,6 +140,26 @@ LEFT JOIN adempiere.ad_ref_list sic_rl
       AND sic_rl.ad_reference_id = sic_ref.ad_reference_id
       AND sic_rl.value = bp.zzsiccode
 
+LEFT JOIN adempiere.ad_table bp_tab
+       ON bp_tab.tablename = 'C_BPartner'
+LEFT JOIN adempiere.ad_column subsector_col
+       ON subsector_col.ad_table_id = bp_tab.ad_table_id
+      AND LOWER(subsector_col.columnname) = 'zzsubsector'
+LEFT JOIN adempiere.ad_ref_list subsector_rl
+       ON subsector_rl.isactive = 'Y'
+      AND subsector_rl.ad_reference_id = subsector_col.ad_reference_value_id
+      AND subsector_rl.value = bp.zzsubsector
+
+LEFT JOIN adempiere.ad_table bd_tab
+       ON bd_tab.tablename = 'ZZBankingDetails'
+LEFT JOIN adempiere.ad_column bank_col
+       ON bank_col.ad_table_id = bd_tab.ad_table_id
+      AND LOWER(bank_col.columnname) = 'bank'
+LEFT JOIN adempiere.ad_ref_list bank_rl
+       ON bank_rl.isactive = 'Y'
+      AND bank_rl.ad_reference_id = bank_col.ad_reference_value_id
+      AND bank_rl.value = bd.bank
+
 WHERE r.zz_wsp_atr_report_id = $P{ZZ_WSP_ATR_Report_ID}]]>
 	</queryString>
 	<field name="zz_wsp_atr_submitted_id" class="java.lang.Integer"/>
@@ -157,7 +173,6 @@ WHERE r.zz_wsp_atr_report_id = $P{ZZ_WSP_ATR_Report_ID}]]>
 	<field name="total_employees" class="java.lang.String"/>
 	<field name="employees_terminated" class="java.lang.String"/>
 	<field name="organisation_tel" class="java.lang.String"/>
-	<field name="organisation_fax" class="java.lang.String"/>
 	<field name="organisation_email" class="java.lang.String"/>
 	<field name="organisation_physical_address" class="java.lang.String"/>
 	<field name="physical_code" class="java.lang.String"/>
@@ -166,7 +181,6 @@ WHERE r.zz_wsp_atr_report_id = $P{ZZ_WSP_ATR_Report_ID}]]>
 	<field name="province_municipality" class="java.lang.String"/>
 	<field name="type_of_organisation" class="java.lang.String"/>
 	<field name="unionised" class="java.lang.String"/>
-	<field name="core_business" class="java.lang.String"/>
 	<field name="sdf_name" class="java.lang.String"/>
 	<field name="sdf_phone" class="java.lang.String"/>
 	<field name="sdf_cell" class="java.lang.String"/>
@@ -297,16 +311,6 @@ WHERE r.zz_wsp_atr_report_id = $P{ZZ_WSP_ATR_Report_ID}]]>
 				<textFieldExpression><![CDATA[$F{organisation_tel}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement style="LblCell" x="0" y="172" width="332" height="18" uuid="71c81b4d-6c08-4d1f-bd63-ff36b5c9d7c0"/>
-				<textElement verticalAlignment="Middle"/>
-				<text><![CDATA[Organisation Fax No]]></text>
-			</staticText>
-			<textField>
-				<reportElement style="ValCell" x="332" y="172" width="878" height="18" uuid="b3f5f8c0-f2f2-44a1-9b41-718a5a3c4b22"/>
-				<textElement verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[$F{organisation_fax}]]></textFieldExpression>
-			</textField>
-			<staticText>
 				<reportElement style="LblCell" x="0" y="190" width="332" height="18" uuid="c0b93166-0a6b-4c1c-b04e-48b5bca1b0e3"/>
 				<textElement verticalAlignment="Middle"/>
 				<text><![CDATA[Organisation Email]]></text>
@@ -385,16 +389,6 @@ WHERE r.zz_wsp_atr_report_id = $P{ZZ_WSP_ATR_Report_ID}]]>
 				<reportElement style="ValCell" x="1089" y="262" width="121" height="18" uuid="d4d5ef2b-9a3d-4a93-bf27-2de0d1cf2c6d"/>
 				<textElement verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{unionised}]]></textFieldExpression>
-			</textField>
-			<staticText>
-				<reportElement style="LblCell" x="0" y="280" width="332" height="18" uuid="d7e0a5ed-1e79-4e49-9b6e-3c146b7d9ed9"/>
-				<textElement verticalAlignment="Middle"/>
-				<text><![CDATA[Core Business of Organisation]]></text>
-			</staticText>
-			<textField>
-				<reportElement style="ValCell" x="332" y="280" width="878" height="18" uuid="b28fa5e3-377b-4fdc-bf65-970ec3fb8db2"/>
-				<textElement verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[$F{core_business}]]></textFieldExpression>
 			</textField>
 			<subreport isUsingCache="true">
 				<reportElement x="0" y="300" width="1210" height="120" uuid="6e90abf0-1c7e-4de2-a38d-5dbf1d6fba91"/>
