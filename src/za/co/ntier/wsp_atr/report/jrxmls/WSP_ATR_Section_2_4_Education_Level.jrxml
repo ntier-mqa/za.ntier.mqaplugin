@@ -712,7 +712,7 @@ ORDER BY qt.Name]]>
 				<text><![CDATA[Grand Total]]></text>
 			</staticText>
 			<textField>
-				<reportElement style="CellNum" x="820" y="22" width="65" height="18" uuid="24000000-0000-0000-0000-000000000077"/>
+				<reportElement style="CellNum" x="755" y="22" width="130" height="18" uuid="24000000-0000-0000-0000-000000000077"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -722,7 +722,7 @@ ORDER BY qt.Name]]>
 				<textFieldExpression><![CDATA[$V{vGrandEmployees}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="CellNum" x="1145" y="22" width="65" height="18" uuid="24000000-0000-0000-0000-000000000078"/>
+				<reportElement style="CellNum" x="1015" y="22" width="195" height="18" uuid="24000000-0000-0000-0000-000000000078"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>

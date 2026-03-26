@@ -725,154 +725,24 @@ ORDER BY occ.Value]]>
 				<textFieldExpression><![CDATA["Grand Total (Employees): " + $V{Grand_Total_Employees}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="CellNum" x="430" y="28" width="52" height="28" uuid="42bd8a96-2f1d-4307-892f-8a5cdcc9e757"/>
+				<reportElement style="CellNum" x="846" y="28" width="104" height="28" uuid="808b49e2-3f65-4d83-8346-3b17086e21b4"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<paragraph leftIndent="4" rightIndent="4"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$V{Sum_African_Male}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$V{Grand_Total_Employees}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="CellNum" x="482" y="28" width="52" height="28" uuid="37cee951-d42e-41f7-a4be-3dc700c3b23e"/>
+				<reportElement style="CellNum" x="1054" y="28" width="156" height="28" uuid="98372833-0d0b-4657-a155-30ef0506c34e"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<paragraph leftIndent="4" rightIndent="4"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$V{Sum_African_Female}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="534" y="28" width="52" height="28" uuid="cfc211f7-1122-4339-8c9e-a62554793ff5"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<paragraph leftIndent="4" rightIndent="4"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$V{Sum_Coloured_Male}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="586" y="28" width="52" height="28" uuid="c585f98c-e958-447b-91d7-ee8f262fe57f"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<paragraph leftIndent="4" rightIndent="4"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$V{Sum_Coloured_Female}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="638" y="28" width="52" height="28" uuid="b493a117-e698-4490-a365-0f82d19577e2"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<paragraph leftIndent="4" rightIndent="4"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$V{Sum_Indian_Male}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="690" y="28" width="52" height="28" uuid="7d6ef6bb-450b-42e5-8658-7bf7c1ccc97f"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<paragraph leftIndent="4" rightIndent="4"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$V{Sum_Indian_Female}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="742" y="28" width="52" height="28" uuid="0db0c7e7-07a2-4897-b2f0-253791fe138f"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<paragraph leftIndent="4" rightIndent="4"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$V{Sum_White_Male}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="794" y="28" width="52" height="28" uuid="259083ee-b3a4-4c9e-aafa-a8bb72b4fa18"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<paragraph leftIndent="4" rightIndent="4"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$V{Sum_White_Female}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="846" y="28" width="52" height="28" uuid="808b49e2-3f65-4d83-8346-3b17086e21b4"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<paragraph leftIndent="4" rightIndent="4"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$V{Sum_Total_Male}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="898" y="28" width="52" height="28" uuid="71a96b9c-6886-42ac-9836-dcb51cc5ae6c"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<paragraph leftIndent="4" rightIndent="4"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$V{Sum_Total_Female}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="950" y="28" width="52" height="28" uuid="e9b34f92-6fbe-4802-9fd1-0f15db9ec2d1"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<paragraph leftIndent="4" rightIndent="4"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$V{Sum_Disabled}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="1002" y="28" width="52" height="28" uuid="d63748f2-5cae-4a7f-a448-9d4e4de909e0"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<paragraph leftIndent="4" rightIndent="4"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$V{Sum_NonSA}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="1054" y="28" width="52" height="28" uuid="65a478c1-ac23-4cf8-b1c5-3813af1a1174"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<paragraph leftIndent="4" rightIndent="4"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$V{Sum_Age_U35}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="1106" y="28" width="52" height="28" uuid="a88c042a-d818-4b4c-a26c-6af22a982b5f"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<paragraph leftIndent="4" rightIndent="4"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$V{Sum_Age_35_55}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="1158" y="28" width="52" height="28" uuid="98372833-0d0b-4657-a155-30ef0506c34e"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<paragraph leftIndent="4" rightIndent="4"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$V{Sum_Age_O55}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$V{Grand_Total_Employees}]]></textFieldExpression>
 			</textField>
 		</band>
 	</summary>
