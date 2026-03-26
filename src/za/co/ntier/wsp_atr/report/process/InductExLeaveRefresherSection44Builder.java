@@ -10,15 +10,15 @@ import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Report;
 import za.ntier.models.MZZWSPATRSubmitted;
 
 /**
- * Section 4.4 - Induction, Ex-leave and Refresher training done (2024) and planned (2025)
+ * Section 4.4 - Induction, Ex-leave and Refresher training done (prior fiscal year) and planned (fiscal year)
  *
  * Output: ZZ_WSP_ATR_Induct_Ex_Leave_Training_Rep
  *
- * Planned (2025): from ZZ_WSP_ATR_WSP
+ * Planned (fiscal year): from ZZ_WSP_ATR_WSP
  * - bucket from ZZ_Learning_Programme_Ref via ZZ_Learning_Programme_Type_ID
  * - planned headcount = ZZ_Male + ZZ_Female
  *
- * Trained (2024): from ZZ_WSP_ATR_ATR_Detail
+ * Trained (prior fiscal year): from ZZ_WSP_ATR_ATR_Detail
  * - bucket from ZZ_Learning_Programme_Ref via qualification_type_id
  * - count DISTINCT employee_number_id (each person counted once regardless of interventions)
  * - major group derived via biodata -> ofo occupation -> occupations_ref.value prefix -> major group ref
@@ -30,7 +30,7 @@ public class InductExLeaveRefresherSection44Builder extends AbstractReportSectio
 
     @Override
     public String getName() {
-        return "Induction, Ex-leave and Refresher training done (2024) and planned (2025)";
+        return "Induction, Ex-leave and Refresher training done (prior fiscal year) and planned (fiscal year)";
     }
 
     @Override
@@ -152,12 +152,12 @@ public class InductExLeaveRefresherSection44Builder extends AbstractReportSectio
 
                     row.set_ValueOfColumn("ZZ_WSP_ATR_OFO_Major_Group_Ref_ID", rs.getInt("major_group_id"));
 
-                    // trained (2024)
+                    // trained (prior fiscal year)
                     row.set_ValueOfColumn("ZZ_Induction_Trained_Cnt", rs.getBigDecimal("induction_trained"));
                     row.set_ValueOfColumn("ZZ_Ex_Leave_Trained_Cnt",  rs.getBigDecimal("exleave_trained"));
                     row.set_ValueOfColumn("ZZ_Refresher_Trained",     rs.getBigDecimal("refresher_trained"));
 
-                    // planned (2025)
+                    // planned (fiscal year)
                     row.set_ValueOfColumn("ZZ_Induction_Planned_Cnt",  rs.getBigDecimal("induction_planned"));
                     row.set_ValueOfColumn("ZZ_Ex_Leave_Planned_Cnt",   rs.getBigDecimal("exleave_planned"));
                     row.set_ValueOfColumn("ZZ_Refresher_Planned",      rs.getBigDecimal("refresher_planned"));

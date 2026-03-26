@@ -12,7 +12,7 @@ import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Summ_Of_Emp_Training_Inter_Rep;
 import za.ntier.models.MZZWSPATRSubmitted;
 
 /**
- * Section 4.2 - Summary of employee training interventions for the period 2024
+ * Section 4.2 - Summary of employee training interventions for the prior fiscal year
  *
  * In this section individual training interventions are counted against the number
  * of beneficiaries in each of them.
@@ -26,15 +26,13 @@ import za.ntier.models.MZZWSPATRSubmitted;
  * - Counts are DISTINCT employees per (Qualification_Type_ID, Learning_Programme_Detail_ID).
  * - Race/Gender/Disabled/SA Citizen derived via reference table Name (ILIKE checks),
  *   same approach as section 2.2.
- * - Age groups computed from Birth_Year_TRUE; report year fixed to 2024 (per section heading).
+ * - Age groups computed from Birth_Year_TRUE using ATR year (fiscal year - 1).
  * - Totals/Grand Totals are handled in JRXML (this builder inserts detail rows only).
  */
 public class SummEmpTrainingInterventionsSection42Builder extends AbstractReportSectionBuilder {
 
     private static final String SECTION = "4.2";
     private static final String TARGET_TABLE = "ZZ_WSP_ATR_Summ_Of_Emp_Training_Inter_Rep";
-    private static final int REPORT_YEAR = 2024;
-
     @Override
     public String getName() {
         return "Summary of employee training interventions";
@@ -51,6 +49,7 @@ public class SummEmpTrainingInterventionsSection42Builder extends AbstractReport
 
         // rerun behaviour: delete all rows for this report+section
         deleteExistingByReportAndSection(TARGET_TABLE, report.getZZ_WSP_ATR_Report_ID(), SECTION, trxName);
+        int atrYear = resolveAtrYearOrPrevious(submitted, trxName);
 
         int inserted = 0;
 
@@ -62,7 +61,7 @@ public class SummEmpTrainingInterventionsSection42Builder extends AbstractReport
          * - Race_ID -> ZZ_Equity_Ref.Name
          * - Gender_ID -> ZZ_Gender_Ref.Name
          * - Disabled_ID / SA_Citizen_ID -> ZZ_No_Yes_Ref.Name
-         * - Birth_Year_TRUE -> age bands based on REPORT_YEAR (2024)
+         * - Birth_Year_TRUE -> age bands based on ATR year (fiscal year - 1)
          */
         final String sql =
                 "WITH base AS ( \n"
@@ -91,7 +90,7 @@ public class SummEmpTrainingInterventionsSection42Builder extends AbstractReport
               + "    COALESCE(sa.Name,  '') AS sa_txt, \n"
               + "    CASE \n"
               + "      WHEN NULLIF(regexp_replace(COALESCE(bd.Birth_Year_TRUE,''), '[^0-9]', '', 'g'), '') IS NULL THEN NULL \n"
-              + "      ELSE (" + REPORT_YEAR + " - NULLIF(regexp_replace(bd.Birth_Year_TRUE, '[^0-9]', '', 'g'), '')::int) \n"
+              + "      ELSE (" + atrYear + " - NULLIF(regexp_replace(bd.Birth_Year_TRUE, '[^0-9]', '', 'g'), '')::int) \n"
               + "    END AS age_years \n"
               + "  FROM dedup dd \n"
               + "  LEFT JOIN " + X_ZZ_WSP_ATR_Biodata_Detail.Table_Name + " bd \n"

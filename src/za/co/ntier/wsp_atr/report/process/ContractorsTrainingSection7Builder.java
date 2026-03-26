@@ -11,7 +11,7 @@ import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Report;
 import za.ntier.models.MZZWSPATRSubmitted;
 
 /**
- * Section 7 - Contractors: Received Training in 2024 and Planned Training for 2025
+ * Section 7 - Contractors: Received Training in prior fiscal year and Planned Training for fiscal year
  *
  * Input : ZZ_WSP_ATR_Contractors (filtered by ZZ_WSP_ATR_Submitted_ID)
  * Output: ZZ_WSP_ATR_Contractors_Training_Rep (linked to ZZ_WSP_ATR_Report_ID)
@@ -99,7 +99,7 @@ public class ContractorsTrainingSection7Builder extends AbstractReportSectionBui
                     // input column zz_learning_programme_id also references that ref
                     row.setZZ_Learning_Programme_Type_ID(rs.getInt("programme_id"));
 
-                    // Trained 2024
+                    // Trained (prior fiscal year)
                     row.setZZ_Managers_Trained(rs.getInt("managers_trained"));
                     row.setZZ_Professionals_Trained(rs.getInt("professionals_trained"));
                     row.setZZ_Technicians_Trained(rs.getInt("technicians_trained"));
@@ -111,7 +111,7 @@ public class ContractorsTrainingSection7Builder extends AbstractReportSectionBui
                     row.setZZ_Learners_Trained(rs.getInt("learners_trained"));
                     row.setZZ_Total_Trained(rs.getInt("total_trained"));
 
-                    // Planned 2025
+                    // Planned (fiscal year)
                     row.setZZ_Managers_Planned(rs.getInt("managers_planned"));
                     row.setZZ_Professionals_Planned(rs.getInt("professionals_planned"));
                     row.setZZ_Technicians_Planned(rs.getInt("technicians_planned"));
