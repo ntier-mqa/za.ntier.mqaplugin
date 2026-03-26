@@ -604,14 +604,8 @@ ORDER BY qt.Name, qd.Name]]>
 					<pen lineWidth="0.5"/>
 				</graphicElement>
 			</rectangle>
-			<rectangle>
-				<reportElement x="1075" y="28" width="90" height="28" uuid="3be5337e-e79a-4779-9b64-95e64f46d1e3"/>
-				<graphicElement>
-					<pen lineWidth="0.5"/>
-				</graphicElement>
-			</rectangle>
 			<textField pattern="#0">
-				<reportElement style="CellNum" x="1165" y="28" width="45" height="28" uuid="771f6a4a-c306-49c6-8c9f-42bea0367911"/>
+				<reportElement style="CellNum" x="1075" y="28" width="135" height="28" uuid="771f6a4a-c306-49c6-8c9f-42bea0367911"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
