@@ -18,6 +18,7 @@ import org.compiere.util.Env;
 
 import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Submitted;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Report;
+import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
 import za.ntier.models.MZZWSPATRSubmitted;
 
 @org.adempiere.base.annotation.Process(
@@ -57,13 +58,15 @@ public class GenerateWspAtrReportProcess extends SvrProcess {
 			throw new IllegalStateException("ZZ_WSP_ATR_Submitted not found for ID=" + p_ZZ_WSP_ATR_Submitted_ID);
 		}
 
-		// Step 1: try find existing report
+		// Step 1: try find latest existing report matching the same criteria
 		X_ZZ_WSP_ATR_Report report = findExistingReport(submitted,consolidatedSubmission,p_ZZ_Only_Sub_Levy_Orgs);
 
 		boolean isNewReport = false;
+		boolean shouldCreateNewReport = report == null
+				|| X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported.equals(submitted.getZZ_DocStatus());
 
-		if (report == null) {
-		    // No existing report → create and build
+		if (shouldCreateNewReport) {
+		    // Imported submissions always create a fresh report record
 		    report = createReport(submitted,consolidatedSubmission,p_ZZ_Only_Sub_Levy_Orgs);
 		    isNewReport = true;
 		}
@@ -133,12 +136,14 @@ public class GenerateWspAtrReportProcess extends SvrProcess {
 	        "SELECT ZZ_WSP_ATR_Report_ID " +
 	        " FROM ZZ_WSP_ATR_Report " +
 	        " WHERE ZZ_WSP_ATR_Submitted_ID=? " +
-	        " and ZZ_ConsolidatedSubmission = " + (consolidatedSubmission ? "'Y'" : "'N'") +
-	        " and ZZ_Only_Sub_Levy_Orgs = " + (p_ZZ_Only_Sub_Levy_Orgs ? "'Y'" : "'N'") +
-	        " and isActive = 'Y'" +
+	        " AND ZZ_ConsolidatedSubmission=? " +
+	        " AND ZZ_Only_Sub_Levy_Orgs=? " +
+	        " AND IsActive='Y' " +
 	        " ORDER BY Created DESC, ZZ_WSP_ATR_Report_ID DESC " +
 	        " FETCH FIRST 1 ROWS ONLY",
-	        submittedId
+	        submittedId,
+	        consolidatedSubmission ? "Y" : "N",
+	        p_ZZ_Only_Sub_Levy_Orgs ? "Y" : "N"
 	    );
 
 	    if (existingReportId > 0) {
