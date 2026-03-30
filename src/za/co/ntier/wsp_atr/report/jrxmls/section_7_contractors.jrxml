@@ -472,7 +472,7 @@ ORDER BY programme_name]]>
 	<summary>
 		<band height="28">
 			<staticText>
-				<reportElement style="HdrSmall" x="0" y="0" width="685" height="28" uuid="8b0b8dee-f4f1-4fe9-ae50-da5f03c8bb4b"/>
+				<reportElement style="HdrSmall" x="0" y="0" width="280" height="28" uuid="8b0b8dee-f4f1-4fe9-ae50-da5f03c8bb4b"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
