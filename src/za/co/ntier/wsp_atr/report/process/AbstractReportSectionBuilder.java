@@ -50,6 +50,7 @@ public abstract class AbstractReportSectionBuilder implements IReportSectionBuil
 	        + "    WHERE slo.zz_wsp_atr_submitted_id = ? "
 	        + "      AND s.isactive = 'Y' "
 	        + "      AND s.zz_docstatus IN ('"
+	        + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Submitted + "','"
 	        + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported + "','"
 	        + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Uploaded + "','"
 	        + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Query + "') "
