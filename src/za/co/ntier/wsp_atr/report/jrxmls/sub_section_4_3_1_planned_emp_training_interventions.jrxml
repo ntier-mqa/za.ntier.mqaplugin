@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 6.20.2  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="sub_section_4_3_1_planned_emp_training_interventions" pageWidth="1250" pageHeight="1800" whenNoDataType="AllSectionsNoDetail" columnWidth="1210" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="c29a52ae-19c1-490d-b1be-ea5bf87b0cbd">
-	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="mqa dev"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="mqa_uat_DataAdapter.jrdax"/>
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
@@ -25,28 +25,21 @@
               WHERE r2.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}), '') AS fiscal_year,
     COALESCE(occ.Value, '') AS occ_code,
     COALESCE(occ.Name,  '') AS occ_title,
-
     COALESCE(lpt.Name, '')  AS programme_type,
     COALESCE(lp.Name,  '')  AS learning_programme,
-
     COALESCE(t.ZZ_Qualification, '') AS qualification_txt,
-
     COALESCE(t.ZZ_Male,0)::int     AS male_cnt,
     COALESCE(t.ZZ_Female,0)::int   AS female_cnt,
-
     COALESCE(t.ZZ_African,0)::int  AS african_cnt,
     COALESCE(t.ZZ_Coloured,0)::int AS coloured_cnt,
     COALESCE(t.ZZ_Indian,0)::int   AS indian_cnt,
     COALESCE(t.ZZ_White,0)::int    AS white_cnt,
-
     COALESCE(t.ZZ_Disabled,0)::int AS disabled_cnt,
-
     ( COALESCE(t.ZZ_African,0)
     + COALESCE(t.ZZ_Coloured,0)
     + COALESCE(t.ZZ_Indian,0)
     + COALESCE(t.ZZ_White,0)
     )::int AS total_to_be_trained
-
 FROM ZZ_WSP_ATR_Summ_Planned_Emp_Training_Inter_Rep t
 LEFT JOIN ZZ_Occupations_Ref occ
        ON occ.ZZ_Occupations_Ref_ID = t.ZZ_OFO_Specialisation_ID
@@ -54,10 +47,8 @@ LEFT JOIN ZZ_Learning_Programme_Ref lpt
        ON lpt.ZZ_Learning_Programme_Ref_ID = t.ZZ_Learning_Programme_Type_ID
 LEFT JOIN ZZ_Qualification_Type_Details_Ref lp
        ON lp.ZZ_Qualification_Type_Details_Ref_ID = t.ZZ_Learning_Programme_ID
-
 WHERE t.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
   AND COALESCE(t.ZZ_Report_Section,'') = '4.3.1'
-
 ORDER BY t.Row_No, occ.Value, lp.Name]]>
 	</queryString>
 	<field name="fiscal_year" class="java.lang.String"/>
@@ -130,9 +121,9 @@ ORDER BY t.Row_No, occ.Value, lp.Name]]>
 		</band>
 	</title>
 	<columnHeader>
-		<band height="70">
+		<band height="127">
 			<staticText>
-				<reportElement style="Hdr" x="0" y="0" width="180" height="70" uuid="938b074d-82d1-4ada-a16a-8a6d652e1dfa"/>
+				<reportElement style="Hdr" x="0" y="0" width="180" height="127" uuid="938b074d-82d1-4ada-a16a-8a6d652e1dfa"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
@@ -142,63 +133,56 @@ ORDER BY t.Row_No, occ.Value, lp.Name]]>
 				<text><![CDATA[Specialisation / Occupation Title]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="Hdr" x="180" y="0" width="70" height="70" uuid="a6157ef3-7ce2-4972-9c1e-54ce79ef43f8"/>
+				<reportElement style="Hdr" x="180" y="0" width="70" height="127" uuid="a6157ef3-7ce2-4972-9c1e-54ce79ef43f8"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Code]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="250" y="0" width="115" height="70" uuid="eb69a89e-9417-4a5d-87cd-8dccd8232eac"/>
+				<reportElement style="HdrSmall" x="250" y="0" width="115" height="127" uuid="eb69a89e-9417-4a5d-87cd-8dccd8232eac"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Qualification / Learning Programme Type]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="365" y="0" width="230" height="70" uuid="89e3d6e6-3762-4ee6-b0f0-cac41106c1ee"/>
+				<reportElement style="HdrSmall" x="365" y="0" width="230" height="127" uuid="89e3d6e6-3762-4ee6-b0f0-cac41106c1ee"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Please add text details of learning programme for each supplied]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="595" y="0" width="105" height="70" uuid="b86b6b33-ad1c-449e-baff-8a73bda28155"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<text><![CDATA[Please specify if study leading to applied and assessed in workplace / not in previous column]]></text>
-			</staticText>
-			<staticText>
-				<reportElement style="HdrSmall" x="700" y="0" width="104" height="30" uuid="5fa771c3-6cb1-4948-bba7-45a3d376df5b"/>
+				<reportElement style="HdrSmall" x="700" y="0" width="104" height="127" uuid="5fa771c3-6cb1-4948-bba7-45a3d376df5b"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Gender]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="804" y="0" width="208" height="30" uuid="a77b4bf5-cc3f-47de-bacd-5bc90e4bb3d2"/>
+				<reportElement style="HdrSmall" x="804" y="0" width="208" height="127" uuid="a77b4bf5-cc3f-47de-bacd-5bc90e4bb3d2"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Race]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="1012" y="0" width="62" height="70" uuid="549e5c8b-37c8-45f3-b398-2edcc61a8d45"/>
+				<reportElement style="HdrSmall" x="1012" y="0" width="62" height="127" uuid="549e5c8b-37c8-45f3-b398-2edcc61a8d45"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Disabled]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="1074" y="0" width="136" height="70" uuid="5d392489-9ab5-40d7-8266-8cc01f71bb8a"/>
+				<reportElement style="HdrSmall" x="1074" y="0" width="136" height="127" uuid="5d392489-9ab5-40d7-8266-8cc01f71bb8a"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[Total to be Trained/Planned]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="700" y="30" width="52" height="40" uuid="048508a0-e886-4b9c-8683-869b86adab7f">
+				<reportElement style="HdrSmall" x="700" y="0" width="52" height="127" uuid="048508a0-e886-4b9c-8683-869b86adab7f">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
 				<box>
@@ -207,7 +191,7 @@ ORDER BY t.Row_No, occ.Value, lp.Name]]>
 				<text><![CDATA[Male]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="752" y="30" width="52" height="40" uuid="7180874b-b206-4c3c-b72f-65c6f1d39e0c">
+				<reportElement style="HdrSmall" x="752" y="0" width="52" height="127" uuid="7180874b-b206-4c3c-b72f-65c6f1d39e0c">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
 				<box>
@@ -216,7 +200,7 @@ ORDER BY t.Row_No, occ.Value, lp.Name]]>
 				<text><![CDATA[Female]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="804" y="30" width="52" height="40" uuid="b7d6fde8-43f6-47ea-bf85-0799a41696bc">
+				<reportElement style="HdrSmall" x="804" y="0" width="52" height="127" uuid="b7d6fde8-43f6-47ea-bf85-0799a41696bc">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
 				<box>
@@ -225,7 +209,7 @@ ORDER BY t.Row_No, occ.Value, lp.Name]]>
 				<text><![CDATA[African]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="856" y="30" width="52" height="40" uuid="0d875ef0-b7ba-42f3-aea4-72f9571b1746">
+				<reportElement style="HdrSmall" x="856" y="0" width="52" height="127" uuid="0d875ef0-b7ba-42f3-aea4-72f9571b1746">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
 				<box>
@@ -234,7 +218,7 @@ ORDER BY t.Row_No, occ.Value, lp.Name]]>
 				<text><![CDATA[Coloured]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="908" y="30" width="52" height="40" uuid="7542b2c4-cfb7-407f-808f-46331d1c8f02">
+				<reportElement style="HdrSmall" x="908" y="0" width="52" height="127" uuid="7542b2c4-cfb7-407f-808f-46331d1c8f02">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
 				<box>
@@ -243,13 +227,20 @@ ORDER BY t.Row_No, occ.Value, lp.Name]]>
 				<text><![CDATA[Indian]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HdrSmall" x="960" y="30" width="52" height="40" uuid="75b4b835-a7a1-4bb8-8a00-1330f62f63eb">
+				<reportElement style="HdrSmall" x="960" y="0" width="52" height="127" uuid="75b4b835-a7a1-4bb8-8a00-1330f62f63eb">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<text><![CDATA[White]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="HdrSmall" x="595" y="1" width="105" height="126" uuid="b86b6b33-ad1c-449e-baff-8a73bda28155"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<text><![CDATA[Please specify if study leading to applied and assessed in workplace / not in previous column]]></text>
 			</staticText>
 		</band>
 	</columnHeader>
@@ -303,7 +294,7 @@ ORDER BY t.Row_No, occ.Value, lp.Name]]>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<paragraph leftIndent="4" rightIndent="4"/>
 				</textElement>
-				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{qualification_txt}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="700" y="0" width="52" height="26" uuid="43b44484-9557-48c6-a12b-89234cecb71c">
