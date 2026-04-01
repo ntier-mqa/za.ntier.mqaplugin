@@ -28,10 +28,8 @@ import za.co.ntier.api.model.X_ZZ_QCTO_Alloc_OC;
 import za.co.ntier.api.model.X_ZZ_QCTO_Alloc_Skills;
 import za.co.ntier.api.model.X_ZZ_QCTO_Allocation;
 
-
 /**
  * Process to Import QCTO Allocations from an attached Excel Spreadsheet.
- * 
  * author niraj
  */
 @Process(name = "za.ntier.process.ImportQCTOAllocationsProcess")
@@ -152,8 +150,8 @@ public class ImportQCTOAllocationsProcess extends SvrProcess
 		}
 
 		return String.format(
-				"Spreadsheet parsing complete. Correctly Processed - OC: %d, Skills: %d, AC: %d. Failed/Skipped Logs: %d",
-				m_updated_OC, m_updated_Skills, m_updated_AC, m_failed);
+								"Spreadsheet parsing complete. Correctly Processed - OC: %d, Skills: %d, AC: %d. Failed/Skipped Logs: %d",
+								m_updated_OC, m_updated_Skills, m_updated_AC, m_failed);
 	}
 
 	private void processSheet(Workbook workbook, String sheetName, int sheetType, int recordId)
@@ -244,19 +242,13 @@ public class ImportQCTOAllocationsProcess extends SvrProcess
 							allocLine.setLineNo(Integer.parseInt(idStr));
 						}
 						catch (Exception ex)
-						{
-						}
+						{}
 					}
 
 					allocLine.setZZ_AllocationNo(uniqueAllocationNo);
 
-					int bPartnerId = getBPartnerId(tradingName, legalName);
-					if (bPartnerId > 0)
-					{
-						allocLine.setC_BPartner_ID(bPartnerId);
-					}
-
 					allocLine.setName(fullNameContact);
+					allocLine.setZZTradeName(tradingName);
 					allocLine.setZZLegalName(legalName);
 					allocLine.setAddress1(physicalAddress);
 					allocLine.setAddress2(buildingName);
@@ -300,19 +292,13 @@ public class ImportQCTOAllocationsProcess extends SvrProcess
 							allocLine.setLineNo(Integer.parseInt(idStr));
 						}
 						catch (Exception ex)
-						{
-						}
+						{}
 					}
 
 					allocLine.setZZ_AllocationNo(uniqueAllocationNo);
 
-					int bPartnerId = getBPartnerId(tradingName, legalName);
-					if (bPartnerId > 0)
-					{
-						allocLine.setC_BPartner_ID(bPartnerId);
-					}
-
 					allocLine.setName(fullNameContact);
+					allocLine.setZZTradeName(tradingName);
 					allocLine.setZZLegalName(legalName);
 					allocLine.setAddress1(physicalAddress);
 					allocLine.setAddress2(buildingName);
@@ -356,19 +342,13 @@ public class ImportQCTOAllocationsProcess extends SvrProcess
 							allocLine.setLineNo(Integer.parseInt(idStr));
 						}
 						catch (Exception ex)
-						{
-						}
+						{}
 					}
 
 					allocLine.setZZ_AllocationNo(uniqueAllocationNo);
 
-					int bPartnerId = getBPartnerId(tradingName, legalName);
-					if (bPartnerId > 0)
-					{
-						allocLine.setC_BPartner_ID(bPartnerId);
-					}
-
 					allocLine.setName(fullNameContact);
+					allocLine.setZZTradeName(tradingName);
 					allocLine.setZZLegalName(legalName);
 					allocLine.setAddress1(physicalAddress);
 					allocLine.setAddress2(buildingName);
@@ -423,39 +403,6 @@ public class ImportQCTOAllocationsProcess extends SvrProcess
 	}
 
 	/**
-	 * Helper to find a Business Partner by Trading Name or Legal Name
-	 */
-	private int getBPartnerId(String tradingName, String legalName)
-	{
-		int bPartnerId = 0;
-
-		// 1. Try to find by Exact Trading Name matches standard Name
-		if (tradingName != null && !tradingName.isEmpty())
-		{
-			bPartnerId = DB.getSQLValue(get_TrxName(),
-					"SELECT C_BPartner_ID FROM C_BPartner WHERE AD_Client_ID=? AND Value=?", getAD_Client_ID(),
-					tradingName);
-
-			if (bPartnerId <= 0)
-			{
-				bPartnerId = DB.getSQLValue(get_TrxName(),
-						"SELECT C_BPartner_ID FROM C_BPartner WHERE AD_Client_ID=? AND Name=?", getAD_Client_ID(),
-						tradingName);
-			}
-		}
-
-		// 2. Fall back to Legal Name (if different)
-		if (bPartnerId <= 0 && legalName != null && !legalName.isEmpty())
-		{
-			bPartnerId = DB.getSQLValue(get_TrxName(),
-					"SELECT C_BPartner_ID FROM C_BPartner WHERE AD_Client_ID=? AND Name=?", getAD_Client_ID(),
-					legalName);
-		}
-
-		return bPartnerId;
-	}
-
-	/**
 	 * Helper to map Excel NQF Level to Reference List value
 	 */
 	private String getNQFLevelValue(String nqfLevelExcel)
@@ -468,10 +415,10 @@ public class ImportQCTOAllocationsProcess extends SvrProcess
 
 		// 1. Try to match exact Name or Value in AD_Ref_List
 		String value = DB.getSQLValueString(get_TrxName(),
-				"SELECT l.Value FROM AD_Ref_List l "
-						+ "INNER JOIN AD_Reference r ON l.AD_Reference_ID = r.AD_Reference_ID "
-						+ "WHERE r.AD_Reference_UU=? AND (l.Name=? OR l.Value=?)",
-				"2b47e027-cb5a-45d6-8fc6-2c9bc9c6c3ad", searchStr, searchStr);
+											"SELECT l.Value FROM AD_Ref_List l "
+															+ "INNER JOIN AD_Reference r ON l.AD_Reference_ID = r.AD_Reference_ID "
+															+ "WHERE r.AD_Reference_UU=? AND (l.Name=? OR l.Value=?)",
+											"2b47e027-cb5a-45d6-8fc6-2c9bc9c6c3ad", searchStr, searchStr);
 
 		if (value != null)
 		{
@@ -483,11 +430,11 @@ public class ImportQCTOAllocationsProcess extends SvrProcess
 		if (searchStr.length() >= 2)
 		{
 			String lastTwo = searchStr.substring(searchStr.length() - 2).trim();
-			value = DB.getSQLValueString(get_TrxName(),
-					"SELECT l.Value FROM AD_Ref_List l "
-							+ "INNER JOIN AD_Reference r ON l.AD_Reference_ID = r.AD_Reference_ID "
-							+ "WHERE r.AD_Reference_UU=? AND l.Value=?",
-					"2b47e027-cb5a-45d6-8fc6-2c9bc9c6c3ad", lastTwo);
+			value = DB.getSQLValueString(	get_TrxName(),
+											"SELECT l.Value FROM AD_Ref_List l "
+															+ "INNER JOIN AD_Reference r ON l.AD_Reference_ID = r.AD_Reference_ID "
+															+ "WHERE r.AD_Reference_UU=? AND l.Value=?",
+											"2b47e027-cb5a-45d6-8fc6-2c9bc9c6c3ad", lastTwo);
 			if (value != null)
 			{
 				return value;
@@ -562,14 +509,14 @@ public class ImportQCTOAllocationsProcess extends SvrProcess
 			else if (header.contains("email address of additional"))
 				map.put("EmailAddContact", i);
 
-			else if (header.contains("cipc registration") || header.contains("emis for tvet")
-					|| header.contains("lra reference number"))
+			else if (header.contains("cipc registration")	|| header.contains("emis for tvet")
+						|| header.contains("lra reference number"))
 				map.put("CIPC", i);
 			else if (header.contains("title of occupational qualification")
-					|| header.contains("title of occupational skills programme"))
+						|| header.contains("title of occupational skills programme"))
 				map.put("OccQualification", i);
 			else if (header.contains("saqa id") || header.contains("id of occupational skills programme")
-					|| header.contains("saqa id number"))
+						|| header.contains("saqa id number"))
 				map.put("SAQAId", i);
 			else if (header.contains("nqf level"))
 				map.put("NQFLevel", i);
@@ -623,11 +570,12 @@ public class ImportQCTOAllocationsProcess extends SvrProcess
 		if (m.find())
 		{
 			String yearStr = m.group(1);
-			int yearId = DB.getSQLValue(get_TrxName(), 
-				"SELECT C_Year_ID FROM C_Year WHERE FiscalYear=? AND AD_Client_ID=?", yearStr, getAD_Client_ID());
-			if (yearId <= 0) {
-				yearId = DB.getSQLValue(get_TrxName(), 
-					"SELECT C_Year_ID FROM C_Year WHERE Year=? AND AD_Client_ID=0", yearStr);
+			int yearId = DB.getSQLValue(get_TrxName(),
+										"SELECT C_Year_ID FROM C_Year WHERE FiscalYear=? AND AD_Client_ID=?", yearStr, getAD_Client_ID());
+			if (yearId <= 0)
+			{
+				yearId = DB.getSQLValue(get_TrxName(),
+										"SELECT C_Year_ID FROM C_Year WHERE Year=? AND AD_Client_ID=0", yearStr);
 			}
 			return yearId > 0 ? yearId : 0;
 		}
@@ -638,18 +586,18 @@ public class ImportQCTOAllocationsProcess extends SvrProcess
 	{
 		if (date == null)
 			return null;
-			
-		String name = DB.getSQLValueString(get_TrxName(),
-				"SELECT Name FROM C_Period WHERE ? BETWEEN StartDate AND EndDate AND AD_Client_ID=?",
-				date, getAD_Client_ID());
-				
+
+		String name = DB.getSQLValueString(	get_TrxName(),
+											"SELECT Name FROM C_Period WHERE ? BETWEEN StartDate AND EndDate AND AD_Client_ID=?",
+											date, getAD_Client_ID());
+
 		if (name == null || name.isEmpty())
 		{
 			name = DB.getSQLValueString(get_TrxName(),
-					"SELECT Name FROM C_Period WHERE ? BETWEEN StartDate AND EndDate AND AD_Client_ID=0",
-					date);
+										"SELECT Name FROM C_Period WHERE ? BETWEEN StartDate AND EndDate AND AD_Client_ID=0",
+										date);
 		}
-		
+
 		if (name == null || name.isEmpty())
 		{
 			return new SimpleDateFormat("MMM-yyyy").format(date);
