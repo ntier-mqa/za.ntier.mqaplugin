@@ -87,6 +87,17 @@ ORDER BY t.Row_No]]>
 	<variable name="Sum_Disabled" class="java.lang.Integer" calculation="Sum">
 		<variableExpression><![CDATA[$F{disabled_cnt}]]></variableExpression>
 	</variable>
+
+	<variable name="Grand_Total_Gender" class="java.lang.Integer">
+		<variableExpression><![CDATA[($V{Sum_Male}==null?0:$V{Sum_Male}.intValue())
+          + ($V{Sum_Female}==null?0:$V{Sum_Female}.intValue())]]></variableExpression>
+	</variable>
+	<variable name="Grand_Total_Race" class="java.lang.Integer">
+		<variableExpression><![CDATA[($V{Sum_African}==null?0:$V{Sum_African}.intValue())
+          + ($V{Sum_Coloured}==null?0:$V{Sum_Coloured}.intValue())
+          + ($V{Sum_Indian}==null?0:$V{Sum_Indian}.intValue())
+          + ($V{Sum_White}==null?0:$V{Sum_White}.intValue())]]></variableExpression>
+	</variable>
 	<variable name="Grand_Total_Planned" class="java.lang.Integer">
 		<variableExpression><![CDATA[($V{Sum_Male}==null?0:$V{Sum_Male}.intValue())
           + ($V{Sum_Female}==null?0:$V{Sum_Female}.intValue())]]></variableExpression>
@@ -416,12 +427,20 @@ ORDER BY t.Row_No]]>
 				</textElement>
 				<text><![CDATA[Grand Total]]></text>
 			</staticText>
-			<rectangle>
-				<reportElement x="790" y="28" width="288" height="28" uuid="0b1c2d3e-4f5a-4b6c-8d7e-9f0a1b2c3d4f"/>
-				<graphicElement>
+			<textField>
+				<reportElement style="CellNum" x="790" y="28" width="96" height="28" uuid="2d3e4f5a-6b7c-4d8e-9f01-2a3b4c5d6e70"/>
+				<box>
 					<pen lineWidth="0.5"/>
-				</graphicElement>
-			</rectangle>
+				</box>
+				<textFieldExpression><![CDATA[$V{Grand_Total_Gender}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="CellNum" x="886" y="28" width="192" height="28" uuid="3e4f5a6b-7c8d-4e9f-012a-3b4c5d6e7f81"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textFieldExpression><![CDATA[$V{Grand_Total_Race}]]></textFieldExpression>
+			</textField>
 			<rectangle>
 				<reportElement x="1078" y="28" width="52" height="28" uuid="0b1c2d3e-4f5a-4b6c-8d7e-9f0a1b2c3d50"/>
 				<graphicElement>
