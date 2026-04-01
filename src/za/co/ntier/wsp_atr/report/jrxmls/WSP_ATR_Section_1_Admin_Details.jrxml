@@ -46,36 +46,36 @@
     COALESCE(bp.zzterminatedemployees::text, '')
                                                                   AS employees_terminated,
 
-    COALESCE( bl.phone, '')                  AS organisation_tel,
+    COALESCE( bl_physical.phone, '')                  AS organisation_tel,
     COALESCE(u.email,'')            AS organisation_email,
 
     COALESCE(
       NULLIF(
         TRIM(CONCAT_WS(', ',
-          loc.address1,
-          loc.address2,
-          loc.city,
-          reg.name
+          loc_physical.address1,
+          loc_physical.address2,
+          loc_physical.city,
+          reg_physical.name
         )), ''
       ),
       ''
     )                                                             AS organisation_physical_address,
-    COALESCE(NULLIF(loc.postal,''), '')            AS physical_code,
+    COALESCE(NULLIF(loc_physical.postal,''), '')            AS physical_code,
 
     COALESCE(
       NULLIF(
         TRIM(CONCAT_WS(', ',
-          loc.address1,
-          loc.address2,
-          loc.city,
-          reg.name
+          loc_postal.address1,
+          loc_postal.address2,
+          loc_postal.city,
+          reg_postal.name
         )), ''
       ),
       ''
     )                                                             AS organisation_postal_address,
-    COALESCE(NULLIF(loc.postal,''), '')              AS postal_code,
+    COALESCE(NULLIF(loc_postal.postal,''), '')              AS postal_code,
 
-    COALESCE(NULLIF(TRIM(CONCAT_WS(' - ', reg.name, loc.city)),''), '')
+    COALESCE(NULLIF(TRIM(CONCAT_WS(' - ', reg_physical.name, loc_physical.city)),''), '')
                                                                   AS province_municipality,
 
     COALESCE(NULLIF(bp.zzorganisationtype,''), '')
@@ -117,14 +117,34 @@ LEFT JOIN LATERAL (
     FROM adempiere.c_bpartner_location bl
     WHERE bl.isactive='Y'
       AND bl.c_bpartner_id = bp.c_bpartner_id
+    ORDER BY
+      CASE
+        WHEN LOWER(COALESCE(bl.name, '')) LIKE '%business%' THEN 0
+        ELSE 1
+      END,
+      bl.updated DESC
+    LIMIT 1
+) bl_physical ON true
+
+LEFT JOIN adempiere.c_location loc_physical
+       ON loc_physical.c_location_id = bl_physical.c_location_id
+LEFT JOIN adempiere.c_region reg_physical
+       ON reg_physical.c_region_id = loc_physical.c_region_id
+
+LEFT JOIN LATERAL (
+    SELECT bl.*
+    FROM adempiere.c_bpartner_location bl
+    WHERE bl.isactive='Y'
+      AND bl.c_bpartner_id = bp.c_bpartner_id
+      AND LOWER(COALESCE(bl.name, '')) LIKE '%postal%'
     ORDER BY bl.updated DESC
     LIMIT 1
-) bl ON true
+) bl_postal ON true
 
-LEFT JOIN adempiere.c_location loc
-       ON loc.c_location_id = bl.c_location_id
-LEFT JOIN adempiere.c_region reg
-       ON reg.c_region_id = loc.c_region_id
+LEFT JOIN adempiere.c_location loc_postal
+       ON loc_postal.c_location_id = bl_postal.c_location_id
+LEFT JOIN adempiere.c_region reg_postal
+       ON reg_postal.c_region_id = loc_postal.c_region_id
 
 LEFT JOIN LATERAL (
     SELECT bd.*
