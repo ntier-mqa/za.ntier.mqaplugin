@@ -56,9 +56,11 @@ ORDER BY t.Row_No]]>
 	<field name="total_planned" class="java.math.BigDecimal"/>
 	<variable name="Sum_Done" class="java.math.BigDecimal" calculation="Sum">
 		<variableExpression><![CDATA[$F{total_done}]]></variableExpression>
+		<initialValueExpression><![CDATA[java.math.BigDecimal.ZERO]]></initialValueExpression>
 	</variable>
 	<variable name="Sum_Planned" class="java.math.BigDecimal" calculation="Sum">
 		<variableExpression><![CDATA[$F{total_planned}]]></variableExpression>
+		<initialValueExpression><![CDATA[java.math.BigDecimal.ZERO]]></initialValueExpression>
 	</variable>
 	<title>
 		<band height="120">
@@ -163,20 +165,20 @@ ORDER BY t.Row_No]]>
 				</textElement>
 				<text><![CDATA[Grand Total]]></text>
 			</staticText>
-			<textField>
-				<reportElement style="CellNum" x="760" y="0" width="225" height="28" uuid="f1e2d3c4-b5a6-4d7e-8f90-112233445566"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textFieldExpression><![CDATA[$V{Sum_Done}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement style="CellNum" x="985" y="0" width="225" height="28" uuid="0a1b2c3d-4e5f-4a6b-8c7d-8899aabbccdd"/>
-				<box>
-					<pen lineWidth="0.5"/>
-				</box>
-				<textFieldExpression><![CDATA[$V{Sum_Planned}]]></textFieldExpression>
-			</textField>
+				<textField>
+					<reportElement style="CellNum" x="760" y="0" width="225" height="28" uuid="f1e2d3c4-b5a6-4d7e-8f90-112233445566"/>
+					<box>
+						<pen lineWidth="0.5"/>
+					</box>
+					<textFieldExpression><![CDATA[$V{Sum_Done} == null ? java.math.BigDecimal.ZERO : $V{Sum_Done}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement style="CellNum" x="985" y="0" width="225" height="28" uuid="0a1b2c3d-4e5f-4a6b-8c7d-8899aabbccdd"/>
+					<box>
+						<pen lineWidth="0.5"/>
+					</box>
+					<textFieldExpression><![CDATA[$V{Sum_Planned} == null ? java.math.BigDecimal.ZERO : $V{Sum_Planned}]]></textFieldExpression>
+				</textField>
 		</band>
 	</summary>
 </jasperReport>
