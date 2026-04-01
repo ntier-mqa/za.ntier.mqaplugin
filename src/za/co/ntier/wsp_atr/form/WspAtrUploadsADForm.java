@@ -253,11 +253,18 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
                 "LIMIT 1",
                 org.zzSdfOrganisationId);
 
+        boolean parentOrganisation = isParentOrganisation(org.zzSdfOrganisationId, trxName);
         MZZWSPATRSubmitted submitted;
         int clientID = Env.getAD_Client_ID(Env.getCtx());
         if (submittedId > 0) {
             submitted = new MZZWSPATRSubmitted(ctx, submittedId, trxName);
+            if (!parentOrganisation && !isDisplayableExistingStatus(submitted.getZZ_DocStatus())) {
+                return null;
+            }
         } else {
+            if (!parentOrganisation) {
+                return null;
+            }
             submitted = new MZZWSPATRSubmitted(ctx, 0, trxName);
             submitted.setName("WSP/ATR " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
             submitted.setSubmittedDate(new Timestamp(System.currentTimeMillis()));
@@ -272,5 +279,33 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
         }
 
         return submitted;
+    }
+
+    private boolean isDisplayableExistingStatus(String status) {
+        return X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Submitted.equals(status)
+                || X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Uploaded.equals(status)
+                || X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_RecommendedForEvaluation.equals(status)
+                || X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_RecommendedForApproval.equals(status)
+                || X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Approved.equals(status);
+    }
+
+    private boolean isParentOrganisation(int zzSdfOrganisationId, String trxName) {
+        final String sql =
+                "SELECT 1 "
+                + "FROM adempiere.zzsdforganisation parent_so "
+                + "JOIN adempiere.zzorganisationlinkage l "
+                + "  ON l.bpartner_parent_id = parent_so.c_bpartner_id "
+                + "JOIN adempiere.zzsdforganisation child_so "
+                + "  ON child_so.c_bpartner_id = l.c_bpartner_id "
+                + "WHERE parent_so.zzsdforganisation_id = ? "
+                + "  AND parent_so.isactive = 'Y' "
+                + "  AND child_so.isactive = 'Y' "
+                + "  AND l.isactive = 'Y' "
+                + "  AND l.zz_parent_uploads = 'Y' "
+                + "  AND COALESCE(parent_so.zz_docstatus, '') <> 'UnSdfOrg' "
+                + "  AND COALESCE(child_so.zz_docstatus, '') <> 'UnSdfOrg' "
+                + "LIMIT 1";
+
+        return DB.getSQLValueEx(trxName, sql, zzSdfOrganisationId) > 0;
     }
 }
