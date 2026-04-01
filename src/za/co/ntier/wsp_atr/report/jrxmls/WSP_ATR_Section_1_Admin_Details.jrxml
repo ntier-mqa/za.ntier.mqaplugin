@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 7.0.0.final using JasperReports Library version 6.20.2  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="WSP_ATR_Section_1_Admin_Details" pageWidth="1250" pageHeight="1800" whenNoDataType="AllSectionsNoDetail" columnWidth="1210" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="4cc5c4b2-6b10-4f3f-86d2-9bda54d989a1">
-	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="mqa dev"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="mqa_uat_DataAdapter.jrdax"/>
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
@@ -146,7 +146,7 @@ LEFT JOIN adempiere.ad_table bp_tab
        ON bp_tab.tablename = 'C_BPartner'
 LEFT JOIN adempiere.ad_column subsector_col
        ON subsector_col.ad_table_id = bp_tab.ad_table_id
-      AND LOWER(subsector_col.columnname) = 'subsector'
+      AND LOWER(subsector_col.columnname) = 'zzsubsector'
 LEFT JOIN adempiere.ad_ref_list subsector_rl
        ON subsector_rl.isactive = 'Y'
       AND subsector_rl.ad_reference_id = subsector_col.ad_reference_value_id
