@@ -120,7 +120,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 			}
 		}
 
-		if (ok && is_ValueChanged(COLUMNNAME_ZZ_DocStatus) && getZZ_DocStatus() != null && getZZ_DocStatus().equals("AP") ) {  // Approved
+		if (ok && is_ValueChanged(COLUMNNAME_ZZ_DocStatus) && getZZ_DocStatus() != null && getZZ_DocStatus().equals(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Approved) ) {  // Approved
 			try {
 				createWSPATR_Approval_Records(getFiscalYear(getAD_Client_ID()));
 				sendQueryEmailWithPDF(WSP_ATR_FINAL_APPROVAL_TEMPLATE_UUID,"WSP-ATR_Approval_" + getSdlNumber() +"_" + getFiscalYear(getAD_Client_ID()));
@@ -162,7 +162,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
         // choose the “active” configuration row; if you have multiple per org, adjust filters
         List<List<Object>> rows = DB.getSQLArrayObjectsEx(null,
             "SELECT y.FiscalYear " +
-            "FROM zz_sdr_configuration s" +
+            "FROM zz_sdr_configuration s " +
             "Join C_Year y on s.ZZ_FinYear_ID = y.C_Year_ID " +
             "WHERE s.ad_client_id=? AND s.isactive='Y' " +
             "ORDER BY s.updated DESC " +

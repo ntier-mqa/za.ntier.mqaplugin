@@ -124,6 +124,11 @@ When working on forms or UI logic:
 - User: postgres
 - Password: dazzle123 
 
+### 10. Enjure SQL text in classes have spaces between statements
+
+- EG.  "Select a from tablea" + "where a = 's'"  will error out. Should be "Select a from tablea " + "where a = 's'"
+- When working on new or existing classes, always check for this bug.
+
 ## Workflow for solving tasks
 
 When solving a problem in this repo:
