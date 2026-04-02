@@ -108,6 +108,22 @@ public class WspAtrUploadsRepository {
         return any > 0;
     }
 
+    public boolean isParentOrganisationTypeForSubmitted(int submittedId) {
+        int isParent = DB.getSQLValueEx(null,
+            "SELECT CASE "
+            + "WHEN UPPER(COALESCE(bp.zzorganisationtype, '')) = 'PARENT' THEN 1 "
+            + "ELSE 0 END "
+            + "FROM adempiere.zz_wsp_atr_submitted s "
+            + "JOIN adempiere.zzsdforganisation so "
+            + "  ON so.zzsdforganisation_id = s.zzsdforganisation_id "
+            + "JOIN adempiere.c_bpartner bp "
+            + "  ON bp.c_bpartner_id = so.c_bpartner_id "
+            + "WHERE s.zz_wsp_atr_submitted_id = ?",
+            submittedId
+        );
+        return isParent == 1;
+    }
+
     public void deleteAttachment(int tableId, int recordId, String trxName) {
         MAttachment att = MAttachment.get(ctx, tableId, recordId);
         if (att != null) att.delete(true);
