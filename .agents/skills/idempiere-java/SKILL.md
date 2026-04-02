@@ -118,11 +118,7 @@ When working on forms or UI logic:
 ### 9. Dev database access
 
 - Connect to the database and RUN queries if neccessary.
-- Postgresql database
-- Host: mqauat.thruhere.net
-- Port: 5401
-- User: postgres
-- Password: dazzle123 
+- Use the project's configured development database connection when SQL verification is needed.
 
 ### 10. Ensure SQL text in classes have spaces between statements
 
