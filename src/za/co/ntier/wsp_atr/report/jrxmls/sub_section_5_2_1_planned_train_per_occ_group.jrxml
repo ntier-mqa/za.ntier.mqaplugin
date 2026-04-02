@@ -9,7 +9,7 @@
 	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
-	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="mqa dev"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="mqa_uat_DataAdapter.jrdax"/>
 	<style name="SectionTitle" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="18" isBold="true"/>
 	<style name="Hdr" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="14" isBold="true"/>
 	<style name="HdrSmall" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="10" isBold="true"/>
@@ -87,7 +87,6 @@ ORDER BY t.Row_No]]>
 	<variable name="Sum_Disabled" class="java.lang.Integer" calculation="Sum">
 		<variableExpression><![CDATA[$F{disabled_cnt}]]></variableExpression>
 	</variable>
-
 	<variable name="Grand_Total_Gender" class="java.lang.Integer">
 		<variableExpression><![CDATA[($V{Sum_Male}==null?0:$V{Sum_Male}.intValue())
           + ($V{Sum_Female}==null?0:$V{Sum_Female}.intValue())]]></variableExpression>
