@@ -49,7 +49,20 @@ public class WspAtrRowUiBuilder {
         lblMsg.setStyle("margin-left:6px; color:#555;");
 
         btnPrint.addEventListener(Events.ON_CLICK, (EventListener<Event>) e -> {
-            openPrintPrompt(submittedId, btnPrint, lblMsg);
+            if (repo.isParentOrganisationTypeForSubmitted(submittedId)) {
+                openPrintPrompt(submittedId, btnPrint, lblMsg);
+                return;
+            }
+
+            btnPrint.setLabel("Re Print...");
+            lblMsg.setValue("Your report will be emailed to you");
+
+            Clients.showNotification(
+                    "Your Report is being prepared and will be emailed to you.",
+                    "info", btnPrint, "top_center", 3500
+            );
+
+            service.generateReport(submittedId, false, false);
         });
 
         hb.appendChild(btnPrint);
