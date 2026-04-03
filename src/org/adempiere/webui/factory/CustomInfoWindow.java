@@ -7,6 +7,9 @@ import org.compiere.model.MTable;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 
+import za.ntier.utils.MQAConstants;
+import za.ntier.utils.StringUtil;
+
 /**
  * 
  */
@@ -57,7 +60,7 @@ public class CustomInfoWindow extends InfoWindow
 
 		boolean isCustomZoom = false;
 
-		if ("ZZ_QCTO_APPLICATION_INFO_V".equalsIgnoreCase(tableName))
+		if (StringUtil.equalsAnyIgnoreCase(tableName, MQAConstants.CUSTOM_ZOOM_TABLES))
 		{
 			String sql = "SELECT AD_Table_ID FROM " + tableName + " WHERE " + p_keyColumn + "=?";
 			int dbTableId = 0;

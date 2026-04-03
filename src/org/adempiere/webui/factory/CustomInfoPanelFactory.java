@@ -6,6 +6,9 @@ import org.compiere.model.GridField;
 import org.compiere.model.Lookup;
 import org.compiere.model.MInfoWindow;
 
+import za.ntier.utils.MQAConstants;
+import za.ntier.utils.StringUtil;
+
 public class CustomInfoPanelFactory implements IInfoFactory
 {
 
@@ -13,7 +16,7 @@ public class CustomInfoPanelFactory implements IInfoFactory
 			boolean multiSelection, String whereClause, int AD_InfoWindow_ID, boolean lookup, GridField field,
 			String predefinedContextVariables)
 	{
-		if ("ZZ_QCTO_APPLICATION_INFO_V".equalsIgnoreCase(tableName))
+		if (StringUtil.equalsAnyIgnoreCase(tableName, MQAConstants.CUSTOM_ZOOM_TABLES))
 		{
 			keyColumn = tableName + "_UU";
 			multiSelection = true;
