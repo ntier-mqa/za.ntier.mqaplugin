@@ -5,7 +5,9 @@ import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 
 import org.adempiere.base.annotation.Parameter;
@@ -31,6 +33,7 @@ import za.co.ntier.api.model.X_ZZ_AccreditationAuditNotifyLine;
 import za.co.ntier.api.model.X_ZZ_QCTO_Alloc_AC;
 import za.co.ntier.api.model.X_ZZ_QCTO_Alloc_OC;
 import za.co.ntier.api.model.X_ZZ_QCTO_Alloc_Skills;
+import za.ntier.utils.MQAConstants;
 
 /**
  * Flow 1 (Info Window): Creates a single Batch/Header and its lines based on
@@ -70,13 +73,11 @@ public class AccreditationAuditNotificationsProcess extends SvrProcess
 	{
 		int pInstanceId = getAD_PInstance_ID();
 
-		// Flow 1: Info Window bulk selection (Create Batch)
 		if (pInstanceId > 0 && isFromInfoWindow(pInstanceId))
 		{
 			return createBatchFromInfoWindow(pInstanceId);
 		}
 
-		// Flow 2: DocAction execution from window record (Workflow + Emails)
 		int recordId = getRecord_ID();
 		if (recordId > 0)
 		{
@@ -178,10 +179,7 @@ public class AccreditationAuditNotificationsProcess extends SvrProcess
 
 		header.saveEx();
 
-		int processId = DB.getSQLValue(	get_TrxName(),
-										"SELECT AD_Process_ID FROM AD_Process WHERE Classname='za.co.ntier.wf.process.ZZ_WF_RunProcess' AND IsActive='Y'");
-		if (processId <= 0)
-			throw new AdempiereException("Could not find active ZZ_WF_RunProcess by its Classname in AD_Process.");
+		int processId = MQAConstants.getWFRunProcessId(get_TrxName());
 
 		MProcess proc = new MProcess(getCtx(), processId, get_TrxName());
 		ProcessInfo pi = new ProcessInfo(proc.getName(), processId, header.get_Table_ID(), header.get_ID());
@@ -242,7 +240,6 @@ public class AccreditationAuditNotificationsProcess extends SvrProcess
 			if (Util.isEmpty(email))
 				continue;
 
-			// Build dynamic content
 			String appTypeLine = "";
 			if (line.get_ValueAsInt("ZZ_QCTO_Alloc_OC_ID") > 0)
 			{
@@ -259,11 +256,9 @@ public class AccreditationAuditNotificationsProcess extends SvrProcess
 				appTypeLine = "Accreditation Center: " + line.getZZ_SAQAIDOrSPID() + " - " + line.getZZ_Qualification();
 			}
 
-			// Replace template variables
 			String msg = baseBody;
 			msg = msg.replace("<Name>", (line.getName() != null) ? line.getName() : "");
 
-			// Format Start and End date strings safely
 			String startDateStr = "TBD";
 			if (header.getDateFrom() != null)
 				startDateStr = new SimpleDateFormat("yyyy-MM-dd").format(header.getDateFrom());
@@ -308,7 +303,7 @@ public class AccreditationAuditNotificationsProcess extends SvrProcess
 	private List<PO> getSelectedSourceRecords(int pInstanceId)
 	{
 		List<PO> results = new ArrayList<>();
-		java.util.Set<String> seen = new java.util.HashSet<>();
+		Set<String> seen = new HashSet<>();
 
 		String sqlSelect = "SELECT DISTINCT T_Selection_ID, T_Selection_UU FROM ("
 							+ "  SELECT T_Selection_ID, T_Selection_UU FROM T_Selection_InfoWindow WHERE AD_PInstance_ID=?"
@@ -345,7 +340,7 @@ public class AccreditationAuditNotificationsProcess extends SvrProcess
 	 * @param results The list to append the resolved PO to
 	 * @param seen    A Set used to prevent processing duplicates
 	 */
-	private void resolveViewRow(int idKey, String uuKey, List<PO> results, java.util.Set<String> seen)
+	private void resolveViewRow(int idKey, String uuKey, List<PO> results, Set<String> seen)
 	{
 		String viewSql = "SELECT zz_tab_name, zz_qcto_application_info_v_id FROM zz_qcto_application_info_v WHERE ";
 

@@ -20,6 +20,7 @@ import org.compiere.util.Trx;
 
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
 import za.ntier.models.MZZWSPATRSubmitted;
+import za.ntier.utils.MQAConstants;
 
 @Process(name = "za.co.ntier.wsp_atr.process.WSPATRBulkApproveProcess")
 public class WSPATRBulkApproveProcess extends SvrProcess
@@ -42,14 +43,7 @@ public class WSPATRBulkApproveProcess extends SvrProcess
 			throw new AdempiereException("Process must be run from an Info Window");
 		}
 
-		// Find the AD_Process_ID for ZZ_WF_RunProcess
-		int adProcessId = DB.getSQLValue(get_TrxName(), "SELECT AD_Process_ID FROM AD_Process WHERE Classname=?",
-				"za.co.ntier.wf.process.ZZ_WF_RunProcess");
-
-		if (adProcessId <= 0)
-		{
-			throw new AdempiereException("Could not find AD_Process for za.co.ntier.wf.process.ZZ_WF_RunProcess");
-		}
+		int adProcessId = MQAConstants.getWFRunProcessId(get_TrxName());
 
 		List<Integer> selectedIds = getSelectedRecords(pInstanceId);
 		if (selectedIds.isEmpty())
