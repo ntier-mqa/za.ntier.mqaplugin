@@ -42,17 +42,17 @@ public class ScheduledAllocationsProcess extends SvrProcess
 			return "Process must be executed from an Info Window selection.";
 		}
 
-		Set<String> tradeNames = getSelectedTradeNames(pInstanceId);
-		if (tradeNames.isEmpty())
+		Set<String> legalNames = getSelectedLegalNames(pInstanceId);
+		if (legalNames.isEmpty())
 		{
 			return "No records were selected in the Info Window or could not resolve trade names.";
 		}
 
 		X_ZZ_AllocationSchedule schedule = getOrCreateOpenSchedule();
 
-		for (String tradeName : tradeNames)
+		for (String legalName : legalNames)
 		{
-			processTradeNameAllocations(schedule, tradeName);
+			processLegalNameAllocations(schedule, legalName);
 		}
 
 		if (schedule.get_ID() > 0)
@@ -66,14 +66,14 @@ public class ScheduledAllocationsProcess extends SvrProcess
 	}
 
 	/**
-	 * Retrieves unique TradeName values from ZZ_AuditSchedule_v using the current process selection
+	 * Retrieves unique LegalName values from ZZ_AuditSchedule_v using the current process selection
 	 * instance.
 	 */
-	private Set<String> getSelectedTradeNames(int pInstanceId)
+	private Set<String> getSelectedLegalNames(int pInstanceId)
 	{
 		Set<String> results = new HashSet<>();
 
-		String sqlSelect = "SELECT DISTINCT ZZTradeName FROM ZZ_AuditSchedule_v WHERE ZZ_AuditSchedule_v_ID IN ("
+		String sqlSelect = "SELECT DISTINCT ZZLegalName FROM ZZ_AuditSchedule_v WHERE ZZ_AuditSchedule_v_ID IN ("
 							+ "  SELECT T_Selection_ID FROM T_Selection_InfoWindow WHERE AD_PInstance_ID=?"
 							+ "  UNION "
 							+ "  SELECT T_Selection_ID FROM T_Selection WHERE AD_PInstance_ID=?"
@@ -146,33 +146,33 @@ public class ScheduledAllocationsProcess extends SvrProcess
 	}
 
 	/**
-	 * Creates or fetches the Organization Sub Tab for a given trade name, then migrates all
+	 * Creates or fetches the Organization Sub Tab for a given legal name, then migrates all
 	 * unscheduled underlying source allocations (OC, Skills, ACs) into nested Allocation lines.
 	 */
-	private void processTradeNameAllocations(X_ZZ_AllocationSchedule schedule, String tradeName)
+	private void processLegalNameAllocations(X_ZZ_AllocationSchedule schedule, String legalName)
 	{
 
 		// Unscheduled OCs
 		List<X_ZZ_QCTO_Alloc_OC> pendingOCs = new Query(getCtx(), X_ZZ_QCTO_Alloc_OC.Table_Name,
-														"ZZTradeName=? AND NOT EXISTS (SELECT 1 FROM ZZ_Allocations a WHERE a.ZZ_QCTO_Alloc_OC_ID=ZZ_QCTO_Alloc_OC.ZZ_QCTO_Alloc_OC_ID AND a.IsOpenSchedule='Y')",
+														"ZZLegalName=? AND NOT EXISTS (SELECT 1 FROM ZZ_Allocations a WHERE a.ZZ_QCTO_Alloc_OC_ID=ZZ_QCTO_Alloc_OC.ZZ_QCTO_Alloc_OC_ID AND a.IsOpenSchedule='Y')",
 														get_TrxName())
-																		.setParameters(tradeName)
+																		.setParameters(legalName)
 																		.setOnlyActiveRecords(true)
 																		.list();
 
 		// Unscheduled Skills
 		List<X_ZZ_QCTO_Alloc_Skills> pendingSkills = new Query(	getCtx(), X_ZZ_QCTO_Alloc_Skills.Table_Name,
-																"ZZTradeName=? AND NOT EXISTS (SELECT 1 FROM ZZ_Allocations a WHERE a.ZZ_QCTO_Alloc_Skills_ID=ZZ_QCTO_Alloc_Skills.ZZ_QCTO_Alloc_Skills_ID AND a.IsOpenSchedule='Y')",
+																"ZZLegalName=? AND NOT EXISTS (SELECT 1 FROM ZZ_Allocations a WHERE a.ZZ_QCTO_Alloc_Skills_ID=ZZ_QCTO_Alloc_Skills.ZZ_QCTO_Alloc_Skills_ID AND a.IsOpenSchedule='Y')",
 																get_TrxName())
-																				.setParameters(tradeName)
+																				.setParameters(legalName)
 																				.setOnlyActiveRecords(true)
 																				.list();
 
 		// Unscheduled ACs
 		List<X_ZZ_QCTO_Alloc_AC> pendingACs = new Query(getCtx(), X_ZZ_QCTO_Alloc_AC.Table_Name,
-														"ZZTradeName=? AND NOT EXISTS (SELECT 1 FROM ZZ_Allocations a WHERE a.ZZ_QCTO_Alloc_AC_ID=ZZ_QCTO_Alloc_AC.ZZ_QCTO_Alloc_AC_ID AND a.IsOpenSchedule='Y')",
+														"ZZLegalName=? AND NOT EXISTS (SELECT 1 FROM ZZ_Allocations a WHERE a.ZZ_QCTO_Alloc_AC_ID=ZZ_QCTO_Alloc_AC.ZZ_QCTO_Alloc_AC_ID AND a.IsOpenSchedule='Y')",
 														get_TrxName())
-																		.setParameters(tradeName)
+																		.setParameters(legalName)
 																		.setOnlyActiveRecords(true)
 																		.list();
 
@@ -181,7 +181,7 @@ public class ScheduledAllocationsProcess extends SvrProcess
 			return;
 		}
 
-		X_ZZ_Organization orgTab = getOrCreateOrganization(schedule, tradeName);
+		X_ZZ_Organization orgTab = getOrCreateOrganization(schedule, legalName);
 
 		int lineCount = DB.getSQLValue(get_TrxName(), "SELECT COALESCE(MAX(LineNo),0) FROM ZZ_Allocations WHERE ZZ_Organization_ID=?", orgTab.get_ID());
 
@@ -211,11 +211,11 @@ public class ScheduledAllocationsProcess extends SvrProcess
 	 * Locates an existing Organization sub-record within a schedule for a trade name,
 	 * or creates it if it doesn't represent one yet.
 	 */
-	private X_ZZ_Organization getOrCreateOrganization(X_ZZ_AllocationSchedule schedule, String tradeName)
+	private X_ZZ_Organization getOrCreateOrganization(X_ZZ_AllocationSchedule schedule, String legalName)
 	{
 		X_ZZ_Organization orgTab = new Query(	getCtx(), X_ZZ_Organization.Table_Name,
-												"ZZ_AllocationSchedule_ID=? AND ZZTradeName=?", get_TrxName())
-																												.setParameters(schedule.get_ID(), tradeName)
+												"ZZ_AllocationSchedule_ID=? AND ZZLegalName=?", get_TrxName())
+																												.setParameters(schedule.get_ID(), legalName)
 																												.setOnlyActiveRecords(true)
 																												.firstOnly();
 
@@ -227,7 +227,7 @@ public class ScheduledAllocationsProcess extends SvrProcess
 		orgTab = new X_ZZ_Organization(getCtx(), 0, get_TrxName());
 		orgTab.setAD_Org_ID(schedule.getAD_Org_ID());
 		orgTab.setZZ_AllocationSchedule_ID(schedule.get_ID());
-		orgTab.setZZTradeName(tradeName);
+		orgTab.setZZLegalName(legalName);
 		orgTab.saveEx();
 
 		return orgTab;
