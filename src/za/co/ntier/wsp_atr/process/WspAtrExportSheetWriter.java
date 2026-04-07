@@ -20,6 +20,8 @@ import org.compiere.util.Util;
 import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Submitted;
 
 final class WspAtrExportSheetWriter {
+    private static final int MAX_ROWS_PER_SHEET_INCLUDING_HEADER = 1_000_000;
+    private static final int MAX_DATA_ROWS_PER_SHEET = MAX_ROWS_PER_SHEET_INCLUDING_HEADER - 1;
 
     private static final Set<String> IGNORED_STANDARD_COLUMNS = Set.of(
             "IsActive",
@@ -44,29 +46,62 @@ final class WspAtrExportSheetWriter {
             throw new IllegalStateException("No exportable columns found for tab " + exportTab.getTabContext().getTabUu());
         }
 
-        Sheet sheet = workbook.createSheet(exportTab.getSheetName());
         CellStyle headerStyle = createHeaderStyle(workbook);
-        Row headerRow = sheet.createRow(0);
+        int totalRows = records.size();
+        int offset = 0;
+        int sheetSuffix = 1;
 
-        for (int col = 0; col < columns.size(); col++) {
-            Cell headerCell = headerRow.createCell(col);
-            headerCell.setCellValue(columns.get(col).getHeader());
-            headerCell.setCellStyle(headerStyle);
-        }
+        while (offset < totalRows || (totalRows == 0 && sheetSuffix == 1)) {
+            int rowsForSheet = Math.min(MAX_DATA_ROWS_PER_SHEET, totalRows - offset);
+            Sheet sheet = workbook.createSheet(createSheetName(workbook, exportTab.getSheetName(), sheetSuffix));
+            Row headerRow = sheet.createRow(0);
 
-        int rowIndex = 1;
-        for (PO record : records) {
-            Row row = sheet.createRow(rowIndex++);
             for (int col = 0; col < columns.size(); col++) {
-                columns.get(col).writeCell(valueFormatter, row.createCell(col), record);
+                Cell headerCell = headerRow.createCell(col);
+                headerCell.setCellValue(columns.get(col).getHeader());
+                headerCell.setCellStyle(headerStyle);
             }
+
+            int rowIndex = 1;
+            for (int i = 0; i < rowsForSheet; i++) {
+                PO record = records.get(offset + i);
+                Row row = sheet.createRow(rowIndex++);
+                for (int col = 0; col < columns.size(); col++) {
+                    columns.get(col).writeCell(valueFormatter, row.createCell(col), record);
+                }
+            }
+
+            for (int col = 0; col < columns.size(); col++) {
+                sheet.autoSizeColumn(col);
+            }
+
+            if (totalRows == 0) {
+                break;
+            }
+            offset += rowsForSheet;
+            sheetSuffix++;
         }
 
-        for (int col = 0; col < columns.size(); col++) {
-            sheet.autoSizeColumn(col);
-        }
+        return totalRows;
+    }
 
-        return records.size();
+    private String createSheetName(Workbook workbook, String baseSheetName, int sheetSuffix) {
+        String suffix = sheetSuffix <= 1 ? "" : "_" + sheetSuffix;
+        int maxBaseLength = Math.max(1, 31 - suffix.length());
+        String base = baseSheetName.length() > maxBaseLength
+                ? baseSheetName.substring(0, maxBaseLength)
+                : baseSheetName;
+        String candidate = base + suffix;
+        int collision = 1;
+        while (workbook.getSheet(candidate) != null) {
+            String collisionSuffix = suffix + "_" + collision++;
+            int collisionBaseLength = Math.max(1, 31 - collisionSuffix.length());
+            String collisionBase = baseSheetName.length() > collisionBaseLength
+                    ? baseSheetName.substring(0, collisionBaseLength)
+                    : baseSheetName;
+            candidate = collisionBase + collisionSuffix;
+        }
+        return candidate;
     }
 
     private List<WspAtrSheetColumn> resolveColumns(WspAtrExportTab exportTab) {
