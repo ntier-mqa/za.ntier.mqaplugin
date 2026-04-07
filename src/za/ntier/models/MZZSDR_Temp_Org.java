@@ -5,8 +5,10 @@ import java.util.Properties;
 
 import org.compiere.model.MClient;
 import org.compiere.model.MMailText;
+import org.compiere.model.MSysConfig;
 import org.compiere.model.MUser;
 import org.compiere.util.DB;
+import org.compiere.util.EMail;
 
 import za.co.ntier.api.model.MBPartner_New;
 
@@ -16,7 +18,7 @@ public class MZZSDR_Temp_Org extends X_ZZ_SDR_Temp_Org {
     private static final String TEMP_ORG_MAILTEXT_UU = "4ace9d73-8349-44a6-8d2d-5a0838c79362";
     public static final String COLUMNNAME_ZZ_DocStatus = "ZZ_DocStatus";
     public static final String DOCSTATUS_Completed = "CO";
-
+    private static final String INTER_SETA_TRANSFER_TO_MQA_DEFAULT_CC = "INTER_SETA_TRANSFER_TO_MQA_DEFAULT_CC";
 
 
     public MZZSDR_Temp_Org(Properties ctx, int ZZ_SDR_Temp_Org_ID, String trxName) {
@@ -212,11 +214,29 @@ public class MZZSDR_Temp_Org extends X_ZZ_SDR_Temp_Org {
         //                 .replace("@SDLNo@", getZZ_SDL_No());
 
         // Send email
-        boolean sent = client.sendEMail(to, subject, message, null, true);
-        if (!sent)
-            log.warning("Failed to send Temporary Org Registration email to " + to);
-        else
-            log.info("Temporary Org Registration email sent to " + to);
+		EMail email = client.createEMail(to, subject, message, true);
+		if (email != null)
+		{
+			// CC from System Configuration
+			String ccEmails = MSysConfig.getValue(INTER_SETA_TRANSFER_TO_MQA_DEFAULT_CC);
+			if (ccEmails != null && !ccEmails.trim().isEmpty())
+			{
+				String[] emails = ccEmails.split(",");
+				for (String cc : emails)
+				{
+					if (cc != null && !cc.trim().isEmpty())
+					{
+						email.addCc(cc.trim());
+					}
+				}
+			}
+			String msg = email.send();
+			boolean sent = EMail.SENT_OK.equals(msg);
+			if (!sent)
+				log.warning("Failed to send Temporary Org Registration email to " + to + ": " + msg);
+			else
+				log.info("Temporary Org Registration email sent to " + to);
+		}
     }
 
     /***********************
