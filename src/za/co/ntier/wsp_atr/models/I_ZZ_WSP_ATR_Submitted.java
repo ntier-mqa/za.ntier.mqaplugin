@@ -339,6 +339,51 @@ public interface I_ZZ_WSP_ATR_Submitted
 	/** Get Is Query	  */
 	public boolean isZZ_IsQuery();
 
+    /** Column name ZZ_Missing_Emp_Rep_Sign */
+    public static final String COLUMNNAME_ZZ_Missing_Emp_Rep_Sign = "ZZ_Missing_Emp_Rep_Sign";
+
+	/** Set Missing Employee Representative Signature	  */
+	public void setZZ_Missing_Emp_Rep_Sign (boolean ZZ_Missing_Emp_Rep_Sign);
+
+	/** Get Missing Employee Representative Signature	  */
+	public boolean isZZ_Missing_Emp_Rep_Sign();
+
+    /** Column name ZZ_Missing_Sen_Fin_CFO_Sign */
+    public static final String COLUMNNAME_ZZ_Missing_Sen_Fin_CFO_Sign = "ZZ_Missing_Sen_Fin_CFO_Sign";
+
+	/** Set Missing Senior Finance/CFO Signature	  */
+	public void setZZ_Missing_Sen_Fin_CFO_Sign (boolean ZZ_Missing_Sen_Fin_CFO_Sign);
+
+	/** Get Missing Senior Finance/CFO Signature	  */
+	public boolean isZZ_Missing_Sen_Fin_CFO_Sign();
+
+    /** Column name ZZ_Missing_Sen_Org_CEO_Sign */
+    public static final String COLUMNNAME_ZZ_Missing_Sen_Org_CEO_Sign = "ZZ_Missing_Sen_Org_CEO_Sign";
+
+	/** Set Missing Senior Organisation/CEO Signature	  */
+	public void setZZ_Missing_Sen_Org_CEO_Sign (boolean ZZ_Missing_Sen_Org_CEO_Sign);
+
+	/** Get Missing Senior Organisation/CEO Signature	  */
+	public boolean isZZ_Missing_Sen_Org_CEO_Sign();
+
+    /** Column name ZZ_Missing_Union_Rep_Sign */
+    public static final String COLUMNNAME_ZZ_Missing_Union_Rep_Sign = "ZZ_Missing_Union_Rep_Sign";
+
+	/** Set Missing Union Representative Signature	  */
+	public void setZZ_Missing_Union_Rep_Sign (boolean ZZ_Missing_Union_Rep_Sign);
+
+	/** Get Missing Union Representative Signature	  */
+	public boolean isZZ_Missing_Union_Rep_Sign();
+
+    /** Column name ZZ_Person_Sign_Many_Times */
+    public static final String COLUMNNAME_ZZ_Person_Sign_Many_Times = "ZZ_Person_Sign_Many_Times";
+
+	/** Set One person signed more than once	  */
+	public void setZZ_Person_Sign_Many_Times (boolean ZZ_Person_Sign_Many_Times);
+
+	/** Get One person signed more than once	  */
+	public boolean isZZ_Person_Sign_Many_Times();
+
     /** Column name ZZ_QueryComment */
     public static final String COLUMNNAME_ZZ_QueryComment = "ZZ_QueryComment";
 
