@@ -123,15 +123,24 @@ interface WspAtrRowProvider {
 final class QueryRowProvider implements WspAtrRowProvider {
     private final String whereClause;
     private final String orderBy;
+    private final Object[] parameters;
 
     QueryRowProvider(String whereClause, String orderBy) {
+        this(whereClause, orderBy, new Object[0]);
+    }
+
+    QueryRowProvider(String whereClause, String orderBy, Object... parameters) {
         this.whereClause = whereClause;
         this.orderBy = orderBy;
+        this.parameters = parameters == null ? new Object[0] : parameters;
     }
 
     @Override
     public List<PO> fetch(ExportSubmittedWspAtrToXlsm process, TabContext tabContext) {
         Query query = new Query(process.getCtx(), tabContext.getTable().getTableName(), whereClause, process.get_TrxName());
+        if (parameters.length > 0) {
+            query.setParameters(parameters);
+        }
         if (orderBy != null && !orderBy.isBlank()) {
             query.setOrderBy(orderBy);
         }
