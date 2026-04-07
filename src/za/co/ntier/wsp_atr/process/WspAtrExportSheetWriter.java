@@ -1,6 +1,7 @@
 package za.co.ntier.wsp_atr.process;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -106,6 +107,7 @@ final class WspAtrExportSheetWriter {
 
     private List<WspAtrSheetColumn> resolveColumns(WspAtrExportTab exportTab) {
         Map<String, WspAtrSheetColumn> actualColumns = new LinkedHashMap<>();
+        Map<Integer, String> fieldHeaderCache = new HashMap<>();
         TabContext tabContext = exportTab.getTabContext();
 
         List<PO> fieldRows = new Query(process.getCtx(), "AD_Field",
@@ -126,7 +128,9 @@ final class WspAtrExportSheetWriter {
                 continue;
             }
 
-            actualColumns.putIfAbsent(normalize(column.getColumnName()), new WspAtrTableColumn(column));
+            String header = fieldHeaderCache.computeIfAbsent(fieldRow.get_ID(),
+                    key -> resolveFieldHeader(fieldRow, column));
+            actualColumns.putIfAbsent(normalize(column.getColumnName()), new WspAtrTableColumn(column, header));
         }
 
         List<WspAtrSheetColumn> resolvedColumns = new ArrayList<>();
@@ -139,6 +143,26 @@ final class WspAtrExportSheetWriter {
 
         resolvedColumns.addAll(actualColumns.values());
         return resolvedColumns;
+    }
+
+    private String resolveFieldHeader(PO fieldRow, MColumn column) {
+        PO translatedField = new Query(process.getCtx(), "AD_Field_Trl", "AD_Field_ID=? AND AD_Language=?",
+                process.get_TrxName())
+                        .setParameters(fieldRow.get_ID(), "en_ZA")
+                        .firstOnly();
+        if (translatedField != null) {
+            String translatedName = translatedField.get_ValueAsString("Name");
+            if (!Util.isEmpty(translatedName, true)) {
+                return translatedName.trim();
+            }
+        }
+
+        String fieldName = fieldRow.get_ValueAsString("Name");
+        if (!Util.isEmpty(fieldName, true)) {
+            return fieldName.trim();
+        }
+
+        return column.getColumnName();
     }
 
     private boolean shouldIgnoreColumn(TabContext tabContext, MColumn column) {

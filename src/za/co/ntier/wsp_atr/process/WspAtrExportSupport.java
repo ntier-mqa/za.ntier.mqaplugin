@@ -160,14 +160,16 @@ interface WspAtrSheetColumn {
 
 final class WspAtrTableColumn implements WspAtrSheetColumn {
     private final MColumn column;
+    private final String header;
 
-    WspAtrTableColumn(MColumn column) {
+    WspAtrTableColumn(MColumn column, String header) {
         this.column = column;
+        this.header = header;
     }
 
     @Override
     public String getHeader() {
-        return column.getColumnName();
+        return header;
     }
 
     @Override
