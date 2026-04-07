@@ -21,8 +21,8 @@ final class WspAtrExportPlanBuilder {
 
     private static final String SUBMITTED_WINDOW_UU = "406eaf0a-7d74-4942-9429-07f09ffeed85";
     private static final String SUBMITTED_TAB_UU = "b3369b7f-fd0c-4e13-bdcc-b1b042bc2c65";
+    private static final int LEVEL_ZERO = 0;
     private static final int LEVEL_ONE = 1;
-    private static final int LEVEL_TWO = 2;
     private static final String SUBMITTED_LINK_COLUMN = I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_WSP_ATR_Submitted_ID;
 
     private final ExportSubmittedWspAtrToXlsm process;
@@ -38,7 +38,7 @@ final class WspAtrExportPlanBuilder {
         WspAtrExportTab submittedTab = buildSubmittedTab(window);
         exportTabs.add(submittedTab);
 
-        exportTabs.addAll(buildLevelTwoTabs(window));
+        exportTabs.addAll(buildLevelOneTabs(window));
         exportTabs.sort(Comparator
                 .comparingInt((WspAtrExportTab tab) -> tab.getTabContext().getTabLevel())
                 .thenComparingInt(tab -> tab.getTabContext().getTabSeqNo()));
@@ -58,16 +58,22 @@ final class WspAtrExportPlanBuilder {
     }
 
     private WspAtrExportTab buildSubmittedTab(WindowRuntime window) {
-        TabContext tabContext = resolveSpecificTab(window, SUBMITTED_TAB_UU, LEVEL_ONE);
+        TabContext tabContext = resolveSpecificTab(window, SUBMITTED_TAB_UU, LEVEL_ZERO);
+        String whereClause = process.hasFiscalYearFilter()
+                ? I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_FinYear_ID + "=?"
+                : null;
+        QueryRowProvider rowProvider = process.hasFiscalYearFilter()
+                ? new QueryRowProvider(whereClause, tabContext.getTable().getTableName() + "_ID", process.getFiscalYearId())
+                : new QueryRowProvider(whereClause, tabContext.getTable().getTableName() + "_ID");
         return new WspAtrExportTab(
                 tabContext,
-                new QueryRowProvider(null, tabContext.getTable().getTableName() + "_ID"),
+                rowProvider,
                 new CurrentRecordDocumentNoProvider(),
                 true,
                 tabContext.getTabName());
     }
 
-    private List<WspAtrExportTab> buildLevelTwoTabs(WindowRuntime window) {
+    private List<WspAtrExportTab> buildLevelOneTabs(WindowRuntime window) {
         List<WspAtrExportTab> tabs = new ArrayList<>();
         Map<Integer, X_ZZ_WSP_ATR_Lookup_Mapping> mappingsByTableId = loadMappingsByTableId();
         Map<Integer, String> documentNoCache = new HashMap<>();
@@ -81,21 +87,34 @@ final class WspAtrExportPlanBuilder {
             PO adTab = new Query(process.getCtx(), "AD_Tab",
                     "AD_Window_ID=? AND AD_Table_ID=? AND IsActive='Y' AND COALESCE(TabLevel,0)=?",
                     process.get_TrxName())
-                            .setParameters(window.getWindowId(), tableId, LEVEL_TWO)
+                            .setParameters(window.getWindowId(), tableId, LEVEL_ONE)
                             .setOrderBy("SeqNo, AD_Tab_ID")
                             .firstOnly();
             if (adTab == null) {
                 continue;
             }
 
-            TabContext tabContext = createTabContext(adTab, window, LEVEL_TWO);
+            TabContext tabContext = createTabContext(adTab, window, LEVEL_ONE);
             ensureSubmittedLinkColumnExists(tabContext);
 
             X_ZZ_WSP_ATR_Lookup_Mapping mapping = entry.getValue();
+            String whereClause = SUBMITTED_LINK_COLUMN + ">0";
+            QueryRowProvider rowProvider;
+            if (process.hasFiscalYearFilter()) {
+                whereClause += " AND " + SUBMITTED_LINK_COLUMN + " IN (SELECT "
+                        + I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_WSP_ATR_Submitted_ID
+                        + " FROM " + I_ZZ_WSP_ATR_Submitted.Table_Name
+                        + " WHERE " + I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_FinYear_ID + "=?)";
+                rowProvider = new QueryRowProvider(whereClause,
+                        SUBMITTED_LINK_COLUMN + ", " + tabContext.getTable().getTableName() + "_ID",
+                        process.getFiscalYearId());
+            } else {
+                rowProvider = new QueryRowProvider(whereClause,
+                        SUBMITTED_LINK_COLUMN + ", " + tabContext.getTable().getTableName() + "_ID");
+            }
             tabs.add(new WspAtrExportTab(
                     tabContext,
-                    new QueryRowProvider(SUBMITTED_LINK_COLUMN + ">0", SUBMITTED_LINK_COLUMN + ", "
-                            + tabContext.getTable().getTableName() + "_ID"),
+                    rowProvider,
                     new ParentDocumentNoProvider(documentNoCache),
                     true,
                     resolveSheetName(mapping, adTab)));

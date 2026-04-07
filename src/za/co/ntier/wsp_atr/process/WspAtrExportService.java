@@ -9,10 +9,13 @@ import java.util.List;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.compiere.model.PO;
+import org.compiere.model.Query;
+import org.compiere.util.Util;
 
 final class WspAtrExportService {
 
-    private static final String EXPORT_FILE_NAME = "ZZ_WSP_ATR_Submitted_Export";
+    private static final String EXPORT_FILE_NAME_TEMPLATE = "MQAWSPATRDataDump %s File";
 
     private final ExportSubmittedWspAtrToXlsm process;
     private final WspAtrExportPlanBuilder planBuilder;
@@ -30,7 +33,7 @@ final class WspAtrExportService {
             throw new IllegalStateException("No tabs configured for export");
         }
 
-        Path exportPath = uniqueTempXlsm(EXPORT_FILE_NAME);
+        Path exportPath = uniqueTempXlsx(resolveExportFileNameBase());
         int totalRowsExported = 0;
 
         try (Workbook workbook = new XSSFWorkbook()) {
@@ -46,17 +49,43 @@ final class WspAtrExportService {
         return new WspAtrExportResult(exportPath, totalRowsExported, exportTabs.size());
     }
 
-    private Path uniqueTempXlsm(String baseName) throws IOException {
+    private Path uniqueTempXlsx(String baseName) throws IOException {
         Path tmpDir = Path.of(System.getProperty("java.io.tmpdir"));
-        String stem = baseName.replaceAll("[^A-Za-z0-9._-]", "_");
-        Path firstCandidate = tmpDir.resolve(stem + ".xlsm");
+        String stem = baseName.replaceAll("[^A-Za-z0-9._ -]", "_").trim();
+        Path firstCandidate = tmpDir.resolve(stem + ".xlsx");
 
         for (int i = 0;; i++) {
-            Path candidate = i == 0 ? firstCandidate : tmpDir.resolve(stem + "_" + i + ".xlsm");
+            Path candidate = i == 0 ? firstCandidate : tmpDir.resolve(stem + "_" + i + ".xlsx");
             try {
                 return Files.createFile(candidate);
             } catch (FileAlreadyExistsException ignore) {
             }
         }
+    }
+
+    private String resolveExportFileNameBase() {
+        if (!process.hasFiscalYearFilter()) {
+            return String.format(EXPORT_FILE_NAME_TEMPLATE, "Year");
+        }
+
+        String yearText = resolveFiscalYearText(process.getFiscalYearId());
+        return String.format(EXPORT_FILE_NAME_TEMPLATE, yearText);
+    }
+
+    private String resolveFiscalYearText(int fiscalYearId) {
+        PO year = new Query(process.getCtx(), "C_Year", "C_Year_ID=?", process.get_TrxName())
+                .setParameters(fiscalYearId)
+                .firstOnly();
+        if (year == null) {
+            return String.valueOf(fiscalYearId);
+        }
+
+        String yearValue = year.get_ValueAsString("Year");
+        if (!Util.isEmpty(yearValue, true)) {
+            return yearValue.trim();
+        }
+
+        Object nameValue = year.get_Value("Name");
+        return nameValue == null ? String.valueOf(fiscalYearId) : String.valueOf(nameValue).trim();
     }
 }
