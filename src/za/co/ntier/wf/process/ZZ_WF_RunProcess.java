@@ -12,6 +12,7 @@ import org.compiere.model.I_R_MailText;
 import org.compiere.model.MTable;
 import org.compiere.model.PO;
 import org.compiere.process.SvrProcess;
+import org.compiere.util.DB;
 import org.compiere.util.Env;
 
 import za.co.ntier.wf.model.MZZWFHeader;
@@ -19,6 +20,7 @@ import za.co.ntier.wf.model.MZZWFLines;
 import za.co.ntier.wf.util.ADColumnUtil;
 import za.co.ntier.wf.util.MailNoticeUtil;
 import za.co.ntier.wf.util.MailNoticeUtil.NotificationFields;
+import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Submitted;
 
 @org.adempiere.base.annotation.Process(name="za.co.ntier.wf.process.ZZ_WF_RunProcess")
 public class ZZ_WF_RunProcess extends SvrProcess {
@@ -28,6 +30,31 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 	private String pRecommend;
 	@Parameter(name="Comment")
 	private String pComment;
+	@Parameter(name="ZZ_Missing_Snr_Fin_CFO_Sign")
+	private String pZZ_Missing_Senior_Finance_CFO_Signature = "N";
+	@Parameter(name="ZZ_Missing_Snr_Org_CEO_Sign")
+	private String pZZ_Missing_Senior_Organisation_CEO_Signature = "N";
+	@Parameter(name="ZZ_Missing_Emp_Rep_Sign")
+	private String pZZ_Missing_Employee_Representative_Signature = "N";
+	@Parameter(name="ZZ_Missing_Union_Rep_Sign")
+	private String pZZ_Missing_Union_Representative_Signature = "N";
+	@Parameter(name="ZZ_One_Person_Signed_More_Than_Once")
+	private String pZZ_One_Person_Signed_More_Than_Once = "N";
+	@Parameter(name="ZZ_Sign_Pages_Not_Clear")
+	private String pZZ_Signature_Pages_Not_Clear = "N";
+
+	private static final String COL_MISSING_SNR_FIN_CFO_SIGN = resolveSubmittedColumnName(
+			"COLUMNNAME_ZZ_Missing_Snr_Fin_CFO_Sign", "ZZ_Missing_Snr_Fin_CFO_Sign");
+	private static final String COL_MISSING_SNR_ORG_CEO_SIGN = resolveSubmittedColumnName(
+			"COLUMNNAME_ZZ_Missing_Snr_Org_CEO_Sign", "ZZ_Missing_Snr_Org_CEO_Sign");
+	private static final String COL_MISSING_EMP_REP_SIGN = resolveSubmittedColumnName(
+			"COLUMNNAME_ZZ_Missing_Emp_Rep_Sign", "ZZ_Missing_Emp_Rep_Sign");
+	private static final String COL_MISSING_UNION_REP_SIGN = resolveSubmittedColumnName(
+			"COLUMNNAME_ZZ_Missing_Union_Rep_Sign", "ZZ_Missing_Union_Rep_Sign");
+	private static final String COL_ONE_PERSON_SIGNED_MORE_THAN_ONCE = resolveSubmittedColumnName(
+			"COLUMNNAME_ZZ_One_Person_Signed_More_Than_Once", "ZZ_One_Person_Signed_More_Than_Once");
+	private static final String COL_SIGN_PAGES_NOT_CLEAR = resolveSubmittedColumnName(
+			"COLUMNNAME_ZZ_Sign_Pages_Not_Clear", "ZZ_Sign_Pages_Not_Clear");
 
 	private PO po;
 	private String trxName;
@@ -87,7 +114,7 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 					pApprove = "Y";  // no option for submit
 				} 
 			}
-			boolean approve = ("Y".equalsIgnoreCase(pApprove.trim())) || ("Y".equalsIgnoreCase(pRecommend.trim()));
+			boolean approve = "Y".equalsIgnoreCase(pApprove) || "Y".equalsIgnoreCase(pRecommend);
 			doApproveReject(hdr, currentStep, approve, pComment);
 		} else {
 			doRequest(hdr, curStatus);
@@ -120,6 +147,7 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 
 		String nextStatus = approve ? step.getNextStatusOnApprove() : step.getNextStatusOnReject();
 		String nextAction = approve ? step.getNextActionOnApprove() : step.getNextActionOnReject();
+		updateSubmittedChecklistFields(approve, nextStatus);
 		// reset values after a rejection and user starts first step
 		resetDecisionStampsIfFirstNode(hdr, step, po);
 		// Persist new state (both fields, as requested)
@@ -247,6 +275,38 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 	    if (colName != null && !colName.isBlank()) {
 	        set.add(colName);
 	    }
+	}
+
+	private void updateSubmittedChecklistFields(boolean approve, String nextStatus) {
+		if (approve || !"QR".equalsIgnoreCase(nextStatus)) {
+			return;
+		}
+
+		String adTableUU = DB.getSQLValueStringEx(trxName,
+				"SELECT AD_Table_UU FROM AD_Table WHERE AD_Table_ID=?", po.get_Table_ID());
+		if (!"419a40ec-6999-4c46-899d-422c3048c97d".equalsIgnoreCase(adTableUU)) {
+			return;
+		}
+
+		po.set_ValueOfColumn(COL_MISSING_SNR_FIN_CFO_SIGN, yesNo(pZZ_Missing_Senior_Finance_CFO_Signature));
+		po.set_ValueOfColumn(COL_MISSING_SNR_ORG_CEO_SIGN, yesNo(pZZ_Missing_Senior_Organisation_CEO_Signature));
+		po.set_ValueOfColumn(COL_MISSING_EMP_REP_SIGN, yesNo(pZZ_Missing_Employee_Representative_Signature));
+		po.set_ValueOfColumn(COL_MISSING_UNION_REP_SIGN, yesNo(pZZ_Missing_Union_Representative_Signature));
+		po.set_ValueOfColumn(COL_ONE_PERSON_SIGNED_MORE_THAN_ONCE, yesNo(pZZ_One_Person_Signed_More_Than_Once));
+		po.set_ValueOfColumn(COL_SIGN_PAGES_NOT_CLEAR, yesNo(pZZ_Signature_Pages_Not_Clear));
+	}
+
+	private String yesNo(String value) {
+		return "Y".equalsIgnoreCase(value) ? "Y" : "N";
+	}
+
+	private static String resolveSubmittedColumnName(String fieldName, String fallback) {
+		try {
+			Object value = I_ZZ_WSP_ATR_Submitted.class.getField(fieldName).get(null);
+			return value == null ? fallback : String.valueOf(value);
+		} catch (Exception e) {
+			return fallback;
+		}
 	}
 
 	
