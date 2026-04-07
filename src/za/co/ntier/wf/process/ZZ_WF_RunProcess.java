@@ -20,6 +20,7 @@ import za.co.ntier.wf.model.MZZWFLines;
 import za.co.ntier.wf.util.ADColumnUtil;
 import za.co.ntier.wf.util.MailNoticeUtil;
 import za.co.ntier.wf.util.MailNoticeUtil.NotificationFields;
+import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Submitted;
 
 @org.adempiere.base.annotation.Process(name="za.co.ntier.wf.process.ZZ_WF_RunProcess")
 public class ZZ_WF_RunProcess extends SvrProcess {
@@ -29,18 +30,31 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 	private String pRecommend;
 	@Parameter(name="Comment")
 	private String pComment;
-	@Parameter(name="ZZ_Missing_Senior_Finance_CFO_Signature")
+	@Parameter(name="ZZ_Missing_Snr_Fin_CFO_Sign")
 	private String pZZ_Missing_Senior_Finance_CFO_Signature = "N";
-	@Parameter(name="ZZ_Missing_Senior_Organisation_CEO_Signature")
+	@Parameter(name="ZZ_Missing_Snr_Org_CEO_Sign")
 	private String pZZ_Missing_Senior_Organisation_CEO_Signature = "N";
-	@Parameter(name="ZZ_Missing_Employee_Representative_Signature")
+	@Parameter(name="ZZ_Missing_Emp_Rep_Sign")
 	private String pZZ_Missing_Employee_Representative_Signature = "N";
-	@Parameter(name="ZZ_Missing_Union_Representative_Signature")
+	@Parameter(name="ZZ_Missing_Union_Rep_Sign")
 	private String pZZ_Missing_Union_Representative_Signature = "N";
 	@Parameter(name="ZZ_One_Person_Signed_More_Than_Once")
 	private String pZZ_One_Person_Signed_More_Than_Once = "N";
-	@Parameter(name="ZZ_Signature_Pages_Not_Clear")
+	@Parameter(name="ZZ_Sign_Pages_Not_Clear")
 	private String pZZ_Signature_Pages_Not_Clear = "N";
+
+	private static final String COL_MISSING_SNR_FIN_CFO_SIGN = resolveSubmittedColumnName(
+			"COLUMNNAME_ZZ_Missing_Snr_Fin_CFO_Sign", "ZZ_Missing_Snr_Fin_CFO_Sign");
+	private static final String COL_MISSING_SNR_ORG_CEO_SIGN = resolveSubmittedColumnName(
+			"COLUMNNAME_ZZ_Missing_Snr_Org_CEO_Sign", "ZZ_Missing_Snr_Org_CEO_Sign");
+	private static final String COL_MISSING_EMP_REP_SIGN = resolveSubmittedColumnName(
+			"COLUMNNAME_ZZ_Missing_Emp_Rep_Sign", "ZZ_Missing_Emp_Rep_Sign");
+	private static final String COL_MISSING_UNION_REP_SIGN = resolveSubmittedColumnName(
+			"COLUMNNAME_ZZ_Missing_Union_Rep_Sign", "ZZ_Missing_Union_Rep_Sign");
+	private static final String COL_ONE_PERSON_SIGNED_MORE_THAN_ONCE = resolveSubmittedColumnName(
+			"COLUMNNAME_ZZ_One_Person_Signed_More_Than_Once", "ZZ_One_Person_Signed_More_Than_Once");
+	private static final String COL_SIGN_PAGES_NOT_CLEAR = resolveSubmittedColumnName(
+			"COLUMNNAME_ZZ_Sign_Pages_Not_Clear", "ZZ_Sign_Pages_Not_Clear");
 
 	private PO po;
 	private String trxName;
@@ -274,16 +288,25 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 			return;
 		}
 
-		po.set_ValueOfColumn("ZZ_Missing_Senior_Finance_CFO_Signature", yesNo(pZZ_Missing_Senior_Finance_CFO_Signature));
-		po.set_ValueOfColumn("ZZ_Missing_Senior_Organisation_CEO_Signature", yesNo(pZZ_Missing_Senior_Organisation_CEO_Signature));
-		po.set_ValueOfColumn("ZZ_Missing_Employee_Representative_Signature", yesNo(pZZ_Missing_Employee_Representative_Signature));
-		po.set_ValueOfColumn("ZZ_Missing_Union_Representative_Signature", yesNo(pZZ_Missing_Union_Representative_Signature));
-		po.set_ValueOfColumn("ZZ_One_Person_Signed_More_Than_Once", yesNo(pZZ_One_Person_Signed_More_Than_Once));
-		po.set_ValueOfColumn("ZZ_Signature_Pages_Not_Clear", yesNo(pZZ_Signature_Pages_Not_Clear));
+		po.set_ValueOfColumn(COL_MISSING_SNR_FIN_CFO_SIGN, yesNo(pZZ_Missing_Senior_Finance_CFO_Signature));
+		po.set_ValueOfColumn(COL_MISSING_SNR_ORG_CEO_SIGN, yesNo(pZZ_Missing_Senior_Organisation_CEO_Signature));
+		po.set_ValueOfColumn(COL_MISSING_EMP_REP_SIGN, yesNo(pZZ_Missing_Employee_Representative_Signature));
+		po.set_ValueOfColumn(COL_MISSING_UNION_REP_SIGN, yesNo(pZZ_Missing_Union_Representative_Signature));
+		po.set_ValueOfColumn(COL_ONE_PERSON_SIGNED_MORE_THAN_ONCE, yesNo(pZZ_One_Person_Signed_More_Than_Once));
+		po.set_ValueOfColumn(COL_SIGN_PAGES_NOT_CLEAR, yesNo(pZZ_Signature_Pages_Not_Clear));
 	}
 
 	private String yesNo(String value) {
 		return "Y".equalsIgnoreCase(value) ? "Y" : "N";
+	}
+
+	private static String resolveSubmittedColumnName(String fieldName, String fallback) {
+		try {
+			Object value = I_ZZ_WSP_ATR_Submitted.class.getField(fieldName).get(null);
+			return value == null ? fallback : String.valueOf(value);
+		} catch (Exception e) {
+			return fallback;
+		}
 	}
 
 	
