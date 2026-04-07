@@ -452,18 +452,28 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	{
 		StringBuilder reasons = new StringBuilder();
 
-		List<MZZWSPATRVeriChecklist> list =
-				new Query(getCtx(),
-						MZZWSPATRVeriChecklist.Table_Name,
-						"ZZ_WSP_ATR_Submitted_ID=? AND ZZ_Information_Completed='N'",
-						get_TrxName())
-				.setParameters(get_ID())
-				.list();
-
-		for (MZZWSPATRVeriChecklist c : list)
-			reasons.append(c.getName()).append("<br/>");
+		appendReasonIfYes(reasons, "ZZ_Missing_Senior_Finance_CFO_Signature",
+				"Missing Senior Finance/CFO Signature");
+		appendReasonIfYes(reasons, "ZZ_Missing_Senior_Organisation_CEO_Signature",
+				"Missing Senior Organisation/CEO Signature");
+		appendReasonIfYes(reasons, "ZZ_Missing_Employee_Representative_Signature",
+				"Missing Employee Representative Signature");
+		appendReasonIfYes(reasons, "ZZ_Missing_Union_Representative_Signature",
+				"Missing Union Representative Signature");
+		appendReasonIfYes(reasons, "ZZ_One_Person_Signed_More_Than_Once",
+				"One person signed more than once");
+		appendReasonIfYes(reasons, "ZZ_Signature_Pages_Not_Clear",
+				"Signature Pages not Clear");
 
 		return reasons.toString();
+	}
+
+	private void appendReasonIfYes(StringBuilder reasons, String columnName, String reasonText)
+	{
+		if (get_ColumnIndex(columnName) >= 0 && get_ValueAsBoolean(columnName))
+		{
+			reasons.append(reasonText).append("<br/>");
+		}
 	}
 
 	private File createPDF(String html,String fileName) throws Exception
