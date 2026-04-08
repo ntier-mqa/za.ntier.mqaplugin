@@ -465,17 +465,17 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	{
 		StringBuilder reasons = new StringBuilder();
 
-		appendReasonIfYes(reasons, COL_MISSING_SNR_FIN_CFO_SIGN,
+		appendReasonIfYes(reasons, I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Sen_Fin_CFO_Sign,
 				"Missing Senior Finance/CFO Signature");
-		appendReasonIfYes(reasons, COL_MISSING_SNR_ORG_CEO_SIGN,
+		appendReasonIfYes(reasons, I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Sen_Org_CEO_Sign,
 				"Missing Senior Organisation/CEO Signature");
-		appendReasonIfYes(reasons, COL_MISSING_EMP_REP_SIGN,
+		appendReasonIfYes(reasons, I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Emp_Rep_Sign,
 				"Missing Employee Representative Signature");
-		appendReasonIfYes(reasons, COL_MISSING_UNION_REP_SIGN,
+		appendReasonIfYes(reasons, I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Union_Rep_Sign,
 				"Missing Union Representative Signature");
-		appendReasonIfYes(reasons, COL_ONE_PERSON_SIGNED_MORE_THAN_ONCE,
+		appendReasonIfYes(reasons, I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Person_Sign_Many_Times,
 				"One person signed more than once");
-		appendReasonIfYes(reasons, COL_SIGN_PAGES_NOT_CLEAR,
+		appendReasonIfYes(reasons, I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Sign_Pages_Not_Clear,
 				"Signature Pages not Clear");
 
 		return reasons.toString();
@@ -486,19 +486,6 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 		if (get_ColumnIndex(columnName) >= 0 && get_ValueAsBoolean(columnName))
 		{
 			reasons.append(reasonText).append("<br/>");
-		}
-	}
-
-	private static String resolveSubmittedColumnName(String fieldName, String fallback)
-	{
-		try
-		{
-			Object value = I_ZZ_WSP_ATR_Submitted.class.getField(fieldName).get(null);
-			return value == null ? fallback : String.valueOf(value);
-		}
-		catch (Exception e)
-		{
-			return fallback;
 		}
 	}
 
