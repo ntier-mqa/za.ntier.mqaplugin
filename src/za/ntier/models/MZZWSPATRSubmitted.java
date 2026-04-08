@@ -28,6 +28,7 @@ import com.lowagie.text.pdf.PdfWriter;
 
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Approvals;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Checklist_Ref;
+import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Submitted;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
 
 
@@ -452,18 +453,28 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	{
 		StringBuilder reasons = new StringBuilder();
 
-		List<MZZWSPATRVeriChecklist> list =
-				new Query(getCtx(),
-						MZZWSPATRVeriChecklist.Table_Name,
-						"ZZ_WSP_ATR_Submitted_ID=? AND ZZ_Information_Completed='N'",
-						get_TrxName())
-				.setParameters(get_ID())
-				.list();
-
-		for (MZZWSPATRVeriChecklist c : list)
-			reasons.append(c.getName()).append("<br/>");
+		appendReasonIfYes(reasons, I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Sen_Fin_CFO_Sign,
+				"Missing Senior Finance/CFO Signature");
+		appendReasonIfYes(reasons, I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Sen_Org_CEO_Sign,
+				"Missing Senior Organisation/CEO Signature");
+		appendReasonIfYes(reasons, I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Emp_Rep_Sign,
+				"Missing Employee Representative Signature");
+		appendReasonIfYes(reasons, I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Union_Rep_Sign,
+				"Missing Union Representative Signature");
+		appendReasonIfYes(reasons, I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Person_Sign_Many_Times,
+				"One person signed more than once");
+		appendReasonIfYes(reasons, I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Sign_Pages_Not_Clear,
+				"Signature Pages not Clear");
 
 		return reasons.toString();
+	}
+
+	private void appendReasonIfYes(StringBuilder reasons, String columnName, String reasonText)
+	{
+		if (get_ColumnIndex(columnName) >= 0 && get_ValueAsBoolean(columnName))
+		{
+			reasons.append(reasonText).append("<br/>");
+		}
 	}
 
 	private File createPDF(String html,String fileName) throws Exception

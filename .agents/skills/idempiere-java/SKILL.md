@@ -71,6 +71,9 @@ Preferred pattern:
 - Avoid raw SQL inserts when a model save is appropriate
 - Use `Query` where it fits better than manual SQL
 - Keep table and column naming consistent with iDempiere conventions
+- For column names in Java code, always use generated `I_` model constants (for example `I_Table.COLUMNNAME_...`) instead of string literals.
+- Do not hardcode `"ZZ_*"` column-name strings when a generated constant exists.
+- Do not edit generated `I_`/`X_` model files manually; regenerate models from dictionary changes instead.
 
 ### 4. Database access
 

@@ -2,9 +2,11 @@ package za.co.ntier.wf.process;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.adempiere.base.annotation.Parameter;
 import org.adempiere.exceptions.AdempiereException;
@@ -12,6 +14,7 @@ import org.compiere.model.I_R_MailText;
 import org.compiere.model.MTable;
 import org.compiere.model.PO;
 import org.compiere.process.SvrProcess;
+import org.compiere.util.DB;
 import org.compiere.util.Env;
 
 import za.co.ntier.wf.model.MZZWFHeader;
@@ -19,6 +22,7 @@ import za.co.ntier.wf.model.MZZWFLines;
 import za.co.ntier.wf.util.ADColumnUtil;
 import za.co.ntier.wf.util.MailNoticeUtil;
 import za.co.ntier.wf.util.MailNoticeUtil.NotificationFields;
+import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Submitted;
 
 @org.adempiere.base.annotation.Process(name="za.co.ntier.wf.process.ZZ_WF_RunProcess")
 public class ZZ_WF_RunProcess extends SvrProcess {
@@ -28,6 +32,18 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 	private String pRecommend;
 	@Parameter(name="Comment")
 	private String pComment;
+	@Parameter(name=I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Sen_Fin_CFO_Sign)
+	private String pZZ_Missing_Senior_Finance_CFO_Signature = "N";
+	@Parameter(name=I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Sen_Org_CEO_Sign)
+	private String pZZ_Missing_Senior_Organisation_CEO_Signature = "N";
+	@Parameter(name=I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Emp_Rep_Sign)
+	private String pZZ_Missing_Employee_Representative_Signature = "N";
+	@Parameter(name=I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Union_Rep_Sign)
+	private String pZZ_Missing_Union_Representative_Signature = "N";
+	@Parameter(name=I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Person_Sign_Many_Times)
+	private String pZZ_One_Person_Signed_More_Than_Once = "N";
+	@Parameter(name=I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Sign_Pages_Not_Clear)
+	private String pZZ_Signature_Pages_Not_Clear = "N";
 
 	private PO po;
 	private String trxName;
@@ -87,7 +103,7 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 					pApprove = "Y";  // no option for submit
 				} 
 			}
-			boolean approve = ("Y".equalsIgnoreCase(pApprove.trim())) || ("Y".equalsIgnoreCase(pRecommend.trim()));
+			boolean approve = "Y".equalsIgnoreCase(pApprove) || "Y".equalsIgnoreCase(pRecommend);
 			doApproveReject(hdr, currentStep, approve, pComment);
 		} else {
 			doRequest(hdr, curStatus);
@@ -120,6 +136,8 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 
 		String nextStatus = approve ? step.getNextStatusOnApprove() : step.getNextStatusOnReject();
 		String nextAction = approve ? step.getNextActionOnApprove() : step.getNextActionOnReject();
+		validateChecklistPromptSetup(approve, nextStatus);
+		updateSubmittedChecklistFields(approve, nextStatus);
 		// reset values after a rejection and user starts first step
 		resetDecisionStampsIfFirstNode(hdr, step, po);
 		// Persist new state (both fields, as requested)
@@ -249,7 +267,61 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 	    }
 	}
 
-	
+	private void updateSubmittedChecklistFields(boolean approve, String nextStatus) {
+		if (approve || !"QR".equalsIgnoreCase(nextStatus)) {
+			return;
+		}
 
+		String adTableUU = DB.getSQLValueStringEx(trxName,
+				"SELECT AD_Table_UU FROM AD_Table WHERE AD_Table_ID=?", po.get_Table_ID());
+		if (!"419a40ec-6999-4c46-899d-422c3048c97d".equalsIgnoreCase(adTableUU)) {
+			return;
+		}
+
+		po.set_ValueOfColumn(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Sen_Fin_CFO_Sign, yesNo(pZZ_Missing_Senior_Finance_CFO_Signature));
+		po.set_ValueOfColumn(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Sen_Org_CEO_Sign, yesNo(pZZ_Missing_Senior_Organisation_CEO_Signature));
+		po.set_ValueOfColumn(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Emp_Rep_Sign, yesNo(pZZ_Missing_Employee_Representative_Signature));
+		po.set_ValueOfColumn(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Union_Rep_Sign, yesNo(pZZ_Missing_Union_Representative_Signature));
+		po.set_ValueOfColumn(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Person_Sign_Many_Times, yesNo(pZZ_One_Person_Signed_More_Than_Once));
+		po.set_ValueOfColumn(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Sign_Pages_Not_Clear, yesNo(pZZ_Signature_Pages_Not_Clear));
+	}
+
+	private void validateChecklistPromptSetup(boolean approve, String nextStatus) {
+		if (approve || !"QR".equalsIgnoreCase(nextStatus)) {
+			return;
+		}
+
+		Set<String> presentParams = new HashSet<>();
+		if (getParameter() != null) {
+			for (org.compiere.process.ProcessInfoParameter p : getParameter()) {
+				if (p != null && p.getParameterName() != null) {
+					presentParams.add(p.getParameterName());
+				}
+			}
+		}
+
+		boolean hasChecklistPromptParams = presentParams.contains(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Sen_Fin_CFO_Sign)
+				|| presentParams.contains(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Sen_Org_CEO_Sign)
+				|| presentParams.contains(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Emp_Rep_Sign)
+				|| presentParams.contains(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Union_Rep_Sign)
+				|| presentParams.contains(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Person_Sign_Many_Times)
+				|| presentParams.contains(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Sign_Pages_Not_Clear);
+
+		if (!hasChecklistPromptParams) {
+			throw new AdempiereException(
+					"Query checklist parameters are not configured on this process. "
+					+ "Please add AD_Process_Para entries for "
+					+ I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Sen_Fin_CFO_Sign + ", "
+					+ I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Sen_Org_CEO_Sign + ", "
+					+ I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Emp_Rep_Sign + ", "
+					+ I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Union_Rep_Sign + ", "
+					+ I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Person_Sign_Many_Times + ", and "
+					+ I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Sign_Pages_Not_Clear + ".");
+		}
+	}
+
+	private String yesNo(String value) {
+		return "Y".equalsIgnoreCase(value) ? "Y" : "N";
+	}
 
 }
