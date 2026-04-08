@@ -32,7 +32,7 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260319L;
+	private static final long serialVersionUID = 20260407L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Submitted (Properties ctx, int ZZ_WSP_ATR_Submitted_ID, String trxName)
@@ -41,6 +41,16 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
       /** if (ZZ_WSP_ATR_Submitted_ID == 0)
         {
 			setZZ_IsQuery (false);
+// N
+			setZZ_Missing_Emp_Rep_Sign (false);
+// N
+			setZZ_Missing_Sen_Fin_CFO_Sign (false);
+// N
+			setZZ_Missing_Sen_Org_CEO_Sign (false);
+// N
+			setZZ_Missing_Union_Rep_Sign (false);
+// N
+			setZZ_Person_Sign_Many_Times (false);
 // N
 			setZZ_WSP_ATR_Submitted_ID (0);
         } */
@@ -54,6 +64,16 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
         {
 			setZZ_IsQuery (false);
 // N
+			setZZ_Missing_Emp_Rep_Sign (false);
+// N
+			setZZ_Missing_Sen_Fin_CFO_Sign (false);
+// N
+			setZZ_Missing_Sen_Org_CEO_Sign (false);
+// N
+			setZZ_Missing_Union_Rep_Sign (false);
+// N
+			setZZ_Person_Sign_Many_Times (false);
+// N
 			setZZ_WSP_ATR_Submitted_ID (0);
         } */
     }
@@ -66,6 +86,16 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
         {
 			setZZ_IsQuery (false);
 // N
+			setZZ_Missing_Emp_Rep_Sign (false);
+// N
+			setZZ_Missing_Sen_Fin_CFO_Sign (false);
+// N
+			setZZ_Missing_Sen_Org_CEO_Sign (false);
+// N
+			setZZ_Missing_Union_Rep_Sign (false);
+// N
+			setZZ_Person_Sign_Many_Times (false);
+// N
 			setZZ_WSP_ATR_Submitted_ID (0);
         } */
     }
@@ -77,6 +107,16 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
       /** if (ZZ_WSP_ATR_Submitted_UU == null)
         {
 			setZZ_IsQuery (false);
+// N
+			setZZ_Missing_Emp_Rep_Sign (false);
+// N
+			setZZ_Missing_Sen_Fin_CFO_Sign (false);
+// N
+			setZZ_Missing_Sen_Org_CEO_Sign (false);
+// N
+			setZZ_Missing_Union_Rep_Sign (false);
+// N
+			setZZ_Person_Sign_Many_Times (false);
 // N
 			setZZ_WSP_ATR_Submitted_ID (0);
         } */
@@ -653,6 +693,116 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	public boolean isZZ_IsQuery()
 	{
 		Object oo = get_Value(COLUMNNAME_ZZ_IsQuery);
+		if (oo != null)
+		{
+			 if (oo instanceof Boolean)
+				 return ((Boolean)oo).booleanValue();
+			return "Y".equals(oo);
+		}
+		return false;
+	}
+
+	/** Set Missing Employee Representative Signature.
+		@param ZZ_Missing_Emp_Rep_Sign Missing Employee Representative Signature
+	*/
+	public void setZZ_Missing_Emp_Rep_Sign (boolean ZZ_Missing_Emp_Rep_Sign)
+	{
+		set_Value (COLUMNNAME_ZZ_Missing_Emp_Rep_Sign, Boolean.valueOf(ZZ_Missing_Emp_Rep_Sign));
+	}
+
+	/** Get Missing Employee Representative Signature.
+		@return Missing Employee Representative Signature	  */
+	public boolean isZZ_Missing_Emp_Rep_Sign()
+	{
+		Object oo = get_Value(COLUMNNAME_ZZ_Missing_Emp_Rep_Sign);
+		if (oo != null)
+		{
+			 if (oo instanceof Boolean)
+				 return ((Boolean)oo).booleanValue();
+			return "Y".equals(oo);
+		}
+		return false;
+	}
+
+	/** Set Missing Senior Finance/CFO Signature.
+		@param ZZ_Missing_Sen_Fin_CFO_Sign Missing Senior Finance/CFO Signature
+	*/
+	public void setZZ_Missing_Sen_Fin_CFO_Sign (boolean ZZ_Missing_Sen_Fin_CFO_Sign)
+	{
+		set_Value (COLUMNNAME_ZZ_Missing_Sen_Fin_CFO_Sign, Boolean.valueOf(ZZ_Missing_Sen_Fin_CFO_Sign));
+	}
+
+	/** Get Missing Senior Finance/CFO Signature.
+		@return Missing Senior Finance/CFO Signature	  */
+	public boolean isZZ_Missing_Sen_Fin_CFO_Sign()
+	{
+		Object oo = get_Value(COLUMNNAME_ZZ_Missing_Sen_Fin_CFO_Sign);
+		if (oo != null)
+		{
+			 if (oo instanceof Boolean)
+				 return ((Boolean)oo).booleanValue();
+			return "Y".equals(oo);
+		}
+		return false;
+	}
+
+	/** Set Missing Senior Organisation/CEO Signature.
+		@param ZZ_Missing_Sen_Org_CEO_Sign Missing Senior Organisation/CEO Signature
+	*/
+	public void setZZ_Missing_Sen_Org_CEO_Sign (boolean ZZ_Missing_Sen_Org_CEO_Sign)
+	{
+		set_Value (COLUMNNAME_ZZ_Missing_Sen_Org_CEO_Sign, Boolean.valueOf(ZZ_Missing_Sen_Org_CEO_Sign));
+	}
+
+	/** Get Missing Senior Organisation/CEO Signature.
+		@return Missing Senior Organisation/CEO Signature	  */
+	public boolean isZZ_Missing_Sen_Org_CEO_Sign()
+	{
+		Object oo = get_Value(COLUMNNAME_ZZ_Missing_Sen_Org_CEO_Sign);
+		if (oo != null)
+		{
+			 if (oo instanceof Boolean)
+				 return ((Boolean)oo).booleanValue();
+			return "Y".equals(oo);
+		}
+		return false;
+	}
+
+	/** Set Missing Union Representative Signature.
+		@param ZZ_Missing_Union_Rep_Sign Missing Union Representative Signature
+	*/
+	public void setZZ_Missing_Union_Rep_Sign (boolean ZZ_Missing_Union_Rep_Sign)
+	{
+		set_Value (COLUMNNAME_ZZ_Missing_Union_Rep_Sign, Boolean.valueOf(ZZ_Missing_Union_Rep_Sign));
+	}
+
+	/** Get Missing Union Representative Signature.
+		@return Missing Union Representative Signature	  */
+	public boolean isZZ_Missing_Union_Rep_Sign()
+	{
+		Object oo = get_Value(COLUMNNAME_ZZ_Missing_Union_Rep_Sign);
+		if (oo != null)
+		{
+			 if (oo instanceof Boolean)
+				 return ((Boolean)oo).booleanValue();
+			return "Y".equals(oo);
+		}
+		return false;
+	}
+
+	/** Set One person signed more than once.
+		@param ZZ_Person_Sign_Many_Times One person signed more than once
+	*/
+	public void setZZ_Person_Sign_Many_Times (boolean ZZ_Person_Sign_Many_Times)
+	{
+		set_Value (COLUMNNAME_ZZ_Person_Sign_Many_Times, Boolean.valueOf(ZZ_Person_Sign_Many_Times));
+	}
+
+	/** Get One person signed more than once.
+		@return One person signed more than once	  */
+	public boolean isZZ_Person_Sign_Many_Times()
+	{
+		Object oo = get_Value(COLUMNNAME_ZZ_Person_Sign_Many_Times);
 		if (oo != null)
 		{
 			 if (oo instanceof Boolean)

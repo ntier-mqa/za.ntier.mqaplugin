@@ -49,6 +49,18 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	private static final String WSP_ATR_Successful_Submission_TEMPLATE_UUID = "8763dcdc-4b83-44e5-b84a-c54e6a5beafe";
 	private static final String WSP_ATR_FINAL_APPROVAL_TEMPLATE_UUID = "6a3d10f8-8f15-4106-a491-e365dff4a7b2";
 	public static final int FROM_EMAIL_USER_ID = MSysConfig.getIntValue("FROM_EMAIL_USER_ID",1000011);
+	private static final String COL_MISSING_SNR_FIN_CFO_SIGN = resolveSubmittedColumnName(
+			"COLUMNNAME_ZZ_Missing_Snr_Fin_CFO_Sign", "ZZ_Missing_Snr_Fin_CFO_Sign");
+	private static final String COL_MISSING_SNR_ORG_CEO_SIGN = resolveSubmittedColumnName(
+			"COLUMNNAME_ZZ_Missing_Snr_Org_CEO_Sign", "ZZ_Missing_Snr_Org_CEO_Sign");
+	private static final String COL_MISSING_EMP_REP_SIGN = resolveSubmittedColumnName(
+			"COLUMNNAME_ZZ_Missing_Emp_Rep_Sign", "ZZ_Missing_Emp_Rep_Sign");
+	private static final String COL_MISSING_UNION_REP_SIGN = resolveSubmittedColumnName(
+			"COLUMNNAME_ZZ_Missing_Union_Rep_Sign", "ZZ_Missing_Union_Rep_Sign");
+	private static final String COL_ONE_PERSON_SIGNED_MORE_THAN_ONCE = resolveSubmittedColumnName(
+			"COLUMNNAME_ZZ_One_Person_Signed_More_Than_Once", "ZZ_One_Person_Signed_More_Than_Once");
+	private static final String COL_SIGN_PAGES_NOT_CLEAR = resolveSubmittedColumnName(
+			"COLUMNNAME_ZZ_Sign_Pages_Not_Clear", "ZZ_Sign_Pages_Not_Clear");
 
 	public static MZZWSPATRSubmitted getSubmitted(Properties ctx,
 			int submittedId,
