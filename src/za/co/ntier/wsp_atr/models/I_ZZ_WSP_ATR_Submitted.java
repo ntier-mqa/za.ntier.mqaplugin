@@ -473,6 +473,15 @@ public interface I_ZZ_WSP_ATR_Submitted
 	/** Get Resubmitted Date	  */
 	public Timestamp getZZ_ResubmittedDate();
 
+    /** Column name ZZ_Sign_Pages_Not_Clear */
+    public static final String COLUMNNAME_ZZ_Sign_Pages_Not_Clear = "ZZ_Sign_Pages_Not_Clear";
+
+	/** Set Signature Pages not Clear	  */
+	public void setZZ_Sign_Pages_Not_Clear (boolean ZZ_Sign_Pages_Not_Clear);
+
+	/** Get Signature Pages not Clear	  */
+	public boolean isZZ_Sign_Pages_Not_Clear();
+
     /** Column name ZZ_Submission_Due_Date */
     public static final String COLUMNNAME_ZZ_Submission_Due_Date = "ZZ_Submission_Due_Date";
 

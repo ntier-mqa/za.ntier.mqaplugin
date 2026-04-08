@@ -32,7 +32,7 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260407L;
+	private static final long serialVersionUID = 20260408L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Submitted (Properties ctx, int ZZ_WSP_ATR_Submitted_ID, String trxName)
@@ -51,6 +51,8 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 			setZZ_Missing_Union_Rep_Sign (false);
 // N
 			setZZ_Person_Sign_Many_Times (false);
+// N
+			setZZ_Sign_Pages_Not_Clear (false);
 // N
 			setZZ_WSP_ATR_Submitted_ID (0);
         } */
@@ -74,6 +76,8 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 // N
 			setZZ_Person_Sign_Many_Times (false);
 // N
+			setZZ_Sign_Pages_Not_Clear (false);
+// N
 			setZZ_WSP_ATR_Submitted_ID (0);
         } */
     }
@@ -96,6 +100,8 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 // N
 			setZZ_Person_Sign_Many_Times (false);
 // N
+			setZZ_Sign_Pages_Not_Clear (false);
+// N
 			setZZ_WSP_ATR_Submitted_ID (0);
         } */
     }
@@ -117,6 +123,8 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 			setZZ_Missing_Union_Rep_Sign (false);
 // N
 			setZZ_Person_Sign_Many_Times (false);
+// N
+			setZZ_Sign_Pages_Not_Clear (false);
 // N
 			setZZ_WSP_ATR_Submitted_ID (0);
         } */
@@ -993,6 +1001,28 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	public Timestamp getZZ_ResubmittedDate()
 	{
 		return (Timestamp)get_Value(COLUMNNAME_ZZ_ResubmittedDate);
+	}
+
+	/** Set Signature Pages not Clear.
+		@param ZZ_Sign_Pages_Not_Clear Signature Pages not Clear
+	*/
+	public void setZZ_Sign_Pages_Not_Clear (boolean ZZ_Sign_Pages_Not_Clear)
+	{
+		set_Value (COLUMNNAME_ZZ_Sign_Pages_Not_Clear, Boolean.valueOf(ZZ_Sign_Pages_Not_Clear));
+	}
+
+	/** Get Signature Pages not Clear.
+		@return Signature Pages not Clear	  */
+	public boolean isZZ_Sign_Pages_Not_Clear()
+	{
+		Object oo = get_Value(COLUMNNAME_ZZ_Sign_Pages_Not_Clear);
+		if (oo != null)
+		{
+			 if (oo instanceof Boolean)
+				 return ((Boolean)oo).booleanValue();
+			return "Y".equals(oo);
+		}
+		return false;
 	}
 
 	/** Set Submission Due Date.
