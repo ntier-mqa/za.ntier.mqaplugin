@@ -12,6 +12,7 @@ import org.compiere.model.MRefList;
 import org.compiere.model.MRefTable;
 import org.compiere.model.MTable;
 import org.compiere.model.PO;
+import org.compiere.model.Query;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Util;
 
@@ -44,7 +45,7 @@ final class WspAtrExportValueFormatter {
         }
 
         if (displayType == DisplayType.YesNo && value instanceof Boolean) {
-            cell.setCellValue((Boolean) value);
+            cell.setCellValue((Boolean) value ? "Yes" : "No");
             return;
         }
 
@@ -87,7 +88,7 @@ final class WspAtrExportValueFormatter {
                     : column.getAD_Reference_ID();
             String listName = MRefList.getListName(ctx, referenceId, rawValue);
             if (!Util.isEmpty(listName, true)) {
-                return rawValue + " - " + listName;
+                return listName;
             }
             return rawValue;
         }
@@ -103,7 +104,8 @@ final class WspAtrExportValueFormatter {
 
         int referenceId = column.getAD_Reference_Value_ID();
         if (referenceId <= 0) {
-            return String.valueOf(value);
+            String fallbackDisplay = resolveKnownTableDirDisplay(column, recordId, trxName);
+            return Util.isEmpty(fallbackDisplay, true) ? String.valueOf(value) : fallbackDisplay;
         }
 
         MRefTable refTable = MRefTable.get(ctx, referenceId, trxName);
@@ -125,7 +127,7 @@ final class WspAtrExportValueFormatter {
         String resolvedName = getStringValue(referencedRecord, "Name");
 
         if (!Util.isEmpty(resolvedValue, true) && !Util.isEmpty(resolvedName, true)) {
-            return resolvedValue + " - " + resolvedName;
+            return resolvedName;
         }
         if (!Util.isEmpty(resolvedName, true)) {
             return resolvedName;
@@ -135,6 +137,38 @@ final class WspAtrExportValueFormatter {
         }
 
         return String.valueOf(value);
+    }
+
+    private String resolveKnownTableDirDisplay(MColumn column, int recordId, String trxName) {
+        if (recordId <= 0 || column == null) {
+            return null;
+        }
+
+        String columnName = column.getColumnName();
+        if (Util.isEmpty(columnName, true)) {
+            return null;
+        }
+
+        if ("ZZ_FinYear_ID".equalsIgnoreCase(columnName) || "C_Year_ID".equalsIgnoreCase(columnName)) {
+            PO year = new Query(process.getCtx(), "C_Year", "C_Year_ID=?", trxName)
+                    .setParameters(recordId)
+                    .firstOnly();
+            if (year == null) {
+                return null;
+            }
+
+            String fiscalYear = getStringValue(year, "FiscalYear");
+            if (!Util.isEmpty(fiscalYear, true)) {
+                return fiscalYear;
+            }
+            String yearValue = getStringValue(year, "Year");
+            if (!Util.isEmpty(yearValue, true)) {
+                return yearValue;
+            }
+            return getStringValue(year, "Name");
+        }
+
+        return null;
     }
 
     private String getStringValue(PO record, String columnName) {
