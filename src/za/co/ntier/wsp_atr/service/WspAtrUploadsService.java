@@ -214,12 +214,7 @@ public class WspAtrUploadsService {
         boolean hasTemplate = repo.hasSubmittedTemplateAttachment(submittedId);
         boolean hasReport = repo.hasUploadTypeAttachment(submittedId,
                 X_ZZ_WSP_ATR_Uploads.ZZ_WSP_ATR_UPLOAD_TYPE_UploadWSP_ATRReport);
-        boolean hasMinutes = repo.hasUploadTypeAttachment(submittedId,
-                X_ZZ_WSP_ATR_Uploads.ZZ_WSP_ATR_UPLOAD_TYPE_UploadSignedMinutes);
-        boolean hasAttendance = repo.hasUploadTypeAttachment(submittedId,
-                X_ZZ_WSP_ATR_Uploads.ZZ_WSP_ATR_UPLOAD_TYPE_UploadAttendanceRegister);
-
-        return hasTemplate && hasReport && hasMinutes && hasAttendance;
+        return hasTemplate && hasReport;
     }
 
     private boolean isChildWithParentUploadsEnabled(Properties ctx, int submittedId, String trxName) {
