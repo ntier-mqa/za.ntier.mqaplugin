@@ -44,7 +44,7 @@ final class WspAtrExportValueFormatter {
         }
 
         if (displayType == DisplayType.YesNo && value instanceof Boolean) {
-            cell.setCellValue((Boolean) value);
+            cell.setCellValue((Boolean) value ? "Yes" : "No");
             return;
         }
 
@@ -87,7 +87,7 @@ final class WspAtrExportValueFormatter {
                     : column.getAD_Reference_ID();
             String listName = MRefList.getListName(ctx, referenceId, rawValue);
             if (!Util.isEmpty(listName, true)) {
-                return rawValue + " - " + listName;
+                return listName;
             }
             return rawValue;
         }
@@ -125,7 +125,7 @@ final class WspAtrExportValueFormatter {
         String resolvedName = getStringValue(referencedRecord, "Name");
 
         if (!Util.isEmpty(resolvedValue, true) && !Util.isEmpty(resolvedName, true)) {
-            return resolvedValue + " - " + resolvedName;
+            return resolvedName;
         }
         if (!Util.isEmpty(resolvedName, true)) {
             return resolvedName;
