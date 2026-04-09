@@ -14,6 +14,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.compiere.model.MColumn;
+import org.compiere.model.MTable;
 import org.compiere.model.PO;
 import org.compiere.model.Query;
 import org.compiere.util.Util;
@@ -134,6 +135,10 @@ final class WspAtrExportSheetWriter {
         }
 
         List<WspAtrSheetColumn> resolvedColumns = new ArrayList<>();
+        if (tabContext.getTabLevel() > 0) {
+            resolvedColumns.addAll(resolveSharedSubmissionColumns());
+        }
+
         if (exportTab.isIncludeDocumentNo()
                 && !actualColumns.containsKey(normalize(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_DocumentNo))) {
             resolvedColumns.add(new WspAtrSyntheticColumn(
@@ -143,6 +148,134 @@ final class WspAtrExportSheetWriter {
 
         resolvedColumns.addAll(actualColumns.values());
         return resolvedColumns;
+    }
+
+    private List<WspAtrSheetColumn> resolveSharedSubmissionColumns() {
+        Map<Integer, PO> submittedCache = new HashMap<>();
+        Map<Integer, PO> organisationCache = new HashMap<>();
+
+        List<WspAtrSheetColumn> columns = new ArrayList<>();
+        columns.add(new WspAtrSyntheticColumn("Legal Name", record ->
+                getOrganisationField(resolveOrganisation(record, submittedCache, organisationCache),
+                        "LegalName", "legalname", "OrgName", "orgname", "Name", "name")));
+        columns.add(new WspAtrSyntheticColumn("Trade  Name", record ->
+                getOrganisationField(resolveOrganisation(record, submittedCache, organisationCache),
+                        "TradingName", "tradingname", "TradeName", "tradename", "OrgName", "orgname", "Name", "name")));
+        columns.add(new WspAtrSyntheticColumn("SDLNumber", record ->
+                getOrganisationField(resolveOrganisation(record, submittedCache, organisationCache),
+                        "ZZ_SDL_No", "zz_sdl_no", "SDLNo", "sdlno", "Value", "value")));
+        columns.add(new WspAtrSyntheticColumn("FinancialYear", record ->
+                resolveFinancialYear(resolveSubmitted(record, submittedCache))));
+        columns.add(new WspAtrSyntheticColumn("WSPStatus", record ->
+                resolveWspStatus(resolveSubmitted(record, submittedCache))));
+        columns.add(new WspAtrSyntheticColumn("Organisation Size", record ->
+                getOrganisationField(resolveOrganisation(record, submittedCache, organisationCache),
+                        "OrganisationSize", "organisation_size", "ZZ_OrganisationSize", "zz_organisationsize")));
+        columns.add(new WspAtrSyntheticColumn("Organisation Sub Sector", record ->
+                getOrganisationField(resolveOrganisation(record, submittedCache, organisationCache),
+                        "SubSector", "subsector", "OrganisationSubSector", "organisation_sub_sector", "ZZ_SubSector")));
+        columns.add(new WspAtrSyntheticColumn("Org Province", record ->
+                getOrganisationField(resolveOrganisation(record, submittedCache, organisationCache),
+                        "Province", "province", "OrgProvince", "orgprovince", "ZZ_Province")));
+        return columns;
+    }
+
+    private PO resolveSubmitted(PO childRecord, Map<Integer, PO> submittedCache) {
+        if (childRecord == null) {
+            return null;
+        }
+        int submittedId = childRecord.get_ValueAsInt(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_WSP_ATR_Submitted_ID);
+        if (submittedId <= 0) {
+            return null;
+        }
+        return submittedCache.computeIfAbsent(submittedId, id ->
+                MTable.get(process.getCtx(), I_ZZ_WSP_ATR_Submitted.Table_ID).getPO(id, process.get_TrxName()));
+    }
+
+    private PO resolveOrganisation(PO childRecord, Map<Integer, PO> submittedCache, Map<Integer, PO> organisationCache) {
+        PO submitted = resolveSubmitted(childRecord, submittedCache);
+        if (submitted == null) {
+            return null;
+        }
+        int orgId = submitted.get_ValueAsInt(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZSdfOrganisation_ID);
+        if (orgId <= 0) {
+            return null;
+        }
+        return organisationCache.computeIfAbsent(orgId, id -> new Query(process.getCtx(),
+                "zzsdforganisation_v", "zzsdforganisation_v_id=?", process.get_TrxName())
+                        .setParameters(id)
+                        .firstOnly());
+    }
+
+    private String resolveFinancialYear(PO submitted) {
+        if (submitted == null) {
+            return "";
+        }
+        int yearId = submitted.get_ValueAsInt(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_FinYear_ID);
+        if (yearId <= 0) {
+            return "";
+        }
+        PO year = new Query(process.getCtx(), "C_Year", "C_Year_ID=?", process.get_TrxName())
+                .setParameters(yearId)
+                .firstOnly();
+        if (year == null) {
+            return "";
+        }
+        return firstNonBlank(year, "FiscalYear", "Year", "Name");
+    }
+
+    private String resolveWspStatus(PO submitted) {
+        if (submitted == null) {
+            return "";
+        }
+        String status = firstNonBlank(submitted,
+                I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_DocStatus,
+                I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_WSP_ATR_Status);
+        if (Util.isEmpty(status, true)) {
+            return "";
+        }
+        String normalized = status.trim();
+        if ("SU".equalsIgnoreCase(normalized)) {
+            return "Submitted";
+        }
+        if ("AP".equalsIgnoreCase(normalized)) {
+            return "Approved";
+        }
+        if ("QR".equalsIgnoreCase(normalized)) {
+            return "Query";
+        }
+        if ("UP".equalsIgnoreCase(normalized)) {
+            return "Uploaded";
+        }
+        return normalized;
+    }
+
+    private String getOrganisationField(PO orgRecord, String... candidates) {
+        if (orgRecord == null) {
+            return "";
+        }
+        String value = firstNonBlank(orgRecord, candidates);
+        return value == null ? "" : value;
+    }
+
+    private String firstNonBlank(PO record, String... columnNames) {
+        if (record == null || columnNames == null) {
+            return null;
+        }
+        for (String columnName : columnNames) {
+            if (Util.isEmpty(columnName, true) || record.get_ColumnIndex(columnName) < 0) {
+                continue;
+            }
+            Object value = record.get_Value(columnName);
+            if (value == null) {
+                continue;
+            }
+            String text = String.valueOf(value).trim();
+            if (!text.isEmpty()) {
+                return text;
+            }
+        }
+        return null;
     }
 
     private String resolveFieldHeader(PO fieldRow, MColumn column) {
