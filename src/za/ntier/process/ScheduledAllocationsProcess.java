@@ -62,7 +62,7 @@ public class ScheduledAllocationsProcess extends SvrProcess
 					X_ZZ_AllocationSchedule.Table_ID, schedule.get_ID());
 		}
 
-		return "@Success@ - Added " + totalAllocationsAdded + " allocations to Schedule " + schedule.getDocumentNo();
+		return "Added " + totalAllocationsAdded + " allocations to Schedule " + schedule.getDocumentNo();
 	}
 
 	/**

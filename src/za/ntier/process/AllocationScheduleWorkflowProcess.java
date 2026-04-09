@@ -3,7 +3,10 @@ package za.ntier.process;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -40,8 +43,6 @@ import za.ntier.utils.MQAConstants;
 public class AllocationScheduleWorkflowProcess extends SvrProcess
 {
 
-	private static final String	ROLE_MGR_QA					= "Mgr - QA";
-
 	/** Mail template UU for Mgr QA Approval emails to organizations */
 	private static final String	APPLICANT_MAIL_TEMPLATE_UU	= "61aeebae-fc16-4db8-823b-c038e0413d3f";
 
@@ -51,12 +52,9 @@ public class AllocationScheduleWorkflowProcess extends SvrProcess
 	@Parameter(name = "Recommend")
 	private String				pRecommend					= "";
 
-	private String				roleName					= null;
-
 	@Override
 	protected void prepare()
 	{
-		roleName = Env.getContext(getCtx(), "#AD_Role_Name");
 	}
 
 	@Override
@@ -78,7 +76,7 @@ public class AllocationScheduleWorkflowProcess extends SvrProcess
 
 		header.load(get_TrxName());
 
-		if (ROLE_MGR_QA.equalsIgnoreCase(roleName) && "Y".equalsIgnoreCase(pApprove))
+		if ("Y".equalsIgnoreCase(pApprove))
 		{
 			if (X_ZZ_AllocationSchedule.ZZ_DOCSTATUS_Approved.equals(header.getZZ_DocStatus()))
 			{
@@ -163,7 +161,7 @@ public class AllocationScheduleWorkflowProcess extends SvrProcess
 		}
 
 		List<EMail> pendingEmails = new ArrayList<>();
-		List<Integer> pendingAllocIds = new ArrayList<>();
+		List<List<Integer>> pendingAllocIdGroups = new ArrayList<>();
 		List<String> pendingTargetEmails = new ArrayList<>();
 		List<String> pendingOrgNames = new ArrayList<>();
 
@@ -171,74 +169,158 @@ public class AllocationScheduleWorkflowProcess extends SvrProcess
 													"ZZ_Organization_ID IN (SELECT ZZ_Organization_ID FROM ZZ_Organization WHERE ZZ_AllocationSchedule_ID=?)",
 													get_TrxName()).setParameters(header.get_ID()).setOnlyActiveRecords(true).list();
 
+		Map<Integer, List<X_ZZ_Allocations>> orgMap = new LinkedHashMap<>();
 		for (X_ZZ_Allocations line : lines)
 		{
-			if (mailText != null)
+			if (!orgMap.containsKey(line.getZZ_Organization_ID()))
 			{
-				String email = line.getEMail();
+				orgMap.put(line.getZZ_Organization_ID(), new ArrayList<>());
+			}
+			orgMap.get(line.getZZ_Organization_ID()).add(line);
+		}
+
+		for (Map.Entry<Integer, List<X_ZZ_Allocations>> entry : orgMap.entrySet())
+		{
+			if (mailText != null && !entry.getValue().isEmpty())
+			{
+				List<X_ZZ_Allocations> orgLines = entry.getValue();
+				String email = null;
+				for (X_ZZ_Allocations l : orgLines)
+				{
+					if (!Util.isEmpty(l.getEMail()))
+					{
+						email = l.getEMail();
+						break;
+					}
+				}
+
 				if (!Util.isEmpty(email))
 				{
 					String msg = baseBody;
 
-					String appTypeLine = "";
-					if (line.get_ValueAsInt("ZZ_QCTO_Alloc_OC_ID") > 0)
+					List<String> ocQuals = new ArrayList<>();
+					List<String> skillsQuals = new ArrayList<>();
+					List<String> acQuals = new ArrayList<>();
+					List<Integer> groupedAllocIds = new ArrayList<>();
+
+					for (X_ZZ_Allocations line : orgLines)
 					{
-						appTypeLine = "Occupational Qualification- " + line.getZZ_Qualification();
-					}
-					else if (line.get_ValueAsInt("ZZ_QCTO_Alloc_Skills_ID") > 0)
-					{
-						appTypeLine = "Skills Occupational Programme- " + line.getZZ_Qualification();
-					}
-					else if (line.get_ValueAsInt("ZZ_QCTO_Alloc_AC_ID") > 0)
-					{
-						appTypeLine = "Accreditation Center- " + line.getZZ_Qualification();
+						groupedAllocIds.add(line.get_ID());
+						if (line.getZZ_QCTO_Alloc_OC_ID() > 0 && !Util.isEmpty(line.getZZ_Qualification()))
+						{
+							ocQuals.add(line.getZZ_Qualification());
+						}
+						else if (line.getZZ_QCTO_Alloc_Skills_ID() > 0 && !Util.isEmpty(line.getZZ_Qualification()))
+						{
+							skillsQuals.add(line.getZZ_Qualification());
+						}
+						else if (line.getZZ_QCTO_Alloc_AC_ID() > 0 && !Util.isEmpty(line.getZZ_Qualification()))
+						{
+							acQuals.add(line.getZZ_Qualification());
+						}
 					}
 
-					X_ZZ_Organization orgTab = new X_ZZ_Organization(getCtx(), line.getZZ_Organization_ID(), get_TrxName());
+					StringBuilder scopeBuilder = new StringBuilder();
+					if (isHtml)
+					{
+						if (!ocQuals.isEmpty())
+						{
+							scopeBuilder.append("&emsp;<b>Occupational Qualification</b><br/>");
+							for (int j = 0; j < ocQuals.size(); j++)
+							{
+								scopeBuilder.append("&emsp;&emsp;").append(j + 1).append(". ").append(ocQuals.get(j)).append("<br/>");
+							}
+						}
+						if (!skillsQuals.isEmpty())
+						{
+							if (scopeBuilder.length() > 0)
+								scopeBuilder.append("<br/>");
+							scopeBuilder.append("&emsp;<b>Skills Occupational Programme</b><br/>");
+							for (int j = 0; j < skillsQuals.size(); j++)
+							{
+								scopeBuilder.append("&emsp;&emsp;").append(j + 1).append(". ").append(skillsQuals.get(j)).append("<br/>");
+							}
+						}
+						if (!acQuals.isEmpty())
+						{
+							if (scopeBuilder.length() > 0)
+								scopeBuilder.append("<br/>");
+							scopeBuilder.append("&emsp;<b>Accreditation Center</b><br/>");
+							for (int j = 0; j < acQuals.size(); j++)
+							{
+								scopeBuilder.append("&emsp;&emsp;").append(j + 1).append(". ").append(acQuals.get(j)).append("<br/>");
+							}
+						}
+					}
+					else
+					{
+						if (!ocQuals.isEmpty())
+						{
+							scopeBuilder.append("\tOccupational Qualification\n");
+							for (int j = 0; j < ocQuals.size(); j++)
+							{
+								scopeBuilder.append("\t\t").append(j + 1).append(". ").append(ocQuals.get(j)).append("\n");
+							}
+						}
+						if (!skillsQuals.isEmpty())
+						{
+							if (scopeBuilder.length() > 0)
+								scopeBuilder.append("\n");
+							scopeBuilder.append("\tSkills Occupational Programme\n");
+							for (int j = 0; j < skillsQuals.size(); j++)
+							{
+								scopeBuilder.append("\t\t").append(j + 1).append(". ").append(skillsQuals.get(j)).append("\n");
+							}
+						}
+						if (!acQuals.isEmpty())
+						{
+							if (scopeBuilder.length() > 0)
+								scopeBuilder.append("\n");
+							scopeBuilder.append("\tAccreditation Center\n");
+							for (int j = 0; j < acQuals.size(); j++)
+							{
+								scopeBuilder.append("\t\t").append(j + 1).append(". ").append(acQuals.get(j)).append("\n");
+							}
+						}
+					}
 
+					X_ZZ_Organization orgTab = new X_ZZ_Organization(getCtx(), entry.getKey(), get_TrxName());
 					String orgName = orgTab.getZZLegalName() != null ? orgTab.getZZLegalName() : "";
 					msg = msg.replace("<OrgName>", orgName);
-					msg = msg.replace("<Scope>", appTypeLine);
+					msg = msg.replace("<Scope>", scopeBuilder.toString());
 
 					String dateStr = "TBD";
-					String timeStr = "TBD";
 
 					if (orgTab.getDateFrom() != null)
 					{
 						SimpleDateFormat dateFmt = new SimpleDateFormat("dd MMMM yyyy");
-						SimpleDateFormat timeFmt = new SimpleDateFormat("hh'h'mma");
 
 						String startDate = dateFmt.format(orgTab.getDateFrom());
-						String startTime = timeFmt.format(orgTab.getDateFrom()).toLowerCase();
 
 						if (orgTab.getDateTo() != null)
 						{
 							String endDate = dateFmt.format(orgTab.getDateTo());
-							String endTime = timeFmt.format(orgTab.getDateTo()).toLowerCase();
 
 							dateStr = startDate.equals(endDate) ? startDate : startDate + " to " + endDate;
-							timeStr = startTime.equals(endTime) ? startTime : startTime + " to " + endTime;
 						}
 						else
 						{
 							dateStr = startDate;
-							timeStr = startTime;
 						}
 					}
 
 					msg = msg.replace("<Dates>", dateStr);
-					msg = msg.replace("<Time>", timeStr);
 
 					EMail emailObj = client.createEMail(email, subject, msg, isHtml);
 					if (emailObj != null)
 					{
-						for (MAttachmentEntry entry : cachedAttachments)
+						for (MAttachmentEntry attachmentEntry : cachedAttachments)
 						{
-							emailObj.addAttachment(entry.getData(), entry.getContentType(), entry.getName());
+							emailObj.addAttachment(attachmentEntry.getData(), attachmentEntry.getContentType(), attachmentEntry.getName());
 						}
 
 						pendingEmails.add(emailObj);
-						pendingAllocIds.add(line.get_ID());
+						pendingAllocIdGroups.add(groupedAllocIds);
 						pendingTargetEmails.add(email);
 						pendingOrgNames.add(orgName);
 					}
@@ -249,7 +331,7 @@ public class AllocationScheduleWorkflowProcess extends SvrProcess
 		if (pendingEmails.isEmpty())
 			return;
 
-		final java.util.Properties ctx = Env.getCtx();
+		final Properties ctx = Env.getCtx();
 		final int totalCount = pendingEmails.size();
 		final AtomicInteger sentCount = new AtomicInteger(0);
 		final AtomicInteger failedCount = new AtomicInteger(0);
@@ -263,7 +345,7 @@ public class AllocationScheduleWorkflowProcess extends SvrProcess
 		for (int i = 0; i < totalCount; i++)
 		{
 			final EMail emailObj = pendingEmails.get(i);
-			final int allocId = pendingAllocIds.get(i);
+			final List<Integer> allocIds = pendingAllocIdGroups.get(i);
 			final String targetEmail = pendingTargetEmails.get(i);
 			final String orgName = pendingOrgNames.get(i);
 
@@ -308,15 +390,18 @@ public class AllocationScheduleWorkflowProcess extends SvrProcess
 						String trxName = Trx.createTrxName("EmailBulk");
 						try
 						{
-							X_ZZ_Allocations alloc = new X_ZZ_Allocations(ctx, allocId, trxName);
-							alloc.setZZ_DocStatus("ST"); // Audit Notification Sent
-							alloc.saveEx();
+							for (Integer aId : allocIds)
+							{
+								X_ZZ_Allocations alloc = new X_ZZ_Allocations(ctx, aId, trxName);
+								alloc.setZZ_DocStatus("ST"); // Audit Notification Sent
+								alloc.saveEx();
+							}
 							Trx.get(trxName, false).commit();
 							sentCount.incrementAndGet();
 						}
 						catch (Exception e)
 						{
-							log.log(Level.WARNING, "Failed to update status for allocId=" + allocId, e);
+							log.log(Level.WARNING, "Failed to update status for org=" + orgName, e);
 							failedCount.incrementAndGet();
 						}
 						finally
@@ -328,18 +413,21 @@ public class AllocationScheduleWorkflowProcess extends SvrProcess
 					}
 					else
 					{
-						X_ZZ_Allocations alloc = new X_ZZ_Allocations(ctx, allocId, null);
-						failedAllocNos.add(String.format(	"%s - %s [ Email: %s ] (%s)",
-															orgName,
-															alloc.getZZ_AllocationNo(),
-															(Util.isEmpty(targetEmail) ? "MISSING" : targetEmail),
-															sendResult));
+						for (Integer aId : allocIds)
+						{
+							X_ZZ_Allocations alloc = new X_ZZ_Allocations(ctx, aId, null);
+							failedAllocNos.add(String.format(	"%s - %s [ Email: %s ] (%s)",
+																orgName,
+																alloc.getZZ_AllocationNo(),
+																(Util.isEmpty(targetEmail) ? "MISSING" : targetEmail),
+																sendResult));
+						}
 						failedCount.incrementAndGet();
 					}
 				}
 				catch (Exception e)
 				{
-					log.log(Level.SEVERE, "Internal email dispatch error for allocId=" + allocId, e);
+					log.log(Level.SEVERE, "Internal email dispatch error for org=" + orgName, e);
 					failedCount.incrementAndGet();
 				}
 				finally
