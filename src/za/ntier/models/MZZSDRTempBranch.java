@@ -68,9 +68,9 @@ public class MZZSDRTempBranch extends X_ZZ_SDR_Temp_Branch {
 				}
 
 		        // 2) Branch name uniqueness
-		        int count = DB.getSQLValueEx(get_TrxName(),
-		            "SELECT COUNT(*) FROM c_bpartner WHERE name=? AND referenceno=?",
-		            branchName, orgRegNo);
+				int count = DB.getSQLValueEx(	get_TrxName(),
+												"SELECT COUNT(*) FROM c_bpartner WHERE name=?",
+												branchName);
 		        if (count > 0) {
 		            log.saveError("Error", "Branch name already exists for this organisation.");
 		            return false;
