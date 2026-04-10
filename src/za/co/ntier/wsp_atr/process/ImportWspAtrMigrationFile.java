@@ -360,7 +360,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
 
         private ColumnMeta findOrgMeta(Map<Integer, ColumnMeta> metas) {
             for (ColumnMeta meta : metas.values()) {
-                if (meta.column != null && X_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZSDFOrganisation_ID.equals(meta.column.getColumnName())) {
+                if (meta.column != null && X_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZSdfOrganisation_ID.equals(meta.column.getColumnName())) {
                     return meta;
                 }
             }
