@@ -304,7 +304,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                         if (Util.isEmpty(mainText, true)) {
                             continue;
                         }
-                        setValueFromText(ctx, line, meta, mainText, meta.createIfNotExist, null, null, trxName);
+                        setValueFromText(ctx, line, meta.column, mainText, meta.useValueForRef, trxName);
                     }
 
                     line.saveEx();
