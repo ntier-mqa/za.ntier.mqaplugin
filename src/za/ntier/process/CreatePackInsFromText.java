@@ -82,7 +82,7 @@ public class CreatePackInsFromText extends SvrProcess {
             }
 
             PO packIn = MTable.get(getCtx(), "AD_Package_Imp").getPO(0, get_TrxName());
-            //packIn.setAD_Client_ID(Env.getAD_Client_ID(getCtx()));
+            packIn.setAD_Client_ID(Env.getAD_Client_ID(getCtx()));
             packIn.setAD_Org_ID(0);
             packIn.set_ValueOfColumn("Name", packInName);
             packIn.saveEx();
@@ -93,7 +93,7 @@ public class CreatePackInsFromText extends SvrProcess {
             if (attachment == null) {
                 attachment = new MAttachment(getCtx(), tableId, packIn.get_ID(), get_TrxName());
             }
-            attachment.addEntry(fileName, content);
+            attachment.addEntry(content, fileName);
             attachment.saveEx();
             attached++;
 
@@ -123,10 +123,4 @@ public class CreatePackInsFromText extends SvrProcess {
         }
         return normalized;
     }
-
-	@Override
-	protected void prepare() {
-		// TODO Auto-generated method stub
-		
-	}
 }
