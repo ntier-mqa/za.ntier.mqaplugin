@@ -124,23 +124,38 @@ public class ImportWSPATRData extends SvrProcess {
 		                             new String[]{"parentsdlnumber","parent sdl number","parcntsdlnumber"});
 		        String financialYr = byHeader(row, H, "WSPYear");
 		        String grantStatus = byHeader(row, H, "PlanningGrantStatus");
+		        String orgName     = byHeaderAny(row, H, NAME_HEADERS);
 		        String numEmpStr   = byHeaderAny(row, H, NUM_EMP_HEADERS);
 		        if (sdlNumber.equals("L999999999") ||  sdlNumber.equals("L000000000")) {
 		        	continue;
 		        }
 
-		        // Try to find existing partner by SDL or parent SDL
-		        String value = (sdlNumber != null && !sdlNumber.isBlank()) ? sdlNumber : parentSDL;
-		        int cnt = DB.getSQLValue(get_TrxName(),
-		                   "SELECT COUNT(*) FROM C_BPartner bp WHERE bp.Value=?", value);
 		        MBPartner_New bp = null;
-		        if (cnt > 0) {
+		        String value = (sdlNumber != null && !sdlNumber.isBlank()) ? sdlNumber : parentSDL;
+		        boolean isTNumber = value != null && value.toUpperCase().startsWith("T0");
+
+		        if (isTNumber) {
+		        	bp = resolveBPForTNumber(orgName, sdlNumber, parentSDL);
+		        	if (bp == null) {
+		        		continue;
+		        	}
+		        	setTNumberOnBP(bp, sdlNumber);
+		        }
+
+		        int cnt = 0;
+		        if (bp == null) {
+		        	cnt = DB.getSQLValue(get_TrxName(),
+		        			"SELECT COUNT(*) FROM C_BPartner bp WHERE bp.Value=?", value);
+		        }
+		        if (bp != null) {
+		        	// already resolved (T-number organization match)
+		        } else if (cnt > 0) {
 		            int c_BPartner_ID = DB.getSQLValue(get_TrxName(),
 		                               "SELECT C_BPartner_ID FROM C_BPartner WHERE Value=?", value);
 		            bp = new MBPartner_New(getCtx(), c_BPartner_ID, get_TrxName());
 		        } else {
 		            // --- create a new BP ---
-		            String name = byHeaderAny(row, H, NAME_HEADERS);
+		            String name = orgName;
 		            if (name == null || name.isBlank()) {
 		                // fall back to trading name if present
 		                name = byHeaderAny(row, H,
@@ -210,7 +225,7 @@ public class ImportWSPATRData extends SvrProcess {
 				File logFile = new File(System.getProperty("java.io.tmpdir"), "unresolved_bps.csv");
 
 				try (PrintWriter writer = new PrintWriter(logFile)) {
-					writer.println("Key1,Key2");
+					writer.println("Reason,Key1,Key2,Extra");
 					for (String line : unresolvedList) {
 						writer.println(line);
 					}
@@ -248,6 +263,50 @@ public class ImportWSPATRData extends SvrProcess {
 
 			return "WSP-ATR Approvals import complete.";
 		}
+	}
+
+	private MBPartner_New resolveBPForTNumber(String orgName, String sdlNumber, String parentSDL) {
+		if (orgName == null || orgName.isBlank()) {
+			unresolvedList.add("T-NUMBER-NO-NAME," + sdlNumber + "," + parentSDL);
+			return null;
+		}
+
+		String trimmedName = orgName.trim();
+		List<List<Object>> rows = DB.getSQLArrayObjectsEx(get_TrxName(),
+				"SELECT C_BPartner_ID FROM C_BPartner WHERE UPPER(TRIM(Name)) = UPPER(TRIM(?))",
+				trimmedName);
+
+		if (rows == null || rows.isEmpty()) {
+			unresolvedList.add("T-NUMBER-BP-NOT-FOUND," + trimmedName + "," + sdlNumber);
+			return null;
+		}
+		if (rows.size() > 1) {
+			unresolvedList.add("T-NUMBER-MULTIPLE-BP," + trimmedName + "," + sdlNumber + ",count=" + rows.size());
+			return null;
+		}
+
+		Object idObj = rows.get(0).get(0);
+		int bpID = idObj instanceof Number ? ((Number) idObj).intValue() : Integer.parseInt(String.valueOf(idObj));
+		return new MBPartner_New(getCtx(), bpID, get_TrxName());
+	}
+
+	private void setTNumberOnBP(MBPartner_New bp, String tNumber) {
+		if (bp == null || tNumber == null || tNumber.isBlank()) {
+			return;
+		}
+
+		if (bp.get_ColumnIndex("T_Number") > 0) {
+			bp.set_ValueOfColumn("T_Number", tNumber);
+			bp.saveEx();
+			return;
+		}
+		if (bp.get_ColumnIndex("ZZ_T_Number") > 0) {
+			bp.set_ValueOfColumn("ZZ_T_Number", tNumber);
+			bp.saveEx();
+			return;
+		}
+
+		addLog("T-number column not found on C_BPartner for BP: " + bp.getName() + " / " + tNumber);
 	}
 	
 	/** Returns the first non‑blank value found for any of the supplied headers. */
