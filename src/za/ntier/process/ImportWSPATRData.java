@@ -272,20 +272,22 @@ public class ImportWSPATRData extends SvrProcess {
 		}
 
 		String trimmedName = orgName.trim();
-		List<Integer> bpIDs = DB.getSQLArrayListEx(get_TrxName(),
+		List<List<Object>> rows = DB.getSQLArrayObjectsEx(get_TrxName(),
 				"SELECT C_BPartner_ID FROM C_BPartner WHERE UPPER(TRIM(Name)) = UPPER(TRIM(?))",
 				trimmedName);
 
-		if (bpIDs == null || bpIDs.isEmpty()) {
+		if (rows == null || rows.isEmpty()) {
 			unresolvedList.add("T-NUMBER-BP-NOT-FOUND," + trimmedName + "," + sdlNumber);
 			return null;
 		}
-		if (bpIDs.size() > 1) {
-			unresolvedList.add("T-NUMBER-MULTIPLE-BP," + trimmedName + "," + sdlNumber + ",count=" + bpIDs.size());
+		if (rows.size() > 1) {
+			unresolvedList.add("T-NUMBER-MULTIPLE-BP," + trimmedName + "," + sdlNumber + ",count=" + rows.size());
 			return null;
 		}
 
-		return new MBPartner_New(getCtx(), bpIDs.get(0), get_TrxName());
+		Object idObj = rows.get(0).get(0);
+		int bpID = idObj instanceof Number ? ((Number) idObj).intValue() : Integer.parseInt(String.valueOf(idObj));
+		return new MBPartner_New(getCtx(), bpID, get_TrxName());
 	}
 
 	private void setTNumberOnBP(MBPartner_New bp, String tNumber) {
