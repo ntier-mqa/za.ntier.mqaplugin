@@ -38,10 +38,14 @@ public class CreatePackInsFromText extends SvrProcess {
             throw new AdempiereUserError("Could not resolve AD_Package_Imp table.");
         }
 
+        int currentClientId = Env.getAD_Client_ID(getCtx());
+        boolean isSystemClient = currentClientId == 0;
+
         String[] rows = inputText.split("\\r?\\n");
         int created = 0;
         int attached = 0;
         int skipped = 0;
+        int skippedByClientRule = 0;
 
         List<String> warnings = new ArrayList<>();
 
@@ -63,6 +67,13 @@ public class CreatePackInsFromText extends SvrProcess {
             }
 
             String packInName = fileName.substring(0, fileName.length() - 4);
+            boolean isSystemPackIn = packInName.contains("_SYSTEM_");
+            if ((isSystemClient && !isSystemPackIn) || (!isSystemClient && isSystemPackIn)) {
+                skippedByClientRule++;
+                warnings.add("Skipped (client rule mismatch): " + fileName);
+                continue;
+            }
+
             Path zipFile = Paths.get(resolvedBaseDirectory, fileName);
             if (!Files.exists(zipFile)) {
                 skipped++;
@@ -92,7 +103,10 @@ public class CreatePackInsFromText extends SvrProcess {
         StringBuilder result = new StringBuilder();
         result.append("Created PackIns=").append(created)
               .append(", Attachments Added=").append(attached)
-              .append(", Skipped=").append(skipped);
+              .append(", Skipped=").append(skipped)
+              .append(", SkippedByClientRule=").append(skippedByClientRule)
+              .append(", CurrentClient=").append(currentClientId)
+              .append(isSystemClient ? " (System)" : " (Non-System)");
 
         if (!warnings.isEmpty()) {
             result.append(" | Warnings: ").append(String.join(" || ", warnings));
