@@ -24,6 +24,11 @@ public class CreatePackInsFromText extends SvrProcess {
     private String baseDirectory;
 
     @Override
+    protected void prepare() {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
     protected String doIt() throws Exception {
         if (inputText == null || inputText.trim().isEmpty()) {
             throw new AdempiereUserError("InputText is required.");
@@ -74,7 +79,7 @@ public class CreatePackInsFromText extends SvrProcess {
                 continue;
             }
 
-            Path zipFile = Paths.get(resolvedBaseDirectory, fileName);
+            Path zipFile = resolveZipPath(resolvedBaseDirectory, trimmed);
             if (!Files.exists(zipFile)) {
                 skipped++;
                 warnings.add("File not found: " + zipFile);
@@ -82,7 +87,7 @@ public class CreatePackInsFromText extends SvrProcess {
             }
 
             PO packIn = MTable.get(getCtx(), "AD_Package_Imp").getPO(0, get_TrxName());
-            packIn.setAD_Client_ID(Env.getAD_Client_ID(getCtx()));
+            packIn.set_ValueNoCheck("AD_Client_ID", Env.getAD_Client_ID(getCtx()));
             packIn.setAD_Org_ID(0);
             packIn.set_ValueOfColumn("Name", packInName);
             packIn.saveEx();
@@ -93,7 +98,7 @@ public class CreatePackInsFromText extends SvrProcess {
             if (attachment == null) {
                 attachment = new MAttachment(getCtx(), tableId, packIn.get_ID(), get_TrxName());
             }
-            attachment.addEntry(content, fileName);
+            attachment.addEntry(fileName,content);
             attachment.saveEx();
             attached++;
 
@@ -122,5 +127,14 @@ public class CreatePackInsFromText extends SvrProcess {
             return normalized.substring(idx + 1);
         }
         return normalized;
+    }
+
+    private Path resolveZipPath(String baseDir, String originalLine) {
+        String normalized = originalLine.trim().replace('\\', '/');
+        Path candidate = Paths.get(normalized);
+        if (candidate.isAbsolute()) {
+            return candidate;
+        }
+        return Paths.get(baseDir, normalized);
     }
 }
