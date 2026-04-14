@@ -132,9 +132,9 @@ public class ImportWSPATRData extends SvrProcess {
 
 		        MBPartner_New bp = null;
 		        String value = (sdlNumber != null && !sdlNumber.isBlank()) ? sdlNumber : parentSDL;
-		        boolean isTNumber = value != null && value.toUpperCase().startsWith("T0");
+		        boolean isT0Number = value != null && value.toUpperCase().startsWith("T0");
 
-		        if (isTNumber) {
+		        if (isT0Number) {
 		        	bp = resolveBPForTNumber(orgName, sdlNumber, parentSDL);
 		        	if (bp == null) {
 		        		continue;
@@ -201,6 +201,12 @@ public class ImportWSPATRData extends SvrProcess {
 		            bpl.saveEx();
 		        }
 				
+
+				// Only create WSP-ATR approvals for L-number BPs
+				if (bp.getValue() == null || !bp.getValue().toUpperCase().startsWith("L")) {
+					unresolvedList.add("SKIP-NON-L-BP," + sdlNumber + "," + bp.getValue());
+					continue;
+				}
 
 				// Check if record exists for same BP and Financial Year
 				String sql = "SELECT ZZ_WSP_ATR_Approvals_ID FROM ZZ_WSP_ATR_Approvals WHERE C_BPartner_ID=? AND zz_financial_year=?";
@@ -273,7 +279,7 @@ public class ImportWSPATRData extends SvrProcess {
 
 		String trimmedName = orgName.trim();
 		List<List<Object>> rows = DB.getSQLArrayObjectsEx(get_TrxName(),
-				"SELECT C_BPartner_ID FROM C_BPartner WHERE UPPER(TRIM(Name)) = UPPER(TRIM(?))",
+				"SELECT C_BPartner_ID FROM C_BPartner WHERE UPPER(TRIM(Name)) = UPPER(TRIM(?)) AND UPPER(Value) LIKE 'L%'",
 				trimmedName);
 
 		if (rows == null || rows.isEmpty()) {
@@ -281,10 +287,9 @@ public class ImportWSPATRData extends SvrProcess {
 			return null;
 		}
 		if (rows.size() > 1) {
-			unresolvedList.add("T-NUMBER-MULTIPLE-BP," + trimmedName + "," + sdlNumber + ",count=" + rows.size());
+			unresolvedList.add("T-NUMBER-MULTIPLE-L-BP," + trimmedName + "," + sdlNumber + ",count=" + rows.size());
 			return null;
 		}
-
 		Object idObj = rows.get(0).get(0);
 		int bpID = idObj instanceof Number ? ((Number) idObj).intValue() : Integer.parseInt(String.valueOf(idObj));
 		return new MBPartner_New(getCtx(), bpID, get_TrxName());
@@ -295,13 +300,8 @@ public class ImportWSPATRData extends SvrProcess {
 			return;
 		}
 
-		if (bp.get_ColumnIndex("T_Number") > 0) {
-			bp.set_ValueOfColumn("T_Number", tNumber);
-			bp.saveEx();
-			return;
-		}
 		if (bp.get_ColumnIndex("ZZ_T_Number") > 0) {
-			bp.set_ValueOfColumn("ZZ_T_Number", tNumber);
+			bp.setZZ_T_Number(tNumber);
 			bp.saveEx();
 			return;
 		}
