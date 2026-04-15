@@ -5,14 +5,20 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import org.adempiere.base.annotation.Parameter;
 import org.compiere.model.MAttachment;
 import org.compiere.model.MTable;
 import org.compiere.model.PO;
+import org.compiere.model.X_AD_Package_Imp_Proc;
 import org.compiere.process.SvrProcess;
 import org.compiere.util.AdempiereUserError;
+import org.compiere.util.DB;
 import org.compiere.util.Env;
+import org.compiere.util.Util;
+
+import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
 
 @org.adempiere.base.annotation.Process(name = "za.ntier.process.CreatePackInsFromText")
 public class CreatePackInsFromText extends SvrProcess {
@@ -86,18 +92,23 @@ public class CreatePackInsFromText extends SvrProcess {
                 continue;
             }
 
-            PO packIn = MTable.get(getCtx(), "AD_Package_Imp").getPO(0, get_TrxName());
-            packIn.set_ValueNoCheck("AD_Client_ID", Env.getAD_Client_ID(getCtx()));
-            packIn.setAD_Org_ID(0);
-            packIn.set_ValueOfColumn("Name", packInName);
-            packIn.saveEx();
+            X_AD_Package_Imp_Proc x_AD_Package_Imp_Proc = new X_AD_Package_Imp_Proc(getCtx(),0,get_TrxName());
+            x_AD_Package_Imp_Proc.setAD_Package_Source_Type("File");
+            x_AD_Package_Imp_Proc.set_ValueNoCheck("AD_Client_ID", Env.getAD_Client_ID(getCtx()));
+            x_AD_Package_Imp_Proc.setAD_Org_ID(0);
+            x_AD_Package_Imp_Proc.setName(packInName);
+            x_AD_Package_Imp_Proc.setProcessing(false);
+            x_AD_Package_Imp_Proc.saveEx();
             created++;
 
             byte[] content = Files.readAllBytes(zipFile);
-            MAttachment attachment = MAttachment.get(getCtx(), tableId, packIn.get_ID());
-            if (attachment == null) {
-                attachment = new MAttachment(getCtx(), tableId, packIn.get_ID(), get_TrxName());
-            }
+            int attID = getID(tableId, x_AD_Package_Imp_Proc.get_ID());
+            if (attID < 0) attID = 0;
+            MAttachment attachment = new MAttachment(Env.getCtx(), attID, get_TrxName());
+            attachment.setClientOrg(Env.getAD_Client_ID(getCtx()), 0);
+            attachment.setAD_Table_ID (x_AD_Package_Imp_Proc.Table_ID);
+            attachment.setRecord_ID (x_AD_Package_Imp_Proc.getAD_Package_Imp_Proc_ID());
+            attachment.setRecord_UU (x_AD_Package_Imp_Proc.getAD_Package_Imp_Proc_UU());
             attachment.addEntry(fileName,content);
             attachment.saveEx();
             attached++;
@@ -119,6 +130,13 @@ public class CreatePackInsFromText extends SvrProcess {
 
         return result.toString();
     }
+    
+    
+   	public  int getID(int Table_ID, int Record_ID) {
+   		String sql="SELECT AD_Attachment_ID FROM AD_Attachment WHERE AD_Table_ID=? AND Record_ID=? AND AD_Client_ID = " + Env.getAD_Client_ID(getCtx());
+   		int attachid = DB.getSQLValue(null, sql, Table_ID, Record_ID);
+   		return attachid;
+   	}
 
     private String extractFileName(String pathText) {
         String normalized = pathText.replace('\\', '/');
