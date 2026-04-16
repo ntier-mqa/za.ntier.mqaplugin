@@ -45,40 +45,48 @@ public class EnterAuditResultsProcess extends SvrProcess
 		for (Integer orgId : orgIds)
 		{
 			X_ZZ_Organization org = new X_ZZ_Organization(getCtx(), orgId, get_TrxName());
-			
+
 			// 1. Create QA Audit Header
 			X_ZZ_QAAudit auditHeader = new X_ZZ_QAAudit(getCtx(), 0, get_TrxName());
 			auditHeader.setZZ_Organization_ID(orgId);
+
 			if (org.getZZLegalName() != null)
 			{
 				auditHeader.setZZLegalName(org.getZZLegalName());
 			}
+
+			if (org.getZZ_AuditLead_ID() > 0)
+			{
+				auditHeader.setZZ_AuditLead_ID(org.getZZ_AuditLead_ID());
+			}
+
 			auditHeader.saveEx();
 			countHeader++;
 
 			// 2. Query Allocations for this Organization
 			List<X_ZZ_Allocations> allocations = new Query(getCtx(), X_ZZ_Allocations.Table_Name, "ZZ_Organization_ID=?", get_TrxName())
-					.setParameters(orgId)
-					.list();
+																																		.setParameters(orgId)
+																																		.list();
 
 			// 3. Create Allocation children under the new Header
 			for (X_ZZ_Allocations alloc : allocations)
 			{
 				X_ZZ_QAAuditAllocations auditAlloc = new X_ZZ_QAAuditAllocations(getCtx(), 0, get_TrxName());
-				
+
 				PO.copyValues(alloc, auditAlloc);
-				
+
 				auditAlloc.setZZ_QAAudit_ID(auditHeader.get_ID());
 				auditAlloc.setZZ_DocStatus(X_ZZ_QAAuditAllocations.ZZ_DOCSTATUS_Draft);
-				
+
 				auditAlloc.saveEx();
 				countChild++;
 			}
-			
+
 			org.setZZ_IsAuditResultsEntered(true);
 			org.saveEx();
 
-			addLog(auditHeader.get_ID(), null, null, "Created " + allocations.size() + " allocations for " + org.getZZLegalName(), I_ZZ_QAAudit.Table_ID, auditHeader.get_ID());
+			addLog(	auditHeader.get_ID(), null, null, "Created " + allocations.size() + " allocations for " + org.getZZLegalName(), I_ZZ_QAAudit.Table_ID,
+					auditHeader.get_ID());
 		}
 
 		return "Created " + countHeader + " QA Audit and " + countChild + " Allocation lines.";
