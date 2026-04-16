@@ -223,8 +223,8 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
                 "WHERE ad_user_id = ? " +
                 "AND isactive = 'Y' " +
                 "AND zzsdfroletype = ? " +
-                "AND COALESCE(zz_docstatus, '') <> 'DR' " +
-                "AND COALESCE(zz_docstatus, '') <> 'UnSdfOrg' " +
+            //    "AND COALESCE(zz_docstatus, '') <> 'DR' " +
+                "AND COALESCE(zz_docstatus, '') <> 'UnSdfOrg' " +  // Unlinked
                 "ORDER BY orgname";
 
         List<List<Object>> rows = DB.getSQLArrayObjectsEx(null, sql,
@@ -302,7 +302,6 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
                 + "  AND parent_so.isactive = 'Y' "
                 + "  AND child_so.isactive = 'Y' "
                 + "  AND l.isactive = 'Y' "
-                + "  AND l.zz_parent_uploads = 'Y' "
                 + "  AND COALESCE(parent_so.zz_docstatus, '') <> 'UnSdfOrg' "
                 + "  AND COALESCE(child_so.zz_docstatus, '') <> 'UnSdfOrg' "
                 + "LIMIT 1";

@@ -1051,7 +1051,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 						+ "   JOIN parent p "
 						+ "     ON l.bpartner_parent_id = p.parent_bp "
 						+ "   WHERE l.isactive = 'Y' "
-						+ "     AND l.zz_parent_uploads = 'Y' "
+					//	+ "     AND l.zz_parent_uploads = 'Y' "
 						+ "), "
 						+ "children_orgs AS ( "
 						+ "   SELECT DISTINCT so.zzsdforganisation_id "
