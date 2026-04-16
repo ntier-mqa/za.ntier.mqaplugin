@@ -75,7 +75,7 @@ public class EnterAuditResultsProcess extends SvrProcess
 				countChild++;
 			}
 			
-			org.setZZ_IsQAAuditGenerated(true);
+			org.setZZ_IsAuditResultsEntered(true);
 			org.saveEx();
 
 			addLog(auditHeader.get_ID(), null, null, "Created " + allocations.size() + " allocations for " + org.getZZLegalName(), I_ZZ_QAAudit.Table_ID, auditHeader.get_ID());
