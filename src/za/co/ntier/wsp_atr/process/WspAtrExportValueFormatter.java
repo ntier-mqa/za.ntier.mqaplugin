@@ -123,6 +123,14 @@ final class WspAtrExportValueFormatter {
             return String.valueOf(value);
         }
 
+        if (displayType == DisplayType.Table || displayType == DisplayType.Search) {
+            String displayColumn = resolveRefTableDisplayColumn(referenceId, trxName);
+            String displayColumnValue = getStringValue(referencedRecord, displayColumn);
+            if (!Util.isEmpty(displayColumnValue, true)) {
+                return displayColumnValue;
+            }
+        }
+
         String resolvedValue = getStringValue(referencedRecord, "Value");
         String resolvedName = getStringValue(referencedRecord, "Name");
 
@@ -137,6 +145,25 @@ final class WspAtrExportValueFormatter {
         }
 
         return String.valueOf(value);
+    }
+
+    private String resolveRefTableDisplayColumn(int referenceId, String trxName) {
+        if (referenceId <= 0) {
+            return null;
+        }
+
+        PO refTableRow = new Query(process.getCtx(), "AD_Ref_Table", "AD_Reference_ID=?", trxName)
+                .setParameters(referenceId)
+                .firstOnly();
+        if (refTableRow == null) {
+            return null;
+        }
+
+        String displayColumn = refTableRow.get_ValueAsString("DisplayColumn");
+        if (Util.isEmpty(displayColumn, true)) {
+            return null;
+        }
+        return displayColumn.trim();
     }
 
     private String resolveKnownTableDirDisplay(MColumn column, int recordId, String trxName) {
