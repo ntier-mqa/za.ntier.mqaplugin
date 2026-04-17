@@ -165,11 +165,21 @@ final class WspAtrExportValueFormatter {
             return null;
         }
 
-        String displayColumn = refTableRow.get_ValueAsString("DisplayColumn");
-        if (Util.isEmpty(displayColumn, true)) {
+        int displayColumnId = refTableRow.get_ValueAsInt("AD_Display");
+        if (displayColumnId <= 0) {
             return null;
         }
-        return displayColumn.trim();
+
+        MColumn displayColumn = MColumn.get(process.getCtx(), displayColumnId);
+        if (displayColumn == null) {
+            return null;
+        }
+
+        String displayColumnName = displayColumn.getColumnName();
+        if (Util.isEmpty(displayColumnName, true)) {
+            return null;
+        }
+        return displayColumnName.trim();
     }
 
     private String resolveKnownTableDirDisplay(MColumn column, int recordId, String trxName) {
