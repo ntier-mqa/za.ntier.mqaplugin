@@ -20,11 +20,8 @@ import za.co.ntier.api.model.X_ZZ_Organization;
 public class ConfirmAuditProcess extends SvrProcess
 {
 
-	@Parameter(name = "IsConfirmed")
-	private boolean	pIsConfirmed	= false;
-
-	@Parameter(name = "IsCancelled")
-	private boolean	pIsCancelled	= false;
+	@Parameter(name = "ZZ_AuditConfirmation")
+	private String pAction;
 
 	@Override
 	protected void prepare()
@@ -45,12 +42,13 @@ public class ConfirmAuditProcess extends SvrProcess
 
 		String status = null;
 		String actionStr = null;
-		if (pIsConfirmed)
+
+		if (X_ZZ_Organization.ZZ_AUDITCONFIRMATION_Confirmed.equals(pAction))
 		{
 			status = X_ZZ_Allocations.ZZ_DOCSTATUS_AuditConfirmed;
 			actionStr = "Confirmed";
 		}
-		else if (pIsCancelled)
+		else if (X_ZZ_Organization.ZZ_AUDITCONFIRMATION_Cancelled.equals(pAction))
 		{
 			status = X_ZZ_Allocations.ZZ_DOCSTATUS_AuditCancelled;
 			actionStr = "Cancelled";
@@ -58,7 +56,7 @@ public class ConfirmAuditProcess extends SvrProcess
 
 		if (status == null)
 		{
-			return "Please select either the Confirmed or Cancelled.";
+			return "Please select a valid Action (Confirmed or Cancelled).";
 		}
 
 		int count = 0;
@@ -78,6 +76,9 @@ public class ConfirmAuditProcess extends SvrProcess
 			}
 
 			X_ZZ_Organization org = new X_ZZ_Organization(getCtx(), orgId, get_TrxName());
+			org.setZZ_AuditConfirmation(pAction);
+			org.saveEx();
+			
 			addLog(orgId, null, null, actionStr + " " + orgAllocCount + " allocations for org " + org.getZZLegalName(), I_ZZ_Organization.Table_ID, orgId);
 			count += orgAllocCount;
 		}
