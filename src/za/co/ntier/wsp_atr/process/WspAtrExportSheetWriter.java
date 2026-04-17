@@ -17,6 +17,7 @@ import org.compiere.model.MColumn;
 import org.compiere.model.MTable;
 import org.compiere.model.PO;
 import org.compiere.model.Query;
+import org.compiere.util.DisplayType;
 import org.compiere.util.Util;
 
 import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Submitted;
@@ -32,6 +33,10 @@ final class WspAtrExportSheetWriter {
             "Updated",
             "UpdatedBy",
             "UUID");
+
+    private static final Set<String> IGNORED_SUBMISSION_COLUMNS = Set.of(
+            I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_DocAction,
+            I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Generate_WSP_ATR_Report);
 
     private final ExportSubmittedWspAtrToXlsm process;
     private final WspAtrExportValueFormatter valueFormatter;
@@ -166,17 +171,6 @@ final class WspAtrExportSheetWriter {
                         "ZZ_SDL_No", "zz_sdl_no", "SDLNo", "sdlno", "Value", "value")));
         columns.add(new WspAtrSyntheticColumn("FinancialYear", record ->
                 resolveFinancialYear(resolveSubmitted(record, submittedCache))));
-        columns.add(new WspAtrSyntheticColumn("WSPStatus", record ->
-                resolveWspStatus(resolveSubmitted(record, submittedCache))));
-        columns.add(new WspAtrSyntheticColumn("Organisation Size", record ->
-                getOrganisationField(resolveOrganisation(record, submittedCache, organisationCache),
-                        "OrganisationSize", "organisation_size", "ZZ_OrganisationSize", "zz_organisationsize")));
-        columns.add(new WspAtrSyntheticColumn("Organisation Sub Sector", record ->
-                getOrganisationField(resolveOrganisation(record, submittedCache, organisationCache),
-                        "SubSector", "subsector", "OrganisationSubSector", "organisation_sub_sector", "ZZ_SubSector")));
-        columns.add(new WspAtrSyntheticColumn("Org Province", record ->
-                getOrganisationField(resolveOrganisation(record, submittedCache, organisationCache),
-                        "Province", "province", "OrgProvince", "orgprovince", "ZZ_Province")));
         return columns;
     }
 
@@ -222,32 +216,6 @@ final class WspAtrExportSheetWriter {
             return "";
         }
         return firstNonBlank(year, "FiscalYear", "Year", "Name");
-    }
-
-    private String resolveWspStatus(PO submitted) {
-        if (submitted == null) {
-            return "";
-        }
-        String status = firstNonBlank(submitted,
-                I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_DocStatus,
-                I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_WSP_ATR_Status);
-        if (Util.isEmpty(status, true)) {
-            return "";
-        }
-        String normalized = status.trim();
-        if ("SU".equalsIgnoreCase(normalized)) {
-            return "Submitted";
-        }
-        if ("AP".equalsIgnoreCase(normalized)) {
-            return "Approved";
-        }
-        if ("QR".equalsIgnoreCase(normalized)) {
-            return "Query";
-        }
-        if ("UP".equalsIgnoreCase(normalized)) {
-            return "Uploaded";
-        }
-        return normalized;
     }
 
     private String getOrganisationField(PO orgRecord, String... candidates) {
@@ -304,7 +272,16 @@ final class WspAtrExportSheetWriter {
             return true;
         }
 
+        if (column.getAD_Reference_ID() == DisplayType.Button) {
+            return true;
+        }
+
         if (IGNORED_STANDARD_COLUMNS.stream().anyMatch(ignored -> ignored.equalsIgnoreCase(columnName))) {
+            return true;
+        }
+
+        if (I_ZZ_WSP_ATR_Submitted.Table_Name.equalsIgnoreCase(tabContext.getTable().getTableName())
+                && IGNORED_SUBMISSION_COLUMNS.stream().anyMatch(ignored -> ignored.equalsIgnoreCase(columnName))) {
             return true;
         }
 
