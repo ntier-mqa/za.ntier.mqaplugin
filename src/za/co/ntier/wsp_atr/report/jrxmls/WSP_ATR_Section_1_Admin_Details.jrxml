@@ -10,12 +10,36 @@
 	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
-	<style name="HdrBand" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" fontName="SansSerif" fontSize="12" isBold="true"/>
-	<style name="HdrCell" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" fontName="SansSerif" fontSize="12" isBold="true"/>
-	<style name="LblCell" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" fontName="SansSerif" fontSize="11" isBold="true"/>
-	<style name="ValCell" fontName="SansSerif" fontSize="11"/>
-	<style name="ValCellCenter" fontName="SansSerif" fontSize="11" isBold="false"/>
-	<style name="SectionTitle" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" fontName="SansSerif" fontSize="14" isBold="true"/>
+	<style name="HdrBand" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" fontName="SansSerif" fontSize="12" isBold="true">
+		<box>
+			<pen lineWidth="1.0"/>
+		</box>
+	</style>
+	<style name="HdrCell" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" fontName="SansSerif" fontSize="12" isBold="true">
+		<box>
+			<pen lineWidth="1.0"/>
+		</box>
+	</style>
+	<style name="LblCell" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" fontName="SansSerif" fontSize="11" isBold="true">
+		<box>
+			<pen lineWidth="1.0"/>
+		</box>
+	</style>
+	<style name="ValCell" fontName="SansSerif" fontSize="11">
+		<box>
+			<pen lineWidth="1.0"/>
+		</box>
+	</style>
+	<style name="ValCellCenter" fontName="SansSerif" fontSize="11" isBold="false">
+		<box>
+			<pen lineWidth="1.0"/>
+		</box>
+	</style>
+	<style name="SectionTitle" mode="Opaque" forecolor="#000000" backcolor="#BFBFBF" fontName="SansSerif" fontSize="14" isBold="true">
+		<box>
+			<pen lineWidth="1.0"/>
+		</box>
+	</style>
 	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
 	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
 		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
