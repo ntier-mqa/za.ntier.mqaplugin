@@ -16,6 +16,8 @@ import org.compiere.model.Query;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Util;
 
+import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Submitted;
+
 final class WspAtrExportValueFormatter {
 
     private static final DateTimeFormatter TIMESTAMP_FORMAT =
@@ -135,6 +137,10 @@ final class WspAtrExportValueFormatter {
         String resolvedName = getStringValue(referencedRecord, "Name");
 
         if (!Util.isEmpty(resolvedValue, true) && !Util.isEmpty(resolvedName, true)) {
+            if (I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZSdfOrganisation_ID
+                    .equalsIgnoreCase(column.getColumnName())) {
+                return resolvedValue + " - " + resolvedName;
+            }
             return resolvedName;
         }
         if (!Util.isEmpty(resolvedName, true)) {
