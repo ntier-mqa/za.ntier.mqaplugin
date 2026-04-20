@@ -100,13 +100,14 @@ public class WspAtrRowUiBuilder {
         return hb;
     }
 
-    public Hbox buildSubmitLine(int submittedId, String status) {
+    public Hbox buildSubmitLine(int submittedId, int zzSdfOrganisationId, String status) {
         Hbox hb = new Hbox();
         hb.setSpacing("10px");
         hb.setAlign("center");
 
         boolean eligible = service.isEligibleToSubmit(submittedId);
-        if (!status.equalsIgnoreCase("Imported")) {
+        boolean parentOrg = form.isParentOrganisation(zzSdfOrganisationId, null);
+        if (!parentOrg && !status.equalsIgnoreCase("Imported")) {
             eligible = false;
         }
 

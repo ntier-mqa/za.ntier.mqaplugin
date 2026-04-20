@@ -149,6 +149,7 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
 
             addRow(
                     submitted.getZZ_WSP_ATR_Submitted_ID(),
+                    org.zzSdfOrganisationId,
                     !Util.isEmpty(org.displayName, true) ? org.displayName : "",
                     submitted.getSubmittedDate(),
                     statusLabel(submitted.getZZ_DocStatus())
@@ -175,7 +176,7 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
         }
     }
 
-    private void addRow(int submittedId, String orgName, Timestamp submittedDate, String status) {
+    private void addRow(int submittedId, int zzSdfOrganisationId, String orgName, Timestamp submittedDate, String status) {
         ListItem item = new ListItem();
         item.setValue(Integer.valueOf(submittedId));
         String formattedDate = "";
@@ -196,7 +197,7 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
         v.appendChild(ui.buildUploadLine(submittedId, UploadTypeDef.WSP_ATR_REPORT));
         v.appendChild(ui.buildUploadLine(submittedId, UploadTypeDef.SIGNED_MINUTES));
         v.appendChild(ui.buildUploadLine(submittedId, UploadTypeDef.ATTENDANCE_REGISTER));
-        v.appendChild(ui.buildSubmitLine(submittedId,status));
+        v.appendChild(ui.buildSubmitLine(submittedId, zzSdfOrganisationId, status));
 
         actionsCell.appendChild(v);
         item.appendChild(actionsCell);
@@ -290,7 +291,7 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
                 || X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported.equals(status);
     }
 
-    private boolean isParentOrganisation(int zzSdfOrganisationId, String trxName) {
+    public boolean isParentOrganisation(int zzSdfOrganisationId, String trxName) {
         final String sql =
                 "SELECT 1 "
                 + "FROM adempiere.zzsdforganisation parent_so "

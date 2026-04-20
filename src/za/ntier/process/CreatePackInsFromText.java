@@ -38,7 +38,7 @@ public class CreatePackInsFromText extends SvrProcess {
         }
 
         String resolvedBaseDirectory = (baseDirectory == null || baseDirectory.trim().isEmpty())
-                ? "/home/martin/sourcesMQA5/project.extra.bundle/"
+                ? "/home/martin/sourcesMQA5/project.extra.bundle/za.co.ntier.webform"
                 : baseDirectory.trim();
 
         int tableId = MTable.getTable_ID(X_AD_Package_Imp_Proc.Table_Name);

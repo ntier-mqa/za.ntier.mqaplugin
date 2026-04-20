@@ -1,10 +1,10 @@
 package za.co.ntier.wsp_atr.process;
 
-import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import org.apache.poi.ss.usermodel.Workbook;
@@ -33,7 +33,7 @@ final class WspAtrExportService {
             throw new IllegalStateException("No tabs configured for export");
         }
 
-        Path exportPath = uniqueTempXlsx(resolveExportFileNameBase());
+        Path exportPath = buildTimestampedTempXlsx(resolveExportFileNameBase());
         int totalRowsExported = 0;
 
         try (Workbook workbook = new XSSFWorkbook()) {
@@ -49,18 +49,11 @@ final class WspAtrExportService {
         return new WspAtrExportResult(exportPath, totalRowsExported, exportTabs.size());
     }
 
-    private Path uniqueTempXlsx(String baseName) throws IOException {
+    private Path buildTimestampedTempXlsx(String baseName) {
         Path tmpDir = Path.of(System.getProperty("java.io.tmpdir"));
         String stem = baseName.replaceAll("[^A-Za-z0-9._ -]", "_").trim();
-        Path firstCandidate = tmpDir.resolve(stem + ".xlsx");
-
-        for (int i = 0;; i++) {
-            Path candidate = i == 0 ? firstCandidate : tmpDir.resolve(stem + "_" + i + ".xlsx");
-            try {
-                return Files.createFile(candidate);
-            } catch (FileAlreadyExistsException ignore) {
-            }
-        }
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        return tmpDir.resolve(stem + "_" + timestamp + ".xlsx");
     }
 
     private String resolveExportFileNameBase() {

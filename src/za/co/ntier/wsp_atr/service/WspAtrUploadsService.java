@@ -211,7 +211,8 @@ public class WspAtrUploadsService {
             return false;
         }
 
-        boolean hasTemplate = repo.hasSubmittedTemplateAttachment(submittedId);
+        boolean hasTemplate = true;
+        // boolean hasTemplate = repo.hasSubmittedTemplateAttachment(submittedId);
         //boolean hasReport = repo.hasUploadTypeAttachment(submittedId,
           //      X_ZZ_WSP_ATR_Uploads.ZZ_WSP_ATR_UPLOAD_TYPE_UploadWSP_ATRReport);
         return hasTemplate; // && hasReport;
