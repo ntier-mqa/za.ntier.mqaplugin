@@ -533,7 +533,7 @@ WHERE r.zz_wsp_atr_report_id = $P{ZZ_WSP_ATR_Report_ID}]]>
 				<text><![CDATA[Type of Account]]></text>
 			</staticText>
 			<textField>
-				<reportElement style="ValCell" x="966" y="584" width="210" height="18" uuid="f00e8c8d-9323-4c9c-9c7e-bd6a5d5d2d1f"/>
+				<reportElement style="ValCell" x="966" y="584" width="244" height="18" uuid="f00e8c8d-9323-4c9c-9c7e-bd6a5d5d2d1f"/>
 				<textElement verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{account_type}]]></textFieldExpression>
 			</textField>
