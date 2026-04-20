@@ -229,8 +229,8 @@ public class WspAtrUploadsService {
                         + "  ON l.c_bpartner_id = so.c_bpartner_id "
                         + "WHERE s.zz_wsp_atr_submitted_id = ? "
                         + "  AND l.isactive = 'Y' "
-                        + "  AND l.bpartner_parent_id IS NOT NULL "
-                        + "  AND l.zz_parent_uploads = 'Y'";
+                        + "  AND l.bpartner_parent_id IS NOT NULL ";
+                      //  + "  AND l.zz_parent_uploads = 'Y'";
 
         try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName)) {
             pstmt.setInt(1, submittedId);
