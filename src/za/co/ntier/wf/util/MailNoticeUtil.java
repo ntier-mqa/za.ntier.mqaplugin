@@ -2,12 +2,14 @@ package za.co.ntier.wf.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import org.adempiere.webui.apps.AEnv;
+import org.apache.commons.lang3.StringUtils;
 import org.compiere.model.I_R_MailText;
 import org.compiere.model.MClient;
 import org.compiere.model.MMailText;
@@ -18,10 +20,9 @@ import org.compiere.model.MUserRoles;
 import org.compiere.model.PO;
 import org.compiere.model.X_AD_User;
 import org.compiere.util.CLogger;
+import org.compiere.util.EMail;
 import org.compiere.util.Env;
 
-import org.apache.commons.lang3.StringUtils;
-import za.co.ntier.fa.process.api.IDocApprove;
 import za.co.ntier.wf.model.MZZWFLineRole;
 import za.co.ntier.wf.model.MZZWFLines;
 
@@ -76,7 +77,11 @@ public final class MailNoticeUtil {
 		queueNotifis.add(sentNotifyInfo);
 	}
 
-	public static void sentNotify(List<Map<NotificationFields, Object>> queueNotifis, PO po,String trxName) {
+	public static void sentNotify(List<Map<NotificationFields, Object>> queueNotifis, PO po, String trxName) {
+		sentNotify(queueNotifis, po, trxName, Collections.emptyList());
+	}
+
+	public static void sentNotify(List<Map<NotificationFields, Object>> queueNotifis, PO po, String trxName, List<String> ccEmails) {
 		queueNotifis.forEach(sentNotifyInfo -> {
 			int mailToUserId = (int) sentNotifyInfo.get(NotificationFields.MAIL_TO_USER_ID);
 			int tableID = (int) sentNotifyInfo.get(NotificationFields.TABLE_ID);
@@ -114,14 +119,24 @@ public final class MailNoticeUtil {
 					msgBody = msgBody + System.lineSeparator() + extraForEmail;
 				}
 
-				if (!client.sendEMail(from, mUser, msgHeader, msgBody, null, mailTemplate.isHtml())) {
-					log.fine("Problem Sending Email.  Please contact Support");
+				EMail email = client.createEMail(from, mUser, msgHeader, msgBody, mailTemplate.isHtml());
+				if (email != null) {
+					if (ccEmails != null) {
+						for (String ccAddr : ccEmails) {
+							if (StringUtils.isNotBlank(ccAddr)) {
+								email.addCc(ccAddr.trim());
+							}
+						}
+					}
+					if (!client.sendEmailNow(from, mUser, email)) {
+						log.fine("Problem Sending Email.  Please contact Support");
+					}
 				}
 
 			}
 		});
 	}
-	
+
 	public static MMailText setPOForMail(I_R_MailText mailTemplate,PO po) {
 		MMailText mail = (MMailText)mailTemplate;
 		mail.setPO((po));

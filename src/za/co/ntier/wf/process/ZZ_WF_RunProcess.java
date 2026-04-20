@@ -2,20 +2,24 @@ package za.co.ntier.wf.process;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.adempiere.base.annotation.Parameter;
 import org.adempiere.exceptions.AdempiereException;
 import org.compiere.model.I_R_MailText;
 import org.compiere.model.MTable;
+import org.compiere.model.MSysConfig;
 import org.compiere.model.PO;
 import org.compiere.process.SvrProcess;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
+import org.apache.commons.lang3.StringUtils;
 
 import za.co.ntier.wf.model.MZZWFHeader;
 import za.co.ntier.wf.model.MZZWFLines;
@@ -108,7 +112,9 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 		} else {
 			doRequest(hdr, curStatus);
 		}
-		MailNoticeUtil.sentNotify(queueNotifis, po,get_TrxName());
+		// Resolve CC email addresses from SysConfig keyed by "HeaderName_StepName"
+		List<String> ccEmails = resolveCCEmails(hdr, currentStep);
+		MailNoticeUtil.sentNotify(queueNotifis, po, get_TrxName(), ccEmails);
 		return "@OK@";
 	}
 
@@ -210,6 +216,34 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 			}
 		}
 
+	}
+
+	/**
+	 * Resolves CC email addresses from SysConfig.
+	 * The SysConfig key is built as: {@code ZZ_WF_Header.Name_ZZ_WF_Lines.Name}
+	 * (e.g. {@code "My Workflow_Approval Step"}).
+	 * The value is expected to be a comma-separated list of email addresses.
+	 * Lookup checks client-level first, then falls back to system-level automatically
+	 * via {@link MSysConfig#getValue(String, String, int)}.
+	 *
+	 * @param hdr  the workflow header (must not be null)
+	 * @param step the current workflow step (may be null)
+	 * @return a list of non-blank CC addresses, or an empty list when none configured
+	 */
+	private List<String> resolveCCEmails(MZZWFHeader hdr, MZZWFLines step) {
+		if (hdr == null || step == null) {
+			return new ArrayList<>();
+		}
+		String sysConfigKey = hdr.getName() + "_" + step.getName();
+		int adClientId = Env.getAD_Client_ID(ctx);
+		String rawValue = MSysConfig.getValue(sysConfigKey, null, adClientId);
+		if (StringUtils.isBlank(rawValue)) {
+			return new ArrayList<>();
+		}
+		return Arrays.stream(rawValue.split(","))
+				.map(String::trim)
+				.filter(s -> !s.isBlank())
+				.collect(Collectors.toList());
 	}
 
 	private static void require(PO po, String col) {
