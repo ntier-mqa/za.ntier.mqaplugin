@@ -73,6 +73,9 @@ public class WspAtrImportService {
                 if (mapHeader.getAD_Table_ID() <= 0) {
                     continue;
                 }
+                if (mapHeader.isZZ_Is_For_Bulk()) {
+                    continue;
+                }
                 logHeap(process, "BEFORE IMPORT TAB: " + mapHeader.getZZ_Tab_Name());
                // importer.setLog(process.getLog());
 

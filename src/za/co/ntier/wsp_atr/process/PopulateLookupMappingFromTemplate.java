@@ -122,7 +122,9 @@ public class PopulateLookupMappingFromTemplate extends SvrProcess {
             X_ZZ_WSP_ATR_Lookup_Mapping header = (X_ZZ_WSP_ATR_Lookup_Mapping) new Query(
                     getCtx(),
                     I_ZZ_WSP_ATR_Lookup_Mapping.Table_Name,
-                    I_ZZ_WSP_ATR_Lookup_Mapping.COLUMNNAME_ZZ_Tab_Name + "=?",
+                    I_ZZ_WSP_ATR_Lookup_Mapping.COLUMNNAME_ZZ_Tab_Name + "=? AND " +
+                    		I_ZZ_WSP_ATR_Lookup_Mapping.COLUMNNAME_ZZ_Is_For_Bulk + " = 'Y'"
+                    ,
                     get_TrxName()
             ).setParameters(sheetName)
              .first();
@@ -131,6 +133,7 @@ public class PopulateLookupMappingFromTemplate extends SvrProcess {
             if (header == null) {
                 header = new X_ZZ_WSP_ATR_Lookup_Mapping(getCtx(), 0, get_TrxName());
                 header.setZZ_Tab_Name(sheetName);
+                header.setZZ_Is_For_Bulk(true);
                 header.saveEx();
                 headersCreated++;
                 isNewHeader = true;
@@ -183,29 +186,50 @@ public class PopulateLookupMappingFromTemplate extends SvrProcess {
                         .first();
 
                 boolean isNewDetail = false;
+                boolean isCopiedFromTemplate = false;
                 if (detail == null) {
-                    detail = new X_ZZ_WSP_ATR_Lookup_Mapping_Detail(getCtx(), 0, get_TrxName());
-                    detail.setZZ_WSP_ATR_Lookup_Mapping_ID(header.get_ID());
-                    detail.setZZ_Header_Name(headerText);
+                    String colLetter = toExcelColumnLetter(headerCell.getColumnIndex());
+                    // Try to copy from a matching non-bulk detail for the same tab
+                    X_ZZ_WSP_ATR_Lookup_Mapping_Detail templateDetail = findNonBulkDetail(sheetName, headerText);
+                    if (templateDetail != null) {
+                        detail = new X_ZZ_WSP_ATR_Lookup_Mapping_Detail(getCtx(), 0, get_TrxName());
+                        detail.setZZ_WSP_ATR_Lookup_Mapping_ID(header.get_ID());
+                        detail.setZZ_Header_Name(templateDetail.getZZ_Header_Name());
+                        detail.setZZ_Column_Letter(colLetter);
+                        detail.setAD_Table_ID(templateDetail.getAD_Table_ID());
+                        detail.setAD_Column_ID(templateDetail.getAD_Column_ID());
+                        detail.setIgnore_If_Blank(templateDetail.isIgnore_If_Blank());
+                        detail.setIsMandatory(templateDetail.isMandatory());
+                        detail.setZZ_Create_If_Not_Exists(templateDetail.isZZ_Create_If_Not_Exists());
+                        detail.setZZ_Is_Formula(templateDetail.isZZ_Is_Formula());
+                        detail.setZZ_Name_Column_Letter(templateDetail.getZZ_Name_Column_Letter());
+                        detail.setZZ_Row_No(templateDetail.getZZ_Row_No());
+                        detail.setZZ_Use_Value(templateDetail.isZZ_Use_Value());
+                        detail.setZZ_Value_Column_Letter(templateDetail.getZZ_Value_Column_Letter());
+                        isCopiedFromTemplate = true;
+                        addLog("Header '" + headerText + "' on sheet '" + sheetName
+                                + "' copied from non-bulk template detail, column=" + colLetter);
+                    } else {
+                        detail = new X_ZZ_WSP_ATR_Lookup_Mapping_Detail(getCtx(), 0, get_TrxName());
+                        detail.setZZ_WSP_ATR_Lookup_Mapping_ID(header.get_ID());
+                        detail.setZZ_Header_Name(headerText);
+                        detail.setZZ_Column_Letter(colLetter);
+                    }
                     isNewDetail = true;
                 }
-                if (Util.isEmpty(detail.getZZ_Column_Letter(), true)) {
-                    String colLetter = toExcelColumnLetter(headerCell.getColumnIndex());
-                    detail.setZZ_Column_Letter(colLetter);
-                }
 
-
-                // Try to guess reference table name from header
-                Integer adTableId = findReferenceTableIdForHeader(headerText);
-                if (adTableId != null && adTableId > 0 && detail.getAD_Table_ID() <= 0) {
-                    detail.setAD_Table_ID(adTableId);
-                    addLog("Header '" + headerText + "' on sheet '" + sheetName
-                            + "' mapped to AD_Table_ID=" + adTableId);
-                } else {
-                    // Leave AD_Table_ID null if not found
-                    detail.setAD_Table_ID(0);
-                    addLog("Header '" + headerText + "' on sheet '" + sheetName
-                            + "' has no matching reference table (left blank).");
+                if (!isCopiedFromTemplate) {
+                    // Try to guess reference table name from header
+                    Integer adTableId = findReferenceTableIdForHeader(headerText);
+                    if (adTableId != null && adTableId > 0 && detail.getAD_Table_ID() <= 0) {
+                        detail.setAD_Table_ID(adTableId);
+                        addLog("Header '" + headerText + "' on sheet '" + sheetName
+                                + "' mapped to AD_Table_ID=" + adTableId);
+                    } else if (!isNewDetail || detail.getAD_Table_ID() <= 0) {
+                        detail.setAD_Table_ID(0);
+                        addLog("Header '" + headerText + "' on sheet '" + sheetName
+                                + "' has no matching reference table (left blank).");
+                    }
                 }
 
                 if (isNewDetail) {
@@ -331,6 +355,37 @@ public class PopulateLookupMappingFromTemplate extends SvrProcess {
         return 0;
     }
     
+    /**
+     * Finds a detail record linked to the non-bulk header for the given tab name and header text.
+     * Returns null if no non-bulk header or no matching detail exists.
+     */
+    private X_ZZ_WSP_ATR_Lookup_Mapping_Detail findNonBulkDetail(String tabName, String headerText) {
+        X_ZZ_WSP_ATR_Lookup_Mapping nonBulkHeader =
+                (X_ZZ_WSP_ATR_Lookup_Mapping) new Query(
+                        getCtx(),
+                        I_ZZ_WSP_ATR_Lookup_Mapping.Table_Name,
+                        I_ZZ_WSP_ATR_Lookup_Mapping.COLUMNNAME_ZZ_Tab_Name + "=? AND "
+                                + I_ZZ_WSP_ATR_Lookup_Mapping.COLUMNNAME_ZZ_Is_For_Bulk + "='N'",
+                        get_TrxName()
+                )
+                .setParameters(tabName)
+                .first();
+
+        if (nonBulkHeader == null) {
+            return null;
+        }
+
+        return (X_ZZ_WSP_ATR_Lookup_Mapping_Detail) new Query(
+                getCtx(),
+                I_ZZ_WSP_ATR_Lookup_Mapping_Detail.Table_Name,
+                I_ZZ_WSP_ATR_Lookup_Mapping_Detail.COLUMNNAME_ZZ_WSP_ATR_Lookup_Mapping_ID + "=? AND "
+                        + I_ZZ_WSP_ATR_Lookup_Mapping_Detail.COLUMNNAME_ZZ_Header_Name + "=?",
+                get_TrxName()
+        )
+        .setParameters(nonBulkHeader.get_ID(), headerText)
+        .first();
+    }
+
     /**
      * Convert zero-based column index to Excel column letters.
      * 0  -> A

@@ -177,7 +177,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             List<MigrationError> errors = new ArrayList<>();
 
             for (X_ZZ_WSP_ATR_Lookup_Mapping header : headers) {
-                if (header.getAD_Table_ID() <= 0) {
+                if (header.getAD_Table_ID() <= 0 || !header.isZZ_Is_For_Bulk()) {
                     continue;
                 }
                 Sheet sheet = getSheetOrThrow(wb, header);
@@ -255,7 +255,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             Integer singleOrgId = resolveSingleOrgId(ctx, wb, headers, trxName, formatter);
 
             for (X_ZZ_WSP_ATR_Lookup_Mapping header : headers) {
-                if (header.getAD_Table_ID() <= 0) {
+                if (header.getAD_Table_ID() <= 0 || !header.isZZ_Is_For_Bulk()) {
                     continue;
                 }
 
@@ -322,7 +322,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                                            DataFormatter formatter) {
             Integer detected = null;
             for (X_ZZ_WSP_ATR_Lookup_Mapping header : headers) {
-                if (header.getAD_Table_ID() <= 0) {
+                if (header.getAD_Table_ID() <= 0 || !header.isZZ_Is_For_Bulk()) {
                     continue;
                 }
                 Sheet sheet = getSheetOrThrow(wb, header);

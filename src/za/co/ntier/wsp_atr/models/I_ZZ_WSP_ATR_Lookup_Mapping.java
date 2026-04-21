@@ -157,6 +157,15 @@ public interface I_ZZ_WSP_ATR_Lookup_Mapping
 	/** Get Is Columns	  */
 	public boolean isZZ_Is_Columns();
 
+    /** Column name ZZ_Is_For_Bulk */
+    public static final String COLUMNNAME_ZZ_Is_For_Bulk = "ZZ_Is_For_Bulk";
+
+	/** Set For Bulk	  */
+	public void setZZ_Is_For_Bulk (boolean ZZ_Is_For_Bulk);
+
+	/** Get For Bulk	  */
+	public boolean isZZ_Is_For_Bulk();
+
     /** Column name ZZ_Tab_Name */
     public static final String COLUMNNAME_ZZ_Tab_Name = "ZZ_Tab_Name";
 

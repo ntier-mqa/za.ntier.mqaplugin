@@ -114,6 +114,9 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 				if (mapHeader.getAD_Table_ID() <= 0) {
 					continue;
 				}
+				if (mapHeader.isZZ_Is_For_Bulk()) {
+					continue;
+				}
 
 				boolean isColumns = mapHeader.get_ValueAsBoolean("ZZ_Is_Columns");
 				if (isColumns) {
@@ -620,6 +623,9 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 
 		Set<Integer> tableIds = new HashSet<>();
 		for (X_ZZ_WSP_ATR_Lookup_Mapping h : headers) {
+			if (h.isZZ_Is_For_Bulk()) {
+				continue;
+			}
 			if (h.getAD_Table_ID() > 0) {
 				tableIds.add(h.getAD_Table_ID());
 			}

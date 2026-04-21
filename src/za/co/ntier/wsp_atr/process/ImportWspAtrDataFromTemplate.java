@@ -79,6 +79,9 @@ public class ImportWspAtrDataFromTemplate extends SvrProcess {
 				if (mapHeader.getAD_Table_ID() <= 0) {
 					continue;
 				}
+				if (mapHeader.isZZ_Is_For_Bulk()) {
+					continue;
+				}
 				//if (mapHeader.getZZ_WSP_ATR_Lookup_Mapping_ID() != 1000007) {
 				//	continue;
 				//}

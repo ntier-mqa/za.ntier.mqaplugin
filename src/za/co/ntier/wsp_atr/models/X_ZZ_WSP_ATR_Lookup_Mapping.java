@@ -33,7 +33,7 @@ public class X_ZZ_WSP_ATR_Lookup_Mapping extends PO implements I_ZZ_WSP_ATR_Look
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260313L;
+	private static final long serialVersionUID = 20260421L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Lookup_Mapping (Properties ctx, int ZZ_WSP_ATR_Lookup_Mapping_ID, String trxName)
@@ -42,6 +42,8 @@ public class X_ZZ_WSP_ATR_Lookup_Mapping extends PO implements I_ZZ_WSP_ATR_Look
       /** if (ZZ_WSP_ATR_Lookup_Mapping_ID == 0)
         {
 			setZZ_Is_Columns (false);
+// N
+			setZZ_Is_For_Bulk (false);
 // N
 			setZZ_WSP_ATR_Lookup_Mapping_ID (0);
         } */
@@ -55,6 +57,8 @@ public class X_ZZ_WSP_ATR_Lookup_Mapping extends PO implements I_ZZ_WSP_ATR_Look
         {
 			setZZ_Is_Columns (false);
 // N
+			setZZ_Is_For_Bulk (false);
+// N
 			setZZ_WSP_ATR_Lookup_Mapping_ID (0);
         } */
     }
@@ -67,6 +71,8 @@ public class X_ZZ_WSP_ATR_Lookup_Mapping extends PO implements I_ZZ_WSP_ATR_Look
         {
 			setZZ_Is_Columns (false);
 // N
+			setZZ_Is_For_Bulk (false);
+// N
 			setZZ_WSP_ATR_Lookup_Mapping_ID (0);
         } */
     }
@@ -78,6 +84,8 @@ public class X_ZZ_WSP_ATR_Lookup_Mapping extends PO implements I_ZZ_WSP_ATR_Look
       /** if (ZZ_WSP_ATR_Lookup_Mapping_UU == null)
         {
 			setZZ_Is_Columns (false);
+// N
+			setZZ_Is_For_Bulk (false);
 // N
 			setZZ_WSP_ATR_Lookup_Mapping_ID (0);
         } */
@@ -189,6 +197,28 @@ public class X_ZZ_WSP_ATR_Lookup_Mapping extends PO implements I_ZZ_WSP_ATR_Look
 	public boolean isZZ_Is_Columns()
 	{
 		Object oo = get_Value(COLUMNNAME_ZZ_Is_Columns);
+		if (oo != null)
+		{
+			 if (oo instanceof Boolean)
+				 return ((Boolean)oo).booleanValue();
+			return "Y".equals(oo);
+		}
+		return false;
+	}
+
+	/** Set For Bulk.
+		@param ZZ_Is_For_Bulk For Bulk
+	*/
+	public void setZZ_Is_For_Bulk (boolean ZZ_Is_For_Bulk)
+	{
+		set_Value (COLUMNNAME_ZZ_Is_For_Bulk, Boolean.valueOf(ZZ_Is_For_Bulk));
+	}
+
+	/** Get For Bulk.
+		@return For Bulk	  */
+	public boolean isZZ_Is_For_Bulk()
+	{
+		Object oo = get_Value(COLUMNNAME_ZZ_Is_For_Bulk);
 		if (oo != null)
 		{
 			 if (oo instanceof Boolean)

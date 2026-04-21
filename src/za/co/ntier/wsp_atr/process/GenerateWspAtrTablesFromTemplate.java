@@ -347,6 +347,8 @@ public class GenerateWspAtrTablesFromTemplate extends SvrProcess {
 			I_ZZ_WSP_ATR_Lookup_Mapping header = det.getZZ_WSP_ATR_Lookup_Mapping(); // FIXED type to interface
 			if (header == null)
 				continue;
+			if (header.isZZ_Is_For_Bulk())
+				continue;
 
 			String tabName = header.getZZ_Tab_Name();
 			String headerName = det.getZZ_Header_Name();

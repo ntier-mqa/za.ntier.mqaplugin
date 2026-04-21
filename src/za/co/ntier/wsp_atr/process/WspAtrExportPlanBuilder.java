@@ -135,6 +135,9 @@ final class WspAtrExportPlanBuilder {
 
         Map<Integer, X_ZZ_WSP_ATR_Lookup_Mapping> mappingsByTableId = new LinkedHashMap<>();
         for (X_ZZ_WSP_ATR_Lookup_Mapping mapping : mappings) {
+            if (mapping.isZZ_Is_For_Bulk()) {
+                continue;
+            }
             if (mapping.getAD_Table_ID() > 0) {
                 mappingsByTableId.putIfAbsent(mapping.getAD_Table_ID(), mapping);
             }
