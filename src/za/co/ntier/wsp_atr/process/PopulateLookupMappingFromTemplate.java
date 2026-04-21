@@ -8,6 +8,7 @@ import java.util.Locale;
 import org.adempiere.base.annotation.Parameter;
 import org.adempiere.exceptions.AdempiereException;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.util.IOUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
@@ -72,9 +73,18 @@ public class PopulateLookupMappingFromTemplate extends SvrProcess {
         int detailsCreated = 0;
         int detailsUpdated = 0;
 
+        // Raise POI's per-record byte-array cap before opening the file.
+        // The default is 100 MB; some XLSM templates exceed this, causing:
+        //   "the maximum length for this record type is 100,000,000"
+        // -1 means "use built-in default" (still 100 MB), so we use MAX_VALUE instead.
+        IOUtils.setByteArrayMaxOverride(Integer.MAX_VALUE);
+
         Workbook workbook;
         try (InputStream is = new FileInputStream(file)) {
             workbook = WorkbookFactory.create(is);
+        } finally {
+            // Restore the default limit so other code in this JVM is not affected
+            IOUtils.setByteArrayMaxOverride(-1);
         }
 
         DataFormatter formatter = new DataFormatter();
