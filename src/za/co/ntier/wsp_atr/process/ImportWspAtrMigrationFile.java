@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.adempiere.base.annotation.Parameter;
 import org.adempiere.exceptions.AdempiereException;
 import org.apache.poi.EncryptedDocumentException;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -47,8 +46,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
 
     private static final String EXCEL_PASSWORD = "Learning2026";
 
-    @Parameter(name = "FileName")
-    private String filePath;
+    private static final String BULK_UPLOAD_PATH = "/tmp/bulkupload.xlsx";
 
     private final ReferenceLookupService refService = new ReferenceLookupService();
 
@@ -61,13 +59,9 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
 
     @Override
     protected String doIt() throws Exception {
-        if (Util.isEmpty(filePath, true)) {
-            throw new AdempiereException("FileName parameter is empty. Please select the migration spreadsheet file.");
-        }
-
-        File file = new File(filePath);
+        File file = new File(BULK_UPLOAD_PATH);
         if (!file.exists() || !file.isFile()) {
-            throw new AdempiereException("File not found or not a regular file: " + filePath);
+            throw new AdempiereException("File not found or not a regular file: " + BULK_UPLOAD_PATH);
         }
 
         List<X_ZZ_WSP_ATR_Lookup_Mapping> headers = loadMappings();
