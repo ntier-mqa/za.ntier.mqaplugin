@@ -16,6 +16,8 @@ import org.compiere.util.Env;
 
 import za.co.ntier.api.model.X_ZZ_AllocationSchedule;
 import za.co.ntier.api.model.X_ZZ_Allocations;
+import za.co.ntier.api.model.X_ZZ_NAMB_Alloc_TTC;
+import za.co.ntier.api.model.X_ZZ_NAMB_Alloc_Trades;
 import za.co.ntier.api.model.X_ZZ_Organization;
 import za.co.ntier.api.model.X_ZZ_QCTO_Alloc_AC;
 import za.co.ntier.api.model.X_ZZ_QCTO_Alloc_OC;
@@ -176,7 +178,23 @@ public class ScheduledAllocationsProcess extends SvrProcess
 																		.setOnlyActiveRecords(true)
 																		.list();
 
-		if (pendingOCs.isEmpty() && pendingSkills.isEmpty() && pendingACs.isEmpty())
+		// Unscheduled NAMB Trades
+		List<X_ZZ_NAMB_Alloc_Trades> pendingTrades = new Query(	getCtx(), X_ZZ_NAMB_Alloc_Trades.Table_Name,
+																"ZZLegalName=? AND NOT EXISTS (SELECT 1 FROM ZZ_Allocations a WHERE a.ZZ_NAMB_Alloc_Trades_ID=ZZ_NAMB_Alloc_Trades.ZZ_NAMB_Alloc_Trades_ID AND a.IsOpenSchedule='Y')",
+																get_TrxName())
+																				.setParameters(legalName)
+																				.setOnlyActiveRecords(true)
+																				.list();
+
+		// Unscheduled NAMB Trades
+		List<X_ZZ_NAMB_Alloc_TTC> pendingTTC = new Query(	getCtx(), X_ZZ_NAMB_Alloc_TTC.Table_Name,
+															"ZZLegalName=? AND NOT EXISTS (SELECT 1 FROM ZZ_Allocations a WHERE a.ZZ_NAMB_Alloc_TTC_ID=ZZ_NAMB_Alloc_TTC.ZZ_NAMB_Alloc_TTC_ID AND a.IsOpenSchedule='Y')",
+															get_TrxName())
+																			.setParameters(legalName)
+																			.setOnlyActiveRecords(true)
+																			.list();
+
+		if (pendingOCs.isEmpty() && pendingSkills.isEmpty() && pendingACs.isEmpty() && pendingTrades.isEmpty() && pendingTTC.isEmpty())
 		{
 			return;
 		}
@@ -203,6 +221,20 @@ public class ScheduledAllocationsProcess extends SvrProcess
 		{
 			lineCount += 10;
 			createAllocationLine(orgTab, ac, lineCount);
+			totalAllocationsAdded++;
+		}
+
+		for (X_ZZ_NAMB_Alloc_Trades trade : pendingTrades)
+		{
+			lineCount += 10;
+			createAllocationLine(orgTab, trade, lineCount);
+			totalAllocationsAdded++;
+		}
+
+		for (X_ZZ_NAMB_Alloc_TTC ttc : pendingTTC)
+		{
+			lineCount += 10;
+			createAllocationLine(orgTab, ttc, lineCount);
 			totalAllocationsAdded++;
 		}
 	}
@@ -256,21 +288,39 @@ public class ScheduledAllocationsProcess extends SvrProcess
 		{
 			child.setZZ_QCTO_Alloc_AC_ID(source.get_ID());
 		}
+		else if (source instanceof X_ZZ_NAMB_Alloc_Trades)
+		{
+			child.setZZ_NAMB_Alloc_Trades_ID(source.get_ID());
+		}
+		else if (source instanceof X_ZZ_NAMB_Alloc_TTC)
+		{
+			child.setZZ_NAMB_Alloc_TTC_ID(source.get_ID());
+		}
 
 		// Field inheritance mapping rules
-		copyField(source, child, "Name");
+		if (source instanceof X_ZZ_NAMB_Alloc_Trades || source instanceof X_ZZ_NAMB_Alloc_TTC)
+		{
+			copyField(source, child, "ContactName", "Name");
+			copyField(source, child, "Address", "Address1");
+			copyField(source, child, "ZZ_ScopeOfTrades", "ZZ_Qualification");
+			copyField(source, child, "ZZ_Allocated", "ZZ_QualityPartner");
+		}
+		else
+		{
+			copyField(source, child, "Name");
+			copyField(source, child, "Address1");
+			copyField(source, child, "ZZ_Qualification");
+			copyField(source, child, "ZZ_QualityPartner");
+		}
+
 		copyField(source, child, "ZZSurname");
 		copyField(source, child, "ZZLegalName");
 		copyField(source, child, "ZZTradeName");
 		copyField(source, child, "EMail");
-		copyField(source, child, "Address1");
 		copyField(source, child, "Address2");
 		copyField(source, child, "City");
 		copyField(source, child, "Region");
 		copyField(source, child, "Postalcode");
-
-		copyField(source, child, "ZZ_Qualification");
-		copyField(source, child, "ZZ_QualityPartner");
 		copyField(source, child, "ZZ_SAQAIDOrSPID");
 		copyField(source, child, "ZZ_NQF_Level");
 
@@ -286,6 +336,7 @@ public class ScheduledAllocationsProcess extends SvrProcess
 		copyField(source, child, "ZZ_AltContactTitle");
 
 		copyField(source, child, "ZZ_QCTO_Allocation_ID");
+		copyField(source, child, "ZZ_NAMB_Allocations_ID");
 
 		child.setIsOpenSchedule(true);
 
@@ -299,15 +350,23 @@ public class ScheduledAllocationsProcess extends SvrProcess
 	 */
 	private void copyField(PO source, PO target, String columnName)
 	{
-		int srcIdx = source.get_ColumnIndex(columnName);
-		int tgtIdx = target.get_ColumnIndex(columnName);
+		copyField(source, target, columnName, columnName);
+	}
+
+	/**
+	 * Internal mapping fallback feature mapping matching data properties safely with specific source and target columns.
+	 */
+	private void copyField(PO source, PO target, String sourceColumn, String targetColumn)
+	{
+		int srcIdx = source.get_ColumnIndex(sourceColumn);
+		int tgtIdx = target.get_ColumnIndex(targetColumn);
 
 		if (srcIdx >= 0 && tgtIdx >= 0)
 		{
-			Object value = source.get_Value(columnName);
+			Object value = source.get_Value(sourceColumn);
 			if (value != null)
 			{
-				target.set_ValueOfColumn(columnName, value);
+				target.set_ValueOfColumn(targetColumn, value);
 			}
 		}
 	}
