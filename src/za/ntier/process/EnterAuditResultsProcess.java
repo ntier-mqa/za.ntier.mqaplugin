@@ -55,9 +55,9 @@ public class EnterAuditResultsProcess extends SvrProcess
 				auditHeader.setZZLegalName(org.getZZLegalName());
 			}
 
-			if (org.getZZ_AuditLead_ID() > 0)
+			if (org.getZZ_AuditLead_IDs() != null)
 			{
-				auditHeader.setZZ_AuditLead_ID(org.getZZ_AuditLead_ID());
+				auditHeader.setZZ_AuditLead_IDs(org.getZZ_AuditLead_IDs());
 			}
 
 			auditHeader.saveEx();
