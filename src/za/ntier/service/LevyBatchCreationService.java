@@ -22,6 +22,7 @@ import za.ntier.repo.LevyFilesRepository;
 import za.ntier.repo.PartnerRepository;
 import za.ntier.utils.DescriptionBuilder;
 import za.ntier.utils.MoneyMath;
+import za.ntier.utils.MonthUtil;
 
 public class LevyBatchCreationService {
 
@@ -67,6 +68,14 @@ public class LevyBatchCreationService {
 
         int currencyId = batchRepo.resolveCurrencyId(defaultCurrencyId);
         if (currencyId <= 0) throw new AdempiereException("Could not resolve C_Currency_ID.");
+
+        // Resolve header's year number (from C_Year table) and month order — used as
+        // the look-back boundary when searching for prior unlinked lines for each BP.
+        int    hdrYearNum  = levyRepo.resolveHeaderYearNumber(hdr.getC_Year_ID());
+        String hdrMonth    = safe(hdr.getZZ_Month());
+        int    hdrMonthOrd = MonthUtil.order(hdrMonth);
+        if (hdrYearNum <= 0)
+            throw new AdempiereException("Could not resolve fiscal year for header ID=" + hdrId);
 
         // Load current header's unlinked lines, sorted by ZZ_Year then ZZ_Month
         List<X_ZZ_Monthly_Levy_Files> currentLines = levyRepo.getUnprocessedRows(hdrId);
@@ -118,9 +127,11 @@ public class LevyBatchCreationService {
             List<X_ZZ_Monthly_Levy_Files> contributing = new ArrayList<>();
             contributing.add(currentLine);
 
-            // Add prior unlinked lines for this BP from earlier headers
+            // Add prior unlinked lines for this BP from headers strictly before
+            // the current header's year+month (uses header C_Year_ID / ZZ_Month,
+            // NOT the levy line's own ZZ_Year / ZZ_Month).
             List<X_ZZ_Monthly_Levy_Files> priorLines =
-                    levyRepo.getPriorUnlinkedLinesForBP(sdlNo, lineYear, lineMonth);
+                    levyRepo.getPriorUnlinkedLinesForBP(sdlNo, hdrYearNum, hdrMonthOrd);
 
             for (X_ZZ_Monthly_Levy_Files prior : priorLines) {
                 String priorYear = safe(prior.getZZ_Year());
