@@ -110,15 +110,16 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 			boolean approve = "Y".equalsIgnoreCase(pApprove) || "Y".equalsIgnoreCase(pRecommend);
 			doApproveReject(hdr, currentStep, approve, pComment);
 		} else {
-			doRequest(hdr, curStatus);
+			currentStep = doRequest(hdr, curStatus);
 		}
+
 		// Resolve CC email addresses from SysConfig keyed by "HeaderName_StepName"
 		List<String> ccEmails = resolveCCEmails(hdr, currentStep);
 		MailNoticeUtil.sentNotify(queueNotifis, po, get_TrxName(), ccEmails);
 		return "@OK@";
 	}
 
-	private void doRequest(MZZWFHeader hdr, String curStatus) {
+	private MZZWFLines doRequest(MZZWFHeader hdr, String curStatus) {
 		MZZWFLines step = MZZWFLines.findFirstByAllowedFromStatus(ctx, hdr.get_ID(), curStatus, trxName);
 		if (step == null)
 			throw new AdempiereException("No workflow step matches current status: " + curStatus);
@@ -130,6 +131,7 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 		MailNoticeUtil.requestStepNotifyAll(queueNotifis,step, po, hdr, getTable_ID(),getRecord_ID(),MailNoticeUtil.setPOForMail(step.getMMailText_Approved(),po),ctx, trxName);
 		AuditUtil.createAudit(ctx, trxName, po.get_Table_ID(), po.get_ID(), step.get_ID(),
 				"REQUEST", curStatus, curStatus, oldAction, step.getSetDocAction(), null,Env.getAD_User_ID(ctx));
+		return step;
 	}
 
 	private void doApproveReject(MZZWFHeader hdr, MZZWFLines step, boolean approve, String comment) {
