@@ -142,13 +142,29 @@ public class PopulateLookupMappingFromTemplate extends SvrProcess {
             boolean isNewHeader = false;
             if (header == null) {
                 header = new X_ZZ_WSP_ATR_Lookup_Mapping(getCtx(), 0, get_TrxName());
-                header.setZZ_Tab_Name(sheetName);
+                // Copy fields from the non-bulk header for the same tab if one exists
+                X_ZZ_WSP_ATR_Lookup_Mapping nonBulkHeader = (X_ZZ_WSP_ATR_Lookup_Mapping) new Query(
+                        getCtx(),
+                        I_ZZ_WSP_ATR_Lookup_Mapping.Table_Name,
+                        I_ZZ_WSP_ATR_Lookup_Mapping.COLUMNNAME_ZZ_Tab_Name + "=? AND "
+                                + I_ZZ_WSP_ATR_Lookup_Mapping.COLUMNNAME_ZZ_Is_For_Bulk + "='N'",
+                        get_TrxName()
+                ).setParameters(sheetName).first();
+                if (nonBulkHeader != null) {
+                    header.setZZ_Tab_Name(nonBulkHeader.getZZ_Tab_Name());
+                    header.setAD_Table_ID(nonBulkHeader.getAD_Table_ID());
+                    header.setSeqNo(nonBulkHeader.getSeqNo());
+                    header.setStart_Row(nonBulkHeader.getStart_Row());
+                    header.setZZ_Is_Columns(nonBulkHeader.isZZ_Is_Columns());
+                    addLog("Header for sheet '" + sheetName + "' copied from non-bulk template header ID=" + nonBulkHeader.get_ID());
+                } else {
+                    header.setZZ_Tab_Name(sheetName);
+                }
                 header.setZZ_Is_For_Bulk(true);
                 header.saveEx();
                 headersCreated++;
                 isNewHeader = true;
             } else {
-                // Nothing else to update for now, but count as updated for reporting
                 headersUpdated++;
             }
 
@@ -307,61 +323,7 @@ public class PopulateLookupMappingFromTemplate extends SvrProcess {
         return "ZZ_" + h + "_Ref";
     }
     
-    private int countNonEmptyCells(Row row) {
-        if (row == null)
-            return 0;
-        int lastCell = row.getLastCellNum();
-        if (lastCell < 0)
-            return 0;
-
-        int count = 0;
-        for (int c = 0; c < lastCell; c++) {
-            Cell cell = row.getCell(c);
-            if (cell == null)
-                continue;
-            switch (cell.getCellType()) {
-                case STRING:
-                    if (!Util.isEmpty(cell.getStringCellValue(), true))
-                        count++;
-                    break;
-                case NUMERIC:
-                case BOOLEAN:
-                case FORMULA:
-                    count++;
-                    break;
-                default:
-                    break;
-            }
-        }
-        return count;
-    }
-
-    /**
-     * Find the “user” header row.
-     * - Row 0 is the technical header.
-     * - Header row is the first later row with enough non-empty cells.
-     */
     private int findHeaderRow(Sheet sheet) {
-        if (sheet == null)
-            return 0;
-
-        Row row0 = sheet.getRow(0);
-        int baseCount = countNonEmptyCells(row0);
-        if (baseCount <= 0)
-            return 0;
-
-        int threshold = Math.max(1, baseCount / 2);
-        int maxRowToCheck = Math.min(sheet.getLastRowNum(), 10); // look only near the top
-
-        for (int r = 1; r <= maxRowToCheck; r++) {
-            Row row = sheet.getRow(r);
-            int cnt = countNonEmptyCells(row);
-            if (cnt >= threshold) {
-                return r;   // this is the user header row
-            }
-        }
-
-        // Fallback if nothing matched
         return 0;
     }
     

@@ -29,10 +29,9 @@ public class BatchRepository {
 
     public int resolveDocTypeId(int preferred) {
         if (preferred > 0) return preferred;
-        int id = DB.getSQLValue(trx,
+        return DB.getSQLValue(trx,
             "SELECT C_DocType_ID FROM C_DocType WHERE DocBaseType='API' AND IsActive='Y' AND AD_Client_ID=? ORDER BY IsSOTrx DESC, C_DocType_ID",
             Env.getAD_Client_ID(ctx));
-        return id;
     }
 
     public int resolveCurrencyId(int fallback) {
@@ -42,9 +41,15 @@ public class BatchRepository {
         return id > 0 ? id : fallback;
     }
 
-    public MInvoiceBatch_New ensureBatchForYear(Map<String, MInvoiceBatch_New> cache,
-                                                X_ZZ_Monthly_Levy_Files_Hdr hdr, int currencyId, String yearKey) {
-        MInvoiceBatch_New cached = cache.get(yearKey);
+    /**
+     * Returns (or creates) a batch for the given year+month combination.
+     * Cache key is "YYYY-Month" e.g. "2025-November".
+     */
+    public MInvoiceBatch_New ensureBatchForYearMonth(Map<String, MInvoiceBatch_New> cache,
+                                                     X_ZZ_Monthly_Levy_Files_Hdr hdr,
+                                                     int currencyId, String year, String month) {
+        String key = year + "-" + month;
+        MInvoiceBatch_New cached = cache.get(key);
         if (cached != null) return cached;
 
         MInvoiceBatch_New b = new MInvoiceBatch_New(ctx, 0, trx);
@@ -57,20 +62,16 @@ public class BatchRepository {
         b.setZZ_IS_WSP_ATR(true);
         b.setZZ_DocAction(X_C_InvoiceBatch.ZZ_DOCACTION_Submit);
         b.setIsSOTrx(false);
-
-        String name = "Levy Batch Hdr#" + hdr.get_ID();
-        if (hdr.getZZ_Month() != null && !hdr.getZZ_Month().trim().isEmpty()) name += " M" + hdr.getZZ_Month();
-        name += " " + yearKey;
-        b.setDescription("MG Generated for Year: " + yearKey + " Month: " + hdr.getZZ_Month());
+        b.setDescription("MG Generated for Year: " + year + " Month: " + month);
         b.setDocumentAmt(Env.ZERO);
         b.saveEx();
 
-        cache.put(yearKey, b);
+        cache.put(key, b);
         return b;
     }
 
-    public int nextLineNo(Map<String, Integer> lineNoByYear, String yearKey, int batchId) {
-        Integer ln = lineNoByYear.get(yearKey);
+    public int nextLineNo(Map<String, Integer> lineNoByKey, String key, int batchId) {
+        Integer ln = lineNoByKey.get(key);
         if (ln == null) {
             ln = DB.getSQLValue(trx,
                 "SELECT COALESCE(MAX(Line),0) FROM C_InvoiceBatchLine WHERE C_InvoiceBatch_ID=?",
@@ -78,13 +79,13 @@ public class BatchRepository {
             if (ln < 0) ln = 0;
         }
         ln += 10;
-        lineNoByYear.put(yearKey, ln);
+        lineNoByKey.put(key, ln);
         return ln;
     }
 
     public int createBatchLine(int batchId, int docTypeId, int lineNo, int bpId, int bpLocId,
                                int chargeId, Timestamp date, BigDecimal amount, String description) {
-    	MInvoiceBatchLine l = new MInvoiceBatchLine(ctx, 0, trx);
+        MInvoiceBatchLine l = new MInvoiceBatchLine(ctx, 0, trx);
         l.setAD_Org_ID(1000016);
         l.setC_InvoiceBatch_ID(batchId);
         l.setC_DocType_ID(docTypeId);
@@ -96,7 +97,7 @@ public class BatchRepository {
         l.setC_Tax_ID(1000000);
         l.setDateInvoiced(date);
         l.setDateAcct(date);
-        l.setQtyEntered(org.compiere.util.Env.ONE);
+        l.setQtyEntered(Env.ONE);
         l.setPriceEntered(amount);
         l.setLineNetAmt(amount);
         l.setLineTotalAmt(amount);
@@ -106,7 +107,7 @@ public class BatchRepository {
     }
 
     public void updateControlAmt(MInvoiceBatch_New batch) {
-    	batch = new MInvoiceBatch_New(ctx, batch.getC_InvoiceBatch_ID(), batch.get_TrxName());  // Refresh values that were updated by batch lines after save
+        batch = new MInvoiceBatch_New(ctx, batch.getC_InvoiceBatch_ID(), batch.get_TrxName());
         batch.setControlAmt(batch.getDocumentAmt());
         batch.saveEx();
     }

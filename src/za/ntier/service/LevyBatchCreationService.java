@@ -1,10 +1,18 @@
 package za.ntier.service;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 import org.adempiere.exceptions.AdempiereException;
+import org.compiere.model.MBPartner;
 
-import za.ntier.model.Approval;
 import za.ntier.models.MInvoiceBatch_New;
 import za.ntier.models.X_ZZ_Monthly_Levy_Files;
 import za.ntier.models.X_ZZ_Monthly_Levy_Files_Hdr;
@@ -12,17 +20,12 @@ import za.ntier.repo.ApprovalsRepository;
 import za.ntier.repo.BatchRepository;
 import za.ntier.repo.LevyFilesRepository;
 import za.ntier.repo.PartnerRepository;
-import za.ntier.strategy.ApprovalAggregationStrategy;
-import za.ntier.strategy.CatchUpAggregation;
-import za.ntier.strategy.LegacyYearAggregation;
 import za.ntier.utils.DescriptionBuilder;
 import za.ntier.utils.MoneyMath;
-import za.ntier.utils.RowGrouping;
-import za.ntier.utils.YearUtil;
 
 public class LevyBatchCreationService {
 
-    private final java.util.Properties ctx;
+    private final Properties ctx;
     private final String trxName;
     private final int adUserId;
     private final int defaultCurrencyId;
@@ -35,7 +38,7 @@ public class LevyBatchCreationService {
     private final PartnerRepository partnerRepo;
     private final BatchRepository batchRepo;
 
-    public LevyBatchCreationService(java.util.Properties ctx, String trxName, int adUserId,
+    public LevyBatchCreationService(Properties ctx, String trxName, int adUserId,
                                     int defaultCurrencyId, int chargeId, int docTypeId, Timestamp dateDoc) {
         this.ctx = ctx;
         this.trxName = trxName;
@@ -46,110 +49,139 @@ public class LevyBatchCreationService {
         this.p_DateDoc = dateDoc;
 
         this.approvalsRepo = new ApprovalsRepository(ctx, trxName);
-        this.levyRepo = new LevyFilesRepository(ctx, trxName);
-        this.partnerRepo = new PartnerRepository(ctx, trxName);
-        this.batchRepo = new BatchRepository(ctx, trxName, adUserId, p_DateDoc);
+        this.levyRepo      = new LevyFilesRepository(ctx, trxName);
+        this.partnerRepo   = new PartnerRepository(ctx, trxName);
+        this.batchRepo     = new BatchRepository(ctx, trxName, adUserId, p_DateDoc);
     }
 
     public String createBatchesFromHeader(int hdrId) {
         X_ZZ_Monthly_Levy_Files_Hdr hdr = levyRepo.getHeaderById(hdrId);
-        if (hdr == null || hdr.get_ID() <= 0) throw new AdempiereException("Header not found: ID=" + hdrId);
+        if (hdr == null || hdr.get_ID() <= 0)
+            throw new AdempiereException("Header not found: ID=" + hdrId);
 
         int chargeId = (p_C_Charge_ID > 0) ? p_C_Charge_ID : batchRepo.resolveDefaultChargeId();
         if (chargeId <= 0) throw new AdempiereException("C_Charge_ID required.");
 
         int docTypeId = batchRepo.resolveDocTypeId(p_C_DocType_ID);
-        if (docTypeId <= 0) throw new AdempiereException("Could not resolve C_DocType_ID (ARI/API).");
+        if (docTypeId <= 0) throw new AdempiereException("Could not resolve C_DocType_ID.");
 
         int currencyId = batchRepo.resolveCurrencyId(defaultCurrencyId);
         if (currencyId <= 0) throw new AdempiereException("Could not resolve C_Currency_ID.");
 
-        // rows (unprocessed) for this header
-        java.util.List<X_ZZ_Monthly_Levy_Files> rows = levyRepo.getUnprocessedRows(hdrId);
-        if (rows.isEmpty()) return "No ZZ_Monthly_Levy_Files rows for header ID " + hdrId;
+        // Load current header's unlinked lines, sorted by ZZ_Year then ZZ_Month
+        List<X_ZZ_Monthly_Levy_Files> currentLines = levyRepo.getUnprocessedRows(hdrId);
+        if (currentLines.isEmpty())
+            return "No unlinked ZZ_Monthly_Levy_Files rows for header ID " + hdrId;
 
-        // group by BP->Year->Rows, and resolve BP/location
-        RowGrouping.GroupResult grouped = RowGrouping.groupByBpYear(ctx, trxName, rows, partnerRepo);
+        // Batch cache keyed by "YYYY-Month", line-number cache keyed the same way
+        Map<String, MInvoiceBatch_New> batchByYearMonth = new LinkedHashMap<>();
+        Map<String, Integer>           lineNoByKey       = new LinkedHashMap<>();
 
-        // load approvals (asc) for the BPs in this header
-        java.util.List<Approval> approvalsAsc = approvalsRepo.loadApprovalsAscForBps(new java.util.ArrayList<>(grouped.bpById.keySet()));
-        if (approvalsAsc.isEmpty()) {
-            return stats("No approvals found for any BP", 0, rows.size(), 0, grouped.skippedNoBP, grouped.skippedNotAL, grouped.skippedZero);
-        }
+        // Track BPs already processed in this run to avoid duplicates
+        Set<Integer> processedBpIds = new HashSet<>();
 
-        // prepare strategies
-        ApprovalAggregationStrategy legacy = new LegacyYearAggregation(2010, 2024);
-        ApprovalAggregationStrategy catchup = new CatchUpAggregation(2010, Integer.MAX_VALUE);
+        int createdLines   = 0;
+        int skippedNoBP    = 0;
+        int skippedNoApproval = 0;
+        int skippedZero    = 0;
 
-        // batch cache by year
-        java.util.Map<String, MInvoiceBatch_New> batchByYear = new java.util.LinkedHashMap<>();
-        java.util.Map<String, Integer> lineNoByYear = new java.util.LinkedHashMap<>();
+        for (X_ZZ_Monthly_Levy_Files currentLine : currentLines) {
 
-        int createdLines = 0;
-
-        for (Approval ap : approvalsAsc) {
-            final int bpId = ap.bpId();
-            final int approvedYear = ap.year();
-
-            if (!approvalsRepo.hasApprovedForYear(bpId, Integer.toString(approvedYear))) {
-                continue; // defensive recheck
+            // --- Resolve BP ---
+            String sdlNo = safe(currentLine.getZZ_SDL_No());
+            if (sdlNo.isEmpty() || !sdlNo.startsWith("L")) {
+                skippedNoBP++;
+                continue;
             }
-
-            java.util.Map<Integer, java.util.List<X_ZZ_Monthly_Levy_Files>> bpRowsByYear = grouped.rowsByBPYear.get(bpId);
-            if (bpRowsByYear == null || bpRowsByYear.isEmpty()) continue;
-
-            java.util.Map<Integer, java.util.List<X_ZZ_Monthly_Levy_Files>> contributing;
-            if (YearUtil.isLegacy(approvedYear)) {
-                contributing = legacy.contributingRows(bpRowsByYear, approvedYear);
-            } else {
-                contributing = catchup.contributingRows(bpRowsByYear, approvedYear);
+            MBPartner bp = partnerRepo.findActiveByValue(sdlNo);
+            if (bp == null) {
+                skippedNoBP++;
+                continue;
             }
-            if (contributing.isEmpty()) continue;
+            int bpId = bp.getC_BPartner_ID();
 
-            // compute sums (include +/-), NEGATE for the posted amount
-            java.util.Map<Integer, java.math.BigDecimal> perYear = MoneyMath.sumPerYear(contributing, r -> ((X_ZZ_Monthly_Levy_Files)r).getZZ_MG());
-            java.math.BigDecimal grand = MoneyMath.sumAll(perYear.values());
-            if (MoneyMath.isZero(grand)) {
-                grouped.skippedZero++;
+            // --- Skip if already processed in this run ---
+            if (processedBpIds.contains(bpId)) continue;
+
+            // --- Year & month from the current line ---
+            String lineYear  = safe(currentLine.getZZ_Year());
+            String lineMonth = safe(currentLine.getZZ_Month());
+
+            // --- Approval check for the current line's year ---
+            if (!approvalsRepo.hasApprovedForYear(bpId, lineYear)) {
+                skippedNoApproval++;
                 continue;
             }
 
-            String yearKey = Integer.toString(approvedYear);
-            MInvoiceBatch_New batch = batchRepo.ensureBatchForYear(batchByYear, hdr, currencyId, yearKey);
-            int lineNo = batchRepo.nextLineNo(lineNoByYear, yearKey, batch.getC_InvoiceBatch_ID());
+            // --- Build list of all contributing lines ---
+            // Start with the current header's line itself
+            List<X_ZZ_Monthly_Levy_Files> contributing = new ArrayList<>();
+            contributing.add(currentLine);
 
-            // build description with NEGATED per-year shown values
-            String desc = DescriptionBuilder.buildAggregateDescription(
-                    "MG", hdr.get_ID(), approvedYear, MoneyMath.negateMap(perYear));
+            // Add prior unlinked lines for this BP from earlier headers
+            List<X_ZZ_Monthly_Levy_Files> priorLines =
+                    levyRepo.getPriorUnlinkedLinesForBP(sdlNo, lineYear, lineMonth);
 
-            // line amount is NEGATED grand
-            java.math.BigDecimal lineAmt = grand.negate();
+            for (X_ZZ_Monthly_Levy_Files prior : priorLines) {
+                String priorYear = safe(prior.getZZ_Year());
+                // Only include if BP has approval for that prior line's year
+                if (approvalsRepo.hasApprovedForYear(bpId, priorYear)) {
+                    contributing.add(prior);
+                }
+            }
 
-            int bpLocId = grouped.bpLocById.getOrDefault(bpId, 0);
-            int lineId = batchRepo.createBatchLine(
+            // --- Sum MG amounts (negate for posting) ---
+            BigDecimal total = BigDecimal.ZERO;
+            for (X_ZZ_Monthly_Levy_Files r : contributing) {
+                total = total.add(MoneyMath.nz(r.getZZ_MG()));
+            }
+            if (MoneyMath.isZero(total)) {
+                skippedZero++;
+                continue;
+            }
+            BigDecimal lineAmt = total.negate();
+
+            // --- Get or create the batch for this year+month ---
+            MInvoiceBatch_New batch = batchRepo.ensureBatchForYearMonth(
+                    batchByYearMonth, hdr, currencyId, lineYear, lineMonth);
+
+            String batchKey = lineYear + "-" + lineMonth;
+            int lineNo = batchRepo.nextLineNo(lineNoByKey, batchKey, batch.getC_InvoiceBatch_ID());
+
+            // --- Build line description ---
+            String desc = DescriptionBuilder.buildLineDescription(
+                    "MG", lineYear, lineMonth, sdlNo, contributing.size(), lineAmt);
+
+            // --- Resolve BP location ---
+            int bpLocId = partnerRepo.getBillToOrAnyLocation(bp);
+
+            // --- Create the batch line ---
+            int batchLineId = batchRepo.createBatchLine(
                     batch.getC_InvoiceBatch_ID(), docTypeId, lineNo,
                     bpId, bpLocId, chargeId, p_DateDoc,
-                    lineAmt, desc
-            );
+                    lineAmt, desc);
 
-            // link all contributing rows to this single line
-            levyRepo.linkRowsToLine(contributing, lineId);
+            // --- Link all contributing levy lines to this batch line ---
+            levyRepo.linkLinesToBatchLine(contributing, batchLineId);
 
-            // roll-up batch documentAmt by original grand (non-negated)
+            // --- Update batch control amount ---
             batchRepo.updateControlAmt(batch);
 
+            processedBpIds.add(bpId);
             createdLines++;
         }
 
-        return stats("OK", batchByYear.size(), rows.size(), createdLines,
-                     grouped.skippedNoBP, grouped.skippedNotAL, grouped.skippedZero);
+        return stats("OK", batchByYearMonth.size(), currentLines.size(), createdLines,
+                skippedNoBP, skippedNoApproval, skippedZero);
     }
 
     private static String stats(String prefix, int batches, int sourceRows, int createdLines,
-                                int skippedNoBP, int skippedNotAL, int skippedZero) {
+                                int skippedNoBP, int skippedNoApproval, int skippedZero) {
         return String.format(
-            "%s. Batches created: %d. Source rows: %d. Lines created: %d. Skipped (no BP): %d, Skipped (Not L Number): %d, Skipped (net zero): %d",
-            prefix, batches, sourceRows, createdLines, skippedNoBP, skippedNotAL, skippedZero
-        );
+            "%s. Batches created: %d. Source rows: %d. Lines created: %d. " +
+            "Skipped (no BP): %d. Skipped (no approval): %d. Skipped (net zero): %d",
+            prefix, batches, sourceRows, createdLines, skippedNoBP, skippedNoApproval, skippedZero);
     }
+
+    private static String safe(String s) { return s == null ? "" : s.trim(); }
 }
