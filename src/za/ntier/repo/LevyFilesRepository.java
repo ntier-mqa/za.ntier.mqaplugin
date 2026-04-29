@@ -76,8 +76,12 @@ public class LevyFilesRepository {
     public void linkLinesToBatchLine(List<X_ZZ_Monthly_Levy_Files> lines, int batchLineId) {
         for (X_ZZ_Monthly_Levy_Files r : lines) {
             if (r.getC_InvoiceBatchLine_ID() == 0) {
-                r.setC_InvoiceBatchLine_ID(batchLineId);
-                r.saveEx();
+                DB.executeUpdateEx(
+                    "UPDATE " + X_ZZ_Monthly_Levy_Files.Table_Name +
+                    " SET C_InvoiceBatchLine_ID=?, Updated=NOW(), UpdatedBy=0" +
+                    " WHERE " + X_ZZ_Monthly_Levy_Files.Table_Name + "_ID=?",
+                    new Object[]{batchLineId, r.get_ID()},
+                    trx);
             }
         }
     }
