@@ -18,13 +18,14 @@ import org.compiere.model.MSysConfig;
 import org.compiere.model.MUser;
 import org.compiere.model.MUserRoles;
 import org.compiere.model.PO;
+import org.compiere.model.Query;
 import org.compiere.model.X_AD_User;
 import org.compiere.util.CLogger;
 import org.compiere.util.EMail;
 import org.compiere.util.Env;
 
-import za.co.ntier.wf.model.MZZWFLineRole;
 import za.co.ntier.wf.model.MZZWFLines;
+import za.ntier.models.X_ZZ_WF_Line_Role;
 
 public final class MailNoticeUtil {
 	private static final CLogger log = CLogger.getCLogger(MailNoticeUtil.class);
@@ -37,8 +38,25 @@ public final class MailNoticeUtil {
 		if (mailText == null) {
 			return;
 		}
-		for (int roleId : MZZWFLineRole.getRoleIds(step.get_ID(), "N","Y",ctx, trxName)) {
-			MailNoticeUtil.queueNotifyForRole(queueNotifis, roleId, tableID, recordID, mailText);
+		
+		String nextStatus = po.get_ValueAsString("ZZ_DocStatus");
+		
+		List<X_ZZ_WF_Line_Role> roles = new Query(ctx, X_ZZ_WF_Line_Role.Table_Name, 
+				"ZZ_WF_Lines_ID=? AND IsActive='Y' AND ZZ_Is_Responsible='N' AND ZZ_Notify='Y'", trxName)
+				.setParameters(step.get_ID())
+				.setOnlyActiveRecords(true)
+				.list();
+
+		for (X_ZZ_WF_Line_Role role : roles)
+		{
+			String roleNextStatus = role.getZZ_NextStatus();
+
+			// VALIDATION: Send mail if the Role's NextStatus matches the Node's nextStatus
+			// (If the Role's NextStatus is not set, we send it by default)
+			if (roleNextStatus == null || roleNextStatus.isBlank() || roleNextStatus.equals(nextStatus))
+			{
+				MailNoticeUtil.queueNotifyForRole(queueNotifis, role.getAD_Role_ID(), tableID, recordID, mailText);
+			}
 		}
 	}
 

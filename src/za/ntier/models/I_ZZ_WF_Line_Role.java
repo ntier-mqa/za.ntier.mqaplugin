@@ -133,6 +133,15 @@ public interface I_ZZ_WF_Line_Role
 	/** Get Is Responsible	  */
 	public boolean isZZ_Is_Responsible();
 
+    /** Column name ZZ_NextStatus */
+    public static final String COLUMNNAME_ZZ_NextStatus = "ZZ_NextStatus";
+
+	/** Set Next Status	  */
+	public void setZZ_NextStatus (String ZZ_NextStatus);
+
+	/** Get Next Status	  */
+	public String getZZ_NextStatus();
+
     /** Column name ZZ_Notify */
     public static final String COLUMNNAME_ZZ_Notify = "ZZ_Notify";
 
@@ -150,6 +159,15 @@ public interface I_ZZ_WF_Line_Role
 
 	/** Get ZZ_WF_Line_Role	  */
 	public int getZZ_WF_Line_Role_ID();
+
+    /** Column name ZZ_WF_Line_Role_UU */
+    public static final String COLUMNNAME_ZZ_WF_Line_Role_UU = "ZZ_WF_Line_Role_UU";
+
+	/** Set ZZ_WF_Line_Role_UU	  */
+	public void setZZ_WF_Line_Role_UU (String ZZ_WF_Line_Role_UU);
+
+	/** Get ZZ_WF_Line_Role_UU	  */
+	public String getZZ_WF_Line_Role_UU();
 
     /** Column name ZZ_WF_Lines_ID */
     public static final String COLUMNNAME_ZZ_WF_Lines_ID = "ZZ_WF_Lines_ID";
