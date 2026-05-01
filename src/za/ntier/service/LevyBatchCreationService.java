@@ -86,8 +86,10 @@ public class LevyBatchCreationService {
         Map<String, MInvoiceBatch_New> batchByYearMonth = new LinkedHashMap<>();
         Map<String, Integer>           lineNoByKey       = new LinkedHashMap<>();
 
-        // Track BPs already processed in this run to avoid duplicates
-        Set<Integer> processedBpIds = new HashSet<>();
+        // Track BP+year+month combos already processed to avoid duplicate batch lines.
+        // Keyed as "bpId-year-month" so the same BP can still be processed for
+        // different year+month combinations within the same header.
+        Set<String> processedKeys = new HashSet<>();
 
         int createdLines   = 0;
         int skippedNoBP    = 0;
@@ -109,12 +111,14 @@ public class LevyBatchCreationService {
             }
             int bpId = bp.getC_BPartner_ID();
 
-            // --- Skip if already processed in this run ---
-            if (processedBpIds.contains(bpId)) continue;
-
             // --- Year & month from the current line ---
+            // ZZ_Month is stored as a numeric code ("12") by iDempiere; convert to name.
             String lineYear  = safe(currentLine.getZZ_Year());
-            String lineMonth = safe(currentLine.getZZ_Month());
+            String lineMonth = MonthUtil.toName(safe(currentLine.getZZ_Month()));
+
+            // --- Skip if this BP+year+month was already processed in this run ---
+            String processKey = bpId + "-" + lineYear + "-" + lineMonth;
+            if (processedKeys.contains(processKey)) continue;
 
             // --- Approval check for the current line's year ---
             if (!approvalsRepo.hasApprovedForYear(bpId, lineYear)) {
@@ -178,7 +182,7 @@ public class LevyBatchCreationService {
             // --- Update batch control amount ---
             batchRepo.updateControlAmt(batch);
 
-            processedBpIds.add(bpId);
+            processedKeys.add(processKey);
             createdLines++;
         }
 
