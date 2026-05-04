@@ -132,11 +132,11 @@ public class PopulateLookupMappingFromTemplate extends SvrProcess {
             X_ZZ_WSP_ATR_Lookup_Mapping header = (X_ZZ_WSP_ATR_Lookup_Mapping) new Query(
                     getCtx(),
                     I_ZZ_WSP_ATR_Lookup_Mapping.Table_Name,
-                    I_ZZ_WSP_ATR_Lookup_Mapping.COLUMNNAME_ZZ_Tab_Name + "=? AND " +
+                    "LOWER(REPLACE(" + I_ZZ_WSP_ATR_Lookup_Mapping.COLUMNNAME_ZZ_Tab_Name + ", ' ', '')) = ? AND " +
                     		I_ZZ_WSP_ATR_Lookup_Mapping.COLUMNNAME_ZZ_Is_For_Bulk + " = 'Y'"
                     ,
                     get_TrxName()
-            ).setParameters(sheetName)
+            ).setParameters(normalize(sheetName))
              .first();
 
             boolean isNewHeader = false;
@@ -146,10 +146,10 @@ public class PopulateLookupMappingFromTemplate extends SvrProcess {
                 X_ZZ_WSP_ATR_Lookup_Mapping nonBulkHeader = (X_ZZ_WSP_ATR_Lookup_Mapping) new Query(
                         getCtx(),
                         I_ZZ_WSP_ATR_Lookup_Mapping.Table_Name,
-                        I_ZZ_WSP_ATR_Lookup_Mapping.COLUMNNAME_ZZ_Tab_Name + "=? AND "
+                        "LOWER(REPLACE(" + I_ZZ_WSP_ATR_Lookup_Mapping.COLUMNNAME_ZZ_Tab_Name + ", ' ', '')) = ? AND "
                                 + I_ZZ_WSP_ATR_Lookup_Mapping.COLUMNNAME_ZZ_Is_For_Bulk + "='N'",
                         get_TrxName()
-                ).setParameters(sheetName).first();
+                ).setParameters(normalize(sheetName)).first();
                 if (nonBulkHeader != null) {
                     header.setZZ_Tab_Name(nonBulkHeader.getZZ_Tab_Name());
                     header.setAD_Table_ID(nonBulkHeader.getAD_Table_ID());
@@ -205,10 +205,10 @@ public class PopulateLookupMappingFromTemplate extends SvrProcess {
                                 getCtx(),
                                 I_ZZ_WSP_ATR_Lookup_Mapping_Detail.Table_Name,
                                 I_ZZ_WSP_ATR_Lookup_Mapping_Detail.COLUMNNAME_ZZ_WSP_ATR_Lookup_Mapping_ID + "=? AND "
-                                        + I_ZZ_WSP_ATR_Lookup_Mapping_Detail.COLUMNNAME_ZZ_Header_Name + "=?",
+                                        + "LOWER(REPLACE(" + I_ZZ_WSP_ATR_Lookup_Mapping_Detail.COLUMNNAME_ZZ_Header_Name + ", ' ', '')) = ?",
                                 get_TrxName()
                         )
-                        .setParameters(header.get_ID(), headerText)
+                        .setParameters(header.get_ID(), normalize(headerText))
                         .first();
 
                 boolean isNewDetail = false;
@@ -280,6 +280,12 @@ public class PopulateLookupMappingFromTemplate extends SvrProcess {
         return summary;
     }
 
+    /** Strips all whitespace and lowercases — used for case/space-insensitive matching. */
+    private static String normalize(String s) {
+        if (s == null) return "";
+        return s.toLowerCase(Locale.ROOT).replaceAll("\\s+", "");
+    }
+
     /**
      * Try to find AD_Table_ID for a header name using ZZ_<Header>_Ref pattern.
      * Example:
@@ -336,11 +342,11 @@ public class PopulateLookupMappingFromTemplate extends SvrProcess {
                 (X_ZZ_WSP_ATR_Lookup_Mapping) new Query(
                         getCtx(),
                         I_ZZ_WSP_ATR_Lookup_Mapping.Table_Name,
-                        I_ZZ_WSP_ATR_Lookup_Mapping.COLUMNNAME_ZZ_Tab_Name + "=? AND "
+                        "LOWER(REPLACE(" + I_ZZ_WSP_ATR_Lookup_Mapping.COLUMNNAME_ZZ_Tab_Name + ", ' ', '')) = ? AND "
                                 + I_ZZ_WSP_ATR_Lookup_Mapping.COLUMNNAME_ZZ_Is_For_Bulk + "='N'",
                         get_TrxName()
                 )
-                .setParameters(tabName)
+                .setParameters(normalize(tabName))
                 .first();
 
         if (nonBulkHeader == null) {
@@ -351,10 +357,10 @@ public class PopulateLookupMappingFromTemplate extends SvrProcess {
                 getCtx(),
                 I_ZZ_WSP_ATR_Lookup_Mapping_Detail.Table_Name,
                 I_ZZ_WSP_ATR_Lookup_Mapping_Detail.COLUMNNAME_ZZ_WSP_ATR_Lookup_Mapping_ID + "=? AND "
-                        + I_ZZ_WSP_ATR_Lookup_Mapping_Detail.COLUMNNAME_ZZ_Header_Name + "=?",
+                        + "LOWER(REPLACE(" + I_ZZ_WSP_ATR_Lookup_Mapping_Detail.COLUMNNAME_ZZ_Header_Name + ", ' ', '')) = ?",
                 get_TrxName()
         )
-        .setParameters(nonBulkHeader.get_ID(), headerText)
+        .setParameters(nonBulkHeader.get_ID(), normalize(headerText))
         .first();
     }
 
