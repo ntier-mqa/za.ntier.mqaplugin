@@ -1,56 +1,83 @@
 package za.ntier.modelvalidator;
 
 import org.compiere.model.MClient;
+import org.compiere.model.MSequence;
 import org.compiere.model.ModelValidationEngine;
 import org.compiere.model.ModelValidator;
 import org.compiere.model.PO;
-import org.compiere.model.X_R_Request;
 import org.compiere.util.CLogger;
+import org.compiere.util.Util;
 
-import za.ntier.models.X_M_InOut;
-import za.ntier.models.X_ZZ_StockPile;
+import za.co.ntier.api.model.I_ZZ_WPA_Application;
+import za.co.ntier.api.model.X_ZZ_WPA_Application;
 
-public class NtierModelValidator implements ModelValidator{
-	private static CLogger log = CLogger.getCLogger(NtierModelValidator.class);
-	private int m_AD_Client_ID = -1;
-	private int m_AD_User_ID = -1;
-	private int m_AD_Role_ID = -1;
-	private int m_AD_Org_ID  = -1;
+public class NtierModelValidator implements ModelValidator
+{
+	private static CLogger	log				= CLogger.getCLogger(NtierModelValidator.class);
+	private int				m_AD_Client_ID	= -1;
 
 	@Override
-	public void initialize(ModelValidationEngine engine, MClient client) {
-		if (client != null ) {
+	public void initialize(ModelValidationEngine engine, MClient client)
+	{
+		if (client != null)
+		{
 			m_AD_Client_ID = client.getAD_Client_ID();
 		}
-		engine.addModelChange(X_ZZ_StockPile.Table_Name, this);
-		engine.addModelChange(X_M_InOut.Table_Name, this);
-		engine.addDocValidate(X_M_InOut.Table_Name, this);
-		engine.addModelChange(X_R_Request.Table_Name, this);
-		
+		engine.addModelChange(X_ZZ_WPA_Application.Table_Name, this);
 	}
 
 	@Override
-	public int getAD_Client_ID() {
-		// TODO Auto-generated method stub
+	public int getAD_Client_ID()
+	{
 		return m_AD_Client_ID;
 	}
 
 	@Override
-	public String login(int AD_Org_ID, int AD_Role_ID, int AD_User_ID) {
-		m_AD_Org_ID = AD_Org_ID;
-		m_AD_Role_ID = AD_Role_ID;
-		m_AD_User_ID = AD_User_ID;
+	public String login(int AD_Org_ID, int AD_Role_ID, int AD_User_ID)
+	{
 		return null;
 	}
 
 	@Override
-	public String modelChange(PO po, int type) throws Exception {
-		
+	public String modelChange(PO po, int type) throws Exception
+	{
+		if (type == ModelValidator.TYPE_AFTER_CHANGE && X_ZZ_WPA_Application.Table_Name.equals(po.get_TableName()))
+		{
+			String ColStatus = I_ZZ_WPA_Application.COLUMNNAME_ZZ_DocStatus;
+			String ColWpaNumber = I_ZZ_WPA_Application.COLUMNNAME_ZZ_WPA_Number;
+
+			if (po.is_ValueChanged(ColStatus))
+			{
+				String newStatus = po.get_ValueAsString(ColStatus);
+				if (X_ZZ_WPA_Application.ZZ_DOCSTATUS_Approved.equals(newStatus))
+				{
+					String currentValue = po.get_ValueAsString(ColWpaNumber);
+					if (Util.isEmpty(currentValue))
+					{
+						String nextSeqNo = MSequence.getDocumentNo(
+																	po.getAD_Client_ID(),
+																	X_ZZ_WPA_Application.Table_Name,
+																	po.get_TrxName(),
+																	po);
+						if (!Util.isEmpty(nextSeqNo))
+						{
+							po.set_ValueNoCheck(ColWpaNumber, nextSeqNo);
+							po.saveEx();
+						}
+						else
+						{
+							log.severe("Failed to fetch sequence for ZZ_WPA_Application. Ensure AD_Sequence is configured.");
+						}
+					}
+				}
+			}
+		}
 		return null;
 	}
 
 	@Override
-	public String docValidate(PO po, int timing) {
+	public String docValidate(PO po, int timing)
+	{
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -68,7 +95,6 @@ public class NtierModelValidator implements ModelValidator{
 	 * mInOutLine:m_InOutLines) { deliveredQty =
 	 * deliveredQty.add(mInOutLine.getMovementQty()); } }
 	 * x_ZZ_StockPile.setZZ_Used_Tonnage(deliveredQty); x_ZZ_StockPile.saveEx(); }
-	 * 
 	 * } return null; }
 	 */
 

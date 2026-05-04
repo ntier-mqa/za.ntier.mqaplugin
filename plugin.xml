@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         id="za.ntier.modelvalidator.NtierModelValidator"
+         name="za.ntier.modelvalidator.NtierModelValidator"
+         point="org.adempiere.base.ModelValidator">
+      <listener
+            class="za.ntier.modelvalidator.NtierModelValidator">
+      </listener>
+   </extension>
+
+</plugin>
