@@ -39,22 +39,20 @@ public final class MailNoticeUtil {
 			return;
 		}
 		
-		String nextStatus = po.get_ValueAsString("ZZ_DocStatus");
+		String newDocStatus = po.get_ValueAsString("ZZ_DocStatus");
 		
 		List<X_ZZ_WF_Line_Role> roles = new Query(ctx, X_ZZ_WF_Line_Role.Table_Name, 
-				"ZZ_WF_Lines_ID=? AND IsActive='Y' AND ZZ_Is_Responsible='N' AND ZZ_Notify='Y'", trxName)
+				"ZZ_WF_Lines_ID=? AND ZZ_Is_Responsible='N' AND ZZ_Notify='Y'", trxName)
 				.setParameters(step.get_ID())
 				.setOnlyActiveRecords(true)
 				.list();
 
-		for (X_ZZ_WF_Line_Role role : roles)
-		{
+		for (X_ZZ_WF_Line_Role role : roles) {
 			String roleNextStatus = role.getZZ_NextStatus();
 
-			// VALIDATION: Send mail if the Role's NextStatus matches the Node's nextStatus
+			// VALIDATION: Send mail if the Role's NextStatus matches the new DocStatus
 			// (If the Role's NextStatus is not set, we send it by default)
-			if (roleNextStatus == null || roleNextStatus.isBlank() || roleNextStatus.equals(nextStatus))
-			{
+			if (roleNextStatus == null || roleNextStatus.isBlank() || roleNextStatus.equals(newDocStatus)) {
 				MailNoticeUtil.queueNotifyForRole(queueNotifis, role.getAD_Role_ID(), tableID, recordID, mailText);
 			}
 		}
