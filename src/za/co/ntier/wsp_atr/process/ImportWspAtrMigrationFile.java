@@ -247,6 +247,8 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
 
             Map<Integer, Integer> importedBySubmittedId = new LinkedHashMap<>();
             Integer singleOrgId = resolveSingleOrgId(ctx, wb, headers, trxName, formatter);
+            int finYearId = resolveFinYearId(ctx, wb, headers, trxName, formatter);
+            String wspStatus = resolveWspStatus(ctx, wb, headers, trxName, formatter);
 
             for (X_ZZ_WSP_ATR_Lookup_Mapping header : headers) {
                 if (header.getAD_Table_ID() <= 0 || !header.isZZ_Is_For_Bulk()) {
@@ -286,7 +288,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                     }
 
                     Integer orgId = resolveOrgIdForRow(ctx, row, orgMeta, singleOrgId, formatter, trxName, sheet.getSheetName(), r + 1);
-                    int submittedId = getOrCreateSubmitted(ctx, orgId, trxName, sourceFileName);
+                    int submittedId = getOrCreateSubmitted(ctx, orgId, finYearId, wspStatus, trxName, sourceFileName);
 
                     PO line = newTargetPO(ctx, new X_ZZ_WSP_ATR_Submitted(ctx, submittedId, trxName), header, trxName);
                     if (line.get_ColumnIndex("Row_No") >= 0) {
@@ -338,10 +340,15 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                     if (Util.isEmpty(orgTxt, true)) {
                         continue;
                     }
-                    Integer orgId = tryResolveRefId(ctx, orgMeta.column, orgTxt, orgMeta.useValueForRef, trxName);
-                    if (orgId == null || orgId.intValue() <= 0) {
+                    int orgIdVal = DB.getSQLValueEx(trxName,
+                            "SELECT v.ZZSdfOrganisation_ID FROM zzsdforganisation_v v"
+                            + " JOIN C_BPartner bp ON bp.C_BPartner_ID = v.C_BPartner_ID"
+                            + " WHERE bp.Value = ? AND bp.AD_Client_ID = ?",
+                            orgTxt.trim(), Env.getAD_Client_ID(ctx));
+                    if (orgIdVal <= 0) {
                         continue;
                     }
+                    Integer orgId = Integer.valueOf(orgIdVal);
                     if (detected == null) {
                         detected = orgId;
                     } else if (detected.intValue() != orgId.intValue()) {
@@ -352,9 +359,108 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             return detected;
         }
 
+        private int resolveFinYearId(Properties ctx,
+                                     Workbook wb,
+                                     List<X_ZZ_WSP_ATR_Lookup_Mapping> headers,
+                                     String trxName,
+                                     DataFormatter formatter) {
+            for (X_ZZ_WSP_ATR_Lookup_Mapping header : headers) {
+                if (header.getAD_Table_ID() <= 0 || !header.isZZ_Is_For_Bulk()) {
+                    continue;
+                }
+                Sheet sheet = getSheetOrThrow(wb, header);
+                Map<Integer, ColumnMeta> metas = buildColumnMeta(ctx, header, trxName);
+                ColumnMeta finYearMeta = findFinYearMeta(metas);
+                if (finYearMeta == null) {
+                    continue;
+                }
+                int startRow = header.getStart_Row() != null ? header.getStart_Row().intValue() : 4;
+                if (startRow <= 0) {
+                    startRow = 4;
+                }
+                for (int r = startRow; r <= sheet.getLastRowNum(); r++) {
+                    Row row = sheet.getRow(r);
+                    if (row == null) {
+                        continue;
+                    }
+                    String finYearTxt = getCellText(row, finYearMeta.columnIndex, formatter);
+                    if (Util.isEmpty(finYearTxt, true)) {
+                        continue;
+                    }
+                    int finYearId = DB.getSQLValueEx(trxName,
+                            "SELECT C_Year_ID FROM C_Year WHERE FiscalYear = ? AND AD_Client_ID = ?",
+                            finYearTxt.trim(), Env.getAD_Client_ID(ctx));
+                    if (finYearId > 0) {
+                        return finYearId;
+                    }
+                }
+            }
+            throw new AdempiereException("Could not resolve financial year from FinancialYear column in workbook.");
+        }
+
+        private String resolveWspStatus(Properties ctx,
+                                        Workbook wb,
+                                        List<X_ZZ_WSP_ATR_Lookup_Mapping> headers,
+                                        String trxName,
+                                        DataFormatter formatter) {
+            for (X_ZZ_WSP_ATR_Lookup_Mapping header : headers) {
+                if (header.getAD_Table_ID() <= 0 || !header.isZZ_Is_For_Bulk()) {
+                    continue;
+                }
+                Sheet sheet = getSheetOrThrow(wb, header);
+                Map<Integer, ColumnMeta> metas = buildColumnMeta(ctx, header, trxName);
+                ColumnMeta statusMeta = findWspStatusMeta(metas);
+                if (statusMeta == null) {
+                    continue;
+                }
+                int startRow = header.getStart_Row() != null ? header.getStart_Row().intValue() : 4;
+                if (startRow <= 0) {
+                    startRow = 4;
+                }
+                for (int r = startRow; r <= sheet.getLastRowNum(); r++) {
+                    Row row = sheet.getRow(r);
+                    if (row == null) {
+                        continue;
+                    }
+                    String statusTxt = getCellText(row, statusMeta.columnIndex, formatter);
+                    if (Util.isEmpty(statusTxt, true)) {
+                        continue;
+                    }
+                    String value = DB.getSQLValueStringEx(trxName,
+                            "SELECT rl.Value FROM AD_Ref_List rl"
+                            + " JOIN AD_Reference r ON r.AD_Reference_ID = rl.AD_Reference_ID"
+                            + " WHERE r.AD_Reference_UU = '98479fb5-df5d-440d-86aa-92d77a320857'"
+                            + " AND rl.Name = ?",
+                            statusTxt.trim());
+                    if (!Util.isEmpty(value, true)) {
+                        return value;
+                    }
+                }
+            }
+            throw new AdempiereException("Could not resolve WSP status from WSPStatus column in workbook.");
+        }
+
+        private ColumnMeta findWspStatusMeta(Map<Integer, ColumnMeta> metas) {
+            for (ColumnMeta meta : metas.values()) {
+                if ("WSPStatus".equals(meta.headerName)) {
+                    return meta;
+                }
+            }
+            return null;
+        }
+
+        private ColumnMeta findFinYearMeta(Map<Integer, ColumnMeta> metas) {
+            for (ColumnMeta meta : metas.values()) {
+                if ("FinancialYear".equals(meta.headerName)) {
+                    return meta;
+                }
+            }
+            return null;
+        }
+
         private ColumnMeta findOrgMeta(Map<Integer, ColumnMeta> metas) {
             for (ColumnMeta meta : metas.values()) {
-                if (meta.column != null && X_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZSdfOrganisation_ID.equals(meta.column.getColumnName())) {
+                if ("SDLNumber".equals(meta.headerName)) {
                     return meta;
                 }
             }
@@ -370,10 +476,16 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                                            String tab,
                                            int lineNo) {
             if (orgMeta != null) {
-                String orgTxt = getCellText(row, orgMeta.columnIndex, formatter);
-                Integer orgId = tryResolveRefId(ctx, orgMeta.column, orgTxt, orgMeta.useValueForRef, trxName);
-                if (orgId != null && orgId.intValue() > 0) {
-                    return orgId;
+                String sdlNumber = getCellText(row, orgMeta.columnIndex, formatter);
+                if (!Util.isEmpty(sdlNumber, true)) {
+                    int orgId = DB.getSQLValueEx(trxName,
+                            "SELECT v.ZZSdfOrganisation_ID FROM zzsdforganisation_v v"
+                            + " JOIN C_BPartner bp ON bp.C_BPartner_ID = v.C_BPartner_ID"
+                            + " WHERE bp.Value = ? AND bp.AD_Client_ID = ?",
+                            sdlNumber.trim(), Env.getAD_Client_ID(ctx));
+                    if (orgId > 0) {
+                        return orgId;
+                    }
                 }
                 throw new AdempiereException("Could not resolve organisation for tab " + tab + " line " + lineNo);
             }
@@ -383,7 +495,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             throw new AdempiereException("Tab " + tab + " has no organisation mapping and workbook contains multiple organisations.");
         }
 
-        private int getOrCreateSubmitted(Properties ctx, int orgId, String trxName, String sourceFileName) {
+        private int getOrCreateSubmitted(Properties ctx, int orgId, int finYearId, String wspStatus, String trxName, String sourceFileName) {
             int existingId = DB.getSQLValueEx(trxName,
                     "SELECT ZZ_WSP_ATR_Submitted_ID FROM ZZ_WSP_ATR_Submitted "
                     + "WHERE ZZSDFOrganisation_ID=? AND COALESCE(ZZ_Import_Submitted_Data,'N')='N' "
@@ -401,8 +513,8 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             submitted.setZZ_Import_Submitted_Data("N");
             submitted.setZZSdfOrganisation_ID(orgId);
             submitted.setZZ_DocAction(null);
-            submitted.setZZ_DocStatus(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Importing);
-            submitted.setZZ_FinYear_ID(WspAtrSubmittedADForm.getFiscalYear(clientId));
+            submitted.setZZ_DocStatus(wspStatus);
+            submitted.setZZ_FinYear_ID(finYearId);
             submitted.setZZ_Submission_Due_Date(WspAtrSubmittedADForm.getWSPATR_Due_Date(clientId, orgId));
             submitted.saveEx();
 

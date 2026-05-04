@@ -67,6 +67,29 @@ public class ExportInvoiceBatchToCsv extends SvrProcess {
                 "SELECT COALESCE(Description, '') FROM C_InvoiceBatch WHERE C_InvoiceBatch_ID=?",
                 m_Record_ID);
 
+        // Determine year/month — from description first, then from linked header record
+        String yearMonth = extractYearMonth(description);
+        String monthStr  = extractMonth(description);
+        if (yearMonth == null) {
+            int hdrId = DB.getSQLValue(get_TrxName(),
+                    "SELECT COALESCE(ZZ_Monthly_Levy_Files_Hdr_ID,0) FROM C_InvoiceBatch WHERE C_InvoiceBatch_ID=?",
+                    m_Record_ID);
+            if (hdrId > 0) {
+                monthStr = DB.getSQLValueString(get_TrxName(),
+                        "SELECT ZZ_Month FROM ZZ_Monthly_Levy_Files_Hdr WHERE ZZ_Monthly_Levy_Files_Hdr_ID=?",
+                        hdrId);
+                String fiscalYear = DB.getSQLValueString(get_TrxName(),
+                        "SELECT cy.FiscalYear FROM C_Year cy " +
+                        "JOIN ZZ_Monthly_Levy_Files_Hdr h ON h.C_Year_ID = cy.C_Year_ID " +
+                        "WHERE h.ZZ_Monthly_Levy_Files_Hdr_ID=?",
+                        hdrId);
+                if (fiscalYear != null && monthStr != null)
+                    yearMonth = fiscalYear + monthStr;
+                else if (fiscalYear != null)
+                    yearMonth = fiscalYear;
+            }
+        }
+
         // Lines query (join invoice & BP)
         final String sql =
                 "SELECT " +
@@ -89,7 +112,7 @@ public class ExportInvoiceBatchToCsv extends SvrProcess {
         // Output filename
         String baseName = (p_FileName != null && !p_FileName.trim().isEmpty())
                 ? p_FileName.trim()
-                : ("MG_" + extractYearMonth(description) + "_" + batchRef.replaceAll("[^A-Za-z0-9_-]", "_"));
+                : ("MG_" + (yearMonth != null ? yearMonth : "") + "_" + batchRef.replaceAll("[^A-Za-z0-9_-]", "_"));
        // if (!baseName.toLowerCase(Locale.ROOT).endsWith(".csv")) {
        //    baseName += ".csv";
        // }
@@ -113,7 +136,6 @@ public class ExportInvoiceBatchToCsv extends SvrProcess {
             );
 
             SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-            String monthStr = extractMonth(description);
             for (List<Object> r : rows) {
                 String invoiceNo = safeStr(r.get(0));
                 Timestamp ts = (Timestamp) r.get(1);
@@ -177,28 +199,39 @@ public class ExportInvoiceBatchToCsv extends SvrProcess {
     
     public static String extractYearMonth(String text) {
         if (text == null) return null;
-        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("Year:\\s*(\\d{4})\\s*Month:\\s*(\\d{1,2})");
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(
+                "Year:\\s*(\\d{4})\\s*Month:\\s*([A-Za-z]+|\\d{1,2})");
         java.util.regex.Matcher matcher = pattern.matcher(text);
-
         if (matcher.find()) {
-            String year = matcher.group(1);
-            String month = String.format("%02d", Integer.parseInt(matcher.group(2)));
-            return year + month;   // e.g. "202507"
+            String year  = matcher.group(1);
+            String month = resolveMonth(matcher.group(2));
+            return month != null ? year + month : year;
         }
-        return null;  // no match
+        return null;
     }
-    
+
     public static String extractMonth(String text) {
         if (text == null) return null;
-        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("Year:\\s*(\\d{4})\\s*Month:\\s*(\\d{1,2})");
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(
+                "Year:\\s*\\d{4}\\s*Month:\\s*([A-Za-z]+|\\d{1,2})");
         java.util.regex.Matcher matcher = pattern.matcher(text);
-
         if (matcher.find()) {
-            String year = matcher.group(1);
-            String month = String.format("%02d", Integer.parseInt(matcher.group(2)));
-            return month;   
+            return resolveMonth(matcher.group(1));
         }
-        return null;  // no match
+        return null;
+    }
+
+    private static String resolveMonth(String raw) {
+        if (raw == null) return null;
+        if (raw.matches("\\d{1,2}"))
+            return String.format("%02d", Integer.parseInt(raw));
+        switch (raw.substring(0, Math.min(3, raw.length())).toLowerCase(java.util.Locale.ROOT)) {
+            case "jan": return "01"; case "feb": return "02"; case "mar": return "03";
+            case "apr": return "04"; case "may": return "05"; case "jun": return "06";
+            case "jul": return "07"; case "aug": return "08"; case "sep": return "09";
+            case "oct": return "10"; case "nov": return "11"; case "dec": return "12";
+            default:    return null;
+        }
     }
 
     private static String safeStr(Object o) {
