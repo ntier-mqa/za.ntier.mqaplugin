@@ -7,6 +7,7 @@ import org.compiere.model.MColumn;
 import org.compiere.model.MRefTable;
 import org.compiere.model.MTable;
 import org.compiere.model.Query;
+import org.compiere.util.DB;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Util;
 
@@ -41,24 +42,33 @@ public class ReferenceLookupService {
         }
 
         int adRefValueId = column.getAD_Reference_Value_ID();
-        if (adRefValueId <= 0) {
+        String tableName;
+        if (adRefValueId > 0) {
+            MRefTable refTable = MRefTable.get(ctx, adRefValueId);
+            if (refTable == null || refTable.getAD_Table_ID() <= 0) {
+                throw new AdempiereException("No AD_Ref_Table found for AD_Reference_ID=" + adRefValueId);
+            }
+            MTable refMTable = MTable.get(ctx, refTable.getAD_Table_ID());
+            if (refMTable == null || refMTable.getAD_Table_ID() <= 0) {
+                throw new AdempiereException("Referenced table not found for AD_Reference_ID=" + adRefValueId);
+            }
+            tableName = refMTable.getTableName();
+        } else if (displayType == DisplayType.TableDir) {
+            // TableDir: derive referenced table from primary key column name
+            tableName = DB.getSQLValueStringEx(trxName,
+                    "SELECT t.TableName FROM AD_Table t "
+                    + "JOIN AD_Column c ON c.AD_Table_ID = t.AD_Table_ID "
+                    + "WHERE c.ColumnName = ? AND c.IsKey = 'Y' AND t.IsActive = 'Y' "
+                    + "ORDER BY t.TableName FETCH FIRST 1 ROWS ONLY",
+                    column.getColumnName());
+            if (Util.isEmpty(tableName, true)) {
+                throw new AdempiereException("Cannot resolve table for TableDir column " + column.getColumnName());
+            }
+        } else {
             throw new AdempiereException("Column " + column.getColumnName()
                     + " has no AD_Reference_Value_ID configured");
         }
 
-        MRefTable refTable = MRefTable.get(ctx, adRefValueId);
-        if (refTable == null || refTable.getAD_Table_ID() <= 0) {
-            throw new AdempiereException("No AD_Ref_Table found for AD_Reference_ID="
-                    + adRefValueId);
-        }
-
-        MTable refMTable = MTable.get(ctx, refTable.getAD_Table_ID());
-        if (refMTable == null || refMTable.getAD_Table_ID() <= 0) {
-            throw new AdempiereException("Referenced table not found for AD_Reference_ID="
-                    + adRefValueId);
-        }
-
-        String tableName = refMTable.getTableName();
         String where = useValue
                 ? "UPPER(TRIM(Value))=UPPER(?)"
                 : "UPPER(TRIM(Name))=UPPER(?)";

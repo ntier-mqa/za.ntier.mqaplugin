@@ -1,6 +1,7 @@
 package za.co.ntier.wsp_atr.process;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -18,6 +19,7 @@ import org.compiere.model.PO;
 import org.compiere.model.Query;
 import org.compiere.process.SvrProcess;
 import org.compiere.util.CLogger;
+import org.compiere.util.DB;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 import org.compiere.util.Util;
@@ -168,8 +170,9 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 	/**
 	 * Set a value into the target PO based on the column definition and text from Excel.
 	 * Supports numeric, String and Table references.
+	 * Returns null on success, or an error message if a reference could not be resolved.
 	 */
-	protected void setValueFromText(Properties ctx,
+	protected String setValueFromText(Properties ctx,
 			PO po,
 			MColumn column,
 			String text,
@@ -186,52 +189,102 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 				|| displayType == DisplayType.Search) {
 			Integer id = refService.lookupReferenceId(ctx, column, text, useValueForRef, trxName);
 			if (id == null) {
-				// throw new org.adempiere.exceptions.AdempiereException(
-				//        "No reference record found for text '" + text
-				//               + "' in column " + colName);
-				svrProcess.addLog(po.get_TableName() + " - No reference record found for text '" + text
-						+ "' in column " + colName);
-				return;
-
+				for (String candidate : buildCandidates(text)) {
+					id = refService.lookupReferenceId(ctx, column, candidate, useValueForRef, trxName);
+					if (id != null)
+						break;
+				}
+			}
+			if (id == null) {
+				return "No reference record found for value '" + text + "' in column " + colName;
 			}
 			po.set_ValueOfColumn(colName, id);
 		} else {
 			int len = column.getFieldLength();
 			po.set_ValueOfColumn(colName, truncate(text, len > 0 ? len : 200));
 		}
+		return null;
 	}
 	
 	protected Integer tryResolveRefId(Properties ctx, MColumn column, String text, boolean useValueForRef, String trxName) {
 		if (Util.isEmpty(text, true))
 			return null;
 
-		int adRefTableId = column.getAD_Reference_Value_ID();
-		if (adRefTableId <= 0)
+		String refTableName = resolveRefTableName(ctx, column, trxName);
+		if (refTableName == null)
 			return null;
 
-		MRefTable refTableCfg = MRefTable.get(ctx, adRefTableId, trxName);
-		if (refTableCfg == null || refTableCfg.getAD_Table_ID() <= 0)
-			return null;
+		// Build candidate list: original text first, then variants (plural/singular, underscore-normalised)
+		List<String> allCandidates = new ArrayList<>();
+		allCandidates.add(text.trim());
+		allCandidates.addAll(buildCandidates(text.trim()));
 
-		MTable refTable = MTable.get(ctx, refTableCfg.getAD_Table_ID());
-		if (refTable == null || refTable.getAD_Table_ID() <= 0)
-			return null;
-
-		String refTableName = refTable.getTableName();
-		String trimmed = text.trim();
-
-		Integer foundId;
-		if (useValueForRef) {
-			foundId = findIdByColumn(ctx, refTableName, "Value", trimmed, trxName);
-			if (foundId == null || foundId <= 0)
-				foundId = findIdByColumn(ctx, refTableName, "Name", trimmed, trxName);
-		} else {
-			foundId = findIdByColumn(ctx, refTableName, "Name", trimmed, trxName);
-			if (foundId == null || foundId <= 0)
-				foundId = findIdByColumn(ctx, refTableName, "Value", trimmed, trxName);
+		for (String candidate : allCandidates) {
+			Integer foundId;
+			if (useValueForRef) {
+				foundId = findIdByColumn(ctx, refTableName, "Value", candidate, trxName);
+				if (foundId == null || foundId <= 0)
+					foundId = findIdByColumn(ctx, refTableName, "Name", candidate, trxName);
+			} else {
+				foundId = findIdByColumn(ctx, refTableName, "Name", candidate, trxName);
+				if (foundId == null || foundId <= 0)
+					foundId = findIdByColumn(ctx, refTableName, "Value", candidate, trxName);
+			}
+			if (foundId != null && foundId > 0)
+				return foundId;
 		}
 
-		return foundId;
+		return null;
+	}
+
+	private String resolveRefTableName(Properties ctx, MColumn column, String trxName) {
+		int adRefValueId = column.getAD_Reference_Value_ID();
+		if (adRefValueId > 0) {
+			MRefTable refTableCfg = MRefTable.get(ctx, adRefValueId, trxName);
+			if (refTableCfg == null || refTableCfg.getAD_Table_ID() <= 0)
+				return null;
+			MTable refTable = MTable.get(ctx, refTableCfg.getAD_Table_ID());
+			if (refTable == null || refTable.getAD_Table_ID() <= 0)
+				return null;
+			return refTable.getTableName();
+		}
+		// TableDir: find the table whose primary key column matches this column name
+		if (column.getAD_Reference_ID() == DisplayType.TableDir) {
+			String tableName = DB.getSQLValueStringEx(trxName,
+					"SELECT t.TableName FROM AD_Table t "
+					+ "JOIN AD_Column c ON c.AD_Table_ID = t.AD_Table_ID "
+					+ "WHERE c.ColumnName = ? AND c.IsKey = 'Y' AND t.IsActive = 'Y' "
+					+ "ORDER BY t.TableName FETCH FIRST 1 ROWS ONLY",
+					column.getColumnName());
+			return Util.isEmpty(tableName, true) ? null : tableName;
+		}
+		return null;
+	}
+
+	private List<String> buildCandidates(String text) {
+		List<String> candidates = new ArrayList<>();
+		addWithPluralVariant(candidates, text);
+		if (text.contains("_")) {
+			String normalized = text.replace('_', ' ');
+			addWithPluralVariant(candidates, normalized);
+		}
+		candidates.remove(text); // first candidate is the original — already tried by caller
+		return candidates;
+	}
+
+	private void addWithPluralVariant(List<String> candidates, String text) {
+		if (!candidates.contains(text))
+			candidates.add(text);
+		String lower = text.toLowerCase();
+		if (lower.endsWith("s")) {
+			String singular = text.substring(0, text.length() - 1);
+			if (!candidates.contains(singular))
+				candidates.add(singular);
+		} else {
+			String plural = text + "s";
+			if (!candidates.contains(plural))
+				candidates.add(plural);
+		}
 	}
 
 	protected Integer findIdByColumn(Properties ctx, String tableName, String columnName, String text, String trxName) {

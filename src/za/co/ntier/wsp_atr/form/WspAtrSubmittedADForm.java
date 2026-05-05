@@ -424,6 +424,10 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
     }
 	
 	public static Timestamp getWSPATR_Due_Date(int adClientId, int zzSdfOrganisationId) {
+	    return getWSPATR_Due_Date(adClientId, zzSdfOrganisationId, null);
+	}
+
+	public static Timestamp getWSPATR_Due_Date(int adClientId, int zzSdfOrganisationId, String trxName) {
 
 	    WspAtrUploadsRepository.SdrWindowConfig cfg =
 	            WspAtrUploadsRepository.getSdrWindowConfig(adClientId);
@@ -437,8 +441,8 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	    Timestamp subEnd = cfg.subEnd;
 	    Timestamp extEnd = null;
 
-	    // Only get extension end if org qualifies
-	    if (repo.isOrgInApprovedWspAtrExtensionBatch(zzSdfOrganisationId)) {
+	    // Only get extension end if org qualifies — pass trxName so newly-created orgs in this txn are visible
+	    if (repo.isOrgInApprovedWspAtrExtensionBatch(zzSdfOrganisationId, trxName)) {
 	        extEnd = cfg.extEnd;
 	    }
 

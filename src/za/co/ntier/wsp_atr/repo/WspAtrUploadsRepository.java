@@ -190,10 +190,16 @@ public class WspAtrUploadsRepository {
      * TODO: implement this based on your “Requests for Extensions (Batch) - WSP-ATR” tables
      */
     public boolean isOrgInApprovedWspAtrExtensionBatch(int zzSdfOrganisationId) {
+        return isOrgInApprovedWspAtrExtensionBatch(zzSdfOrganisationId, null);
+    }
 
-        // NOTE: your parameter is actually ZZSDForgranisation_ID, not AD_Org_ID.
-        X_ZZSdfOrganisation org = new X_ZZSdfOrganisation(ctx, zzSdfOrganisationId, null);
-        int c_BPartner_ID = org.getC_BPartner_ID();
+    public boolean isOrgInApprovedWspAtrExtensionBatch(int zzSdfOrganisationId, String trxName) {
+
+        // Query the base table directly to avoid issues with the view-backed X_ZZSdfOrganisation PO.
+        // Pass trxName so records created earlier in the same import txn are visible.
+        int c_BPartner_ID = DB.getSQLValueEx(trxName,
+                "SELECT C_BPartner_ID FROM ZZSdfOrganisation WHERE ZZSdfOrganisation_ID = ?",
+                zzSdfOrganisationId);
         if (c_BPartner_ID <= 0) {
             return false;
         }
@@ -214,7 +220,7 @@ public class WspAtrUploadsRepository {
             "  AND b.zz_wsp_atr_ext_end_date IS NOT NULL " +
             "  AND CURRENT_TIMESTAMP BETWEEN b.zz_wsp_atr_ext_start_date AND b.zz_wsp_atr_ext_end_date ";
 
-        int withinWindow = DB.getSQLValueEx(null, sql, c_BPartner_ID);
+        int withinWindow = DB.getSQLValueEx(trxName, sql, c_BPartner_ID);
         return withinWindow == 1;
     }
 
