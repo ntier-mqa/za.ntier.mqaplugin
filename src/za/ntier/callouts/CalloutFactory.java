@@ -10,6 +10,10 @@ import org.osgi.service.component.annotations.Component;
 
 import za.ntier.models.X_ZZ_Open_Application;
 import za.ntier.models.X_ZZ_System_Access_Application;
+import za.co.ntier.api.model.X_C_BP_SkillsProgramme;
+import za.co.ntier.api.model.X_C_BP_OC;
+import za.co.ntier.api.model.X_C_BP_Trades;
+import za.co.ntier.api.model.X_C_BP_AC;
 
 @Component(
 
@@ -24,7 +28,11 @@ public class CalloutFactory implements IColumnCalloutFactory {
 		List<IColumnCallout> list = new ArrayList<IColumnCallout>();
 		if (tableName.equals(X_M_InventoryLine.Table_Name) || 
 			tableName.equals(X_ZZ_System_Access_Application.Table_Name) ||
-			tableName.equals(X_ZZ_Open_Application.Table_Name)
+			tableName.equals(X_ZZ_Open_Application.Table_Name) ||
+			tableName.equals(X_C_BP_SkillsProgramme.Table_Name) ||
+			tableName.equals(X_C_BP_OC.Table_Name) ||
+			tableName.equals(X_C_BP_Trades.Table_Name) ||
+			tableName.equals(X_C_BP_AC.Table_Name)
 			)
 		{
 			list.add(new CalloutFromFactory());
