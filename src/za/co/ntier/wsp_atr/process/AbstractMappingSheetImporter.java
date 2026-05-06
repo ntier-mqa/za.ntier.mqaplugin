@@ -167,6 +167,17 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 		return result - 1; // zero-based
 	}
 
+	protected String columnIndexToLetter(int index) {
+		StringBuilder sb = new StringBuilder();
+		int n = index + 1; // convert to 1-based
+		while (n > 0) {
+			int rem = (n - 1) % 26;
+			sb.insert(0, (char) ('A' + rem));
+			n = (n - 1) / 26;
+		}
+		return sb.toString();
+	}
+
 	/**
 	 * Set a value into the target PO based on the column definition and text from Excel.
 	 * Supports numeric, String and Table references.

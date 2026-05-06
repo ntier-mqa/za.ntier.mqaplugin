@@ -90,13 +90,15 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             Map<Integer, Integer> importedBySubmittedId = processor.importWorkbook(
                     getCtx(), workbook, headers, get_TrxName(), formatter, file.getName());
 
-            // If any reference lookups failed during import, write and offer the error file for download
+            // If any reference lookups failed during import, write and offer the error file for download then abort
             List<MigrationError> importErrors = processor.getImportErrors();
             if (!importErrors.isEmpty()) {
                 File logFile = processor.writeErrorLog(importErrors);
                 if (processUI != null && logFile != null && logFile.exists()) {
                     processUI.download(logFile);
                 }
+                throw new AdempiereException("Import failed with " + importErrors.size()
+                        + " error(s). Download the generated log file and correct the source spreadsheet.");
             }
 
             int total = 0;
@@ -107,25 +109,16 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                 MZZWSPATRHTVF.updateHTVFTotal(getCtx(), submittedId, get_TrxName());
                 MZZWSPATRWSP.updateWSPTotal(getCtx(), submittedId, get_TrxName());
 
-                DB.executeUpdateEx(
-                        "UPDATE ZZ_WSP_ATR_Submitted SET ZZ_DocStatus=? WHERE ZZ_WSP_ATR_Submitted_ID=?",
-                        new Object[] { X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported, submittedId },
-                        get_TrxName());
-
                 MZZWSPATRSubmitted submitted = new MZZWSPATRSubmitted(getCtx(), submittedId, get_TrxName());
                 addLog("Imported " + e.getValue() + " row(s) for " + submitted.getOrganisationName());
             }
 
-            String result = "Imported " + total + " row(s) across " + importedBySubmittedId.size() + " submission(s).";
-            if (!importErrors.isEmpty()) {
-                result += " " + importErrors.size() + " reference warning(s) — see downloaded error file.";
-            }
-            return result;
+            return "Imported " + total + " row(s) across " + importedBySubmittedId.size() + " submission(s).";
         }
     }
 
     private List<X_ZZ_WSP_ATR_Lookup_Mapping> loadMappings() {
-        return new Query(getCtx(), X_ZZ_WSP_ATR_Lookup_Mapping.Table_Name, null, get_TrxName())
+        return new Query(getCtx(), X_ZZ_WSP_ATR_Lookup_Mapping.Table_Name, "ZZ_Is_For_Bulk = 'Y'", get_TrxName())
                 .setOnlyActiveRecords(true)
                 .setOrderBy("seqNo")
                 .list();
@@ -162,11 +155,13 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
     private static final class MigrationError {
         final String tab;
         final int lineNo;
+        final String column;
         final String message;
 
-        private MigrationError(String tab, int lineNo, String message) {
+        private MigrationError(String tab, int lineNo, String column, String message) {
             this.tab = tab;
             this.lineNo = lineNo;
+            this.column = column;
             this.message = message;
         }
     }
@@ -232,8 +227,9 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                             continue; // lookup-only entry (SDLNumber, FinancialYear, WSPStatus)
                         }
                         String txt = getCellText(row, meta.columnIndex, formatter);
+                        String colLetter = columnIndexToLetter(meta.columnIndex);
                         if (meta.mandatory && Util.isEmpty(txt, true)) {
-                            errors.add(new MigrationError(sheet.getSheetName(), r + 1,
+                            errors.add(new MigrationError(sheet.getSheetName(), r + 1, colLetter,
                                     "Mandatory field is missing (" + meta.column.getColumnName() + ")"));
                             if (errors.size() >= MAX_ERRORS) {
                                 return errors;
@@ -250,7 +246,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                         if (isRef && !meta.createIfNotExist) {
                             Integer id = tryResolveRefId(ctx, meta.column, txt, meta.useValueForRef, trxName);
                             if (id == null || id <= 0) {
-                                errors.add(new MigrationError(sheet.getSheetName(), r + 1,
+                                errors.add(new MigrationError(sheet.getSheetName(), r + 1, colLetter,
                                         "Reference not found for value '" + txt + "' (" + meta.column.getColumnName() + ")"));
                                 if (errors.size() >= MAX_ERRORS) {
                                     return errors;
@@ -340,8 +336,9 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                             continue;
                         }
                         String err = setValueFromText(ctx, line, meta.column, mainText, meta.useValueForRef, trxName);
-                        if (err != null) {
-                            importErrors.add(new MigrationError(sheet.getSheetName(), r + 1, err));
+                        if (err != null && !meta.createIfNotExist) {
+                            importErrors.add(new MigrationError(sheet.getSheetName(), r + 1,
+                                    columnIndexToLetter(meta.columnIndex), err));
                         }
                     }
 
@@ -569,7 +566,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
         private int getOrCreateSubmitted(Properties ctx, int orgId, int finYearId, String wspStatus, String trxName, String sourceFileName) {
             int existingId = DB.getSQLValueEx(trxName,
                     "SELECT ZZ_WSP_ATR_Submitted_ID FROM ZZ_WSP_ATR_Submitted "
-                    + "WHERE ZZSDFOrganisation_ID=? AND ZZ_FinYear_ID=? AND COALESCE(ZZ_Import_Submitted_Data,'N')='N' "
+                    + "WHERE ZZSDFOrganisation_ID=? AND ZZ_FinYear_ID=? "
                     + "ORDER BY SubmittedDate DESC NULLS LAST, ZZ_WSP_ATR_Submitted_ID DESC FETCH FIRST 1 ROWS ONLY",
                     Integer.valueOf(orgId), Integer.valueOf(finYearId));
 
@@ -640,9 +637,9 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             try (java.io.FileWriter fw = new java.io.FileWriter(file);
                  java.io.BufferedWriter bw = new java.io.BufferedWriter(fw);
                  java.io.PrintWriter out = new java.io.PrintWriter(bw)) {
-                out.println("Tab,Line,Error");
+                out.println("Tab,Line,Column,Error");
                 for (MigrationError err : errors) {
-                    out.println(toCsv(err.tab) + "," + err.lineNo + "," + toCsv(err.message));
+                    out.println(toCsv(err.tab) + "," + err.lineNo + "," + toCsv(err.column) + "," + toCsv(err.message));
                 }
             }
             return file;
