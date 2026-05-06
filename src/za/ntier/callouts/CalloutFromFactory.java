@@ -4,13 +4,18 @@ import java.sql.Timestamp;
 import java.util.Properties;
 
 import org.adempiere.base.IColumnCallout;
-import org.adempiere.exceptions.AdempiereException;
 import org.compiere.model.GridField;
 import org.compiere.model.GridTab;
 import org.compiere.model.X_M_InventoryLine;
 import org.compiere.util.DB;
 import org.compiere.util.Msg;
 
+import za.co.ntier.api.model.X_C_BP_AC;
+import za.co.ntier.api.model.X_C_BP_OC;
+import za.co.ntier.api.model.X_C_BP_SkillsProgramme;
+import za.co.ntier.api.model.X_C_BP_Trades;
+import za.co.ntier.api.model.X_ZZSkillsProgramme;
+import za.co.ntier.api.model.X_ZZ_Occupational_Certificates;
 import za.ntier.models.MZZOpenApplication;
 import za.ntier.models.OpenAppOverlapInput;
 import za.ntier.models.X_ZZ_Open_Application;
@@ -101,6 +106,77 @@ public class CalloutFromFactory implements IColumnCallout {
 
 			}
 		}
+		
+		if (mTab.getTableName().equals(X_C_BP_SkillsProgramme.Table_Name)	&&
+			mField.getColumnName().equals(X_C_BP_SkillsProgramme.COLUMNNAME_ZZSkillsProgramme_ID))
+		{
+
+			if (value != null)
+			{
+				int srcID = 0;
+				if (value instanceof Number)
+				{
+					srcID = ((Number) value).intValue();
+				}
+				else
+				{
+					srcID = Integer.parseInt(value.toString());
+				}
+
+				if (srcID > 0)
+				{
+					X_ZZSkillsProgramme srcSkill = new X_ZZSkillsProgramme(ctx, srcID, null);
+
+					mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZLkpOfoOccupation_ID, srcSkill.getZZLkpOfoOccupation_ID());
+					mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZNqfLevel, srcSkill.getZZNqfLevel());
+					mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZCredits, srcSkill.getZZCredits());
+				}
+			}
+			else
+			{
+				// Clear values if ZZSkillsProgramme_ID is cleared
+				mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZLkpOfoOccupation_ID, null);
+				mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZNqfLevel, null);
+				mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZCredits, null);
+			}
+		}
+
+		if ((mTab.getTableName().equals(X_C_BP_OC.Table_Name)	||
+				mTab.getTableName().equals(X_C_BP_Trades.Table_Name) ||
+				mTab.getTableName().equals(X_C_BP_AC.Table_Name))	&&
+			mField.getColumnName().equals(X_C_BP_OC.COLUMNNAME_ZZ_Occupational_Certificates_ID))
+		{
+
+			if (value != null)
+			{
+				int srcID = 0;
+				if (value instanceof Number)
+				{
+					srcID = ((Number) value).intValue();
+				}
+				else
+				{
+					srcID = Integer.parseInt(value.toString());
+				}
+
+				if (srcID > 0)
+				{
+					X_ZZ_Occupational_Certificates srcCert = new X_ZZ_Occupational_Certificates(ctx, srcID, null);
+
+					mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZLkpOfoOccupation_ID, srcCert.getZZLkpOfoOccupation_ID());
+					mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZNqfLevel, srcCert.getZZNqfLevel());
+					mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZCredits, srcCert.getZZCredits());
+				}
+			}
+			else
+			{
+				// Clear values if ZZ_Occupational_Certificates_ID is cleared
+				mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZLkpOfoOccupation_ID, null);
+				mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZNqfLevel, null);
+				mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZCredits, null);
+			}
+		}
+
 		return null;
 	}
 
