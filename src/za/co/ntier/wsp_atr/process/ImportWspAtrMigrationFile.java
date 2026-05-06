@@ -311,7 +311,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                         continue;
                     }
 
-                    Integer orgId = resolveOrgIdForRow(ctx, row, orgMeta, singleOrgId, formatter, trxName, sheet.getSheetName(), r + 1);
+                    Integer orgId = resolveOrgIdForRow(ctx, row, orgMeta, singleOrgId, formatter, metas, trxName, sheet.getSheetName(), r + 1);
                     if (orgId == null) {
                         svrProcess.addLog("Tab " + sheet.getSheetName() + " row " + (r + 1) + ": no SDL number — skipping remainder of tab");
                         break;
@@ -498,6 +498,15 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             return null;
         }
 
+        private String getCellValueByHeader(Row row, Map<Integer, ColumnMeta> metas, String header, DataFormatter formatter) {
+            for (ColumnMeta meta : metas.values()) {
+                if (header.equals(meta.headerName)) {
+                    return getCellText(row, meta.columnIndex, formatter);
+                }
+            }
+            return null;
+        }
+
         private ColumnMeta findOrgMeta(Map<Integer, ColumnMeta> metas) {
             for (ColumnMeta meta : metas.values()) {
                 if ("SDLNumber".equals(meta.headerName)) {
@@ -512,6 +521,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                                            ColumnMeta orgMeta,
                                            Integer singleOrgId,
                                            DataFormatter formatter,
+                                           Map<Integer, ColumnMeta> metas,
                                            String trxName,
                                            String tab,
                                            int lineNo) {
@@ -537,8 +547,11 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                     // BPartner does not exist — create it from the SDL number
                     MBPartner_New bp = new MBPartner_New(ctx, 0, trxName);
                     bp.setValue(sdlNumber.trim());
-                    bp.setName(sdlNumber.trim());
-                    bp.set_ValueOfColumn("Name2", "Created by ImportWspAtrMigrationFile");
+                    String legalName = getCellValueByHeader(row, metas, "Legal Name", formatter);
+                    bp.setName(legalName != null && !legalName.isBlank() ? legalName.trim() : sdlNumber.trim());
+                    String tradeName = getCellValueByHeader(row, metas, "Trade Name", formatter);
+                    if (tradeName != null && !tradeName.isBlank()) { bp.setName2(tradeName.trim()); }
+                    bp.setDescription("Created by ImportWspAtrMigrationFile");
                     bp.setC_BP_Group_ID(1000018); // UNKNOWN GROUP
                     bp.setIsVendor(true);
                     bp.setIsCustomer(false);
