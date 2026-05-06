@@ -17,6 +17,7 @@ import java.util.Properties;
 import org.adempiere.exceptions.AdempiereException;
 import org.apache.poi.EncryptedDocumentException;
 import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.util.IOUtils;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -132,6 +133,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
     }
 
     private Workbook openWorkbookAuto(byte[] data, String password) throws Exception {
+        IOUtils.setByteArrayMaxOverride(200 * 1024 * 1024);
         try {
             return WorkbookFactory.create(new ByteArrayInputStream(data));
         } catch (EncryptedDocumentException e) {
