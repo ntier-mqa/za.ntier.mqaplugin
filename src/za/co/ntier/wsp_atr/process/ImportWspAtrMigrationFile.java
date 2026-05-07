@@ -272,6 +272,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             importErrors.clear();
             Map<Integer, Integer> importedBySubmittedId = new LinkedHashMap<>();
             Map<Integer, Integer> submittedIdByOrgId = new HashMap<>();
+            int rowsSaved = 0;
             Integer singleOrgId = resolveSingleOrgId(ctx, wb, headers, trxName, formatter);
             int finYearId = resolveFinYearId(ctx, wb, headers, trxName, formatter);
             String wspStatus = resolveWspStatus(ctx, wb, headers, trxName, formatter);
@@ -294,8 +295,17 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                     startRow = 4;
                 }
 
+                // Resume support: find the last committed line for this tab and skip ahead.
+                // lastProcessedLine is stored as r+1 (1-based), so the next r to process is lastProcessedLine.
+                int lastProcessedLine = getLastProcessedLine(ctx, trxName, sourceFileName, sheet.getSheetName());
+                int effectiveStartRow = Math.max(startRow, lastProcessedLine);
+                if (effectiveStartRow > startRow) {
+                    svrProcess.addLog("Tab " + sheet.getSheetName() + ": resuming from line "
+                            + (effectiveStartRow + 1) + " (last committed line was " + lastProcessedLine + ")");
+                }
+
                 int emptyRowsInARow = 0;
-                for (int r = startRow; r <= sheet.getLastRowNum(); r++) {
+                for (int r = effectiveStartRow; r <= sheet.getLastRowNum(); r++) {
                     Row row = sheet.getRow(r);
                     if (row == null) {
                         continue;
@@ -345,7 +355,17 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                     }
 
                     line.saveEx();
+                    recordProgress(ctx, trxName, sourceFileName, sheet.getSheetName(), r + 1);
                     importedBySubmittedId.put(submittedId, importedBySubmittedId.getOrDefault(submittedId, 0) + 1);
+                    rowsSaved++;
+                    if (rowsSaved % 1000 == 0) {
+                        try {
+                            DB.commit(true, trxName);
+                        } catch (java.sql.SQLException e) {
+                            throw new AdempiereException("Batch commit failed after " + rowsSaved + " rows", e);
+                        }
+                        svrProcess.addLog("Committed batch after " + rowsSaved + " rows");
+                    }
                 }
             }
 
@@ -645,6 +665,33 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
         public int importData(Properties ctx, Workbook wb, X_ZZ_WSP_ATR_Submitted submitted,
                               X_ZZ_WSP_ATR_Lookup_Mapping mappingHeader, String trxName, DataFormatter formatter) {
             return 0;
+        }
+
+        /**
+         * Returns the highest LineNo already committed for the given file+tab combination,
+         * or 0 if nothing has been recorded yet.  LineNo values are 1-based (r + 1).
+         */
+        private int getLastProcessedLine(Properties ctx, String trxName, String sourceFile, String tabName) {
+            int val = DB.getSQLValue(trxName,
+                    "SELECT COALESCE(MAX(LineNo), 0) FROM ZZ_WSP_ATR_Migration_Progress"
+                    + " WHERE AD_Client_ID = ? AND SourceFile = ? AND TabName = ?",
+                    Env.getAD_Client_ID(ctx), sourceFile, tabName);
+            return val < 0 ? 0 : val;
+        }
+
+        /**
+         * Inserts a progress record for the given line inside the current transaction.
+         * The record is committed together with the surrounding data batch.
+         * ON CONFLICT DO NOTHING makes it safe to call even if the row already exists.
+         */
+        private void recordProgress(Properties ctx, String trxName, String sourceFile, String tabName, int lineNo) {
+            DB.executeUpdateEx(
+                    "INSERT INTO ZZ_WSP_ATR_Migration_Progress"
+                    + " (AD_Client_ID, SourceFile, TabName, LineNo, ProcessedAt)"
+                    + " VALUES (?, ?, ?, ?, NOW())"
+                    + " ON CONFLICT DO NOTHING",
+                    new Object[]{Env.getAD_Client_ID(ctx), sourceFile, tabName, Integer.valueOf(lineNo)},
+                    trxName);
         }
 
         private File writeErrorLog(List<MigrationError> errors) throws Exception {
