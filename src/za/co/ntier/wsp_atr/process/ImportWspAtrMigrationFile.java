@@ -344,13 +344,36 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                             continue; // lookup-only entry (SDLNumber, FinancialYear, WSPStatus) — not a PO column
                         }
                         String mainText = getCellText(row, meta.columnIndex, formatter);
-                        if (Util.isEmpty(mainText, true)) {
-                            continue;
-                        }
-                        String err = setValueFromText(ctx, line, meta.column, mainText, meta.useValueForRef, trxName);
-                        if (err != null && !meta.createIfNotExist) {
-                            importErrors.add(new MigrationError(sheet.getSheetName(), r + 1,
-                                    columnIndexToLetter(meta.columnIndex), err));
+
+                        boolean isRefColumn =
+                                meta.column.getAD_Reference_ID() == DisplayType.Table
+                                || meta.column.getAD_Reference_ID() == DisplayType.TableDir
+                                || meta.column.getAD_Reference_ID() == DisplayType.Search;
+
+                        if (meta.createIfNotExist && isRefColumn) {
+                            // Read optional Value/Name from their own columns when configured
+                            String valueText = (meta.valueColumnIndex != null)
+                                    ? getCellText(row, meta.valueColumnIndex, formatter) : null;
+                            String nameText  = (meta.nameColumnIndex  != null)
+                                    ? getCellText(row, meta.nameColumnIndex,  formatter) : null;
+
+                            boolean allBlank = Util.isEmpty(mainText, true)
+                                    && Util.isEmpty(valueText, true)
+                                    && Util.isEmpty(nameText,  true);
+                            if (allBlank) {
+                                continue;
+                            }
+
+                            setValueFromTextOrCreate(ctx, line, meta, mainText, valueText, nameText, trxName);
+                        } else {
+                            if (Util.isEmpty(mainText, true)) {
+                                continue;
+                            }
+                            String err = setValueFromText(ctx, line, meta.column, mainText, meta.useValueForRef, trxName);
+                            if (err != null) {
+                                importErrors.add(new MigrationError(sheet.getSheetName(), r + 1,
+                                        columnIndexToLetter(meta.columnIndex), err));
+                            }
                         }
                     }
 
@@ -646,6 +669,14 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                 meta.createIfNotExist = det.isZZ_Create_If_Not_Exists();
                 meta.mandatory = det.isMandatory();
                 meta.ignoreIfBlank = det.isIgnore_If_Blank();
+                String valueColLetter = det.getZZ_Value_Column_Letter();
+                String nameColLetter  = det.getZZ_Name_Column_Letter();
+                if (!Util.isEmpty(valueColLetter, true)) {
+                    meta.valueColumnIndex = columnLetterToIndex(valueColLetter);
+                }
+                if (!Util.isEmpty(nameColLetter, true)) {
+                    meta.nameColumnIndex = columnLetterToIndex(nameColLetter);
+                }
                 if (det.getAD_Column_ID() > 0) {
                     meta.column = new MColumn(ctx, det.getAD_Column_ID(), trxName);
                     if (Util.isEmpty(meta.column.getColumnName(), true)) {

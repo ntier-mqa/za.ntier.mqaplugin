@@ -298,6 +298,147 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 		}
 	}
 
+	/**
+	 * Sets a reference FK column on the PO, creating the reference record in the target
+	 * table when it does not already exist.
+	 *
+	 * <p>valueText / nameText come from optional separate columns on the sheet
+	 * (configured via ZZ_Value_Column_Letter / ZZ_Name_Column_Letter on the mapping detail).
+	 * When those are absent, mainText is used as both Value and Name.</p>
+	 *
+	 * <p>Falls back to the plain lookup path when the column is not a reference type or
+	 * {@code meta.createIfNotExist} is false.</p>
+	 */
+	protected void setValueFromTextOrCreate(Properties ctx,
+			PO po,
+			ColumnMeta meta,
+			String mainText,
+			String valueText,
+			String nameText,
+			String trxName) {
+
+		MColumn column = meta.column;
+		int displayType = column.getAD_Reference_ID();
+
+		boolean isRef = displayType == DisplayType.Table
+				|| displayType == DisplayType.TableDir
+				|| displayType == DisplayType.Search;
+
+		if (!isRef || !meta.createIfNotExist) {
+			setValueFromText(ctx, po, column, mainText, meta.useValueForRef, trxName);
+			return;
+		}
+
+		boolean noMain  = Util.isEmpty(mainText,  true);
+		boolean noVal   = Util.isEmpty(valueText,  true);
+		boolean noName  = Util.isEmpty(nameText,   true);
+		if (noMain && noVal && noName) {
+			return;
+		}
+
+		String cleanMain  = noMain  ? null : mainText.trim();
+		String cleanValue = noVal   ? null : valueText.trim();
+		String cleanName  = noName  ? null : nameText.trim();
+
+		// Decide which text maps to Value / Name for lookup and creation
+		String valueToUse = cleanValue;
+		String nameToUse  = cleanName;
+		if (valueToUse == null && meta.useValueForRef && cleanMain != null) {
+			valueToUse = cleanMain;
+		}
+		if (nameToUse == null && !meta.useValueForRef && cleanMain != null) {
+			nameToUse = cleanMain;
+		}
+		if (valueToUse == null && nameToUse == null && cleanMain != null) {
+			nameToUse = cleanMain;
+		}
+
+		// Resolve the reference table from the column definition
+		int adRefTableId = column.getAD_Reference_Value_ID();
+		if (adRefTableId <= 0) {
+			setValueFromText(ctx, po, column, mainText, meta.useValueForRef, trxName);
+			return;
+		}
+		MRefTable refTableCfg = MRefTable.get(ctx, adRefTableId, trxName);
+		if (refTableCfg == null || refTableCfg.getAD_Table_ID() <= 0) {
+			setValueFromText(ctx, po, column, mainText, meta.useValueForRef, trxName);
+			return;
+		}
+		MTable refTable = MTable.get(ctx, refTableCfg.getAD_Table_ID());
+		if (refTable == null || refTable.getAD_Table_ID() <= 0) {
+			setValueFromText(ctx, po, column, mainText, meta.useValueForRef, trxName);
+			return;
+		}
+		String refTableName = refTable.getTableName();
+
+		// 1) Try to find an existing record by Value, then by Name / mainText
+		Integer foundId = null;
+		if (meta.useValueForRef && !Util.isEmpty(valueToUse, true)) {
+			foundId = findIdByColumn(ctx, refTableName, "Value", valueToUse, trxName);
+		}
+		if ((foundId == null || foundId <= 0) && cleanMain != null) {
+			foundId = findIdByColumn(ctx, refTableName, "Name", cleanMain, trxName);
+		}
+		if (foundId != null && foundId > 0) {
+			po.set_ValueOfColumn(column.getColumnName(), foundId);
+			return;
+		}
+
+		// 2) Not found — create a new record in the reference table
+		if (meta.nameColumnIndex != null && Util.isEmpty(nameText, true)) {
+			// Name column is configured but blank — silently skip rather than create a bad record
+			return;
+		}
+
+		PO refPO = refTable.getPO(0, trxName);
+		if (refPO == null) {
+			throw new org.adempiere.exceptions.AdempiereException(
+					"Cannot create reference record for table " + refTableName);
+		}
+
+		// Ensure we have something for Name
+		if (nameToUse == null && meta.nameColumnIndex == null) {
+			nameToUse = valueToUse != null ? valueToUse : cleanMain;
+		}
+		// Auto-generate a Value when no explicit value column is configured
+		if ((meta.valueColumnIndex == null || meta.valueColumnIndex < 0) && !meta.useValueForRef) {
+			valueToUse = getNextAddedValue(refTableName, trxName);
+		}
+		if (valueToUse == null && nameToUse != null) {
+			valueToUse = nameToUse;
+		}
+
+		if (refTable.getColumn("Value") != null && valueToUse != null) {
+			refPO.set_ValueOfColumn("Value", valueToUse);
+		}
+		if (refTable.getColumn("Name") != null && nameToUse != null) {
+			refPO.set_ValueOfColumn("Name", nameToUse);
+		}
+		if (refTable.getColumn("EntityType") != null) {
+			refPO.set_ValueOfColumn("EntityType", "U");
+		}
+
+		refPO.saveEx();
+		int newId = refPO.get_ID();
+		if (newId <= 0) {
+			throw new org.adempiere.exceptions.AdempiereException(
+					"Failed to create reference record in " + refTableName);
+		}
+		po.set_ValueOfColumn(column.getColumnName(), newId);
+	}
+
+	/**
+	 * Returns a sequenced placeholder Value for newly-created reference records
+	 * when no explicit Value text is available (e.g. "ADDED_00001").
+	 */
+	protected String getNextAddedValue(String tableName, String trxName) {
+		int max = DB.getSQLValueEx(trxName,
+				"SELECT MAX(CAST(SUBSTRING(Value, 7) AS INTEGER)) "
+				+ "FROM " + tableName + " WHERE Value LIKE 'ADDED_%'");
+		int next = max > 0 ? max + 1 : 1;
+		return String.format("ADDED_%05d", next);
+	}
+
 	protected Integer findIdByColumn(Properties ctx, String tableName, String columnName, String text, String trxName) {
 		if (Util.isEmpty(text, true))
 			return null;

@@ -495,19 +495,7 @@ public class ColumnModeSheetImporter extends AbstractMappingSheetImporter {
 		po.set_ValueOfColumn(column.getColumnName(), newId);
 	}
 
-	private String getNextAddedValue(String tableName, String trxName) {
-		// Extract numeric part after 'ADDED_'
-		final String sql =
-				"SELECT MAX(CAST(SUBSTRING(Value, 7) AS INTEGER)) " +
-						"FROM " + tableName + " " +
-						"WHERE Value LIKE 'ADDED_%'";
-
-		int max = DB.getSQLValueEx(trxName, sql);
-
-		int next = max > 0 ? max + 1 : 1;
-
-		return String.format("ADDED_%05d", next);
-	}
+	// getNextAddedValue is inherited from AbstractMappingSheetImporter
 
 	private void setValueFromTextMandatoryRefAware(Properties ctx, PO po, ColumnMeta meta, String text, String trxName) {
 		MColumn column = meta.column;
