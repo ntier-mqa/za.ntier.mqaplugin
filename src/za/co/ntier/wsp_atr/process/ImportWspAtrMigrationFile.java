@@ -272,6 +272,9 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             importErrors.clear();
             Map<Integer, Integer> importedBySubmittedId = new LinkedHashMap<>();
             Map<Integer, Integer> submittedIdByOrgId = new HashMap<>();
+            // Cache the X_ZZ_WSP_ATR_Submitted PO by ID so newTargetPO does not
+            // reload it from the database on every single row.
+            Map<Integer, X_ZZ_WSP_ATR_Submitted> submittedPoCache = new HashMap<>();
             int rowsSaved = 0;
             Integer singleOrgId = resolveSingleOrgId(ctx, wb, headers, trxName, formatter);
             int finYearId = resolveFinYearId(ctx, wb, headers, trxName, formatter);
@@ -334,7 +337,9 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                         submittedIdByOrgId.put(orgId, submittedId);
                     }
 
-                    PO line = newTargetPO(ctx, new X_ZZ_WSP_ATR_Submitted(ctx, submittedId, trxName), header, trxName);
+                    X_ZZ_WSP_ATR_Submitted submittedPO = submittedPoCache.computeIfAbsent(
+                            submittedId, id -> new X_ZZ_WSP_ATR_Submitted(ctx, id, trxName));
+                    PO line = newTargetPO(ctx, submittedPO, header, trxName);
                     if (line.get_ColumnIndex("Row_No") >= 0) {
                         line.set_ValueOfColumn("Row_No", Integer.valueOf(r + 1));
                     }
@@ -345,12 +350,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                         }
                         String mainText = getCellText(row, meta.columnIndex, formatter);
 
-                        boolean isRefColumn =
-                                meta.column.getAD_Reference_ID() == DisplayType.Table
-                                || meta.column.getAD_Reference_ID() == DisplayType.TableDir
-                                || meta.column.getAD_Reference_ID() == DisplayType.Search;
-
-                        if (meta.createIfNotExist && isRefColumn) {
+                        if (meta.createIfNotExist && meta.isRefColumn) {
                             // Read optional Value/Name from their own columns when configured
                             String valueText = (meta.valueColumnIndex != null)
                                     ? getCellText(row, meta.valueColumnIndex, formatter) : null;
@@ -400,7 +400,12 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                                            List<X_ZZ_WSP_ATR_Lookup_Mapping> headers,
                                            String trxName,
                                            DataFormatter formatter) {
-            Integer detected = null;
+            // We only need to know whether the whole workbook contains exactly one
+            // organisation.  Stop as soon as we see a second distinct SDL value —
+            // no need to scan every row of every sheet.
+            String detectedSdl = null;
+            Integer detectedId  = null;
+
             for (X_ZZ_WSP_ATR_Lookup_Mapping header : headers) {
                 if (header.getAD_Table_ID() <= 0 || !header.isZZ_Is_For_Bulk()) {
                     continue;
@@ -424,24 +429,28 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                     if (Util.isEmpty(orgTxt, true)) {
                         continue;
                     }
+                    orgTxt = orgTxt.trim();
+                    if (detectedSdl != null && detectedSdl.equalsIgnoreCase(orgTxt)) {
+                        continue; // same SDL as already detected — no DB query needed
+                    }
                     int orgIdVal = DB.getSQLValueEx(trxName,
                             "SELECT o.ZZSdfOrganisation_ID FROM ZZSdfOrganisation o"
                             + " JOIN C_BPartner bp ON bp.C_BPartner_ID = o.C_BPartner_ID"
                             + " WHERE bp.Value = ? AND o.AD_Client_ID = ? AND o.IsActive = 'Y'"
                             + " FETCH FIRST 1 ROWS ONLY",
-                            orgTxt.trim(), Env.getAD_Client_ID(ctx));
+                            orgTxt, Env.getAD_Client_ID(ctx));
                     if (orgIdVal <= 0) {
                         continue;
                     }
-                    Integer orgId = Integer.valueOf(orgIdVal);
-                    if (detected == null) {
-                        detected = orgId;
-                    } else if (detected.intValue() != orgId.intValue()) {
-                        return null;
+                    if (detectedId == null) {
+                        detectedId  = orgIdVal;
+                        detectedSdl = orgTxt;
+                    } else if (detectedId.intValue() != orgIdVal) {
+                        return null; // multiple orgs — stop immediately, no need to scan further
                     }
                 }
             }
-            return detected;
+            return detectedId;
         }
 
         private int resolveFinYearId(Properties ctx,
@@ -683,6 +692,10 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                         svrProcess.addLog("Skipping detail — MColumn " + det.getAD_Column_ID() + " not found (letter " + det.getZZ_Column_Letter() + ")");
                         continue;
                     }
+                    int ref = meta.column.getAD_Reference_ID();
+                    meta.isRefColumn = ref == DisplayType.Table
+                            || ref == DisplayType.TableDir
+                            || ref == DisplayType.Search;
                 }
                 // meta.column may be null for lookup-only entries (SDLNumber, FinancialYear, WSPStatus)
                 // — those are resolved by the special finder methods and never passed to setValueFromText

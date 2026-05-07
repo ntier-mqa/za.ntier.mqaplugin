@@ -2,7 +2,9 @@ package za.co.ntier.wsp_atr.process;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -439,16 +441,31 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 		return String.format("ADDED_%05d", next);
 	}
 
+	// -----------------------------------------------------------------------
+	// Reference-ID lookup cache: avoids repeated DB queries for the same
+	// (table, column, text) triple across thousands of rows.
+	// Key   = "tableName|columnName|TEXT_UPPERCASED"
+	// Value = the found ID, or -1 when the lookup returned no result.
+	// -----------------------------------------------------------------------
+	private final Map<String, Integer> findIdCache = new HashMap<>();
+
 	protected Integer findIdByColumn(Properties ctx, String tableName, String columnName, String text, String trxName) {
 		if (Util.isEmpty(text, true))
 			return null;
+
+		String key = tableName + "|" + columnName + "|" + text.trim().toUpperCase();
+		Integer cached = findIdCache.get(key);
+		if (cached != null) {
+			return cached > 0 ? cached : null; // -1 sentinel → null (not found)
+		}
 
 		String where = "UPPER(TRIM(" + columnName + "))=UPPER(?)";
 		int id = new Query(ctx, tableName, where, trxName)
 				.setParameters(text.trim())
 				.firstId();
 
-		return (id > 0) ? id : null;
+		findIdCache.put(key, id > 0 ? id : -1); // cache hit and miss
+		return id > 0 ? id : null;
 	}
 	
 	
@@ -542,6 +559,10 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 		MColumn column;
 		boolean useValueForRef;
 		boolean isFormular;
+
+		// Precomputed: true when column is Table / TableDir / Search display type.
+		// Avoids calling column.getAD_Reference_ID() on every row in the inner loop.
+		boolean isRefColumn;
 
 		// create-if-missing support
 		boolean createIfNotExist;
