@@ -1,5 +1,9 @@
 package za.ntier.modelvalidator;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import org.compiere.model.MClient;
 import org.compiere.model.MSequence;
 import org.compiere.model.ModelValidationEngine;
@@ -8,7 +12,9 @@ import org.compiere.model.PO;
 import org.compiere.util.CLogger;
 import org.compiere.util.Util;
 
+import za.co.ntier.api.model.I_ZZAssessorPerson;
 import za.co.ntier.api.model.I_ZZ_WPA_Application;
+import za.co.ntier.api.model.X_ZZAssessorPerson;
 import za.co.ntier.api.model.X_ZZ_WPA_Application;
 
 public class NtierModelValidator implements ModelValidator
@@ -24,6 +30,7 @@ public class NtierModelValidator implements ModelValidator
 			m_AD_Client_ID = client.getAD_Client_ID();
 		}
 		engine.addModelChange(X_ZZ_WPA_Application.Table_Name, this);
+		engine.addModelChange(X_ZZAssessorPerson.Table_Name, this);
 	}
 
 	@Override
@@ -43,18 +50,18 @@ public class NtierModelValidator implements ModelValidator
 	{
 		if (type == ModelValidator.TYPE_AFTER_CHANGE && X_ZZ_WPA_Application.Table_Name.equals(po.get_TableName()))
 		{
-			String ColStatus = I_ZZ_WPA_Application.COLUMNNAME_ZZ_DocStatus;
-			String ColWpaNumber = I_ZZ_WPA_Application.COLUMNNAME_ZZ_WPA_Number;
+			var ColStatus = I_ZZ_WPA_Application.COLUMNNAME_ZZ_DocStatus;
+			var ColWpaNumber = I_ZZ_WPA_Application.COLUMNNAME_ZZ_WPA_Number;
 
 			if (po.is_ValueChanged(ColStatus))
 			{
-				String newStatus = po.get_ValueAsString(ColStatus);
+				var newStatus = po.get_ValueAsString(ColStatus);
 				if (X_ZZ_WPA_Application.ZZ_DOCSTATUS_Approved.equals(newStatus))
 				{
-					String currentValue = po.get_ValueAsString(ColWpaNumber);
+					var currentValue = po.get_ValueAsString(ColWpaNumber);
 					if (Util.isEmpty(currentValue))
 					{
-						String nextSeqNo = MSequence.getDocumentNo(
+						var nextSeqNo = MSequence.getDocumentNo(
 																	po.getAD_Client_ID(),
 																	X_ZZ_WPA_Application.Table_Name,
 																	po.get_TrxName(),
@@ -69,6 +76,37 @@ public class NtierModelValidator implements ModelValidator
 							log.severe("Failed to fetch sequence for ZZ_WPA_Application. Ensure AD_Sequence is configured.");
 						}
 					}
+				}
+			}
+		}
+		
+		if (type == ModelValidator.TYPE_AFTER_CHANGE && X_ZZAssessorPerson.Table_Name.equals(po.get_TableName()))
+		{
+			var ColStatus = I_ZZAssessorPerson.COLUMNNAME_ZZ_DocStatus;
+			
+			if (po.is_ValueChanged(ColStatus))
+			{
+				var newStatus = po.get_ValueAsString(ColStatus);
+				if (X_ZZAssessorPerson.ZZ_DOCSTATUS_Approved.equals(newStatus))
+				{
+					var assessorPerson = new X_ZZAssessorPerson(po.getCtx(), po.get_ID(), po.get_TrxName());
+					var now = LocalDateTime.now();
+					assessorPerson.setStartDate(Timestamp.valueOf(now));
+					assessorPerson.setEndDate(Timestamp.valueOf(now.plusYears(3))); // Set end date to 3 year from now
+					
+					if (Util.isEmpty(assessorPerson.getZZ_Assessor()))
+					{
+						var assDocNo = assessorPerson.getDocumentNo();
+						
+						if (!Util.isEmpty(assDocNo))
+						{
+							var dateStr = now.format(DateTimeFormatter.ofPattern("ddMMyy"));
+							var assessorNo = "MQA/ASS" + assDocNo + "/" + dateStr;
+							assessorPerson.setZZ_Assessor(assessorNo);
+						}
+					}
+					
+					assessorPerson.saveEx();
 				}
 			}
 		}
