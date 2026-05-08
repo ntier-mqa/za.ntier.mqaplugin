@@ -1,5 +1,7 @@
 package za.co.ntier.wsp_atr.process;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import org.adempiere.exceptions.AdempiereException;
@@ -12,6 +14,23 @@ import org.compiere.util.DisplayType;
 import org.compiere.util.Util;
 
 public class ReferenceLookupService {
+
+    /**
+     * Cache of resolved reference lookups.
+     * Key: AD_Column_ID + "|" + UPPER(text) + "|" + useValue
+     * Value: resolved ID (>0), or -1 sentinel for "looked up and not found"
+     *
+     * Per-instance cache; the bulk import process holds a single instance so
+     * lookups for the same (column,text) pair across thousands of rows hit the
+     * cache after the first DB round-trip.
+     */
+    private final Map<String, Integer> lookupCache = new HashMap<>();
+
+    /**
+     * Cache of resolved table names by AD_Column_ID. The TableDir branch otherwise
+     * runs a DB query on every call to find the table name from the column name.
+     */
+    private final Map<Integer, String> tableNameCache = new HashMap<>();
 
     /**
      * Given AD_Column_ID and text from Excel, find the referenced record ID.
@@ -41,8 +60,38 @@ public class ReferenceLookupService {
                     + displayType + ")");
         }
 
-        int adRefValueId = column.getAD_Reference_Value_ID();
+        String cacheKey = column.getAD_Column_ID() + "|" + text.toUpperCase() + "|" + useValue;
+        Integer cached = lookupCache.get(cacheKey);
+        if (cached != null) {
+            return cached > 0 ? cached : null;
+        }
+
+        String tableName = resolveTableName(ctx, column, displayType, trxName);
+
+        String where = useValue
+                ? "UPPER(TRIM(Value))=UPPER(?)"
+                : "UPPER(TRIM(Name))=UPPER(?)";
+
+        int id = new Query(ctx, tableName, where, trxName)
+                .setParameters(text)
+                .firstId();
+
+        lookupCache.put(cacheKey, id > 0 ? id : -1);
+        return (id <= 0) ? null : id;
+    }
+
+    /**
+     * Resolve and cache the referenced table name for a column.
+     */
+    private String resolveTableName(Properties ctx, MColumn column, int displayType, String trxName) {
+        Integer columnId = column.getAD_Column_ID();
+        String cached = tableNameCache.get(columnId);
+        if (cached != null) {
+            return cached;
+        }
+
         String tableName;
+        int adRefValueId = column.getAD_Reference_Value_ID();
         if (adRefValueId > 0) {
             MRefTable refTable = MRefTable.get(ctx, adRefValueId);
             if (refTable == null || refTable.getAD_Table_ID() <= 0) {
@@ -69,14 +118,7 @@ public class ReferenceLookupService {
                     + " has no AD_Reference_Value_ID configured");
         }
 
-        String where = useValue
-                ? "UPPER(TRIM(Value))=UPPER(?)"
-                : "UPPER(TRIM(Name))=UPPER(?)";
-
-        int id = new Query(ctx, tableName, where, trxName)
-                .setParameters(text)
-                .firstId();
-
-        return (id <= 0) ? null : id;
+        tableNameCache.put(columnId, tableName);
+        return tableName;
     }
 }

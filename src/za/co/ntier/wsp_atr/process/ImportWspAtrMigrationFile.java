@@ -209,6 +209,10 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                 for (int r = startRow; r <= sheet.getLastRowNum(); r++) {
                     Row row = sheet.getRow(r);
                     if (row == null) {
+                    	emptyRowsInARow++;
+                        if (emptyRowsInARow > 10) {
+                            break;
+                        }
                         continue;
                     }
                     if (isRowCompletelyEmpty(row, metas.values())) {
@@ -311,6 +315,10 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                 for (int r = effectiveStartRow; r <= sheet.getLastRowNum(); r++) {
                     Row row = sheet.getRow(r);
                     if (row == null) {
+                    	emptyRowsInARow++;
+                        if (emptyRowsInARow > 10) {
+                            break;
+                        }
                         continue;
                     }
                     if (isRowCompletelyEmpty(row, metas.values())) {
