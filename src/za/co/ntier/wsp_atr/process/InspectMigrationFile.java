@@ -120,7 +120,7 @@ public class InspectMigrationFile extends SvrProcess {
             try {
                 return formatter.formatCellValue(cell, row.getSheet().getWorkbook().getCreationHelper().createFormulaEvaluator());
             } catch (Exception e) {
-                return cell.getRawValue();
+                return "";
             }
         }
         return formatter.formatCellValue(cell);
