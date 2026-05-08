@@ -127,24 +127,23 @@ public class InspectMigrationFile extends SvrProcess {
     }
 
     private Workbook openWorkbook(File file) throws Exception {
+        // Try streaming directly first — avoids loading the whole file into memory.
         try (InputStream is = new FileInputStream(file)) {
-            byte[] data = org.apache.commons.io.IOUtils.toByteArray(is);
-            return openWorkbookAuto(data, EXCEL_PASSWORD);
-        }
-    }
-
-    private Workbook openWorkbookAuto(byte[] data, String password) throws Exception {
-        IOUtils.setByteArrayMaxOverride(200 * 1024 * 1024);
-        try {
-            return WorkbookFactory.create(new ByteArrayInputStream(data));
+            return WorkbookFactory.create(is);
         } catch (EncryptedDocumentException e) {
+            // Encrypted workbook: must buffer so we can decrypt, then stream the result.
+            IOUtils.setByteArrayMaxOverride(600 * 1024 * 1024);
+            byte[] data;
+            try (InputStream is = new FileInputStream(file)) {
+                data = org.apache.commons.io.IOUtils.toByteArray(is);
+            }
             try (org.apache.poi.poifs.filesystem.POIFSFileSystem fs =
                     new org.apache.poi.poifs.filesystem.POIFSFileSystem(new ByteArrayInputStream(data))) {
 
                 org.apache.poi.poifs.crypt.EncryptionInfo info = new org.apache.poi.poifs.crypt.EncryptionInfo(fs);
                 org.apache.poi.poifs.crypt.Decryptor decryptor = org.apache.poi.poifs.crypt.Decryptor.getInstance(info);
 
-                if (!decryptor.verifyPassword(password)) {
+                if (!decryptor.verifyPassword(EXCEL_PASSWORD)) {
                     throw new AdempiereException("Invalid Excel password for workbook");
                 }
 
