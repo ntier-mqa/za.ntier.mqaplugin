@@ -1,30 +1,23 @@
 package za.co.ntier.wsp_atr.process;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.adempiere.exceptions.AdempiereException;
-import org.apache.poi.EncryptedDocumentException;
 import org.apache.poi.ss.usermodel.DataFormatter;
-import org.apache.poi.util.IOUtils;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.compiere.model.MColumn;
 import org.compiere.model.MProcessPara;
-import org.compiere.model.MTable;
 import org.compiere.model.PO;
 import org.compiere.model.Query;
 import org.compiere.process.ProcessInfoParameter;
@@ -45,12 +38,25 @@ import za.ntier.models.MZZWSPATRHTVF;
 import za.ntier.models.MZZWSPATRSubmitted;
 import za.ntier.models.MZZWSPATRWSP;
 
+/**
+ * Streaming bulk import for the WSP/ATR migration spreadsheet.
+ *
+ * <p>This used to load the whole workbook with {@code WorkbookFactory.create()}
+ * which collapses on multi-million-row source files. The implementation now
+ * uses {@link StreamingXlsxReader} so the workbook is processed row-by-row;
+ * memory usage is bounded by the unique-string table plus a single row of
+ * cells. Two passes are made over the file:</p>
+ * <ol>
+ *   <li>Validation pass — checks mandatory fields and reference resolvability,
+ *       and incidentally captures the workbook-wide single organisation,
+ *       financial year and submission status.</li>
+ *   <li>Import pass — creates the target POs.</li>
+ * </ol>
+ */
 @org.adempiere.base.annotation.Process(name = "za.co.ntier.wsp_atr.process.ImportWspAtrMigrationFile")
 public class ImportWspAtrMigrationFile extends SvrProcess {
 
-    private static final String EXCEL_PASSWORD = "Learning2026";
-
-    private static final String BULK_UPLOAD_PATH = "/tmp/bulkupload.xlsx";
+    private static final String BULK_UPLOAD_PATH = "/home/ntier/SG_Data_070526/MQAWSPATRDataDump2026.xlsx";
 
     private final ReferenceLookupService refService = new ReferenceLookupService();
 
@@ -73,25 +79,34 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             throw new AdempiereException("No active WSP/ATR mapping header records found.");
         }
 
-        DataFormatter formatter = new DataFormatter();
         MigrationSheetProcessor processor = new MigrationSheetProcessor(refService, this);
-        List<MigrationError> errors;
-        try (Workbook workbook = openWorkbook(file)) {
-            errors = processor.validateWorkbook(getCtx(), workbook, headers, get_TrxName(), formatter);
 
-            if (!errors.isEmpty()) {
-                File logFile = processor.writeErrorLog(errors);
+        try (StreamingXlsxReader reader = new StreamingXlsxReader(file)) {
+
+            // Pass 1: validate + capture workbook-wide single org / fin year / WSP status.
+            MigrationSheetProcessor.ValidationResult vr =
+                    processor.validateWorkbook(getCtx(), reader, headers, get_TrxName());
+
+            if (!vr.errors.isEmpty()) {
+                File logFile = processor.writeErrorLog(vr.errors);
                 if (processUI != null && logFile != null && logFile.exists()) {
                     processUI.download(logFile);
                 }
-                throw new AdempiereException("Validation failed with " + errors.size()
+                throw new AdempiereException("Validation failed with " + vr.errors.size()
                         + " error(s). Download the generated log file and correct the source spreadsheet.");
             }
+            if (vr.finYearId <= 0) {
+                throw new AdempiereException("Could not resolve financial year from FinancialYear column in workbook.");
+            }
+            if (vr.wspStatus == null) {
+                throw new AdempiereException("Could not resolve WSP status from WSPStatus column in workbook.");
+            }
 
+            // Pass 2: stream again and create the POs.
             Map<Integer, Integer> importedBySubmittedId = processor.importWorkbook(
-                    getCtx(), workbook, headers, get_TrxName(), formatter, file.getName());
+                    getCtx(), reader, headers, get_TrxName(), file.getName(),
+                    vr.singleOrgId, vr.finYearId, vr.wspStatus);
 
-            // If any reference lookups failed during import, write and offer the error file for download then abort
             List<MigrationError> importErrors = processor.getImportErrors();
             if (!importErrors.isEmpty()) {
                 File logFile = processor.writeErrorLog(importErrors);
@@ -125,42 +140,14 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                 .list();
     }
 
-    private Workbook openWorkbook(File file) throws Exception {
-        try (InputStream is = new FileInputStream(file)) {
-            byte[] data = org.apache.commons.io.IOUtils.toByteArray(is);
-            return openWorkbookAuto(data, EXCEL_PASSWORD);
-        }
-    }
-
-    private Workbook openWorkbookAuto(byte[] data, String password) throws Exception {
-        IOUtils.setByteArrayMaxOverride(200 * 1024 * 1024);
-        try {
-            return WorkbookFactory.create(new ByteArrayInputStream(data));
-        } catch (EncryptedDocumentException e) {
-            try (org.apache.poi.poifs.filesystem.POIFSFileSystem fs =
-                    new org.apache.poi.poifs.filesystem.POIFSFileSystem(new ByteArrayInputStream(data))) {
-
-                org.apache.poi.poifs.crypt.EncryptionInfo info = new org.apache.poi.poifs.crypt.EncryptionInfo(fs);
-                org.apache.poi.poifs.crypt.Decryptor decryptor = org.apache.poi.poifs.crypt.Decryptor.getInstance(info);
-
-                if (!decryptor.verifyPassword(password)) {
-                    throw new AdempiereException("Invalid Excel password for workbook");
-                }
-
-                try (InputStream decryptedStream = decryptor.getDataStream(fs)) {
-                    return WorkbookFactory.create(decryptedStream);
-                }
-            }
-        }
-    }
-
-    private static final class MigrationError {
+    /** Error captured during validation or import. */
+    static final class MigrationError {
         final String tab;
         final int lineNo;
         final String column;
         final String message;
 
-        private MigrationError(String tab, int lineNo, String column, String message) {
+        MigrationError(String tab, int lineNo, String column, String message) {
             this.tab = tab;
             this.lineNo = lineNo;
             this.column = column;
@@ -168,14 +155,23 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
         }
     }
 
+    // ------------------------------------------------------------------------
+    // The processor: extends AbstractMappingSheetImporter for the POI-free
+    // helpers (setValueFromText, findIdByColumn, columnLetterToIndex, ...) but
+    // never calls into its Row/Sheet/Workbook-typed methods.
+    // ------------------------------------------------------------------------
     private static final class MigrationSheetProcessor extends AbstractMappingSheetImporter {
 
         private static final int MAX_ERRORS = 500;
+        private static final int MAX_EMPTY_ROWS = 10;
+
+        private static final String WSP_STATUS_REF_UU = "98479fb5-df5d-440d-86aa-92d77a320857";
+        private static final String DEFAULT_SDF_UU    = "06baf540-649a-40d2-84db-75b907bb9d99";
 
         private final Map<Integer, Map<Integer, ColumnMeta>> columnMetaCache = new HashMap<>();
         private final List<MigrationError> importErrors = new ArrayList<>();
 
-        private MigrationSheetProcessor(ReferenceLookupService refService, SvrProcess process) {
+        MigrationSheetProcessor(ReferenceLookupService refService, SvrProcess process) {
             super(refService, process);
         }
 
@@ -183,161 +179,199 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             return importErrors;
         }
 
-        private List<MigrationError> validateWorkbook(Properties ctx,
-                                                     Workbook wb,
-                                                     List<X_ZZ_WSP_ATR_Lookup_Mapping> headers,
-                                                     String trxName,
-                                                     DataFormatter formatter) {
-            List<MigrationError> errors = new ArrayList<>();
+        // ---- Single Workbook-method we still satisfy from IWspAtrSheetImporter ----
+        @Override
+        public int importData(Properties ctx, Workbook wb, X_ZZ_WSP_ATR_Submitted submitted,
+                              X_ZZ_WSP_ATR_Lookup_Mapping mappingHeader, String trxName, DataFormatter formatter) {
+            // This streaming processor doesn't use the per-sheet entry point —
+            // importWorkbook below drives everything.
+            return 0;
+        }
 
-            for (X_ZZ_WSP_ATR_Lookup_Mapping header : headers) {
+        // -------------------- result of validation --------------------
+        static final class ValidationResult {
+            final List<MigrationError> errors = new ArrayList<>();
+            Integer singleOrgId;       // null when workbook contains >1 distinct org
+            int finYearId;             // 0 until resolved
+            String wspStatus;          // null until resolved
+            // Detection bookkeeping:
+            String detectedSdl;        // SDL that yielded singleOrgId
+            boolean multipleOrgsDetected;
+        }
+
+        // ============================================================
+        // Validation pass
+        // ============================================================
+        ValidationResult validateWorkbook(final Properties ctx,
+                                          StreamingXlsxReader reader,
+                                          List<X_ZZ_WSP_ATR_Lookup_Mapping> mappingHeaders,
+                                          final String trxName) throws Exception {
+            final ValidationResult result = new ValidationResult();
+
+            for (final X_ZZ_WSP_ATR_Lookup_Mapping header : mappingHeaders) {
                 if (header.getAD_Table_ID() <= 0 || !header.isZZ_Is_For_Bulk()) {
                     continue;
                 }
-                Sheet sheet = getSheetOrThrow(wb, header);
-                Map<Integer, ColumnMeta> metas = buildColumnMeta(ctx, header, trxName);
+                final String sheetName = header.getZZ_Tab_Name();
+                if (!reader.hasSheet(sheetName)) {
+                    throw new AdempiereException("Sheet '" + sheetName + "' not found in workbook");
+                }
+
+                final Map<Integer, ColumnMeta> metas = buildColumnMeta(ctx, header, trxName);
                 if (metas.isEmpty()) {
                     continue;
                 }
 
-                int startRow = header.getStart_Row() != null ? header.getStart_Row().intValue() : 4;
-                if (startRow <= 0) {
-                    startRow = 4;
-                }
+                final ColumnMeta orgMeta     = findColumnByHeader(metas, "SDLNumber");
+                final ColumnMeta finYearMeta = findColumnByHeader(metas, "FinancialYear");
+                final ColumnMeta statusMeta  = findColumnByHeader(metas, "WSPStatus");
 
-                int emptyRowsInARow = 0;
-                for (int r = startRow; r <= sheet.getLastRowNum(); r++) {
-                    Row row = sheet.getRow(r);
-                    if (row == null) {
-                    	emptyRowsInARow++;
-                        if (emptyRowsInARow > 10) {
-                            break;
+                int sr = header.getStart_Row() != null ? header.getStart_Row().intValue() : 4;
+                if (sr <= 0) sr = 4;
+                final int startRow = sr;
+
+                final Set<Integer> wanted = collectWantedColumns(metas);
+                final int[] emptyCounter = {0};
+                final boolean[] stopAll = {false};
+
+                reader.streamSheet(sheetName, startRow, wanted, (rowIdx, cells) -> {
+                    if (stopAll[0]) {
+                        return StreamingXlsxReader.Action.STOP;
+                    }
+                    if (isMappedRowEmpty(cells, metas.values())) {
+                        emptyCounter[0]++;
+                        if (emptyCounter[0] > MAX_EMPTY_ROWS) {
+                            return StreamingXlsxReader.Action.STOP;
                         }
-                        continue;
+                        return StreamingXlsxReader.Action.CONTINUE;
                     }
-                    if (isRowCompletelyEmpty(row, metas.values())) {
-                        emptyRowsInARow++;
-                        if (emptyRowsInARow > 10) {
-                            break;
-                        }
-                        continue;
-                    }
-                    emptyRowsInARow = 0;
+                    emptyCounter[0] = 0;
 
-                    if (shouldIgnoreRowBecauseOfIgnoreIfBlank(row, metas.values(), formatter)) {
-                        continue;
+                    if (shouldIgnoreRowMap(cells, metas.values())) {
+                        return StreamingXlsxReader.Action.CONTINUE;
                     }
 
+                    // Validate mandatory + references for this row.
                     for (ColumnMeta meta : metas.values()) {
                         if (meta.column == null) {
                             continue; // lookup-only entry (SDLNumber, FinancialYear, WSPStatus)
                         }
-                        String txt = getCellText(row, meta.columnIndex, formatter);
+                        String txt = cells.get(meta.columnIndex);
                         String colLetter = columnIndexToLetter(meta.columnIndex);
+
                         if (meta.mandatory && Util.isEmpty(txt, true)) {
-                            errors.add(new MigrationError(sheet.getSheetName(), r + 1, colLetter,
+                            result.errors.add(new MigrationError(sheetName, rowIdx + 1, colLetter,
                                     "Mandatory field is missing (" + meta.column.getColumnName() + ")"));
-                            if (errors.size() >= MAX_ERRORS) {
-                                return errors;
+                            if (result.errors.size() >= MAX_ERRORS) {
+                                stopAll[0] = true;
+                                return StreamingXlsxReader.Action.STOP;
                             }
                             continue;
                         }
-
                         if (Util.isEmpty(txt, true)) {
                             continue;
                         }
-
                         int ref = meta.column.getAD_Reference_ID();
-                        boolean isRef = (ref == DisplayType.Table || ref == DisplayType.TableDir || ref == DisplayType.Search);
+                        boolean isRef = (ref == DisplayType.Table
+                                       || ref == DisplayType.TableDir
+                                       || ref == DisplayType.Search);
                         if (isRef && !meta.createIfNotExist) {
                             Integer id = tryResolveRefId(ctx, meta.column, txt, meta.useValueForRef, trxName);
                             if (id == null || id <= 0) {
-                                errors.add(new MigrationError(sheet.getSheetName(), r + 1, colLetter,
+                                result.errors.add(new MigrationError(sheetName, rowIdx + 1, colLetter,
                                         "Reference not found for value '" + txt + "' (" + meta.column.getColumnName() + ")"));
-                                if (errors.size() >= MAX_ERRORS) {
-                                    return errors;
+                                if (result.errors.size() >= MAX_ERRORS) {
+                                    stopAll[0] = true;
+                                    return StreamingXlsxReader.Action.STOP;
                                 }
                             }
                         }
                     }
-                }
+
+                    // Piggyback workbook-wide value detection on this same scan.
+                    detectSingleOrg(ctx, cells, orgMeta, result, trxName);
+                    detectFinYear(ctx, cells, finYearMeta, result, trxName);
+                    detectWspStatus(cells, statusMeta, result, trxName);
+
+                    return StreamingXlsxReader.Action.CONTINUE;
+                });
             }
 
-            return errors;
+            return result;
         }
 
-        private Map<Integer, Integer> importWorkbook(Properties ctx,
-                                                     Workbook wb,
-                                                     List<X_ZZ_WSP_ATR_Lookup_Mapping> headers,
-                                                     String trxName,
-                                                     DataFormatter formatter,
-                                                     String sourceFileName) {
+        // ============================================================
+        // Import pass
+        // ============================================================
+        Map<Integer, Integer> importWorkbook(final Properties ctx,
+                                             StreamingXlsxReader reader,
+                                             List<X_ZZ_WSP_ATR_Lookup_Mapping> mappingHeaders,
+                                             final String trxName,
+                                             final String sourceFileName,
+                                             final Integer singleOrgId,
+                                             final int finYearId,
+                                             final String wspStatus) throws Exception {
 
             importErrors.clear();
-            Map<Integer, Integer> importedBySubmittedId = new LinkedHashMap<>();
-            Map<Integer, Integer> submittedIdByOrgId = new HashMap<>();
-            // Cache the X_ZZ_WSP_ATR_Submitted PO by ID so newTargetPO does not
-            // reload it from the database on every single row.
-            Map<Integer, X_ZZ_WSP_ATR_Submitted> submittedPoCache = new HashMap<>();
-            int rowsSaved = 0;
-            Integer singleOrgId = resolveSingleOrgId(ctx, wb, headers, trxName, formatter);
-            int finYearId = resolveFinYearId(ctx, wb, headers, trxName, formatter);
-            String wspStatus = resolveWspStatus(ctx, wb, headers, trxName, formatter);
+            final Map<Integer, Integer> importedBySubmittedId = new LinkedHashMap<>();
+            final Map<Integer, Integer> submittedIdByOrgId = new HashMap<>();
+            final Map<Integer, X_ZZ_WSP_ATR_Submitted> submittedPoCache = new HashMap<>();
+            final int[] rowsSaved = {0};
 
-            for (X_ZZ_WSP_ATR_Lookup_Mapping header : headers) {
+            for (final X_ZZ_WSP_ATR_Lookup_Mapping header : mappingHeaders) {
                 if (header.getAD_Table_ID() <= 0 || !header.isZZ_Is_For_Bulk()) {
                     continue;
                 }
+                final String sheetName = header.getZZ_Tab_Name();
+                if (!reader.hasSheet(sheetName)) {
+                    throw new AdempiereException("Sheet '" + sheetName + "' not found in workbook");
+                }
 
-                Sheet sheet = getSheetOrThrow(wb, header);
-                Map<Integer, ColumnMeta> metas = buildColumnMeta(ctx, header, trxName);
+                final Map<Integer, ColumnMeta> metas = buildColumnMeta(ctx, header, trxName);
                 if (metas.isEmpty()) {
                     continue;
                 }
+                final ColumnMeta orgMeta = findColumnByHeader(metas, "SDLNumber");
 
-                ColumnMeta orgMeta = findOrgMeta(metas);
+                int sr = header.getStart_Row() != null ? header.getStart_Row().intValue() : 4;
+                if (sr <= 0) sr = 4;
+                final int startRow = sr;
 
-                int startRow = header.getStart_Row() != null ? header.getStart_Row().intValue() : 4;
-                if (startRow <= 0) {
-                    startRow = 4;
-                }
-
-                // Resume support: find the last committed line for this tab and skip ahead.
-                // lastProcessedLine is stored as r+1 (1-based), so the next r to process is lastProcessedLine.
-                int lastProcessedLine = getLastProcessedLine(ctx, trxName, sourceFileName, sheet.getSheetName());
-                int effectiveStartRow = Math.max(startRow, lastProcessedLine);
+                // Resume support: skip ahead past any rows already committed for this tab.
+                int lastProcessedLine = getLastProcessedLine(ctx, trxName, sourceFileName, sheetName);
+                final int effectiveStartRow = Math.max(startRow, lastProcessedLine);
                 if (effectiveStartRow > startRow) {
-                    svrProcess.addLog("Tab " + sheet.getSheetName() + ": resuming from line "
+                    svrProcess.addLog("Tab " + sheetName + ": resuming from line "
                             + (effectiveStartRow + 1) + " (last committed line was " + lastProcessedLine + ")");
                 }
 
-                int emptyRowsInARow = 0;
-                for (int r = effectiveStartRow; r <= sheet.getLastRowNum(); r++) {
-                    Row row = sheet.getRow(r);
-                    if (row == null) {
-                    	emptyRowsInARow++;
-                        if (emptyRowsInARow > 10) {
-                            break;
-                        }
-                        continue;
-                    }
-                    if (isRowCompletelyEmpty(row, metas.values())) {
-                        emptyRowsInARow++;
-                        if (emptyRowsInARow > 10) {
-                            break;
-                        }
-                        continue;
-                    }
-                    emptyRowsInARow = 0;
+                final Set<Integer> wanted = collectWantedColumns(metas);
+                final int[] emptyCounter = {0};
+                final boolean[] stopAll = {false};
 
-                    if (shouldIgnoreRowBecauseOfIgnoreIfBlank(row, metas.values(), formatter)) {
-                        continue;
+                reader.streamSheet(sheetName, effectiveStartRow, wanted, (rowIdx, cells) -> {
+                    if (stopAll[0]) {
+                        return StreamingXlsxReader.Action.STOP;
+                    }
+                    if (isMappedRowEmpty(cells, metas.values())) {
+                        emptyCounter[0]++;
+                        if (emptyCounter[0] > MAX_EMPTY_ROWS) {
+                            return StreamingXlsxReader.Action.STOP;
+                        }
+                        return StreamingXlsxReader.Action.CONTINUE;
+                    }
+                    emptyCounter[0] = 0;
+
+                    if (shouldIgnoreRowMap(cells, metas.values())) {
+                        return StreamingXlsxReader.Action.CONTINUE;
                     }
 
-                    Integer orgId = resolveOrgIdForRow(ctx, row, orgMeta, singleOrgId, formatter, metas, trxName, sheet.getSheetName(), r + 1);
+                    Integer orgId = resolveOrgIdForRow(ctx, cells, orgMeta, singleOrgId,
+                            metas, trxName, sheetName, rowIdx + 1);
                     if (orgId == null) {
-                        svrProcess.addLog("Tab " + sheet.getSheetName() + " row " + (r + 1) + ": no SDL number — skipping remainder of tab");
-                        break;
+                        svrProcess.addLog("Tab " + sheetName + " row " + (rowIdx + 1)
+                                + ": no SDL number — skipping remainder of tab");
+                        return StreamingXlsxReader.Action.STOP;
                     }
                     Integer submittedId = submittedIdByOrgId.get(orgId);
                     if (submittedId == null) {
@@ -345,33 +379,31 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                         submittedIdByOrgId.put(orgId, submittedId);
                     }
 
+                    final int finalSubmittedId = submittedId;
                     X_ZZ_WSP_ATR_Submitted submittedPO = submittedPoCache.computeIfAbsent(
-                            submittedId, id -> new X_ZZ_WSP_ATR_Submitted(ctx, id, trxName));
+                            finalSubmittedId, id -> new X_ZZ_WSP_ATR_Submitted(ctx, id, trxName));
                     PO line = newTargetPO(ctx, submittedPO, header, trxName);
                     if (line.get_ColumnIndex("Row_No") >= 0) {
-                        line.set_ValueOfColumn("Row_No", Integer.valueOf(r + 1));
+                        line.set_ValueOfColumn("Row_No", Integer.valueOf(rowIdx + 1));
                     }
 
                     for (ColumnMeta meta : metas.values()) {
                         if (meta.column == null) {
-                            continue; // lookup-only entry (SDLNumber, FinancialYear, WSPStatus) — not a PO column
+                            continue; // lookup-only entry — not a PO column
                         }
-                        String mainText = getCellText(row, meta.columnIndex, formatter);
+                        String mainText = cells.get(meta.columnIndex);
 
                         if (meta.createIfNotExist && meta.isRefColumn) {
-                            // Read optional Value/Name from their own columns when configured
                             String valueText = (meta.valueColumnIndex != null)
-                                    ? getCellText(row, meta.valueColumnIndex, formatter) : null;
+                                    ? cells.get(meta.valueColumnIndex.intValue()) : null;
                             String nameText  = (meta.nameColumnIndex  != null)
-                                    ? getCellText(row, meta.nameColumnIndex,  formatter) : null;
-
+                                    ? cells.get(meta.nameColumnIndex.intValue())  : null;
                             boolean allBlank = Util.isEmpty(mainText, true)
                                     && Util.isEmpty(valueText, true)
                                     && Util.isEmpty(nameText,  true);
                             if (allBlank) {
                                 continue;
                             }
-
                             setValueFromTextOrCreate(ctx, line, meta, mainText, valueText, nameText, trxName);
                         } else {
                             if (Util.isEmpty(mainText, true)) {
@@ -379,240 +411,133 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                             }
                             String err = setValueFromText(ctx, line, meta.column, mainText, meta.useValueForRef, trxName);
                             if (err != null) {
-                                importErrors.add(new MigrationError(sheet.getSheetName(), r + 1,
+                                importErrors.add(new MigrationError(sheetName, rowIdx + 1,
                                         columnIndexToLetter(meta.columnIndex), err));
                             }
                         }
                     }
 
                     line.saveEx();
-                    recordProgress(ctx, trxName, sourceFileName, sheet.getSheetName(), r + 1);
-                    importedBySubmittedId.put(submittedId, importedBySubmittedId.getOrDefault(submittedId, 0) + 1);
-                    rowsSaved++;
-                    if (rowsSaved % 1000 == 0) {
+                    recordProgress(ctx, trxName, sourceFileName, sheetName, rowIdx + 1);
+                    importedBySubmittedId.merge(finalSubmittedId, Integer.valueOf(1), Integer::sum);
+                    rowsSaved[0]++;
+                    if (rowsSaved[0] % 1000 == 0) {
                         try {
                             DB.commit(true, trxName);
                         } catch (java.sql.SQLException e) {
-                            throw new AdempiereException("Batch commit failed after " + rowsSaved + " rows", e);
+                            throw new AdempiereException("Batch commit failed after " + rowsSaved[0] + " rows", e);
                         }
-                        svrProcess.addLog("Committed batch after " + rowsSaved + " rows");
+                        svrProcess.addLog("Committed batch after " + rowsSaved[0] + " rows");
                     }
-                }
+
+                    return StreamingXlsxReader.Action.CONTINUE;
+                });
             }
 
             return importedBySubmittedId;
         }
 
-        private Integer resolveSingleOrgId(Properties ctx,
-                                           Workbook wb,
-                                           List<X_ZZ_WSP_ATR_Lookup_Mapping> headers,
-                                           String trxName,
-                                           DataFormatter formatter) {
-            // We only need to know whether the whole workbook contains exactly one
-            // organisation.  Stop as soon as we see a second distinct SDL value —
-            // no need to scan every row of every sheet.
-            String detectedSdl = null;
-            Integer detectedId  = null;
-
-            for (X_ZZ_WSP_ATR_Lookup_Mapping header : headers) {
-                if (header.getAD_Table_ID() <= 0 || !header.isZZ_Is_For_Bulk()) {
-                    continue;
-                }
-                Sheet sheet = getSheetOrThrow(wb, header);
-                Map<Integer, ColumnMeta> metas = buildColumnMeta(ctx, header, trxName);
-                ColumnMeta orgMeta = findOrgMeta(metas);
-                if (orgMeta == null) {
-                    continue;
-                }
-                int startRow = header.getStart_Row() != null ? header.getStart_Row().intValue() : 4;
-                if (startRow <= 0) {
-                    startRow = 4;
-                }
-                for (int r = startRow; r <= sheet.getLastRowNum(); r++) {
-                    Row row = sheet.getRow(r);
-                    if (row == null) {
-                        continue;
-                    }
-                    String orgTxt = getCellText(row, orgMeta.columnIndex, formatter);
-                    if (Util.isEmpty(orgTxt, true)) {
-                        continue;
-                    }
-                    orgTxt = orgTxt.trim();
-                    if (detectedSdl != null && detectedSdl.equalsIgnoreCase(orgTxt)) {
-                        continue; // same SDL as already detected — no DB query needed
-                    }
-                    int orgIdVal = DB.getSQLValueEx(trxName,
-                            "SELECT o.ZZSdfOrganisation_ID FROM ZZSdfOrganisation o"
-                            + " JOIN C_BPartner bp ON bp.C_BPartner_ID = o.C_BPartner_ID"
-                            + " WHERE bp.Value = ? AND o.AD_Client_ID = ? AND o.IsActive = 'Y'"
-                            + " FETCH FIRST 1 ROWS ONLY",
-                            orgTxt, Env.getAD_Client_ID(ctx));
-                    if (orgIdVal <= 0) {
-                        continue;
-                    }
-                    if (detectedId == null) {
-                        detectedId  = orgIdVal;
-                        detectedSdl = orgTxt;
-                    } else if (detectedId.intValue() != orgIdVal) {
-                        return null; // multiple orgs — stop immediately, no need to scan further
-                    }
-                }
+        // ============================================================
+        // Workbook-wide single-org / finYear / wspStatus detection
+        // ============================================================
+        private void detectSingleOrg(Properties ctx, Map<Integer, String> cells,
+                                     ColumnMeta orgMeta, ValidationResult result, String trxName) {
+            if (orgMeta == null || result.multipleOrgsDetected) {
+                return;
             }
-            return detectedId;
+            String orgTxt = cells.get(orgMeta.columnIndex);
+            if (Util.isEmpty(orgTxt, true)) {
+                return;
+            }
+            String trimmed = orgTxt.trim();
+            if (result.detectedSdl != null && result.detectedSdl.equalsIgnoreCase(trimmed)) {
+                return; // already seen — no DB hit needed
+            }
+            int orgIdVal = lookupOrgIdBySdl(ctx, trimmed, trxName);
+            if (orgIdVal <= 0) {
+                return;
+            }
+            if (result.detectedSdl == null) {
+                result.detectedSdl = trimmed;
+                result.singleOrgId = Integer.valueOf(orgIdVal);
+            } else if (result.singleOrgId != null
+                    && result.singleOrgId.intValue() != orgIdVal) {
+                result.multipleOrgsDetected = true;
+                result.singleOrgId = null;
+            }
         }
 
-        private int resolveFinYearId(Properties ctx,
-                                     Workbook wb,
-                                     List<X_ZZ_WSP_ATR_Lookup_Mapping> headers,
-                                     String trxName,
-                                     DataFormatter formatter) {
-            for (X_ZZ_WSP_ATR_Lookup_Mapping header : headers) {
-                if (header.getAD_Table_ID() <= 0 || !header.isZZ_Is_For_Bulk()) {
-                    continue;
-                }
-                Sheet sheet = getSheetOrThrow(wb, header);
-                Map<Integer, ColumnMeta> metas = buildColumnMeta(ctx, header, trxName);
-                ColumnMeta finYearMeta = findFinYearMeta(metas);
-                if (finYearMeta == null) {
-                    continue;
-                }
-                int startRow = header.getStart_Row() != null ? header.getStart_Row().intValue() : 4;
-                if (startRow <= 0) {
-                    startRow = 4;
-                }
-                for (int r = startRow; r <= sheet.getLastRowNum(); r++) {
-                    Row row = sheet.getRow(r);
-                    if (row == null) {
-                        continue;
-                    }
-                    String finYearTxt = getCellText(row, finYearMeta.columnIndex, formatter);
-                    if (Util.isEmpty(finYearTxt, true)) {
-                        continue;
-                    }
-                    int finYearId = DB.getSQLValueEx(trxName,
-                            "SELECT C_Year_ID FROM C_Year WHERE FiscalYear = ? AND AD_Client_ID = ?",
-                            finYearTxt.trim(), Env.getAD_Client_ID(ctx));
-                    if (finYearId > 0) {
-                        return finYearId;
-                    }
-                }
+        private void detectFinYear(Properties ctx, Map<Integer, String> cells,
+                                   ColumnMeta finYearMeta, ValidationResult result, String trxName) {
+            if (finYearMeta == null || result.finYearId > 0) {
+                return;
             }
-            throw new AdempiereException("Could not resolve financial year from FinancialYear column in workbook.");
+            String txt = cells.get(finYearMeta.columnIndex);
+            if (Util.isEmpty(txt, true)) {
+                return;
+            }
+            int finId = DB.getSQLValueEx(trxName,
+                    "SELECT C_Year_ID FROM C_Year WHERE FiscalYear = ? AND AD_Client_ID = ?",
+                    txt.trim(), Env.getAD_Client_ID(ctx));
+            if (finId > 0) {
+                result.finYearId = finId;
+            }
         }
 
-        private String resolveWspStatus(Properties ctx,
-                                        Workbook wb,
-                                        List<X_ZZ_WSP_ATR_Lookup_Mapping> headers,
-                                        String trxName,
-                                        DataFormatter formatter) {
-            for (X_ZZ_WSP_ATR_Lookup_Mapping header : headers) {
-                if (header.getAD_Table_ID() <= 0 || !header.isZZ_Is_For_Bulk()) {
-                    continue;
-                }
-                Sheet sheet = getSheetOrThrow(wb, header);
-                Map<Integer, ColumnMeta> metas = buildColumnMeta(ctx, header, trxName);
-                ColumnMeta statusMeta = findWspStatusMeta(metas);
-                if (statusMeta == null) {
-                    continue;
-                }
-                int startRow = header.getStart_Row() != null ? header.getStart_Row().intValue() : 4;
-                if (startRow <= 0) {
-                    startRow = 4;
-                }
-                for (int r = startRow; r <= sheet.getLastRowNum(); r++) {
-                    Row row = sheet.getRow(r);
-                    if (row == null) {
-                        continue;
-                    }
-                    String statusTxt = getCellText(row, statusMeta.columnIndex, formatter);
-                    if (Util.isEmpty(statusTxt, true)) {
-                        continue;
-                    }
-                    String value = DB.getSQLValueStringEx(trxName,
-                            "SELECT rl.Value FROM AD_Ref_List rl"
-                            + " JOIN AD_Reference r ON r.AD_Reference_ID = rl.AD_Reference_ID"
-                            + " WHERE r.AD_Reference_UU = '98479fb5-df5d-440d-86aa-92d77a320857'"
-                            + " AND rl.Name = ?",
-                            statusTxt.trim());
-                    if (!Util.isEmpty(value, true)) {
-                        return value;
-                    }
-                }
+        private void detectWspStatus(Map<Integer, String> cells, ColumnMeta statusMeta,
+                                     ValidationResult result, String trxName) {
+            if (statusMeta == null || result.wspStatus != null) {
+                return;
             }
-            throw new AdempiereException("Could not resolve WSP status from WSPStatus column in workbook.");
+            String txt = cells.get(statusMeta.columnIndex);
+            if (Util.isEmpty(txt, true)) {
+                return;
+            }
+            String value = DB.getSQLValueStringEx(trxName,
+                    "SELECT rl.Value FROM AD_Ref_List rl"
+                    + " JOIN AD_Reference r ON r.AD_Reference_ID = rl.AD_Reference_ID"
+                    + " WHERE r.AD_Reference_UU = '" + WSP_STATUS_REF_UU + "'"
+                    + " AND rl.Name = ?",
+                    txt.trim());
+            if (!Util.isEmpty(value, true)) {
+                result.wspStatus = value;
+            }
         }
 
-        private ColumnMeta findWspStatusMeta(Map<Integer, ColumnMeta> metas) {
-            for (ColumnMeta meta : metas.values()) {
-                if ("WSPStatus".equals(meta.headerName)) {
-                    return meta;
-                }
-            }
-            return null;
-        }
-
-        private ColumnMeta findFinYearMeta(Map<Integer, ColumnMeta> metas) {
-            for (ColumnMeta meta : metas.values()) {
-                if ("FinancialYear".equals(meta.headerName)) {
-                    return meta;
-                }
-            }
-            return null;
-        }
-
-        private String getCellValueByHeader(Row row, Map<Integer, ColumnMeta> metas, String header, DataFormatter formatter) {
-            for (ColumnMeta meta : metas.values()) {
-                if (header.equals(meta.headerName)) {
-                    return getCellText(row, meta.columnIndex, formatter);
-                }
-            }
-            return null;
-        }
-
-        private ColumnMeta findOrgMeta(Map<Integer, ColumnMeta> metas) {
-            for (ColumnMeta meta : metas.values()) {
-                if ("SDLNumber".equals(meta.headerName)) {
-                    return meta;
-                }
-            }
-            return null;
-        }
-
+        // ============================================================
+        // Per-row helpers
+        // ============================================================
         private Integer resolveOrgIdForRow(Properties ctx,
-                                           Row row,
+                                           Map<Integer, String> cells,
                                            ColumnMeta orgMeta,
                                            Integer singleOrgId,
-                                           DataFormatter formatter,
                                            Map<Integer, ColumnMeta> metas,
                                            String trxName,
                                            String tab,
                                            int lineNo) {
             if (orgMeta != null) {
-                String sdlNumber = getCellText(row, orgMeta.columnIndex, formatter);
+                String sdlNumber = cells.get(orgMeta.columnIndex);
                 if (Util.isEmpty(sdlNumber, true)) {
                     return null;
                 }
-                int orgId = DB.getSQLValueEx(trxName,
-                        "SELECT o.ZZSdfOrganisation_ID FROM ZZSdfOrganisation o"
-                        + " JOIN C_BPartner bp ON bp.C_BPartner_ID = o.C_BPartner_ID"
-                        + " WHERE bp.Value = ? AND o.AD_Client_ID = ? AND o.IsActive = 'Y'"
-                        + " FETCH FIRST 1 ROWS ONLY",
-                        sdlNumber.trim(), Env.getAD_Client_ID(ctx));
+                String sdl = sdlNumber.trim();
+                int orgId = lookupOrgIdBySdl(ctx, sdl, trxName);
                 if (orgId > 0) {
-                    return orgId;
+                    return Integer.valueOf(orgId);
                 }
-                // ZZSdfOrganisation not found — create one if the BPartner exists
+                // ZZSdfOrganisation not found — create one if the BPartner exists.
                 int bpId = DB.getSQLValueEx(trxName,
                         "SELECT C_BPartner_ID FROM C_BPartner WHERE Value = ? AND AD_Client_ID = ?",
-                        sdlNumber.trim(), Env.getAD_Client_ID(ctx));
+                        sdl, Env.getAD_Client_ID(ctx));
                 if (bpId <= 0) {
-                    // BPartner does not exist — create it from the SDL number
                     MBPartner_New bp = new MBPartner_New(ctx, 0, trxName);
-                    bp.setValue(sdlNumber.trim());
-                    String legalName = getCellValueByHeader(row, metas, "Legal Name", formatter);
-                    bp.setName(legalName != null && !legalName.isBlank() ? legalName.trim() : sdlNumber.trim());
-                    String tradeName = getCellValueByHeader(row, metas, "Trade Name", formatter);
-                    if (tradeName != null && !tradeName.isBlank()) { bp.setName2(tradeName.trim()); }
+                    bp.setValue(sdl);
+                    String legalName = getCellByHeader(cells, metas, "Legal Name");
+                    bp.setName((legalName != null && !legalName.isBlank()) ? legalName.trim() : sdl);
+                    String tradeName = getCellByHeader(cells, metas, "Trade Name");
+                    if (tradeName != null && !tradeName.isBlank()) {
+                        bp.setName2(tradeName.trim());
+                    }
                     bp.setDescription("Created by ImportWspAtrMigrationFile");
                     bp.setC_BP_Group_ID(1000018); // UNKNOWN GROUP
                     bp.setIsVendor(true);
@@ -621,24 +546,27 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                     bp.setIsProspect(false);
                     bp.saveEx();
                     bpId = bp.get_ID();
-                    svrProcess.addLog("Tab " + tab + " row " + lineNo + ": created new BPartner for SDL " + sdlNumber.trim());
+                    svrProcess.addLog("Tab " + tab + " row " + lineNo + ": created new BPartner for SDL " + sdl);
                 }
                 X_ZZSdfOrganisation newOrg = new X_ZZSdfOrganisation(ctx, 0, trxName);
                 newOrg.setC_BPartner_ID(bpId);
                 newOrg.setZZActingForEmployer(false);
                 newOrg.setZZReplacingPrimarySDF(false);
                 newOrg.setZZSecondarySdf(false);
-                newOrg.setZZSdf_ID(DB.getSQLValue(trxName, "Select s.ZZSDF_ID from ZZSdf s where ZZSdf_UU='06baf540-649a-40d2-84db-75b907bb9d99'"));
+                newOrg.setZZSdf_ID(DB.getSQLValue(trxName,
+                        "Select s.ZZSDF_ID from ZZSdf s where ZZSdf_UU='" + DEFAULT_SDF_UU + "'"));
                 newOrg.saveEx();
-                return newOrg.get_ID();
+                return Integer.valueOf(newOrg.get_ID());
             }
             if (singleOrgId != null && singleOrgId.intValue() > 0) {
                 return singleOrgId;
             }
-            throw new AdempiereException("Tab " + tab + " has no organisation mapping and workbook contains multiple organisations.");
+            throw new AdempiereException(
+                    "Tab " + tab + " has no organisation mapping and workbook contains multiple organisations.");
         }
 
-        private int getOrCreateSubmitted(Properties ctx, int orgId, int finYearId, String wspStatus, String trxName, String sourceFileName) {
+        private int getOrCreateSubmitted(Properties ctx, int orgId, int finYearId,
+                                         String wspStatus, String trxName, String sourceFileName) {
             int existingId = DB.getSQLValueEx(trxName,
                     "SELECT ZZ_WSP_ATR_Submitted_ID FROM ZZ_WSP_ATR_Submitted "
                     + "WHERE ZZSDFOrganisation_ID=? AND ZZ_FinYear_ID=? "
@@ -651,7 +579,8 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                     : new MZZWSPATRSubmitted(ctx, 0, trxName);
 
             if (existingId <= 0) {
-                submitted.setName("WSP/ATR Migration " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+                submitted.setName("WSP/ATR Migration "
+                        + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
                 submitted.setSubmittedDate(new Timestamp(System.currentTimeMillis()));
             }
             submitted.setFileName(sourceFileName);
@@ -660,19 +589,96 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             submitted.setZZ_DocAction(null);
             submitted.setZZ_DocStatus(wspStatus);
             submitted.setZZ_FinYear_ID(finYearId);
-            submitted.setZZ_Submission_Due_Date(WspAtrSubmittedADForm.getWSPATR_Due_Date(clientId, orgId, trxName));
+            submitted.setZZ_Submission_Due_Date(
+                    WspAtrSubmittedADForm.getWSPATR_Due_Date(clientId, orgId, trxName));
             submitted.saveEx();
 
             WspAtrSubmittedADForm.rebuildSubLevyOrgLinks(submitted.get_ID(), trxName);
             return submitted.get_ID();
         }
 
+        private int lookupOrgIdBySdl(Properties ctx, String sdl, String trxName) {
+            return DB.getSQLValueEx(trxName,
+                    "SELECT o.ZZSdfOrganisation_ID FROM ZZSdfOrganisation o"
+                    + " JOIN C_BPartner bp ON bp.C_BPartner_ID = o.C_BPartner_ID"
+                    + " WHERE bp.Value = ? AND o.AD_Client_ID = ? AND o.IsActive = 'Y'"
+                    + " FETCH FIRST 1 ROWS ONLY",
+                    sdl, Env.getAD_Client_ID(ctx));
+        }
+
+        private String getCellByHeader(Map<Integer, String> cells,
+                                       Map<Integer, ColumnMeta> metas,
+                                       String headerName) {
+            for (ColumnMeta meta : metas.values()) {
+                if (headerName.equals(meta.headerName)) {
+                    return cells.get(meta.columnIndex);
+                }
+            }
+            return null;
+        }
+
+        private ColumnMeta findColumnByHeader(Map<Integer, ColumnMeta> metas, String headerName) {
+            for (ColumnMeta meta : metas.values()) {
+                if (headerName.equals(meta.headerName)) {
+                    return meta;
+                }
+            }
+            return null;
+        }
+
+        private Set<Integer> collectWantedColumns(Map<Integer, ColumnMeta> metas) {
+            Set<Integer> wanted = new HashSet<>();
+            for (ColumnMeta meta : metas.values()) {
+                wanted.add(Integer.valueOf(meta.columnIndex));
+                if (meta.valueColumnIndex != null) {
+                    wanted.add(meta.valueColumnIndex);
+                }
+                if (meta.nameColumnIndex != null) {
+                    wanted.add(meta.nameColumnIndex);
+                }
+            }
+            return wanted;
+        }
+
+        /**
+         * Map-based equivalent of {@code AbstractMappingSheetImporter#isRowCompletelyEmpty}.
+         * Treats blank text and zero-valued numeric strings as empty, matching the
+         * original behaviour where numeric 0 cells were considered empty.
+         */
+        private boolean isMappedRowEmpty(Map<Integer, String> cells, Iterable<ColumnMeta> metas) {
+            for (ColumnMeta meta : metas) {
+                String txt = cells.get(meta.columnIndex);
+                if (txt != null && !isBlankOrZero(txt)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /** Map-based equivalent of {@code shouldIgnoreRowBecauseOfIgnoreIfBlank}. */
+        private boolean shouldIgnoreRowMap(Map<Integer, String> cells, Iterable<ColumnMeta> metas) {
+            for (ColumnMeta meta : metas) {
+                if (!meta.ignoreIfBlank) {
+                    continue;
+                }
+                String txt = cells.get(meta.columnIndex);
+                if (isBlankOrZero(txt)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // ============================================================
+        // Column metadata cache
+        // ============================================================
         private Map<Integer, ColumnMeta> buildColumnMeta(Properties ctx,
-                                                         X_ZZ_WSP_ATR_Lookup_Mapping mappingHeader,
-                                                         String trxName) {
+                                                        X_ZZ_WSP_ATR_Lookup_Mapping mappingHeader,
+                                                        String trxName) {
             Map<Integer, ColumnMeta> cached = columnMetaCache.get(mappingHeader.get_ID());
-            if (cached != null)
+            if (cached != null) {
                 return cached;
+            }
             List<X_ZZ_WSP_ATR_Lookup_Mapping_Detail> details = loadDetails(mappingHeader, trxName);
             Map<Integer, ColumnMeta> metas = new HashMap<>();
             for (X_ZZ_WSP_ATR_Lookup_Mapping_Detail det : details) {
@@ -689,15 +695,16 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                 String valueColLetter = det.getZZ_Value_Column_Letter();
                 String nameColLetter  = det.getZZ_Name_Column_Letter();
                 if (!Util.isEmpty(valueColLetter, true)) {
-                    meta.valueColumnIndex = columnLetterToIndex(valueColLetter);
+                    meta.valueColumnIndex = Integer.valueOf(columnLetterToIndex(valueColLetter));
                 }
                 if (!Util.isEmpty(nameColLetter, true)) {
-                    meta.nameColumnIndex = columnLetterToIndex(nameColLetter);
+                    meta.nameColumnIndex = Integer.valueOf(columnLetterToIndex(nameColLetter));
                 }
                 if (det.getAD_Column_ID() > 0) {
                     meta.column = new MColumn(ctx, det.getAD_Column_ID(), trxName);
                     if (Util.isEmpty(meta.column.getColumnName(), true)) {
-                        svrProcess.addLog("Skipping detail — MColumn " + det.getAD_Column_ID() + " not found (letter " + det.getZZ_Column_Letter() + ")");
+                        svrProcess.addLog("Skipping detail — MColumn " + det.getAD_Column_ID()
+                                + " not found (letter " + det.getZZ_Column_Letter() + ")");
                         continue;
                     }
                     int ref = meta.column.getAD_Reference_ID();
@@ -705,24 +712,15 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                             || ref == DisplayType.TableDir
                             || ref == DisplayType.Search;
                 }
-                // meta.column may be null for lookup-only entries (SDLNumber, FinancialYear, WSPStatus)
-                // — those are resolved by the special finder methods and never passed to setValueFromText
                 metas.put(Integer.valueOf(meta.columnIndex), meta);
             }
             columnMetaCache.put(mappingHeader.get_ID(), metas);
             return metas;
         }
 
-        @Override
-        public int importData(Properties ctx, Workbook wb, X_ZZ_WSP_ATR_Submitted submitted,
-                              X_ZZ_WSP_ATR_Lookup_Mapping mappingHeader, String trxName, DataFormatter formatter) {
-            return 0;
-        }
-
-        /**
-         * Returns the highest LineNo already committed for the given file+tab combination,
-         * or 0 if nothing has been recorded yet.  LineNo values are 1-based (r + 1).
-         */
+        // ============================================================
+        // Resume bookkeeping
+        // ============================================================
         private int getLastProcessedLine(Properties ctx, String trxName, String sourceFile, String tabName) {
             int val = DB.getSQLValue(trxName,
                     "SELECT COALESCE(MAX(LineNo), 0) FROM ZZ_WSP_ATR_Migration_Progress"
@@ -731,11 +729,6 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             return val < 0 ? 0 : val;
         }
 
-        /**
-         * Inserts a progress record for the given line inside the current transaction.
-         * The record is committed together with the surrounding data batch.
-         * ON CONFLICT DO NOTHING makes it safe to call even if the row already exists.
-         */
         private void recordProgress(Properties ctx, String trxName, String sourceFile, String tabName, int lineNo) {
             DB.executeUpdateEx(
                     "INSERT INTO ZZ_WSP_ATR_Migration_Progress"
@@ -746,7 +739,10 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                     trxName);
         }
 
-        private File writeErrorLog(List<MigrationError> errors) throws Exception {
+        // ============================================================
+        // Error CSV writer
+        // ============================================================
+        File writeErrorLog(List<MigrationError> errors) throws Exception {
             File file = File.createTempFile("wspatr-migration-errors-", ".csv");
             try (java.io.FileWriter fw = new java.io.FileWriter(file);
                  java.io.BufferedWriter bw = new java.io.BufferedWriter(fw);
