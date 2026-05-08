@@ -57,6 +57,7 @@ import za.ntier.models.MZZWSPATRWSP;
 public class ImportWspAtrMigrationFile extends SvrProcess {
 
     private static final String BULK_UPLOAD_PATH = "/home/ntier/SG_Data_070526/MQAWSPATRDataDump2026.xlsx";
+    //private static final String BULK_UPLOAD_PATH = "/tmp/bulkupload.xlsx";
 
     private final ReferenceLookupService refService = new ReferenceLookupService();
 
@@ -212,15 +213,19 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                 if (header.getAD_Table_ID() <= 0 || !header.isZZ_Is_For_Bulk()) {
                     continue;
                 }
-                final String sheetName = header.getZZ_Tab_Name();
-                if (!reader.hasSheet(sheetName)) {
-                    throw new AdempiereException("Sheet '" + sheetName + "' not found in workbook");
+                final String mappingName = header.getZZ_Tab_Name();
+                List<String> matchingSheets = reader.findMatchingSheets(mappingName);
+                if (matchingSheets.isEmpty()) {
+                    throw new AdempiereException(
+                            "No sheet matching mapping '" + mappingName + "' found in workbook");
                 }
 
                 final Map<Integer, ColumnMeta> metas = buildColumnMeta(ctx, header, trxName);
                 if (metas.isEmpty()) {
                     continue;
                 }
+
+                for (final String sheetName : matchingSheets) {
 
                 final ColumnMeta orgMeta     = findColumnByHeader(metas, "SDLNumber");
                 final ColumnMeta finYearMeta = findColumnByHeader(metas, "FinancialYear");
@@ -295,6 +300,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
 
                     return StreamingXlsxReader.Action.CONTINUE;
                 });
+                } // end for matchingSheets
             }
 
             return result;
@@ -322,9 +328,11 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                 if (header.getAD_Table_ID() <= 0 || !header.isZZ_Is_For_Bulk()) {
                     continue;
                 }
-                final String sheetName = header.getZZ_Tab_Name();
-                if (!reader.hasSheet(sheetName)) {
-                    throw new AdempiereException("Sheet '" + sheetName + "' not found in workbook");
+                final String mappingName = header.getZZ_Tab_Name();
+                List<String> matchingSheets = reader.findMatchingSheets(mappingName);
+                if (matchingSheets.isEmpty()) {
+                    throw new AdempiereException(
+                            "No sheet matching mapping '" + mappingName + "' found in workbook");
                 }
 
                 final Map<Integer, ColumnMeta> metas = buildColumnMeta(ctx, header, trxName);
@@ -336,6 +344,8 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                 int sr = header.getStart_Row() != null ? header.getStart_Row().intValue() : 4;
                 if (sr <= 0) sr = 4;
                 final int startRow = sr;
+
+                for (final String sheetName : matchingSheets) {
 
                 // Resume support: skip ahead past any rows already committed for this tab.
                 int lastProcessedLine = getLastProcessedLine(ctx, trxName, sourceFileName, sheetName);
@@ -417,6 +427,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                         }
                     }
 
+                    line.setAD_Org_ID(0);
                     line.saveEx();
                     recordProgress(ctx, trxName, sourceFileName, sheetName, rowIdx + 1);
                     importedBySubmittedId.merge(finalSubmittedId, Integer.valueOf(1), Integer::sum);
@@ -432,6 +443,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
 
                     return StreamingXlsxReader.Action.CONTINUE;
                 });
+                } // end for matchingSheets
             }
 
             return importedBySubmittedId;
@@ -544,6 +556,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                     bp.setIsCustomer(false);
                     bp.setIsEmployee(false);
                     bp.setIsProspect(false);
+                    bp.setAD_Org_ID(0);
                     bp.saveEx();
                     bpId = bp.get_ID();
                     svrProcess.addLog("Tab " + tab + " row " + lineNo + ": created new BPartner for SDL " + sdl);
@@ -555,6 +568,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                 newOrg.setZZSecondarySdf(false);
                 newOrg.setZZSdf_ID(DB.getSQLValue(trxName,
                         "Select s.ZZSDF_ID from ZZSdf s where ZZSdf_UU='" + DEFAULT_SDF_UU + "'"));
+                newOrg.setAD_Org_ID(0);
                 newOrg.saveEx();
                 return Integer.valueOf(newOrg.get_ID());
             }
@@ -591,6 +605,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             submitted.setZZ_FinYear_ID(finYearId);
             submitted.setZZ_Submission_Due_Date(
                     WspAtrSubmittedADForm.getWSPATR_Due_Date(clientId, orgId, trxName));
+            submitted.setAD_Org_ID(0);
             submitted.saveEx();
 
             WspAtrSubmittedADForm.rebuildSubLevyOrgLinks(submitted.get_ID(), trxName);

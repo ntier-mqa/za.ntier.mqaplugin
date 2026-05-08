@@ -420,6 +420,7 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 			refPO.set_ValueOfColumn("EntityType", "U");
 		}
 
+		refPO.setAD_Org_ID(0);
 		refPO.saveEx();
 		int newId = refPO.get_ID();
 		if (newId <= 0) {

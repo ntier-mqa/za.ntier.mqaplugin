@@ -73,8 +73,40 @@ public class StreamingXlsxReader implements AutoCloseable {
         return Collections.unmodifiableList(sheetNames);
     }
 
+    /** Case-insensitive existence check. */
     public boolean hasSheet(String name) {
-        return sheetNames.contains(name);
+        if (name == null) return false;
+        for (String s : sheetNames) {
+            if (s.equalsIgnoreCase(name)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns every actual sheet name that matches the supplied mapping name,
+     * comparing case-insensitively. A sheet matches when its name is either
+     * an exact (case-insensitive) equal of {@code mappingName}, or starts with
+     * {@code mappingName + "_"} — so a mapping called {@code "ATR"} matches
+     * sheets named {@code ATR}, {@code ATR_1}, {@code ATR_2}, etc.
+     *
+     * <p>Returned in workbook order. Empty list when no sheet matches.</p>
+     */
+    public List<String> findMatchingSheets(String mappingName) {
+        List<String> matches = new ArrayList<>();
+        if (mappingName == null || mappingName.isEmpty()) {
+            return matches;
+        }
+        int len = mappingName.length();
+        for (String s : sheetNames) {
+            if (s.equalsIgnoreCase(mappingName)) {
+                matches.add(s);
+            } else if (s.length() > len + 1
+                    && s.charAt(len) == '_'
+                    && s.regionMatches(true, 0, mappingName, 0, len)) {
+                matches.add(s);
+            }
+        }
+        return matches;
     }
 
     /**
@@ -128,7 +160,7 @@ public class StreamingXlsxReader implements AutoCloseable {
         XSSFReader.SheetIterator iter = (XSSFReader.SheetIterator) reader.getSheetsData();
         while (iter.hasNext()) {
             InputStream is = iter.next();
-            if (name.equals(iter.getSheetName())) {
+            if (name != null && name.equalsIgnoreCase(iter.getSheetName())) {
                 return is;
             }
             is.close();
