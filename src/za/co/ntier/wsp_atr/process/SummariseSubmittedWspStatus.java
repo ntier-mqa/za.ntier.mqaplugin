@@ -2,6 +2,8 @@ package za.co.ntier.wsp_atr.process;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -21,17 +23,42 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.compiere.process.ProcessInfoParameter;
 import org.compiere.process.SvrProcess;
+import org.compiere.util.DB;
 
-@org.adempiere.base.annotation.Process(name = "za.co.ntier.wsp_atr.process.SummariseMigrationTab")
-public class SummariseMigrationTab extends SvrProcess {
+/**
+ * Queries ZZ_WSP_ATR_Submitted and produces the same SDL × WSPStatus pivot
+ * as SummariseMigrationTab so the two outputs can be compared side-by-side.
+ *
+ * Join path:
+ *   ZZ_WSP_ATR_Submitted.ZZSdfOrganisation_ID
+ *     → ZZSdfOrganisation.C_BPartner_ID
+ *       → C_BPartner.Value  (SDL number)
+ *       → C_BPartner.Name   (Legal Name)
+ *   ZZ_WSP_ATR_Submitted.ZZ_DocStatus
+ *     → AD_Ref_List.Name    (human-readable status, same text as the Excel column)
+ */
+@org.adempiere.base.annotation.Process(name = "za.co.ntier.wsp_atr.process.SummariseSubmittedWspStatus")
+public class SummariseSubmittedWspStatus extends SvrProcess {
 
-    private static final String BULK_UPLOAD_PATH = "/home/ntier/SG_Data_070526/MQAWSPATRDataDump2026.xlsx";
-    private static final String BIODATA_SHEET    = "BioData";
-    private static final String COL_SDL          = "SDLNumber";
-    private static final String COL_LEGAL        = "LegalName";
-    private static final String COL_STATUS       = "WSPStatus";
-    private static final String BLANK_SDL        = "(blank)";
-    private static final int    MAX_EMPTY        = 10;
+    // Reference list UUID that backs ZZ_DocStatus — same value used in ImportWspAtrMigrationFile.
+    private static final String WSP_STATUS_REF_UU = "98479fb5-df5d-440d-86aa-92d77a320857";
+
+    private static final String BLANK_SDL = "(blank)";
+
+    private static final String SQL =
+            "SELECT bp.Value                               AS sdl_number," +
+            "       bp.Name                                AS legal_name," +
+            "       COALESCE(rl.Name, s.ZZ_DocStatus)     AS wsp_status," +
+            "       COUNT(*)                               AS cnt" +
+            "  FROM ZZ_WSP_ATR_Submitted s" +
+            "  JOIN ZZSdfOrganisation org ON org.ZZSdfOrganisation_ID = s.ZZSdfOrganisation_ID" +
+            "  JOIN C_BPartner         bp  ON bp.C_BPartner_ID         = org.C_BPartner_ID" +
+            "  LEFT JOIN AD_Ref_List   rl  ON rl.Value                 = s.ZZ_DocStatus" +
+            "                             AND rl.AD_Reference_ID = (" +
+            "                                 SELECT AD_Reference_ID FROM AD_Reference" +
+            "                                  WHERE AD_Reference_UU = '" + WSP_STATUS_REF_UU + "')" +
+            " GROUP BY bp.Value, bp.Name, COALESCE(rl.Name, s.ZZ_DocStatus)" +
+            " ORDER BY bp.Value";
 
     @Override
     protected void prepare() {
@@ -42,71 +69,42 @@ public class SummariseMigrationTab extends SvrProcess {
 
     @Override
     protected String doIt() throws Exception {
-        File file = new File(BULK_UPLOAD_PATH);
-        if (!file.exists() || !file.isFile())
-            throw new AdempiereException("File not found: " + BULK_UPLOAD_PATH);
 
-        // sdlNumber -> (status -> count).  LinkedHashMap preserves SDL insertion order.
+        // sdlNumber -> (statusName -> count)
         Map<String, Map<String, Integer>> pivot = new LinkedHashMap<>();
-        // sdlNumber -> first Legal Name seen for that SDL.
+        // sdlNumber -> legal name
         Map<String, String> legalNames = new LinkedHashMap<>();
-        // All unique statuses, sorted alphabetically.
+        // all unique statuses, sorted alphabetically
         Map<String, Void> statusSet = new TreeMap<>();
 
-        int[] sdlColRef   = {-1};
-        int[] legalColRef = {-1};
-        int[] statColRef  = {-1};
-        int[] emptyStreak = {0};
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            pstmt = DB.prepareStatement(SQL, get_TrxName());
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                String sdl    = rs.getString("sdl_number");
+                String legal  = rs.getString("legal_name");
+                String status = rs.getString("wsp_status");
+                int    cnt    = rs.getInt("cnt");
 
-        try (StreamingXlsxReader reader = new StreamingXlsxReader(file)) {
-            if (!reader.hasSheet(BIODATA_SHEET))
-                throw new AdempiereException("Sheet '" + BIODATA_SHEET + "' not found in file.");
-
-            reader.streamSheet(BIODATA_SHEET, 0, null, (rowIdx, cells) -> {
-
-                if (rowIdx == 0) {
-                    // Locate SDL, Legal Name, and status columns by header name.
-                    for (Map.Entry<Integer, String> e : cells.entrySet()) {
-                        String h = e.getValue().trim();
-                        if (COL_SDL.equalsIgnoreCase(h))    sdlColRef[0]   = e.getKey();
-                        if (COL_LEGAL.equalsIgnoreCase(h))  legalColRef[0] = e.getKey();
-                        if (COL_STATUS.equalsIgnoreCase(h)) statColRef[0]  = e.getKey();
-                    }
-                    if (sdlColRef[0] < 0)
-                        throw new AdempiereException("Column '" + COL_SDL + "' not found in BioData header row.");
-                    if (statColRef[0] < 0)
-                        throw new AdempiereException("Column '" + COL_STATUS + "' not found in BioData header row.");
-                    return StreamingXlsxReader.Action.CONTINUE;
-                }
-
-                if (sdlColRef[0] < 0) return StreamingXlsxReader.Action.STOP; // header never found
-
-                // Stop after MAX_EMPTY consecutive empty rows.
-                if (cells.isEmpty()) {
-                    if (++emptyStreak[0] > MAX_EMPTY) return StreamingXlsxReader.Action.STOP;
-                    return StreamingXlsxReader.Action.CONTINUE;
-                }
-                emptyStreak[0] = 0;
-
-                String sdl    = cells.getOrDefault(sdlColRef[0],  "").trim();
-                String status = cells.getOrDefault(statColRef[0], "").trim();
-                String legal  = legalColRef[0] >= 0 ? cells.getOrDefault(legalColRef[0], "").trim() : "";
-
-                if (sdl.isEmpty())    sdl    = BLANK_SDL;
-                if (status.isEmpty()) status = "(none)";
+                if (sdl    == null || sdl.trim().isEmpty())    sdl    = BLANK_SDL;
+                if (legal  == null) legal  = "";
+                if (status == null || status.trim().isEmpty()) status = "(none)";
+                sdl    = sdl.trim();
+                status = status.trim();
 
                 statusSet.put(status, null);
-                pivot.computeIfAbsent(sdl, k -> new LinkedHashMap<>())
-                     .merge(status, 1, Integer::sum);
-                // Keep the first Legal Name encountered for each SDL.
                 legalNames.putIfAbsent(sdl, legal);
-
-                return StreamingXlsxReader.Action.CONTINUE;
-            });
+                pivot.computeIfAbsent(sdl, k -> new LinkedHashMap<>())
+                     .merge(status, cnt, Integer::sum);
+            }
+        } finally {
+            DB.close(rs, pstmt);
         }
 
         if (pivot.isEmpty())
-            return "No data rows found in '" + BIODATA_SHEET + "'.";
+            return "No records found in ZZ_WSP_ATR_Submitted.";
 
         List<String> statuses = new ArrayList<>(statusSet.keySet());
 
@@ -125,15 +123,14 @@ public class SummariseMigrationTab extends SvrProcess {
                             Map<String, String> legalNames,
                             List<String> statuses) throws Exception {
 
-        File tmp = File.createTempFile("BioData_WSP_Status_Summary_", ".xlsx");
+        File tmp = File.createTempFile("DB_WSP_Status_Summary_", ".xlsx");
 
-        // Fixed columns before the dynamic status columns.
         final int STATUS_OFFSET = 2; // col 0 = SDL Number, col 1 = Legal Name
 
         try (XSSFWorkbook wb = new XSSFWorkbook();
              FileOutputStream fos = new FileOutputStream(tmp)) {
 
-            Sheet sheet = wb.createSheet("WSP Status Summary");
+            Sheet sheet = wb.createSheet("WSP Status Summary (DB)");
 
             CellStyle headerStyle = makeHeaderStyle(wb);
             CellStyle totalStyle  = makeTotalStyle(wb);
@@ -142,8 +139,8 @@ public class SummariseMigrationTab extends SvrProcess {
 
             // ---- Header row ----
             Row hdr = sheet.createRow(0);
-            setStyledCell(hdr, 0, "SDL Number",  headerStyle);
-            setStyledCell(hdr, 1, "Legal Name",  headerStyle);
+            setStyledCell(hdr, 0, "SDL Number", headerStyle);
+            setStyledCell(hdr, 1, "Legal Name", headerStyle);
             for (int c = 0; c < statuses.size(); c++)
                 setStyledCell(hdr, STATUS_OFFSET + c, statuses.get(c), headerStyle);
             setStyledCell(hdr, STATUS_OFFSET + statuses.size(), "Total", headerStyle);
@@ -199,7 +196,7 @@ public class SummariseMigrationTab extends SvrProcess {
         f.setBold(true);
         f.setColor(IndexedColors.WHITE.getIndex());
         s.setFont(f);
-        s.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
+        s.setFillForegroundColor(IndexedColors.DARK_GREEN.getIndex());
         s.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         s.setAlignment(HorizontalAlignment.CENTER);
         setBorder(s);
@@ -222,7 +219,7 @@ public class SummariseMigrationTab extends SvrProcess {
         Font f = wb.createFont();
         f.setBold(true);
         s.setFont(f);
-        s.setFillForegroundColor(IndexedColors.LIGHT_BLUE.getIndex());
+        s.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
         s.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         setBorder(s);
         return s;

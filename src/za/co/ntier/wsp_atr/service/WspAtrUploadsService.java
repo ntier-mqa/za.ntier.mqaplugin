@@ -206,10 +206,10 @@ public class WspAtrUploadsService {
         if (!(inMainWindow || inExtWindow))
             return false;
 
-        if (isChildWithParentUploadsEnabled(ctx, submittedId, null)) {
-            submitButtonMsg = "Child Organisation configured for Upload only";
-            return false;
-        }
+     //   if (isChildWithParentUploadsEnabled(ctx, submittedId, null)) {
+     //       submitButtonMsg = "Child Organisation configured for Upload only";
+     //       return false;
+     //   }
 
         boolean hasTemplate = true;
         // boolean hasTemplate = repo.hasSubmittedTemplateAttachment(submittedId);

@@ -505,6 +505,10 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             if (Util.isEmpty(txt, true)) {
                 return;
             }
+            if (txt.trim().equals("Created") ) {
+            	txt = "Draft";
+            	
+            }
             String value = DB.getSQLValueStringEx(trxName,
                     "SELECT rl.Value FROM AD_Ref_List rl"
                     + " JOIN AD_Reference r ON r.AD_Reference_ID = rl.AD_Reference_ID"
