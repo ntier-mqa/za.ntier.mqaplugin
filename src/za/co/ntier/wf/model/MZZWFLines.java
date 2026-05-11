@@ -8,6 +8,7 @@ import org.compiere.model.Query;
 
 import za.co.ntier.wf.util.ADColumnUtil;
 import za.ntier.models.X_ZZ_WF_Lines;
+import org.compiere.util.DB;
 
 public class MZZWFLines extends X_ZZ_WF_Lines {
 	private static final long serialVersionUID = 1L;
@@ -37,5 +38,16 @@ public class MZZWFLines extends X_ZZ_WF_Lines {
 		int colId = getZZ_Specific_Responsible_Col_ID();
 		if (colId <= 0) return null;
 		return ADColumnUtil.getColumnName(ctx, colId, trxName);
+	}
+
+	@Override
+	protected boolean beforeSave(boolean newRecord) {
+		if (newRecord || getSeqNo() == 0) {
+			int nextSeqNo = DB.getSQLValue(get_TrxName(),
+					"SELECT COALESCE(MAX(SeqNo), 0) + 10 FROM ZZ_WF_Lines WHERE ZZ_WF_Header_ID=?",
+					getZZ_WF_Header_ID());
+			setSeqNo(nextSeqNo);
+		}
+		return true;
 	}
 }
