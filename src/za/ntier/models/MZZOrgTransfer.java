@@ -2,17 +2,21 @@ package za.ntier.models;
 
 import java.sql.ResultSet;
 import java.util.Properties;
+
+import org.compiere.model.MClient;
+import org.compiere.model.MMailText;
+import org.compiere.model.MSysConfig;
 import org.compiere.model.Query;
 import org.compiere.util.DB;
-import za.ntier.models.MZZSDR_Temp_Org;
-import org.compiere.model.MMailText;
-import org.compiere.util.Env;
-import org.compiere.util.Msg;
-import org.compiere.model.MUser;
-import org.compiere.model.MClient;
+import org.compiere.util.EMail;
+
 import za.co.ntier.api.model.MBPartner_New;
 
 public class MZZOrgTransfer extends X_ZZ_Org_Transfer {
+
+	private static final String INTER_SETA_TRANSFER_FROM_MQA_DEFAULT_CC = "INTER_SETA_TRANSFER_FROM_MQA_DEFAULT_CC";
+	private static final String INTER_SETA_TRANSFER_FROM_MAILTEXT_UU  = "0a9d567f-49ac-4662-b4c3-315018a4475e";
+
 
 	public MZZOrgTransfer(Properties ctx, int ZZ_Org_Transfer_ID, String trxName) {
 		super(ctx, ZZ_Org_Transfer_ID, trxName);
@@ -202,9 +206,80 @@ public class MZZOrgTransfer extends X_ZZ_Org_Transfer {
 	}
 	
 	@Override
-	protected boolean afterSave(boolean newRecord, boolean success) {
-		// TODO Auto-generated method stub
+	protected boolean afterSave(boolean newRecord, boolean success)
+	{
+
+		if (is_ValueChanged(COLUMNNAME_ZZ_DocStatus)
+			&& ZZ_DOCSTATUS_Approved.equals(getZZ_DocStatus()))
+		{
+			sendEmailAfterApproval();
+		}
+
 		return super.afterSave(newRecord, success);
+	}
+
+	private void sendEmailAfterApproval()
+	{
+		String applicantEmail = getEMail();
+		if (applicantEmail == null || applicantEmail.trim().isEmpty())
+		{
+			log.warning("No applicant email found for Org Transfer record " + get_ID());
+			return;
+		}
+
+		int mailTextID = DB.getSQLValueEx(
+											get_TrxName(),
+											"SELECT r_mailtext_id FROM adempiere.r_mailtext WHERE r_mailtext_uu = ?",
+											INTER_SETA_TRANSFER_FROM_MAILTEXT_UU);
+
+		MMailText mText = new MMailText(getCtx(), mailTextID, get_TrxName());
+
+		if (mText.get_ID() <= 0)
+		{
+			log.warning("Temp Org mail text not found. UU=" + INTER_SETA_TRANSFER_FROM_MAILTEXT_UU);
+			return;
+		}
+
+		try
+		{
+			mText.setPO(this, true);
+		}
+		catch (Throwable t)
+		{
+			try
+			{
+				mText.setPO(this);
+			}
+			catch (Throwable ignore)
+			{}
+		}
+
+		String message = mText.getMailText(true);
+		String subject = mText.getMailHeader();
+
+		MClient client = MClient.get(getCtx());
+		EMail email = client.createEMail(applicantEmail, subject, message, mText.isHtml());
+		if (email != null)
+		{
+			String ccEmails = MSysConfig.getValue(INTER_SETA_TRANSFER_FROM_MQA_DEFAULT_CC);
+			if (ccEmails != null && !ccEmails.trim().isEmpty())
+			{
+				String[] emails = ccEmails.split(",");
+				for (String cc : emails)
+				{
+					if (cc != null && !cc.trim().isEmpty())
+					{
+						email.addCc(cc.trim());
+					}
+				}
+			}
+			String msg = email.send();
+			boolean sent = EMail.SENT_OK.equals(msg);
+			if (!sent)
+				log.warning("Failed to send Inter-SETA Transfer approval email to " + applicantEmail + ": " + msg);
+			else
+				log.info("Inter-SETA Transfer approval email sent to " + applicantEmail);
+		}
 	}
 
 }
