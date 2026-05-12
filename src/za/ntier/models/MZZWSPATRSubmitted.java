@@ -177,6 +177,21 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
         List<Object> r = rows.get(0);
         return (String) r.get(0);
     }
+	
+	public String getFinYear() {
+		List<List<Object>> rows = DB.getSQLArrayObjectsEx(null,
+	            "SELECT y.FiscalYear " +
+	            "FROM C_Year y  " +
+	            "WHERE y.C_Year_ID = ? " +
+	            "FETCH FIRST 1 ROWS ONLY",
+	            getZZ_FinYear_ID()
+	        );
+	        if (rows == null || rows.isEmpty())
+	            return null;
+
+	        List<Object> r = rows.get(0);
+	        return (String) r.get(0);
+	}
 
 	private void ensureVerificationChecklist() {
 		int submittedId = getZZ_WSP_ATR_Submitted_ID();

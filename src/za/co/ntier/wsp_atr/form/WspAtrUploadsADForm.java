@@ -171,6 +171,7 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
             case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_RecommendedForEvaluation: return "Recommended For Evaluation";
             case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_RecommendedForApproval: return "Recommended For Approval";
             case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Approved: return "Approved";
+            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Query: return "Query";
             
             default: return code;
         }

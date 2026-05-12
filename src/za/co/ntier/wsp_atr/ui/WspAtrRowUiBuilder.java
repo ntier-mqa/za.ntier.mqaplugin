@@ -110,6 +110,9 @@ public class WspAtrRowUiBuilder {
         if (!parentOrg && !status.equalsIgnoreCase("Imported")) {
             eligible = false;
         }
+        if (status.equalsIgnoreCase("Query")) {
+        	eligible = false;
+        }
 
         Button btn = new Button("Submit WSP-ATR");
         btn.setSclass("btn btn-sm btn-primary wsp-edit-purple");
