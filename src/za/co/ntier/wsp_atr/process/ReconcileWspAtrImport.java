@@ -283,7 +283,9 @@ public class ReconcileWspAtrImport extends SvrProcess {
             return out;
         }
 
-        final int dataStartIdx = Math.max(0, tab.startRow - 1);
+        // Mapping's Start_Row is passed straight to streamSheet (0-based skip),
+        // same convention the importer uses — rows 0..startRow-1 are headers/metadata.
+        final int dataStartIdx = Math.max(0, tab.startRow);
         for (String sheetName : tab.matchedSheets)
             scanOneSheet(reader, sheetName, tab, dataStartIdx, out);
         return out;
@@ -336,7 +338,9 @@ public class ReconcileWspAtrImport extends SvrProcess {
         Map<String, Map<String, Long>> out = new LinkedHashMap<>();
         if (tab.matchedSheets.isEmpty() || tab.sdlColIdx < 0 || tab.wspStatusColIdx < 0) return out;
 
-        final int dataStartIdx = Math.max(0, tab.startRow - 1);
+        // Mapping's Start_Row is passed straight to streamSheet (0-based skip),
+        // same convention the importer uses — rows 0..startRow-1 are headers/metadata.
+        final int dataStartIdx = Math.max(0, tab.startRow);
         for (String sheetName : tab.matchedSheets) {
             final int[] emptyStreak = {0};
             reader.streamSheet(sheetName, dataStartIdx, null, (rowIdx, cells) -> {
