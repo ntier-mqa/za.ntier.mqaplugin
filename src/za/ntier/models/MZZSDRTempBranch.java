@@ -103,12 +103,11 @@ public class MZZSDRTempBranch extends X_ZZ_SDR_Temp_Branch {
 
 		        if (oldStatus == null || !ZZ_DOCSTATUS_Completed.equals(oldStatus)) {
 
-					if (getC_BPartner_ID() > 0)
+					int existingBPID = DB.getSQLValueEx(get_TrxName(),
+							"SELECT c_bpartner_id FROM c_bpartner WHERE value=?", getValue());
+					if (existingBPID > 0)
 					{
-						if (!is_ValueChanged("C_BPartner_ID"))
-						{
-							log.info("Branch BP already created: " + getC_BPartner_ID());
-						}
+						log.info("Branch BP already created: " + existingBPID);
 						return true;
 					}
 
@@ -118,9 +117,6 @@ public class MZZSDRTempBranch extends X_ZZ_SDR_Temp_Branch {
 		                log.severe("Failed to create Branch BP");
 		                return false;
 		            }
-
-		            setC_BPartner_ID(bpID);
-		            saveEx();
 
 		            MClient client = MClient.get(getCtx());
 		            sendBranchEmail(client, bpID);
