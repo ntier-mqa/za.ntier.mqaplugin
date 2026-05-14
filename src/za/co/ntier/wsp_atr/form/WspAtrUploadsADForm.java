@@ -289,7 +289,8 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
                 || X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_RecommendedForEvaluation.equals(status)
                 || X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_RecommendedForApproval.equals(status)
                 || X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Approved.equals(status)
-                || X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported.equals(status);
+                || X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported.equals(status)
+                ||X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Query.equals(status);
     }
 
     public boolean isParentOrganisation(int zzSdfOrganisationId, String trxName) {
