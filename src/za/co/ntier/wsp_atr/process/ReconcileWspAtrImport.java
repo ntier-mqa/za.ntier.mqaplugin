@@ -119,7 +119,7 @@ public class ReconcileWspAtrImport extends SvrProcess {
             }
         }
 
-        Map<String, Map<String, Long>> dbStatus = (statusTab != null) ? queryDbStatus() : Collections.emptyMap();
+        Map<String, Map<String, Long>> dbStatus = (statusTab != null) ? queryDbStatus(statusTab) : Collections.emptyMap();
 
         File report = buildReport(tabs, excelStats, dbStats, legalNames,
                                   statusTab, excelStatus, dbStatus);
@@ -411,23 +411,26 @@ public class ReconcileWspAtrImport extends SvrProcess {
     }
 
     /**
-     * SDL → (status display name → count) from ZZ_WSP_ATR_Submitted.
-     * Status display name is resolved via AD_Ref_List under the WSP status
-     * reference UUID (same lookup used by the importer's detectWspStatus()).
+     * SDL → (status display name → count) of rows in the BioData detail table,
+     * joined back through Submitted to read ZZ_DocStatus. Excel counts one row
+     * per person on the BioData tab, so we must count detail rows (not Submitted
+     * rows) to compare like-for-like.
      */
-    private Map<String, Map<String, Long>> queryDbStatus() {
+    private Map<String, Map<String, Long>> queryDbStatus(TabConfig statusTab) {
         Map<String, Map<String, Long>> out = new LinkedHashMap<>();
         String sql =
             "SELECT bp.Value AS sdl," +
             "       COALESCE(rl.Name, s.ZZ_DocStatus) AS status," +
             "       COUNT(*) AS cnt" +
-            "  FROM ZZ_WSP_ATR_Submitted s" +
-            "  JOIN ZZSdfOrganisation org ON org.ZZSdfOrganisation_ID = s.ZZSdfOrganisation_ID" +
-            "  JOIN C_BPartner         bp  ON bp.C_BPartner_ID         = org.C_BPartner_ID" +
-            "  LEFT JOIN AD_Ref_List   rl  ON rl.Value = s.ZZ_DocStatus" +
-            "                             AND rl.AD_Reference_ID = (" +
-            "                                 SELECT AD_Reference_ID FROM AD_Reference" +
-            "                                  WHERE AD_Reference_UU = '" + WSP_STATUS_REF_UU + "')" +
+            "  FROM " + statusTab.dbTable + " c" +
+            "  JOIN ZZ_WSP_ATR_Submitted s   ON s.ZZ_WSP_ATR_Submitted_ID = c.ZZ_WSP_ATR_Submitted_ID" +
+            "  JOIN ZZSdfOrganisation org    ON org.ZZSdfOrganisation_ID = s.ZZSdfOrganisation_ID" +
+            "  JOIN C_BPartner         bp    ON bp.C_BPartner_ID         = org.C_BPartner_ID" +
+            "  LEFT JOIN AD_Ref_List   rl    ON rl.Value = s.ZZ_DocStatus" +
+            "                              AND rl.AD_Reference_ID = (" +
+            "                                  SELECT AD_Reference_ID FROM AD_Reference" +
+            "                                   WHERE AD_Reference_UU = '" + WSP_STATUS_REF_UU + "')" +
+            " WHERE c.IsActive='Y'" +
             " GROUP BY bp.Value, COALESCE(rl.Name, s.ZZ_DocStatus)";
 
         PreparedStatement pst = null;
