@@ -106,6 +106,10 @@ public class ReconcileWspAtrImport extends SvrProcess {
         Map<String, Map<String, Long>> excelStatus = new LinkedHashMap<>();
         TabConfig statusTab = null;
 
+        // Pre-load canonical status name lookup (lower-cased AD_Ref_List.Name → canonical Name)
+        // so Excel-side status text is normalised to whatever the DB stores via AD_Ref_List.
+        Map<String, String> statusNormalizer = loadStatusNormalizer();
+
         try (StreamingXlsxReader reader = new StreamingXlsxReader(file)) {
             for (TabConfig tab : tabs) {
                 tab.matchedSheets = reader.findMatchingSheets(tab.tabName);
@@ -114,7 +118,7 @@ public class ReconcileWspAtrImport extends SvrProcess {
                 dbStats   .put(tab.tabName, queryDb(tab));
                 if (tab.wspStatusColIdx >= 0 && statusTab == null) {
                     statusTab = tab;
-                    excelStatus = scanExcelStatus(reader, tab);
+                    excelStatus = scanExcelStatus(reader, tab, statusNormalizer);
                 }
             }
         }
@@ -316,25 +320,48 @@ public class ReconcileWspAtrImport extends SvrProcess {
     }
 
     /**
-     * Tolerant numeric parse: strips a leading apostrophe (Excel "force-text"
-     * artefact), any whitespace, thousands separators, and currency symbols
-     * before parsing. Anything else returns 0.
+     * Tolerant numeric parse. Mirrors WspAtrImportUtil.parseBigDecimal so the
+     * reconciler interprets Excel cells the same way the importer does.
+     * Handles US ("1,234.56") and European ("1.234,56" or "19509,35") formats,
+     * currency symbols, spaces, and leading "force-text" apostrophes.
      */
     private static double parseNumber(String s) {
         if (s == null) return 0;
         String t = s.trim();
         if (t.isEmpty()) return 0;
         if (t.charAt(0) == '\'') t = t.substring(1).trim();
-        t = t.replace(",", "").replace(" ", "").replace("R", "").replace("$", "");
+        t = t.replace("R", "").replace("$", "")
+             .replace(" ", "").replace("\u00A0", "");
         if (t.isEmpty()) return 0;
+
+        int lastDot   = t.lastIndexOf('.');
+        int lastComma = t.lastIndexOf(',');
+        if (lastDot >= 0 && lastComma >= 0) {
+            if (lastComma > lastDot) {
+                t = t.replace(".", "");
+                t = t.replace(',', '.');
+            } else {
+                t = t.replace(",", "");
+            }
+        } else if (lastComma >= 0) {
+            if (t.matches("-?\\d{1,3}(,\\d{3})+")) {
+                t = t.replace(",", "");
+            } else {
+                t = t.replace(',', '.');
+            }
+        }
+
         try { return Double.parseDouble(t); }
         catch (NumberFormatException e) { return 0; }
     }
 
     /**
      * Builds SDL → (status → count) from the WSPStatus column of the BioData tab.
+     * Status text is normalised case-insensitively against AD_Ref_List.Name so it
+     * matches what the importer's detectWspStatus() would have stored.
      */
-    private Map<String, Map<String, Long>> scanExcelStatus(StreamingXlsxReader reader, TabConfig tab) throws Exception {
+    private Map<String, Map<String, Long>> scanExcelStatus(StreamingXlsxReader reader, TabConfig tab,
+                                                            Map<String, String> normalizer) throws Exception {
         Map<String, Map<String, Long>> out = new LinkedHashMap<>();
         if (tab.matchedSheets.isEmpty() || tab.sdlColIdx < 0 || tab.wspStatusColIdx < 0) return out;
 
@@ -352,13 +379,56 @@ public class ReconcileWspAtrImport extends SvrProcess {
 
                 String sdl = cells.getOrDefault(tab.sdlColIdx, "").trim();
                 String status = cells.getOrDefault(tab.wspStatusColIdx, "").trim();
-                if (sdl.isEmpty())    sdl    = BLANK_SDL;
-                if (status.isEmpty()) status = BLANK_STATUS;
+                if (sdl.isEmpty()) sdl = BLANK_SDL;
+                status = canonicaliseStatus(status, normalizer);
 
                 out.computeIfAbsent(sdl, k -> new TreeMap<>())
                    .merge(status, 1L, Long::sum);
                 return StreamingXlsxReader.Action.CONTINUE;
             });
+        }
+        return out;
+    }
+
+    /**
+     * Normalises raw Excel status text to the canonical AD_Ref_List.Name.
+     * Applies the same "Created" → "Draft" remap as the importer.
+     * Unrecognised values fall through unchanged so they're still visible in the report.
+     */
+    private String canonicaliseStatus(String raw, Map<String, String> normalizer) {
+        if (raw == null || raw.isEmpty()) return BLANK_STATUS;
+        String key = raw.toLowerCase();
+        // Same remap as ImportWspAtrMigrationFile.detectWspStatus.
+        if ("created".equals(key)) key = "draft";
+        String canonical = normalizer.get(key);
+        return (canonical != null) ? canonical : raw;
+    }
+
+    /**
+     * lower(rl.Name) → canonical rl.Name for the WSP status reference. Loaded once.
+     */
+    private Map<String, String> loadStatusNormalizer() {
+        Map<String, String> out = new HashMap<>();
+        String sql =
+            "SELECT rl.Name FROM AD_Ref_List rl" +
+            "  JOIN AD_Reference r ON r.AD_Reference_ID = rl.AD_Reference_ID" +
+            " WHERE r.AD_Reference_UU = '" + WSP_STATUS_REF_UU + "'" +
+            "   AND rl.IsActive='Y'";
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+        try {
+            pst = DB.prepareStatement(sql, null);
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                String name = rs.getString(1);
+                if (name != null && !name.trim().isEmpty()) {
+                    out.put(name.trim().toLowerCase(), name.trim());
+                }
+            }
+        } catch (Exception e) {
+            log.warning("Could not load WSP status reference list: " + e.getMessage());
+        } finally {
+            DB.close(rs, pst);
         }
         return out;
     }
