@@ -1,19 +1,17 @@
 package za.ntier.models;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.Base64;
-import java.util.Properties;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.StringReader;
-import java.math.BigDecimal;
-
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.text.SimpleDateFormat;
+import java.util.Base64;
+import java.util.Date;
 import java.util.List;
-
+import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.compiere.model.MBPartner;
 import org.compiere.model.MClient;
@@ -21,16 +19,16 @@ import org.compiere.model.MImage;
 import org.compiere.model.MMailText;
 import org.compiere.model.MSysConfig;
 import org.compiere.model.MUser;
-import org.compiere.model.PO;  // Required for getAllIDs
 import org.compiere.model.Query;
+import org.compiere.util.CLogger;
 import org.compiere.util.DB;
+import org.compiere.util.Env;
 
 import com.lowagie.text.Document;
+import com.lowagie.text.Element;
+import com.lowagie.text.Paragraph;
 import com.lowagie.text.html.simpleparser.HTMLWorker;
 import com.lowagie.text.pdf.PdfWriter;
-import org.compiere.util.CLogger;
-
-import org.compiere.util.Env;
 
 import za.co.ntier.api.model.X_ZZSdfOrganisation;
 
@@ -235,81 +233,185 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
         return bp.getName();
     }
     
-    private void sendSdfApprovalLetter() throws Exception {
+	private void sendSdfApprovalLetter() throws Exception
+	{
 
-        int adUserId = getSdfUserId();
-        if (adUserId <= 0) {
-            log.warning("No recipient AD_User found");
-            return;
-        }
+		int adUserId = getSdfUserId();
+		if (adUserId <= 0)
+		{
+			log.warning("No recipient AD_User found for SDF approval letter.");
+			return;
+		}
 
-        MUser toUser = MUser.get(getCtx(), adUserId);
+		MUser toUser = MUser.get(getCtx(), adUserId);
 
-        if (toUser.getEMail() == null || toUser.getEMail().isEmpty()) {
-            log.warning("Recipient has no email address");
-            return;
-        }
+		if (toUser.getEMail() == null || toUser.getEMail().isEmpty())
+		{
+			log.warning("Recipient has no email address");
+			return;
+		}
 
-        // Load approval letter template
-        MMailText mailText =
-            new MMailText(getCtx(), SDF_APPROVAL_LETTER_TEMPLATE_UUID, get_TrxName());
+		// Load approval letter template
+		MMailText mailText = new MMailText(getCtx(), SDF_APPROVAL_LETTER_TEMPLATE_UUID, get_TrxName());
 
-        if (mailText.get_ID() <= 0) {
-            log.severe("Approval mail template not found");
-            return;
-        }
+		if (mailText.get_ID() <= 0)
+		{
+			log.severe("Approval mail template not found");
+			return;
+		}
 
-        try {
-            mailText.setPO(this, true);
-        } catch (Throwable t) {
-            mailText.setPO(this);
-        }
+		try
+		{
+			mailText.setPO(this, true);
+		}
+		catch (Throwable t)
+		{
+			mailText.setPO(this);
+		}
 
-        String html = mailText.getMailText(true);
-        String subject = mailText.getMailHeader();
+		String html = mailText.getMailText(true);
+		String subject = mailText.getMailHeader();
 
-        if (subject == null || subject.trim().isEmpty())
-            subject = "SDF Approval Letter";
+		if (subject == null || subject.trim().isEmpty())
+			subject = "SDF Approval Letter";
 
-        // Replace custom tokens
-        //html = html.replace("@SdfName@", getSdfUserName());
-        //html = html.replace("@SdfEmail@", toUser.getEMail());
-        //html = html.replace("@OrgName@", getOrganisationName());
-        //html = html.replace("@SDLNumber@", getSdlNumber());
-        //html = html.replace("@ApprovalDate@", new Timestamp(System.currentTimeMillis()).toString());
+		String sdfName = getSdfUserName();
+		String orgName = getOrganisationName();
+		String sdlNumber = getSdlNumber();
+		String appDate = getApprovalDate();
+		String sdfEmail = toUser.getEMail();
 
-        // Create PDF
-        File pdf = createPDF(html, "SDF_Approval_" + getSdlNumber());
+		// Replace custom tokens
+		if (sdfName != null)
+			html = html.replace("%SdfUserName%", sdfName);
+		if (sdfEmail != null)
+			html = html.replace("%SdfEmail%", sdfEmail);
+		if (orgName != null)
+			html = html.replace("%OrganisationName%", orgName);
+		if (sdlNumber != null)
+			html = html.replace("%SdlNumber%", sdlNumber);
+		if (appDate != null)
+			html = html.replace("%ApprovalDate%", appDate);
 
-        // Sender
-        MUser fromUser = MUser.get(getCtx(), FROM_EMAIL_USER_ID);
-        MClient client = MClient.get(getCtx());
+		String pdfHtml = html;
+		String logoFilePath = getLogoAsFilePath();
+		if (logoFilePath != null && !logoFilePath.isEmpty())
+		{
+			pdfHtml = pdfHtml.replace("%Logo%", logoFilePath);
+		}
+		else
+		{
+			pdfHtml = pdfHtml.replace("%Logo%", "");
+		}
 
-        boolean sent =
-            client.sendEMail(fromUser, toUser, subject, html, pdf, true);
+		String logoBase64 = getLogo();
+		if (logoBase64 != null && !logoBase64.isEmpty())
+		{
+			html = html.replace("%Logo%", logoBase64);
+		}
 
-        if (!sent)
-            log.severe("Failed to send SDF approval letter email");
-        else
-            log.info("SDF approval letter email sent successfully");
-    }
+		File pdf = createPDF(pdfHtml, "SDF_Approval_" + (sdlNumber != null ? sdlNumber : "Unknown"));
+
+		// Sender
+		MUser fromUser = MUser.get(getCtx(), FROM_EMAIL_USER_ID);
+		MClient client = MClient.get(getCtx());
+
+		boolean sent = client.sendEMail(fromUser, toUser, subject, html, pdf, true);
+
+		if (!sent)
+			log.severe("Failed to send SDF approval letter email");
+		else
+			log.info("SDF approval letter email sent successfully");
+	}
     
-	private File createPDF(String html,String fileName) throws Exception
+	private File createPDF(String html, String fileName) throws Exception
 	{
 		File pdfFile = File.createTempFile(fileName + "_", ".pdf");
+		pdfFile.deleteOnExit(); // Ensure cleanup of temporary PDFs from the OS
 
 		Document document = new Document();
 		PdfWriter.getInstance(document, new FileOutputStream(pdfFile));
-
 		document.open();
 
-		HTMLWorker worker = new HTMLWorker(document);
-		worker.parse(new StringReader(html));
+		try
+		{
+			String safeHtml = html	.replaceAll("(?i)<br>", "<br/>")
+									.replaceAll("(?i)<hr>", "<hr/>")
+									.replaceAll("(?s)<style[^>]*>.*?</style>", "");
+
+			Matcher m = Pattern.compile("(?is)<body[^>]*>(.*?)</body>").matcher(safeHtml);
+			if (m.find())
+			{
+				safeHtml = m.group(1);
+			}
+
+			List elements = HTMLWorker.parseToList(new StringReader(safeHtml), null);
+
+			boolean hasContent = false;
+			if (elements != null && !elements.isEmpty())
+			{
+				for (Object obj : elements)
+				{
+					document.add((Element) obj);
+					hasContent = true;
+				}
+			}
+
+			if (!hasContent)
+			{
+				document.add(new Paragraph("No valid HTML content could be rendered."));
+				String plainText = html.replaceAll("(?s)<[^>]*>", " ").trim();
+				if (!plainText.isEmpty())
+				{
+					document.add(new Paragraph(plainText));
+				}
+			}
+		}
+		catch (Exception e)
+		{
+			log.severe("Error parsing HTML to PDF: " + e.getMessage());
+			document.add(new Paragraph("Document generation error: " + e.getMessage()));
+
+			String plainText = html.replaceAll("(?s)<[^>]*>", " ").trim();
+			if (!plainText.isEmpty())
+			{
+				document.add(new Paragraph(plainText));
+			}
+		}
 
 		document.close();
-		worker.close();
 
 		return pdfFile;
+	}
+
+	public String getLogoAsFilePath()
+	{
+		String IMAGE_UUID = "bfdc53c3-bb63-4047-874f-ff8802d629c2";
+		MImage image = new Query(getCtx(), MImage.Table_Name, "AD_Image_UU=?", get_TrxName())
+																								.setParameters(IMAGE_UUID).first();
+		if (image == null)
+			return "";
+
+		byte[] data = image.getData();
+		if (data == null || data.length == 0)
+			return "";
+
+		try
+		{
+			File tempFile = File.createTempFile("logo_", ".jpg");
+			tempFile.deleteOnExit(); // Ensure cleanup from OS temporary directory
+
+			try (FileOutputStream fos = new FileOutputStream(tempFile))
+			{
+				fos.write(data);
+			}
+			return tempFile.getAbsolutePath();
+		}
+		catch (Exception e)
+		{
+			log.severe("Could not save logo to temp file: " + e.getMessage());
+			return "";
+		}
 	}
 
 	public String getLogo()
@@ -339,12 +441,11 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
 	}
 
 
+
 	public String getApprovalDate()
 	{
-		java.text.SimpleDateFormat sdf =
-				new java.text.SimpleDateFormat("dd MMM yyyy HH:mm");
-
-		return sdf.format(new java.util.Date());
+		SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy HH:mm");
+		return sdf.format(new Date());
 	}
     
     /**
