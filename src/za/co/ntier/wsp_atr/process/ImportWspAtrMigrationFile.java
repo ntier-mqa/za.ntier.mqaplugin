@@ -99,14 +99,15 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             if (vr.finYearId <= 0) {
                 throw new AdempiereException("Could not resolve financial year from FinancialYear column in workbook.");
             }
-            if (vr.wspStatus == null) {
-                throw new AdempiereException("Could not resolve WSP status from WSPStatus column in workbook.");
+            if (vr.wspStatusByOrgId.isEmpty()) {
+                throw new AdempiereException("Could not resolve WSP status from WSPStatus column in workbook"
+                        + " (no row produced a recognised status).");
             }
 
             // Pass 2: stream again and create the POs.
             Map<Integer, Integer> importedBySubmittedId = processor.importWorkbook(
                     getCtx(), reader, headers, get_TrxName(), file.getName(),
-                    vr.singleOrgId, vr.finYearId, vr.wspStatus);
+                    vr.singleOrgId, vr.finYearId, vr.wspStatusByOrgId);
 
             List<MigrationError> importErrors = processor.getImportErrors();
             if (!importErrors.isEmpty()) {
@@ -194,7 +195,12 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             final List<MigrationError> errors = new ArrayList<>();
             Integer singleOrgId;       // null when workbook contains >1 distinct org
             int finYearId;             // 0 until resolved
-            String wspStatus;          // null until resolved
+            /**
+             * orgId → resolved AD_Ref_List Value for WSPStatus, captured per SDL
+             * (first non-empty value seen for that org wins). Replaces the prior
+             * workbook-wide single status which collapsed all SDLs to one status.
+             */
+            final Map<Integer, String> wspStatusByOrgId = new HashMap<>();
             // Detection bookkeeping:
             String detectedSdl;        // SDL that yielded singleOrgId
             boolean multipleOrgsDetected;
@@ -296,7 +302,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                     // Piggyback workbook-wide value detection on this same scan.
                     detectSingleOrg(ctx, cells, orgMeta, result, trxName);
                     detectFinYear(ctx, cells, finYearMeta, result, trxName);
-                    detectWspStatus(cells, statusMeta, result, trxName);
+                    detectWspStatus(ctx, cells, statusMeta, orgMeta, result, trxName);
 
                     return StreamingXlsxReader.Action.CONTINUE;
                 });
@@ -316,7 +322,14 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                                              final String sourceFileName,
                                              final Integer singleOrgId,
                                              final int finYearId,
-                                             final String wspStatus) throws Exception {
+                                             final Map<Integer, String> wspStatusByOrgId) throws Exception {
+
+            // Fallback used when an SDL has no resolved status of its own (e.g. its
+            // WSPStatus cell was blank or didn't resolve in AD_Ref_List). We use the
+            // first detected status as a last-resort default so the import doesn't
+            // fail mid-stream; this matches the prior behaviour for those rows.
+            final String fallbackStatus = wspStatusByOrgId.values().stream()
+                    .findFirst().orElse(null);
 
             importErrors.clear();
             final Map<Integer, Integer> importedBySubmittedId = new LinkedHashMap<>();
@@ -385,7 +398,8 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                     }
                     Integer submittedId = submittedIdByOrgId.get(orgId);
                     if (submittedId == null) {
-                        submittedId = getOrCreateSubmitted(ctx, orgId, finYearId, wspStatus, trxName, sourceFileName);
+                        String statusForOrg = wspStatusByOrgId.getOrDefault(orgId, fallbackStatus);
+                        submittedId = getOrCreateSubmitted(ctx, orgId, finYearId, statusForOrg, trxName, sourceFileName);
                         submittedIdByOrgId.put(orgId, submittedId);
                     }
 
@@ -496,27 +510,49 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             }
         }
 
-        private void detectWspStatus(Map<Integer, String> cells, ColumnMeta statusMeta,
+        /**
+         * Resolves the row's WSPStatus column to an AD_Ref_List Value and stores it
+         * in {@code result.wspStatusByOrgId} keyed by this row's orgId. First
+         * non-empty resolution per org wins; later rows for the same org are
+         * skipped cheaply. Lookup is case-insensitive (UPPER(rl.Name)) and applies
+         * the same "Created" → "Draft" remap as before.
+         */
+        private void detectWspStatus(Properties ctx, Map<Integer, String> cells,
+                                     ColumnMeta statusMeta, ColumnMeta orgMeta,
                                      ValidationResult result, String trxName) {
-            if (statusMeta == null || result.wspStatus != null) {
+            if (statusMeta == null || orgMeta == null) {
+                return;
+            }
+            // Resolve current row's orgId from SDL — cheap re-lookup, but skip if we
+            // already have a status for this org.
+            String orgTxt = cells.get(orgMeta.columnIndex);
+            if (Util.isEmpty(orgTxt, true)) {
+                return;
+            }
+            int orgIdVal = lookupOrgIdBySdl(ctx, orgTxt.trim(), trxName);
+            if (orgIdVal <= 0) {
+                return;
+            }
+            Integer orgKey = Integer.valueOf(orgIdVal);
+            if (result.wspStatusByOrgId.containsKey(orgKey)) {
                 return;
             }
             String txt = cells.get(statusMeta.columnIndex);
             if (Util.isEmpty(txt, true)) {
                 return;
             }
-            if (txt.trim().equals("Created") ) {
-            	txt = "Draft";
-            	
+            String lookupTxt = txt.trim();
+            if ("Created".equalsIgnoreCase(lookupTxt)) {
+                lookupTxt = "Draft";
             }
             String value = DB.getSQLValueStringEx(trxName,
                     "SELECT rl.Value FROM AD_Ref_List rl"
                     + " JOIN AD_Reference r ON r.AD_Reference_ID = rl.AD_Reference_ID"
                     + " WHERE r.AD_Reference_UU = '" + WSP_STATUS_REF_UU + "'"
-                    + " AND rl.Name = ?",
-                    txt.trim());
+                    + " AND UPPER(rl.Name) = UPPER(?)",
+                    lookupTxt);
             if (!Util.isEmpty(value, true)) {
-                result.wspStatus = value;
+                result.wspStatusByOrgId.put(orgKey, value);
             }
         }
 
