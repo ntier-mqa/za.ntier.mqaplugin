@@ -74,6 +74,7 @@ public class ReconcileWspAtrImport extends SvrProcess {
         int          sdlColIdx;       // 0-based column index for SDLNumber (from mapping detail)
         int          wspStatusColIdx; // 0-based column index for WSPStatus (-1 if not on this tab)
         int[]        numericColIdx;   // 0-based column indexes, aligned with numericCols
+        int[]        ignoreIfBlankColIdx = new int[0]; // columns flagged ignore_if_blank=Y
     }
 
     private static class TabStats {
@@ -178,7 +179,7 @@ public class ReconcileWspAtrImport extends SvrProcess {
      */
     private void resolveColumnLayout(TabConfig tab) {
         String sql =
-            "SELECT d.ZZ_Column_Letter, d.ZZ_Header_Name, c.ColumnName " +
+            "SELECT d.ZZ_Column_Letter, d.ZZ_Header_Name, c.ColumnName, d.ignore_if_blank " +
             "  FROM ZZ_WSP_ATR_Lookup_Mapping_Detail d " +
             "  JOIN ZZ_WSP_ATR_Lookup_Mapping m " +
             "    ON m.ZZ_WSP_ATR_Lookup_Mapping_ID = d.ZZ_WSP_ATR_Lookup_Mapping_ID " +
@@ -190,10 +191,12 @@ public class ReconcileWspAtrImport extends SvrProcess {
             pst = DB.prepareStatement(sql, null);
             pst.setString(1, tab.tabName);
             rs = pst.executeQuery();
+            java.util.Set<Integer> ignoreIfBlank = new java.util.LinkedHashSet<>();
             while (rs.next()) {
                 String letter   = rs.getString(1);
                 String hdrName  = rs.getString(2);
                 String colName  = rs.getString(3);
+                String ignoreFlag = rs.getString(4);
                 int idx = columnLetterToIndex(letter);
                 if (idx < 0) continue;
 
@@ -209,7 +212,11 @@ public class ReconcileWspAtrImport extends SvrProcess {
                         tab.numericColIdx[i] = idx;
                     }
                 }
+                if ("Y".equalsIgnoreCase(ignoreFlag)) {
+                    ignoreIfBlank.add(idx);
+                }
             }
+            tab.ignoreIfBlankColIdx = ignoreIfBlank.stream().mapToInt(Integer::intValue).toArray();
         } catch (Exception e) {
             log.warning("Could not resolve column layout for " + tab.tabName + ": " + e.getMessage());
         } finally {
@@ -306,6 +313,15 @@ public class ReconcileWspAtrImport extends SvrProcess {
             }
             emptyStreak[0] = 0;
 
+            // Mirror the importer's ignore_if_blank filter: if any flagged column
+            // is blank or numerically zero, the importer skips this row, so we
+            // must too — otherwise the Excel sum includes rows the DB doesn't.
+            for (int idx : tab.ignoreIfBlankColIdx) {
+                if (isBlankOrZero(cells.get(idx))) {
+                    return StreamingXlsxReader.Action.CONTINUE;
+                }
+            }
+
             String sdl = cells.getOrDefault(tab.sdlColIdx, "").trim();
             if (sdl.isEmpty()) sdl = BLANK_SDL;
 
@@ -325,6 +341,28 @@ public class ReconcileWspAtrImport extends SvrProcess {
      * Handles US ("1,234.56") and European ("1.234,56" or "19509,35") formats,
      * currency symbols, spaces, and leading "force-text" apostrophes.
      */
+    /** Round to 2 decimals (cents) — eliminates accumulated double-sum noise. */
+    private static double round2(double v) {
+        return Math.round(v * 100.0) / 100.0;
+    }
+
+    /**
+     * Mirrors {@code AbstractMappingSheetImporter.isBlankOrZero}: blank text,
+     * or a numeric-looking string that evaluates to zero, both count as blank.
+     */
+    private static boolean isBlankOrZero(String txt) {
+        if (txt == null) return true;
+        String s = txt.trim();
+        if (s.isEmpty()) return true;
+        s = s.replace(" ", "").replace(",", "");
+        try {
+            return new java.math.BigDecimal(s)
+                    .compareTo(java.math.BigDecimal.ZERO) == 0;
+        } catch (Exception ignore) {
+            return false;
+        }
+    }
+
     private static double parseNumber(String s) {
         if (s == null) return 0;
         String t = s.trim();
@@ -376,6 +414,13 @@ public class ReconcileWspAtrImport extends SvrProcess {
                     return StreamingXlsxReader.Action.CONTINUE;
                 }
                 emptyStreak[0] = 0;
+
+                // Skip rows the importer would have ignored (ignore_if_blank columns).
+                for (int idx : tab.ignoreIfBlankColIdx) {
+                    if (isBlankOrZero(cells.get(idx))) {
+                        return StreamingXlsxReader.Action.CONTINUE;
+                    }
+                }
 
                 String sdl = cells.getOrDefault(tab.sdlColIdx, "").trim();
                 String status = cells.getOrDefault(tab.wspStatusColIdx, "").trim();
@@ -441,13 +486,30 @@ public class ReconcileWspAtrImport extends SvrProcess {
         sql.append("SELECT bp.Value AS sdl, COUNT(*) AS cnt");
         // Cast to text + regex-match before ::numeric so non-numeric values in
         // varchar columns (e.g. zz_finance_value) don't kill the query. Matches
-        // the Excel-side parseNumber: anything that isn't a clean signed number
-        // contributes 0.
-        for (String nc : tab.numericCols)
-            sql.append(", COALESCE(SUM(CASE WHEN TRIM(CAST(c.")
-               .append(nc).append(" AS TEXT)) ~ '^-?[0-9]+(\\.[0-9]+)?$'")
-               .append(" THEN TRIM(CAST(c.").append(nc).append(" AS TEXT))::numeric")
+        // the Excel-side parseNumber: plain numbers, European single-decimal
+        // ("75,44"), US thousands ("1,234,567"), US thousands+decimal
+        // ("1,234,567.89"), and European with dot-thousands+comma-decimal
+        // ("1.234.567,89") are all summed. Anything else contributes 0.
+        for (String nc : tab.numericCols) {
+            String raw = "TRIM(CAST(c." + nc + " AS TEXT))";
+            sql.append(", COALESCE(SUM(CASE")
+               // 1) Plain US:  19509.35 / 905590.00 / 57
+               .append(" WHEN ").append(raw).append(" ~ '^-?[0-9]+(\\.[0-9]+)?$'")
+               .append(" THEN ").append(raw).append("::numeric")
+               // 2) US thousands + decimal: 1,234,567.89  (must precede the looser patterns below)
+               .append(" WHEN ").append(raw).append(" ~ '^-?[0-9]{1,3}(,[0-9]{3})+\\.[0-9]+$'")
+               .append(" THEN REPLACE(").append(raw).append(", ',', '')::numeric")
+               // 3) US thousands only: 1,234 / 1,234,567  (3-digit groups → thousands, never decimal)
+               .append(" WHEN ").append(raw).append(" ~ '^-?[0-9]{1,3}(,[0-9]{3})+$'")
+               .append(" THEN REPLACE(").append(raw).append(", ',', '')::numeric")
+               // 4) European dot-thousands + comma decimal: 1.234.567,89
+               .append(" WHEN ").append(raw).append(" ~ '^-?[0-9]{1,3}(\\.[0-9]{3})+,[0-9]+$'")
+               .append(" THEN REPLACE(REPLACE(").append(raw).append(", '.', ''), ',', '.')::numeric")
+               // 5) European single-decimal: 75,44 / 19509,35  (catch-all for comma-as-decimal)
+               .append(" WHEN ").append(raw).append(" ~ '^-?[0-9]+,[0-9]+$'")
+               .append(" THEN REPLACE(").append(raw).append(", ',', '.')::numeric")
                .append(" ELSE 0 END),0) AS ").append(nc);
+        }
         sql.append("  FROM ").append(tab.dbTable).append(" c")
            .append("  JOIN ZZ_WSP_ATR_Submitted s ON s.ZZ_WSP_ATR_Submitted_ID = c.ZZ_WSP_ATR_Submitted_ID")
            .append("  JOIN ZZSdfOrganisation org ON org.ZZSdfOrganisation_ID  = s.ZZSdfOrganisation_ID")
@@ -658,10 +720,10 @@ public class ReconcileWspAtrImport extends SvrProcess {
                 TabStats es = e.get(sdl);
                 TabStats ds = d.get(sdl);
                 for (int i = 0; i < tab.numericCols.length; i++) {
-                    double ev = es != null ? es.sums[i] : 0;
-                    double dv = ds != null ? ds.sums[i] : 0;
-                    double diff = ev - dv;
-                    CellStyle style = (Math.abs(diff) == 0) ? null : bad;
+                    double ev = round2(es != null ? es.sums[i] : 0);
+                    double dv = round2(ds != null ? ds.sums[i] : 0);
+                    double diff = round2(ev - dv);
+                    CellStyle style = (diff == 0.0) ? null : bad;
 
                     Row row = sh.createRow(r++);
                     cell   (row, 0, sdl, style);
@@ -702,13 +764,14 @@ public class ReconcileWspAtrImport extends SvrProcess {
                         "Row Count", String.valueOf(ec), String.valueOf(dc), String.valueOf(ec - dc)});
                 }
                 for (int i = 0; i < tab.numericCols.length; i++) {
-                    double ev = e.containsKey(sdl) ? e.get(sdl).sums[i] : 0;
-                    double dv = d.containsKey(sdl) ? d.get(sdl).sums[i] : 0;
-                    if (ev != dv) {
+                    double ev = round2(e.containsKey(sdl) ? e.get(sdl).sums[i] : 0);
+                    double dv = round2(d.containsKey(sdl) ? d.get(sdl).sums[i] : 0);
+                    double diff = round2(ev - dv);
+                    if (diff != 0.0) {
                         rows.add(new String[]{
                             sdl, legal.getOrDefault(sdl, ""), tab.tabName,
                             "SUM(" + tab.numericCols[i] + ")",
-                            fmt(ev), fmt(dv), fmt(ev - dv)});
+                            fmt(ev), fmt(dv), fmt(diff)});
                     }
                 }
             }

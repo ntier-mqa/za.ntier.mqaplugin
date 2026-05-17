@@ -59,6 +59,25 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
     private static final String BULK_UPLOAD_PATH = "/home/ntier/SG_Data_070526/MQAWSPATRDataDump2026.xlsx";
     //private static final String BULK_UPLOAD_PATH = "/tmp/bulkupload.xlsx";
 
+    /**
+     * Quick-test SDL filter. When non-empty the importer will skip every row
+     * whose SDL column value is not in this set. Leave empty for a full
+     * production import.
+     *
+     * <p>Usage:
+     * <ul>
+     *   <li>TRUNCATE the target detail tables + ZZ_WSP_ATR_Submitted, and
+     *       {@code DELETE FROM ZZ_WSP_ATR_Migration_Progress WHERE SourceFile = 'MQAWSPATRDataDump2026.xlsx'}
+     *       so the progress tracker doesn't skip the test rows.</li>
+     *   <li>Put your test SDLs in the set below and rebuild.</li>
+     *   <li>Run the importer — it now finishes in seconds.</li>
+     *   <li>Clear the set (or set it empty) before running the real import.</li>
+     * </ul>
+     */
+    private static final Set<String> SDL_FILTER = new HashSet<>(java.util.Arrays.asList(
+            // "L010712109", "L010787762", "L010813873", "L020714947"
+    ));
+
     private final ReferenceLookupService refService = new ReferenceLookupService();
 
     @Override
@@ -262,6 +281,18 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                         return StreamingXlsxReader.Action.CONTINUE;
                     }
 
+                    // Quick-test SDL filter — skip rows not in the test set.
+                    if (!SDL_FILTER.isEmpty()) {
+                        if (orgMeta == null) {
+                            return StreamingXlsxReader.Action.CONTINUE;
+                        }
+                        String sdlTxt = cells.get(orgMeta.columnIndex);
+                        if (Util.isEmpty(sdlTxt, true)
+                                || !SDL_FILTER.contains(sdlTxt.trim())) {
+                            return StreamingXlsxReader.Action.CONTINUE;
+                        }
+                    }
+
                     // Validate mandatory + references for this row.
                     for (ColumnMeta meta : metas.values()) {
                         if (meta.column == null) {
@@ -387,6 +418,18 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
 
                     if (shouldIgnoreRowMap(cells, metas.values())) {
                         return StreamingXlsxReader.Action.CONTINUE;
+                    }
+
+                    // Quick-test SDL filter — skip rows not in the test set.
+                    if (!SDL_FILTER.isEmpty()) {
+                        if (orgMeta == null) {
+                            return StreamingXlsxReader.Action.CONTINUE;
+                        }
+                        String sdlTxt = cells.get(orgMeta.columnIndex);
+                        if (Util.isEmpty(sdlTxt, true)
+                                || !SDL_FILTER.contains(sdlTxt.trim())) {
+                            return StreamingXlsxReader.Action.CONTINUE;
+                        }
                     }
 
                     Integer orgId = resolveOrgIdForRow(ctx, cells, orgMeta, singleOrgId,

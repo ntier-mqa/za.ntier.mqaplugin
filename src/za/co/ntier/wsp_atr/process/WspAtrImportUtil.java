@@ -123,7 +123,11 @@ public class WspAtrImportUtil {
         // else: only dot, or no separator at all — leave as-is.
 
         try { return new BigDecimal(t); }
-        catch (Exception e) { return Env.ZERO; }
+        catch (Exception e) {
+            org.compiere.util.CLogger.getCLogger(WspAtrImportUtil.class)
+                .warning("parseBigDecimal failed: raw=[" + txt + "] cleaned=[" + t + "]");
+            return Env.ZERO;
+        }
     }
 
     public String truncate(String s, int max) {

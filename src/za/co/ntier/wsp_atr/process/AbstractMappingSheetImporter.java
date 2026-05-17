@@ -135,12 +135,61 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 
 
 
+	/**
+	 * Tolerant numeric parse for Excel-sourced text.
+	 *
+	 * Handles:
+	 *   - leading apostrophe ("force text" prefix in Excel)
+	 *   - currency symbols ($, R) and stray spaces / non-breaking spaces
+	 *   - US-style numbers   : "1,234,567.89"
+	 *   - European-style     : "19509,35"  /  "1 234 567,89"
+	 *
+	 * Decision rule for ambiguous separators:
+	 *   - both . and , present : the rightmost is the decimal point, the other is thousands.
+	 *   - only , present       : treated as thousands if it forms tidy 3-digit groups
+	 *                            (e.g. "1,234"), otherwise as a decimal separator.
+	 *   - only . present       : taken as the decimal point as-is.
+	 *
+	 * Returns null for empty input or completely unparseable strings (preserves
+	 * the prior contract that the caller writes NULL when there's nothing
+	 * meaningful in the cell).
+	 */
 	protected BigDecimal parseBigDecimal(String txt) {
 		if (Util.isEmpty(txt, true))
 			return null;
+		String t = txt.trim();
+		if (t.charAt(0) == '\'')
+			t = t.substring(1).trim();
+		t = t.replace("R", "").replace("$", "")
+		     .replace(" ", "").replace("\u00A0", "")
+		     .replace("\u202F", "").replace("\u2009", "");
+		if (t.isEmpty())
+			return null;
+
+		int lastDot   = t.lastIndexOf('.');
+		int lastComma = t.lastIndexOf(',');
+		if (lastDot >= 0 && lastComma >= 0) {
+			if (lastComma > lastDot) {              // European: dots thousands, comma decimal
+				t = t.replace(".", "");
+				t = t.replace(',', '.');
+			} else {                                 // US: commas thousands, dot decimal
+				t = t.replace(",", "");
+			}
+		} else if (lastComma >= 0) {
+			// Only commas. Treat as thousands ONLY if it looks like "123,456,789".
+			if (t.matches("-?\\d{1,3}(,\\d{3})+")) {
+				t = t.replace(",", "");
+			} else {
+				t = t.replace(',', '.');
+			}
+		}
+		// else: only dot, or no separator at all — leave as-is.
+
 		try {
-			return new BigDecimal(txt.trim());
+			return new BigDecimal(t);
 		} catch (Exception e) {
+			org.compiere.util.CLogger.getCLogger(AbstractMappingSheetImporter.class)
+				.warning("parseBigDecimal failed: raw=[" + txt + "] cleaned=[" + t + "]");
 			return null;
 		}
 	}
