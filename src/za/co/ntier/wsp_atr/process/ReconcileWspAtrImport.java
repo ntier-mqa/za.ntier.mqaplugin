@@ -63,6 +63,67 @@ public class ReconcileWspAtrImport extends SvrProcess {
             "ZZ_Male","ZZ_Female","ZZ_Disabled"});
         NUMERIC_BY_TABLE.put("ZZ_WSP_ATR_Finance",    new String[]{"ZZ_Finance_Value"});
         NUMERIC_BY_TABLE.put("ZZ_WSP_ATR_ATR_Detail", new String[]{"Total_Training_Cost"});
+        // HTVF: sum of vacancies per province
+        NUMERIC_BY_TABLE.put("ZZ_WSP_ATR_HTVF", new String[]{
+            "ZZ_Vacancies_EC_Cnt","ZZ_Vacancies_FS_Cnt","ZZ_Vacancies_GP_Cnt",
+            "ZZ_Vacancies_KZN_Cnt","ZZ_Vacancies_LP_Cnt","ZZ_Vacancies_MP_Cnt",
+            "ZZ_Vacancies_NP_Cnt","ZZ_Vacancies_NW_Cnt","ZZ_Vacancies_WC_Cnt"});
+        // Non-Employee Skills Training: sum of demographic training counts
+        NUMERIC_BY_TABLE.put("ZZ_WSP_ATR_Non_Employees_Training", new String[]{
+            "ZZ_African","ZZ_Coloured","ZZ_Indian","ZZ_Male","ZZ_Female",
+            "ZZ_Disabled_Done","ZZ_Disabled_Planned","ZZ_Total_Done","ZZ_Total_Planned"});
+        // Contractors: sum of trained/planned per occupational group
+        NUMERIC_BY_TABLE.put("ZZ_WSP_ATR_Contractors", new String[]{
+            "ZZ_Managers_Trained","ZZ_Managers_Planned",
+            "ZZ_Professionals_Trained","ZZ_Professionals_Planned",
+            "ZZ_Technicians_Trained","ZZ_Technicians_Planned",
+            "ZZ_Clerical_Trained","ZZ_Clerical_Planned",
+            "ZZ_Service_Trained","ZZ_Service_Planned",
+            "ZZ_Skilled_Workers_Trained","ZZ_Skilled_Workers_Planned",
+            "ZZ_Plant_Trained","ZZ_Plant_Planned",
+            "ZZ_Elementary_Trained","ZZ_Elementary_Planned",
+            "ZZ_Learners_Trained","ZZ_Learners_Planned",
+            "ZZ_Total_Trained"});
+    }
+
+    /**
+     * One FK column on a detail table that we want to group counts by.
+     * {@code lookupTable} is the table referenced by the FK; its PK is assumed to
+     * be {@code <lookupTable>_ID} and its display label column is "Name" — the
+     * iDempiere convention used throughout the ZZ_*_Ref tables.
+     */
+    private static class CategoryCol {
+        final String fkColumn;    // e.g. "Gender_ID"
+        final String lookupTable; // e.g. "ZZ_Gender_Ref"
+        CategoryCol(String fk, String lookup) { fkColumn = fk; lookupTable = lookup; }
+    }
+
+    /** DB table (case-insensitive) → reference FK columns to count rows by category. */
+    private static final Map<String, CategoryCol[]> CATEGORY_BY_TABLE = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    static {
+        CATEGORY_BY_TABLE.put("ZZ_WSP_ATR_Biodata_Detail", new CategoryCol[]{
+            new CategoryCol("Gender_ID",     "ZZ_Gender_Ref"),
+            new CategoryCol("Disabled_ID",   "ZZ_No_Yes_Ref"),
+            new CategoryCol("Race_ID",       "ZZ_Equity_Ref"),
+            new CategoryCol("SA_Citizen_ID", "ZZ_No_Yes_Ref"),
+        });
+        // HTVF: count rows per primary scarce reason
+        CATEGORY_BY_TABLE.put("ZZ_WSP_ATR_HTVF", new CategoryCol[]{
+            new CategoryCol("ZZ_Scarce_Reason_ID", "ZZ_Scarce_Reason_Ref"),
+        });
+        // Top-up Skills Survey: count rows per top-up skill type
+        CATEGORY_BY_TABLE.put("ZZ_WSP_ATR_TopUp_Skills", new CategoryCol[]{
+            new CategoryCol("ZZ_TopUpSkill_ID", "ZZ_Topup_Skills_Ref"),
+        });
+        // Non-Employee Skills Training: count rows by employment status and target beneficiary
+        CATEGORY_BY_TABLE.put("ZZ_WSP_ATR_Non_Employees_Training", new CategoryCol[]{
+            new CategoryCol("ZZ_Non_Emp_Status_Done_ID",   "ZZ_WSP_Non_Employee_Status_Ref"),
+            new CategoryCol("ZZ_Target_Ben_Done_ID",       "ZZ_Target_Beneficiary_Ref"),
+        });
+        // Contractors: count rows per learning programme type
+        CATEGORY_BY_TABLE.put("ZZ_WSP_ATR_Contractors", new CategoryCol[]{
+            new CategoryCol("ZZ_Learning_Programme_Type_ID", "ZZ_Qualification_Type_Details_Ref"),
+        });
     }
 
     private static class TabConfig {
@@ -75,11 +136,15 @@ public class ReconcileWspAtrImport extends SvrProcess {
         int          wspStatusColIdx; // 0-based column index for WSPStatus (-1 if not on this tab)
         int[]        numericColIdx;   // 0-based column indexes, aligned with numericCols
         int[]        ignoreIfBlankColIdx = new int[0]; // columns flagged ignore_if_blank=Y
+        CategoryCol[] categoryCols  = new CategoryCol[0]; // FK + lookup table per category
+        int[]         categoryColIdx = new int[0];        // aligned Excel column indexes
     }
 
     private static class TabStats {
         long     count;
         double[] sums;
+        /** DB col name → (category label lower-cased) → row count. */
+        Map<String, Map<String, Long>> categoryCounts = new LinkedHashMap<>();
         TabStats(int n) { this.sums = new double[n]; }
     }
 
@@ -157,11 +222,15 @@ public class ReconcileWspAtrImport extends SvrProcess {
                 tc.startRow = (rs.wasNull() || sr <= 0) ? DEFAULT_START_ROW : sr;
                 String[] nums = NUMERIC_BY_TABLE.get(tc.dbTable);
                 tc.numericCols    = (nums != null) ? nums : new String[0];
+                CategoryCol[] cats = CATEGORY_BY_TABLE.get(tc.dbTable);
+                tc.categoryCols  = (cats != null) ? cats : new CategoryCol[0];
                 tc.matchedSheets  = Collections.emptyList();
                 tc.sdlColIdx       = -1;
                 tc.wspStatusColIdx = -1;
                 tc.numericColIdx  = new int[tc.numericCols.length];
                 Arrays.fill(tc.numericColIdx, -1);
+                tc.categoryColIdx = new int[tc.categoryCols.length];
+                Arrays.fill(tc.categoryColIdx, -1);
                 out.add(tc);
             }
         } catch (Exception e) {
@@ -210,6 +279,12 @@ public class ReconcileWspAtrImport extends SvrProcess {
                     if (tab.numericCols[i].equalsIgnoreCase(colName)
                             || tab.numericCols[i].equalsIgnoreCase(hdrName)) {
                         tab.numericColIdx[i] = idx;
+                    }
+                }
+                for (int i = 0; i < tab.categoryCols.length; i++) {
+                    String fk = tab.categoryCols[i].fkColumn;
+                    if (fk.equalsIgnoreCase(colName) || fk.equalsIgnoreCase(hdrName)) {
+                        tab.categoryColIdx[i] = idx;
                     }
                 }
                 if ("Y".equalsIgnoreCase(ignoreFlag)) {
@@ -330,6 +405,18 @@ public class ReconcileWspAtrImport extends SvrProcess {
             for (int i = 0; i < tab.numericColIdx.length; i++) {
                 int colIdx = tab.numericColIdx[i];
                 if (colIdx >= 0) st.sums[i] += parseNumber(cells.get(colIdx));
+            }
+            for (int i = 0; i < tab.categoryColIdx.length; i++) {
+                int colIdx = tab.categoryColIdx[i];
+                if (colIdx < 0) continue;
+                String raw = cells.get(colIdx);
+                if (raw == null) raw = "";
+                String key = raw.trim();
+                if (key.isEmpty()) key = BLANK_STATUS; // re-use the blank sentinel
+                key = key.toLowerCase();
+                st.categoryCounts
+                  .computeIfAbsent(tab.categoryCols[i].fkColumn, k -> new LinkedHashMap<>())
+                  .merge(key, 1L, Long::sum);
             }
             return StreamingXlsxReader.Action.CONTINUE;
         });
@@ -539,7 +626,59 @@ public class ReconcileWspAtrImport extends SvrProcess {
         } finally {
             DB.close(rs, pst);
         }
+
+        // Category counts: one query per category FK column. Joins to that
+        // column's lookup table to fetch the human-readable Name.
+        for (CategoryCol cat : tab.categoryCols) {
+            queryDbCategory(tab, cat, out);
+        }
         return out;
+    }
+
+    /**
+     * Run one category-count query for {@code cat} on {@code tab.dbTable},
+     * populating each SDL's {@link TabStats#categoryCounts}. SDLs that didn't
+     * appear in the main numeric query get a fresh TabStats entry on-the-fly.
+     */
+    private void queryDbCategory(TabConfig tab, CategoryCol cat, Map<String, TabStats> out) {
+        String lookupPk = cat.lookupTable + "_ID";
+        String sql =
+            "SELECT bp.Value AS sdl," +
+            "       LOWER(COALESCE(r.Name, CAST(c." + cat.fkColumn + " AS TEXT))) AS label," +
+            "       COUNT(*) AS cnt" +
+            "  FROM " + tab.dbTable + " c" +
+            "  JOIN ZZ_WSP_ATR_Submitted s   ON s.ZZ_WSP_ATR_Submitted_ID = c.ZZ_WSP_ATR_Submitted_ID" +
+            "  JOIN ZZSdfOrganisation org    ON org.ZZSdfOrganisation_ID  = s.ZZSdfOrganisation_ID" +
+            "  JOIN C_BPartner         bp    ON bp.C_BPartner_ID          = org.C_BPartner_ID" +
+            "  LEFT JOIN " + cat.lookupTable + " r ON r." + lookupPk + " = c." + cat.fkColumn +
+            " WHERE c.IsActive='Y'" +
+            " GROUP BY bp.Value, COALESCE(r.Name, CAST(c." + cat.fkColumn + " AS TEXT))";
+
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+        try {
+            pst = DB.prepareStatement(sql, null);
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                String sdl = rs.getString("sdl");
+                if (sdl == null || sdl.trim().isEmpty()) sdl = BLANK_SDL;
+                String label = rs.getString("label");
+                if (label == null || label.isEmpty()) label = BLANK_STATUS;
+                long cnt = rs.getLong("cnt");
+                TabStats st = out.computeIfAbsent(sdl.trim(),
+                        k -> new TabStats(tab.numericCols.length));
+                st.categoryCounts
+                  .computeIfAbsent(cat.fkColumn, k -> new LinkedHashMap<>())
+                  .merge(label, cnt, Long::sum);
+            }
+        } catch (Exception e) {
+            log.warning("DB category query failed for " + tab.dbTable + "." + cat.fkColumn
+                    + ": " + e.getMessage());
+            addLog("DB category query failed for " + tab.dbTable + "." + cat.fkColumn
+                    + ": " + e.getMessage());
+        } finally {
+            DB.close(rs, pst);
+        }
     }
 
     /**
@@ -710,7 +849,7 @@ public class ReconcileWspAtrImport extends SvrProcess {
 
         int r = 1;
         for (TabConfig tab : tabs) {
-            if (tab.numericCols.length == 0) continue;
+            if (tab.numericCols.length == 0 && tab.categoryCols.length == 0) continue;
             Map<String, TabStats> e = excel.getOrDefault(tab.tabName, Collections.emptyMap());
             Map<String, TabStats> d = db   .getOrDefault(tab.tabName, Collections.emptyMap());
             TreeSet<String> sdls = new TreeSet<>();
@@ -719,6 +858,7 @@ public class ReconcileWspAtrImport extends SvrProcess {
             for (String sdl : sdls) {
                 TabStats es = e.get(sdl);
                 TabStats ds = d.get(sdl);
+                // Numeric sums.
                 for (int i = 0; i < tab.numericCols.length; i++) {
                     double ev = round2(es != null ? es.sums[i] : 0);
                     double dv = round2(ds != null ? ds.sums[i] : 0);
@@ -733,6 +873,29 @@ public class ReconcileWspAtrImport extends SvrProcess {
                     numCell(row, 4, ev, style);
                     numCell(row, 5, dv, style);
                     numCell(row, 6, diff, style != null ? bad : ok);
+                }
+                // Category counts: one row per (category col, label) seen on either side.
+                for (CategoryCol cat : tab.categoryCols) {
+                    Map<String, Long> em = (es != null) ? es.categoryCounts.get(cat.fkColumn) : null;
+                    Map<String, Long> dm = (ds != null) ? ds.categoryCounts.get(cat.fkColumn) : null;
+                    TreeSet<String> labels = new TreeSet<>();
+                    if (em != null) labels.addAll(em.keySet());
+                    if (dm != null) labels.addAll(dm.keySet());
+                    for (String label : labels) {
+                        long ec = (em != null && em.get(label) != null) ? em.get(label) : 0L;
+                        long dc = (dm != null && dm.get(label) != null) ? dm.get(label) : 0L;
+                        long diffL = ec - dc;
+                        CellStyle style = (diffL == 0) ? null : bad;
+
+                        Row row = sh.createRow(r++);
+                        cell   (row, 0, sdl, style);
+                        cell   (row, 1, legal.getOrDefault(sdl, ""), style);
+                        cell   (row, 2, tab.tabName, style);
+                        cell   (row, 3, "COUNT(" + cat.fkColumn + "=" + label + ")", style);
+                        numCell(row, 4, ec, style);
+                        numCell(row, 5, dc, style);
+                        numCell(row, 6, diffL, style != null ? bad : ok);
+                    }
                 }
             }
         }
@@ -772,6 +935,23 @@ public class ReconcileWspAtrImport extends SvrProcess {
                             sdl, legal.getOrDefault(sdl, ""), tab.tabName,
                             "SUM(" + tab.numericCols[i] + ")",
                             fmt(ev), fmt(dv), fmt(diff)});
+                    }
+                }
+                for (CategoryCol cat : tab.categoryCols) {
+                    Map<String, Long> em = e.containsKey(sdl) ? e.get(sdl).categoryCounts.get(cat.fkColumn) : null;
+                    Map<String, Long> dm = d.containsKey(sdl) ? d.get(sdl).categoryCounts.get(cat.fkColumn) : null;
+                    TreeSet<String> labels = new TreeSet<>();
+                    if (em != null) labels.addAll(em.keySet());
+                    if (dm != null) labels.addAll(dm.keySet());
+                    for (String label : labels) {
+                        long ec2 = (em != null && em.get(label) != null) ? em.get(label) : 0L;
+                        long dc2 = (dm != null && dm.get(label) != null) ? dm.get(label) : 0L;
+                        if (ec2 != dc2) {
+                            rows.add(new String[]{
+                                sdl, legal.getOrDefault(sdl, ""), tab.tabName,
+                                "COUNT(" + cat.fkColumn + "=" + label + ")",
+                                String.valueOf(ec2), String.valueOf(dc2), String.valueOf(ec2 - dc2)});
+                        }
                     }
                 }
             }
