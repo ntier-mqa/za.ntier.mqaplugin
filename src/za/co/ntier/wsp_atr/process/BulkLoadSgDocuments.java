@@ -7,7 +7,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.adempiere.exceptions.AdempiereException;
 import org.compiere.model.MAttachment;
+import org.compiere.process.ProcessInfoParameter;
 import org.compiere.process.SvrProcess;
 import org.compiere.util.DB;
 import org.compiere.util.Trx;
@@ -25,11 +27,16 @@ import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Uploads;
  *   C = Upload Cancelled Cheque
  *   T = Upload Proof of Training
  *   S = Upload Signed Minutes  (existing)
+ *
+ * Process parameter:
+ *   ClearUploads (Y/N) — when Y, deletes all existing 2026 upload records
+ *                        and their attachments before loading.
  */
 @org.adempiere.base.annotation.Process(name = "za.co.ntier.wsp_atr.process.BulkLoadSgDocuments")
 public class BulkLoadSgDocuments extends SvrProcess {
 
-    private static final String BASE_DIR = "/tmp/SG_Data_070526";
+    private static final String BASE_DIR    = "/tmp/SG_Data_070526";
+    private static final String FISCAL_YEAR = "2026";
 
     /** Maps directory names found in the dump to upload type codes. */
     private static final Map<String, String> DIR_TO_TYPE = new HashMap<>();
@@ -40,12 +47,19 @@ public class BulkLoadSgDocuments extends SvrProcess {
         DIR_TO_TYPE.put("Proof of Training",                 "T");
     }
 
+    private boolean clearUploads = false;
     private int loaded  = 0;
     private int skipped = 0;
 
     @Override
     protected void prepare() {
-        // no process parameters
+        for (ProcessInfoParameter p : getParameter()) {
+            if ("ClearUploads".equalsIgnoreCase(p.getParameterName())) {
+                clearUploads = "Y".equals(p.getParameter());
+            } else {
+                org.compiere.model.MProcessPara.validateUnknownParameter(getProcessInfo().getAD_Process_ID(), p);
+            }
+        }
     }
 
     @Override
@@ -53,6 +67,9 @@ public class BulkLoadSgDocuments extends SvrProcess {
         File base = new File(BASE_DIR);
         if (!base.isDirectory())
             throw new IllegalStateException("Base directory not found: " + BASE_DIR);
+
+        if (clearUploads)
+            clearAllUploads();
 
         for (File batchDir : dirs(base)) {
             for (File sdlDir : dirs(batchDir)) {
@@ -64,11 +81,75 @@ public class BulkLoadSgDocuments extends SvrProcess {
     }
 
     // -------------------------------------------------------------------------
+    //  Clear
+    // -------------------------------------------------------------------------
+
+    /**
+     * Deletes all ZZ_WSP_ATR_Uploads records (and their attachments) that
+     * belong to a submission in fiscal year 2026.
+     */
+    private void clearAllUploads() {
+        addLog("ClearUploads=Y — removing all existing uploads for fiscal year " + FISCAL_YEAR + " ...");
+
+        String trxName = Trx.createTrxName("SGDocClear");
+        Trx trx = Trx.get(trxName, true);
+        try {
+            // 1. Attachment entries
+            DB.executeUpdateEx(
+                "DELETE FROM ad_attachmententry " +
+                "WHERE ad_attachment_id IN (" +
+                "  SELECT a.ad_attachment_id FROM ad_attachment a " +
+                "  WHERE a.ad_table_id = " + X_ZZ_WSP_ATR_Uploads.Table_ID + " " +
+                "  AND a.record_id IN (" +
+                "    SELECT u.zz_wsp_atr_uploads_id FROM zz_wsp_atr_uploads u " +
+                "    JOIN zz_wsp_atr_submitted s ON s.zz_wsp_atr_submitted_id = u.zz_wsp_atr_submitted_id " +
+                "    JOIN c_year y ON y.c_year_id = s.zz_finyear_id " +
+                "    WHERE y.fiscalyear = '" + FISCAL_YEAR + "'" +
+                "  )" +
+                ")",
+                null, trxName);
+
+            // 2. Attachment headers
+            DB.executeUpdateEx(
+                "DELETE FROM ad_attachment " +
+                "WHERE ad_table_id = " + X_ZZ_WSP_ATR_Uploads.Table_ID + " " +
+                "AND record_id IN (" +
+                "  SELECT u.zz_wsp_atr_uploads_id FROM zz_wsp_atr_uploads u " +
+                "  JOIN zz_wsp_atr_submitted s ON s.zz_wsp_atr_submitted_id = u.zz_wsp_atr_submitted_id " +
+                "  JOIN c_year y ON y.c_year_id = s.zz_finyear_id " +
+                "  WHERE y.fiscalyear = '" + FISCAL_YEAR + "'" +
+                ")",
+                null, trxName);
+
+            // 3. Upload records
+            int deleted = DB.executeUpdateEx(
+                "DELETE FROM zz_wsp_atr_uploads " +
+                "WHERE zz_wsp_atr_submitted_id IN (" +
+                "  SELECT s.zz_wsp_atr_submitted_id FROM zz_wsp_atr_submitted s " +
+                "  JOIN c_year y ON y.c_year_id = s.zz_finyear_id " +
+                "  WHERE y.fiscalyear = '" + FISCAL_YEAR + "'" +
+                ")",
+                null, trxName);
+
+            trx.commit(true);
+            addLog("Cleared " + deleted + " upload record(s).");
+
+        } catch (Exception e) {
+            trx.rollback();
+            throw new AdempiereException("Failed to clear uploads: " + e.getMessage(), e);
+        } finally {
+            trx.close();
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    //  Load
+    // -------------------------------------------------------------------------
 
     private void processSDL(String sdlNumber, File sdlDir) {
         int submittedId = findSubmittedId(sdlNumber);
         if (submittedId <= 0) {
-            addLog("No 2026 submission for SDL " + sdlNumber + " — skipped");
+            addLog("No " + FISCAL_YEAR + " submission for SDL " + sdlNumber + " — skipped");
             skipped++;
             return;
         }
@@ -87,19 +168,6 @@ public class BulkLoadSgDocuments extends SvrProcess {
     }
 
     private void loadFile(int submittedId, String uploadType, File file, String sdlNumber) {
-        // Skip if an upload record already exists for this submitted + type
-        int existingId = DB.getSQLValueEx(null,
-                "SELECT zz_wsp_atr_uploads_id FROM zz_wsp_atr_uploads " +
-                "WHERE zz_wsp_atr_submitted_id = ? AND zz_wsp_atr_upload_type = ? " +
-                "ORDER BY created DESC LIMIT 1",
-                submittedId, uploadType);
-
-        if (existingId > 0) {
-            addLog("Already uploaded: SDL=" + sdlNumber + " type=" + uploadType + " — skipped");
-            skipped++;
-            return;
-        }
-
         String trxName = Trx.createTrxName("SGDocLoad");
         Trx trx = Trx.get(trxName, true);
         try {
@@ -131,6 +199,8 @@ public class BulkLoadSgDocuments extends SvrProcess {
     }
 
     // -------------------------------------------------------------------------
+    //  Lookup
+    // -------------------------------------------------------------------------
 
     /**
      * Finds the ZZ_WSP_ATR_Submitted_ID for this SDL number and fiscal year 2026.
@@ -144,12 +214,14 @@ public class BulkLoadSgDocuments extends SvrProcess {
                 "JOIN c_bpartner bp ON bp.c_bpartner_id = org.c_bpartner_id " +
                 "JOIN c_year y ON y.c_year_id = s.zz_finyear_id " +
                 "WHERE bp.value = ? " +
-                "AND y.fiscalyear = '2026' " +
+                "AND y.fiscalyear = '" + FISCAL_YEAR + "' " +
                 "ORDER BY s.created DESC " +
                 "LIMIT 1",
                 sdlNumber);
     }
 
+    // -------------------------------------------------------------------------
+    //  Helpers
     // -------------------------------------------------------------------------
 
     private static File[] dirs(File parent) {
