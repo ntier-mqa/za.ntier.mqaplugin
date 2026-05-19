@@ -189,10 +189,11 @@ public class BulkLoadSgDocuments extends SvrProcess {
     }
 
     /**
-     * Walks the full exception chain and returns a single descriptive string,
-     * e.g. "SaveError → Value 'T' not in reference list ZZ_WSP_ATR_Upload_Type".
+     * Walks the full exception chain and appends the stack trace of the root
+     * cause so that internally-swallowed DB errors are always visible.
      */
     private static String rootCauseChain(Throwable t) {
+        // 1. Build the cause chain message
         StringBuilder sb = new StringBuilder();
         Throwable current = t;
         while (current != null) {
@@ -202,10 +203,17 @@ public class BulkLoadSgDocuments extends SvrProcess {
               .append(": ")
               .append(msg != null ? msg.trim() : "(no message)");
             Throwable cause = current.getCause();
-            // stop if cause is the same or we have enough context
             if (cause == current) break;
             current = cause;
         }
+
+        // 2. Append the full stack trace so internally-swallowed DB errors
+        //    (e.g. iDempiere re-wrapping PSQLException as "SaveError") are visible
+        sb.append("\n");
+        java.io.StringWriter sw = new java.io.StringWriter();
+        t.printStackTrace(new java.io.PrintWriter(sw));
+        sb.append(sw.toString());
+
         return sb.toString();
     }
 
