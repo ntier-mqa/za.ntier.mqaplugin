@@ -94,22 +94,7 @@ public class BulkLoadSgDocuments extends SvrProcess {
         String trxName = Trx.createTrxName("SGDocClear");
         Trx trx = Trx.get(trxName, true);
         try {
-            // 1. Attachment entries
-            DB.executeUpdateEx(
-                "DELETE FROM ad_attachmententry " +
-                "WHERE ad_attachment_id IN (" +
-                "  SELECT a.ad_attachment_id FROM ad_attachment a " +
-                "  WHERE a.ad_table_id = " + X_ZZ_WSP_ATR_Uploads.Table_ID + " " +
-                "  AND a.record_id IN (" +
-                "    SELECT u.zz_wsp_atr_uploads_id FROM zz_wsp_atr_uploads u " +
-                "    JOIN zz_wsp_atr_submitted s ON s.zz_wsp_atr_submitted_id = u.zz_wsp_atr_submitted_id " +
-                "    JOIN c_year y ON y.c_year_id = s.zz_finyear_id " +
-                "    WHERE y.fiscalyear = '" + FISCAL_YEAR + "'" +
-                "  )" +
-                ")",
-                null, trxName);
-
-            // 2. Attachment headers
+            // 1. Attachment headers (binary data stored directly in ad_attachment)
             DB.executeUpdateEx(
                 "DELETE FROM ad_attachment " +
                 "WHERE ad_table_id = " + X_ZZ_WSP_ATR_Uploads.Table_ID + " " +
@@ -121,7 +106,7 @@ public class BulkLoadSgDocuments extends SvrProcess {
                 ")",
                 null, trxName);
 
-            // 3. Upload records
+            // 2. Upload records
             int deleted = DB.executeUpdateEx(
                 "DELETE FROM zz_wsp_atr_uploads " +
                 "WHERE zz_wsp_atr_submitted_id IN (" +
@@ -170,16 +155,19 @@ public class BulkLoadSgDocuments extends SvrProcess {
     private void loadFile(int submittedId, String uploadType, File file, String sdlNumber) {
         String trxName = Trx.createTrxName("SGDocLoad");
         Trx trx = Trx.get(trxName, true);
+        String step = "reading file";
         try {
             byte[] data     = Files.readAllBytes(file.toPath());
             String filename = file.getName();
 
+            step = "saving upload record (ZZ_WSP_ATR_Uploads)";
             X_ZZ_WSP_ATR_Uploads up = new X_ZZ_WSP_ATR_Uploads(getCtx(), 0, trxName);
             up.setZZ_WSP_ATR_Submitted_ID(submittedId);
             up.setZZ_WSP_ATR_Upload_Type(uploadType);
             up.setName(uploadType + " - " + filename + " - " + now());
             up.saveEx();
 
+            step = "saving attachment (MAttachment)";
             MAttachment att = new MAttachment(getCtx(), X_ZZ_WSP_ATR_Uploads.Table_ID, up.get_ID(), null, trxName);
             att.addEntry(filename, data);
             att.saveEx();
@@ -191,11 +179,34 @@ public class BulkLoadSgDocuments extends SvrProcess {
         } catch (Exception e) {
             trx.rollback();
             skipped++;
-            addLog("ERROR: SDL=" + sdlNumber + " type=" + uploadType
-                    + " file=" + file.getName() + " — " + e.getMessage());
+            addLog("ERROR [step=" + step + "] SDL=" + sdlNumber
+                    + " type=" + uploadType
+                    + " file=" + file.getName()
+                    + " — " + rootCauseChain(e));
         } finally {
             trx.close();
         }
+    }
+
+    /**
+     * Walks the full exception chain and returns a single descriptive string,
+     * e.g. "SaveError → Value 'T' not in reference list ZZ_WSP_ATR_Upload_Type".
+     */
+    private static String rootCauseChain(Throwable t) {
+        StringBuilder sb = new StringBuilder();
+        Throwable current = t;
+        while (current != null) {
+            if (sb.length() > 0) sb.append(" → ");
+            String msg = current.getMessage();
+            sb.append(current.getClass().getSimpleName())
+              .append(": ")
+              .append(msg != null ? msg.trim() : "(no message)");
+            Throwable cause = current.getCause();
+            // stop if cause is the same or we have enough context
+            if (cause == current) break;
+            current = cause;
+        }
+        return sb.toString();
     }
 
     // -------------------------------------------------------------------------

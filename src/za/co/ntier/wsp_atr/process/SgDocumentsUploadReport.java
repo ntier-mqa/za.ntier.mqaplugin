@@ -6,9 +6,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
@@ -27,10 +29,11 @@ import org.compiere.util.DB;
  * Compares documents available on disk (SG data dump) vs what has been
  * uploaded into the WSP/ATR system for fiscal year 2026.
  *
- * Produces a three-tab Excel workbook:
- *   Tab 1 – Summary    : overall totals
- *   Tab 2 – By SDL     : files vs uploaded per SDL number
- *   Tab 3 – By Type    : files vs uploaded per document type
+ * Produces a four-tab Excel workbook:
+ *   Tab 1 – Summary       : overall totals
+ *   Tab 2 – By SDL        : files vs uploaded per SDL number
+ *   Tab 3 – By Type       : files vs uploaded per document type
+ *   Tab 4 – Discrepancies : every SDL + type that is missing or partially uploaded, with reason
  */
 @org.adempiere.base.annotation.Process(name = "za.co.ntier.wsp_atr.process.SgDocumentsUploadReport")
 public class SgDocumentsUploadReport extends SvrProcess {
@@ -82,6 +85,28 @@ public class SgDocumentsUploadReport extends SvrProcess {
 
     private int dbTotal = 0;
 
+    /** SDL numbers that have at least one ZZ_WSP_ATR_Submitted record for 2026. */
+    private final Set<String> sdlsWithSubmission = new HashSet<>();
+
+    /** One row per (SDL, type) combination that has files on disk but is missing or short in DB. */
+    private final List<Discrepancy> discrepancies = new ArrayList<>();
+
+    private static class Discrepancy {
+        final String sdl;
+        final String docType;
+        final int    diskCount;
+        final int    dbCount;
+        final String reason;
+
+        Discrepancy(String sdl, String docType, int diskCount, int dbCount, String reason) {
+            this.sdl       = sdl;
+            this.docType   = docType;
+            this.diskCount = diskCount;
+            this.dbCount   = dbCount;
+            this.reason    = reason;
+        }
+    }
+
     // -------------------------------------------------------------------------
 
     @Override
@@ -95,6 +120,8 @@ public class SgDocumentsUploadReport extends SvrProcess {
 
         scanDisk(base);
         loadDbCounts();
+        loadSdlsWithSubmission();
+        buildDiscrepancies();
 
         File report = buildReport();
         if (getProcessInfo().getProcessUI() != null)
@@ -193,9 +220,10 @@ public class SgDocumentsUploadReport extends SvrProcess {
 
             Styles s = new Styles(wb);
 
-            writeSummarySheet(wb.createSheet("Summary"),    s);
-            writeSdlSheet    (wb.createSheet("By SDL"),     s);
-            writeTypeSheet   (wb.createSheet("By Type"),    s);
+            writeSummarySheet      (wb.createSheet("Summary"),       s);
+            writeSdlSheet          (wb.createSheet("By SDL"),        s);
+            writeTypeSheet         (wb.createSheet("By Type"),       s);
+            writeDiscrepanciesSheet(wb.createSheet("Discrepancies"), s);
 
             wb.write(fos);
         }
@@ -371,6 +399,100 @@ public class SgDocumentsUploadReport extends SvrProcess {
         pctCell(totRow, 5, totPct,                     totDisk == totDb ? s.good : s.bad);
 
         for (int c = 0; c < 6; c++) sh.autoSizeColumn(c);
+    }
+
+    // =========================================================================
+    //  3b. Load which SDL numbers have a 2026 submission
+    // =========================================================================
+
+    private void loadSdlsWithSubmission() {
+        String sql =
+            "SELECT DISTINCT bp.value " +
+            "FROM zz_wsp_atr_submitted s " +
+            "JOIN zzsdforganisation org ON org.zzsdforganisation_id = s.zzsdforganisation_id " +
+            "JOIN c_bpartner bp         ON bp.c_bpartner_id         = org.c_bpartner_id " +
+            "JOIN c_year y              ON y.c_year_id              = s.zz_finyear_id " +
+            "WHERE y.fiscalyear = '" + FISCAL_YEAR + "'";
+
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+        try {
+            pst = DB.prepareStatement(sql, null);
+            rs  = pst.executeQuery();
+            while (rs.next())
+                sdlsWithSubmission.add(rs.getString(1));
+        } catch (Exception e) {
+            addLog("loadSdlsWithSubmission failed: " + e.getMessage());
+        } finally {
+            DB.close(rs, pst);
+        }
+    }
+
+    // =========================================================================
+    //  3c. Build discrepancy list
+    // =========================================================================
+
+    private void buildDiscrepancies() {
+        for (Map.Entry<String, Map<String, Integer>> sdlEntry : diskBySdlAndType.entrySet()) {
+            String sdl = sdlEntry.getKey();
+
+            for (Map.Entry<String, Integer> typeEntry : sdlEntry.getValue().entrySet()) {
+                String typeCode  = typeEntry.getKey();
+                int    diskCount = typeEntry.getValue();
+                int    dbCount   = dbBySdlAndType
+                                       .getOrDefault(sdl, new HashMap<>())
+                                       .getOrDefault(typeCode, 0);
+
+                if (dbCount >= diskCount) continue; // fully uploaded — no discrepancy
+
+                String docTypeLabel = TYPE_LABEL.getOrDefault(typeCode, typeCode);
+                String reason;
+
+                if (!sdlsWithSubmission.contains(sdl)) {
+                    reason = "No submission found for fiscal year " + FISCAL_YEAR;
+                } else if (dbCount == 0) {
+                    reason = "Not uploaded";
+                } else {
+                    reason = "Partially uploaded (" + dbCount + " of " + diskCount + " file(s) uploaded)";
+                }
+
+                discrepancies.add(new Discrepancy(sdl, docTypeLabel, diskCount, dbCount, reason));
+            }
+        }
+
+        discrepancies.sort((a, b) -> {
+            int c = a.sdl.compareTo(b.sdl);
+            return c != 0 ? c : a.docType.compareTo(b.docType);
+        });
+    }
+
+    // ---- Tab 4: Discrepancies -----------------------------------------------
+
+    private void writeDiscrepanciesSheet(Sheet sh, Styles s) {
+        int r = 0;
+        Row hdr = sh.createRow(r++);
+        cell(hdr, 0, "SDL Number",     s.hdr);
+        cell(hdr, 1, "Document Type",  s.hdr);
+        cell(hdr, 2, "Files on Disk",  s.hdr);
+        cell(hdr, 3, "Uploaded to DB", s.hdr);
+        cell(hdr, 4, "Reason",         s.hdr);
+
+        if (discrepancies.isEmpty()) {
+            Row row = sh.createRow(r);
+            cell(row, 0, "No discrepancies — all files have been uploaded.", s.good);
+            sh.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(r, r, 0, 4));
+        } else {
+            for (Discrepancy d : discrepancies) {
+                Row row = sh.createRow(r++);
+                cell   (row, 0, d.sdl,       s.bad);
+                cell   (row, 1, d.docType,   s.bad);
+                numCell(row, 2, d.diskCount, s.bad);
+                numCell(row, 3, d.dbCount,   s.bad);
+                cell   (row, 4, d.reason,    s.bad);
+            }
+        }
+
+        for (int c = 0; c < 5; c++) sh.autoSizeColumn(c);
     }
 
     // =========================================================================
