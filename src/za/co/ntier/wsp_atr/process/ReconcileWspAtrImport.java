@@ -120,9 +120,12 @@ public class ReconcileWspAtrImport extends SvrProcess {
             new CategoryCol("ZZ_Non_Emp_Status_Done_ID",   "ZZ_WSP_Non_Employee_Status_Ref"),
             new CategoryCol("ZZ_Target_Ben_Done_ID",       "ZZ_Target_Beneficiary_Ref"),
         });
-        // Contractors: count rows per learning programme type
+        // Contractors: count rows per learning programme type.
+        // AD_Column ZZ_Learning_Programme_Type_ID on ZZ_WSP_ATR_Contractors has Reference Key
+        // = ZZ_Contractors_Learning_Programme_Ref (confirmed via mapping detail → AD_Column → Table Validation).
+        // The Java model incorrectly declares the return type as ZZ_Qualification_Type_Details_Ref.
         CATEGORY_BY_TABLE.put("ZZ_WSP_ATR_Contractors", new CategoryCol[]{
-            new CategoryCol("ZZ_Learning_Programme_Type_ID", "ZZ_Qualification_Type_Details_Ref"),
+            new CategoryCol("ZZ_Learning_Programme_Type_ID", "ZZ_Contractors_Learning_Programme_Ref"),
         });
     }
 
@@ -413,7 +416,7 @@ public class ReconcileWspAtrImport extends SvrProcess {
                 if (raw == null) raw = "";
                 String key = raw.trim();
                 if (key.isEmpty()) key = BLANK_STATUS; // re-use the blank sentinel
-                key = key.toLowerCase();
+                key = normaliseCategoryLabel(key);
                 st.categoryCounts
                   .computeIfAbsent(tab.categoryCols[i].fkColumn, k -> new LinkedHashMap<>())
                   .merge(key, 1L, Long::sum);
@@ -527,6 +530,25 @@ public class ReconcileWspAtrImport extends SvrProcess {
      * Applies the same "Created" → "Draft" remap as the importer.
      * Unrecognised values fall through unchanged so they're still visible in the report.
      */
+    /**
+     * Normalise a category label so cosmetically different representations compare equal:
+     *   - lowercase
+     *   - strip ALL non-alphanumeric characters (spaces, underscores, hyphens, etc.)
+     *     so "z_b" == "z b" == "zb"
+     *   - strip one trailing "s" to ignore plural vs singular
+     *     so "certificate" == "certificates", "manager" == "managers"
+     *
+     * Applied identically to both the Excel raw text and the DB Name so that
+     * any two labels that differ only in these cosmetic ways will merge.
+     */
+    private static String normaliseCategoryLabel(String raw) {
+        if (raw == null) return "";
+        String s = raw.toLowerCase().replaceAll("[^a-z0-9]", "");
+        if (s.length() > 1 && s.endsWith("s"))
+            s = s.substring(0, s.length() - 1);
+        return s;
+    }
+
     private String canonicaliseStatus(String raw, Map<String, String> normalizer) {
         if (raw == null || raw.isEmpty()) return BLANK_STATUS;
         String key = raw.toLowerCase();
@@ -652,7 +674,7 @@ public class ReconcileWspAtrImport extends SvrProcess {
             "  JOIN C_BPartner         bp    ON bp.C_BPartner_ID          = org.C_BPartner_ID" +
             "  LEFT JOIN " + cat.lookupTable + " r ON r." + lookupPk + " = c." + cat.fkColumn +
             " WHERE c.IsActive='Y'" +
-            " GROUP BY bp.Value, COALESCE(r.Name, CAST(c." + cat.fkColumn + " AS TEXT))";
+            " GROUP BY bp.Value, LOWER(COALESCE(r.Name, CAST(c." + cat.fkColumn + " AS TEXT)))";
 
         PreparedStatement pst = null;
         ResultSet rs = null;
@@ -664,6 +686,7 @@ public class ReconcileWspAtrImport extends SvrProcess {
                 if (sdl == null || sdl.trim().isEmpty()) sdl = BLANK_SDL;
                 String label = rs.getString("label");
                 if (label == null || label.isEmpty()) label = BLANK_STATUS;
+                label = normaliseCategoryLabel(label); // normalise blank sentinel too: "(none)" → "none"
                 long cnt = rs.getLong("cnt");
                 TabStats st = out.computeIfAbsent(sdl.trim(),
                         k -> new TabStats(tab.numericCols.length));

@@ -305,8 +305,8 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
                 + "  AND parent_so.isactive = 'Y' "
                 + "  AND child_so.isactive = 'Y' "
                 + "  AND l.isactive = 'Y' "
-                + "  AND COALESCE(parent_so.zz_docstatus, '') <> 'UnSdfOrg' "
-                + "  AND COALESCE(child_so.zz_docstatus, '') <> 'UnSdfOrg' "
+                + "  AND COALESCE(parent_so.zz_docstatus, '') = 'AP' "
+                + "  AND COALESCE(child_so.zz_docstatus, '') = 'AP' "
                 + "LIMIT 1";
 
         return DB.getSQLValueEx(trxName, sql, zzSdfOrganisationId) > 0;

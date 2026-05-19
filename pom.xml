@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
 	<groupId>org.idempiere</groupId>
-	<artifactId>extra.sub.parent</artifactId>
+	<artifactId>sub.parent</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 	<relativePath>../sub.parent.pom.xml</relativePath>
   </parent>
