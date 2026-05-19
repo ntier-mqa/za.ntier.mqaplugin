@@ -101,8 +101,16 @@ public class NtierModelValidator implements ModelValidator
 						if (!Util.isEmpty(assDocNo))
 						{
 							var dateStr = now.format(DateTimeFormatter.ofPattern("ddMMyy"));
-							var assessorNo = "MQA/ASS" + assDocNo + "/" + dateStr;
-							assessorPerson.setZZ_Assessor(assessorNo);
+							if (assessorPerson.getZZAssessorRole().equals("Assessor"))
+							{
+								var assessorNo = "MQA/ASS" + assDocNo + "/" + dateStr;
+								assessorPerson.setZZ_Assessor(assessorNo);
+							}
+							else if (assessorPerson.getZZAssessorRole().equals("Moderator"))
+							{
+								var moderatorNo = "MQA/MOD" + assDocNo + "/" + dateStr;
+								assessorPerson.setZZ_Moderator(moderatorNo);
+							}
 						}
 					}
 					
