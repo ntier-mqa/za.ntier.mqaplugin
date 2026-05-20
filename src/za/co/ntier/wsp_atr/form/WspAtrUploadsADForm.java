@@ -226,7 +226,7 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
                 "AND isactive = 'Y' " +
                 "AND zzsdfroletype = ? " +
             //    "AND COALESCE(zz_docstatus, '') <> 'DR' " +
-                "AND COALESCE(zz_docstatus, '') <> 'UnSdfOrg' " +  // Unlinked
+                "AND COALESCE(zz_docstatus, '') = 'AP' " + // <> 'UnSdfOrg' "  Unlinked
                 "ORDER BY orgname";
 
         List<List<Object>> rows = DB.getSQLArrayObjectsEx(null, sql,

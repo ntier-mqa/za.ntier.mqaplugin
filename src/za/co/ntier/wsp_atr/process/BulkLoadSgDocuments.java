@@ -182,7 +182,7 @@ public class BulkLoadSgDocuments extends SvrProcess {
             addLog("ERROR [step=" + step + "] SDL=" + sdlNumber
                     + " type=" + uploadType
                     + " file=" + file.getName()
-                    + " — " + rootCauseChain(e));
+                    + " — " + e.getMessage());
         } finally {
             trx.close();
         }

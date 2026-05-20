@@ -29,11 +29,12 @@ import org.compiere.util.DB;
  * Compares documents available on disk (SG data dump) vs what has been
  * uploaded into the WSP/ATR system for fiscal year 2026.
  *
- * Produces a four-tab Excel workbook:
+ * Produces a five-tab Excel workbook:
  *   Tab 1 – Summary       : overall totals
  *   Tab 2 – By SDL        : files vs uploaded per SDL number
  *   Tab 3 – By Type       : files vs uploaded per document type
  *   Tab 4 – Discrepancies : every SDL + type that is missing or partially uploaded, with reason
+ *   Tab 5 – Zero Byte     : files found on disk with 0 bytes (excluded from counts, cannot be uploaded)
  */
 @org.adempiere.base.annotation.Process(name = "za.co.ntier.wsp_atr.process.SgDocumentsUploadReport")
 public class SgDocumentsUploadReport extends SvrProcess {
@@ -91,6 +92,23 @@ public class SgDocumentsUploadReport extends SvrProcess {
     /** One row per (SDL, type) combination that has files on disk but is missing or short in DB. */
     private final List<Discrepancy> discrepancies = new ArrayList<>();
 
+    /** Zero-byte files found on disk. */
+    private final List<ZeroByteFile> zeroByteFiles = new ArrayList<>();
+
+    private static class ZeroByteFile {
+        final String sdl;
+        final String docType;
+        final String filename;
+        final String fullPath;
+
+        ZeroByteFile(String sdl, String docType, String filename, String fullPath) {
+            this.sdl      = sdl;
+            this.docType  = docType;
+            this.filename = filename;
+            this.fullPath = fullPath;
+        }
+    }
+
     private static class Discrepancy {
         final String sdl;
         final String docType;
@@ -127,7 +145,8 @@ public class SgDocumentsUploadReport extends SvrProcess {
         if (getProcessInfo().getProcessUI() != null)
             getProcessInfo().getProcessUI().download(report);
 
-        return "Report generated. Disk=" + diskTotal + "  DB=" + dbTotal;
+        return "Report generated. Disk=" + diskTotal + "  DB=" + dbTotal
+                + "  ZeroByte=" + zeroByteFiles.size();
     }
 
     // =========================================================================
@@ -142,7 +161,19 @@ public class SgDocumentsUploadReport extends SvrProcess {
                     String typeCode = DIR_TO_TYPE.get(docTypeDir.getName());
                     if (typeCode == null) continue; // unknown type — ignore
 
-                    int count = files(docTypeDir).length;
+                    String docTypeLabel = TYPE_LABEL.getOrDefault(typeCode, typeCode);
+                    File[] fileList = files(docTypeDir);
+                    if (fileList.length == 0) continue;
+
+                    int count = 0;
+                    for (File f : fileList) {
+                        if (f.length() == 0) {
+                            zeroByteFiles.add(new ZeroByteFile(sdl, docTypeLabel, f.getName(), f.getAbsolutePath()));
+                        } else {
+                            count++;
+                        }
+                    }
+
                     if (count == 0) continue;
 
                     // by SDL + type
@@ -224,6 +255,7 @@ public class SgDocumentsUploadReport extends SvrProcess {
             writeSdlSheet          (wb.createSheet("By SDL"),        s);
             writeTypeSheet         (wb.createSheet("By Type"),       s);
             writeDiscrepanciesSheet(wb.createSheet("Discrepancies"), s);
+            writeZeroByteSheet     (wb.createSheet("Zero Byte"),     s);
 
             wb.write(fos);
         }
@@ -493,6 +525,41 @@ public class SgDocumentsUploadReport extends SvrProcess {
         }
 
         for (int c = 0; c < 5; c++) sh.autoSizeColumn(c);
+    }
+
+    // ---- Tab 5: Zero Byte Files ---------------------------------------------
+
+    private void writeZeroByteSheet(Sheet sh, Styles s) {
+        int r = 0;
+        Row hdr = sh.createRow(r++);
+        cell(hdr, 0, "SDL Number",    s.hdr);
+        cell(hdr, 1, "Document Type", s.hdr);
+        cell(hdr, 2, "Filename",      s.hdr);
+        cell(hdr, 3, "Full Path",     s.hdr);
+
+        if (zeroByteFiles.isEmpty()) {
+            Row row = sh.createRow(r);
+            cell(row, 0, "No zero-byte files found.", s.good);
+            sh.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(r, r, 0, 3));
+        } else {
+            // Sort by SDL then doc type then filename
+            zeroByteFiles.sort((a, b) -> {
+                int c = a.sdl.compareTo(b.sdl);
+                if (c != 0) return c;
+                c = a.docType.compareTo(b.docType);
+                return c != 0 ? c : a.filename.compareTo(b.filename);
+            });
+
+            for (ZeroByteFile z : zeroByteFiles) {
+                Row row = sh.createRow(r++);
+                cell(row, 0, z.sdl,      s.bad);
+                cell(row, 1, z.docType,  s.bad);
+                cell(row, 2, z.filename, s.bad);
+                cell(row, 3, z.fullPath, s.bad);
+            }
+        }
+
+        for (int c = 0; c < 4; c++) sh.autoSizeColumn(c);
     }
 
     // =========================================================================
