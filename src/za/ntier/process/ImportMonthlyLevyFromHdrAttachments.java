@@ -14,12 +14,20 @@ import java.util.regex.Pattern;
 import org.adempiere.exceptions.AdempiereException;
 import org.compiere.model.MAttachment;
 import org.compiere.model.MAttachmentEntry;
+import org.compiere.model.MClient;
+import org.compiere.model.MMailText;
+import org.compiere.model.MSysConfig;
+import org.compiere.model.MUser;
+import org.compiere.model.MUserRoles;
+import org.compiere.model.Query;
 import org.compiere.process.SvrProcess;
 import org.compiere.util.DB;
+import org.compiere.util.Util;
 
 import za.ntier.models.X_ZZ_Monthly_Levy_Files;
 // If you generated the header X-model, import it here:
 import za.ntier.models.X_ZZ_Monthly_Levy_Files_Hdr;
+import za.ntier.utils.Notifications;
 
 @org.adempiere.base.annotation.Process(
 		name = "za.ntier.process.ImportMonthlyLevyFromHdrAttachments"
@@ -99,6 +107,8 @@ public class ImportMonthlyLevyFromHdrAttachments extends SvrProcess {
 				(clearExisting ? (" | Deleted existing: " + deleted) : "") +
 				(skippedFiles.length() > 0 ? (" | Skipped(non-matching): " + skippedFiles) : ""));
 		hdr.saveEx();
+
+		sendSdrManagerNotification(fiscalYear, monthName(month2));
 
 		String headerLabel = fiscalYear + " " + monthName(month2);
 
@@ -242,6 +252,54 @@ public class ImportMonthlyLevyFromHdrAttachments extends SvrProcess {
 		case "12": return "December";
 		default:   return mm; // fallback
 		}
+	}
+
+
+	// UUID of the R_MailText template – create the template in iDempiere and paste its UUID here.
+	// Template tokens: @Name@ (recipient name), @FiscalYear@ (4-digit year), @ZZ_Month@ (month name)
+	private static final String LEVY_IMPORT_MAIL_TEMPLATE_UU = "96989870-cf2d-4bc2-b339-b88baec4faf4";
+
+	private void sendSdrManagerNotification(String year, String mthName) {
+		if (Util.isEmpty(LEVY_IMPORT_MAIL_TEMPLATE_UU)) {
+			addLog("WARN: Mail template UUID not configured (LEVY_IMPORT_MAIL_TEMPLATE_UU) – email notification skipped.");
+			return;
+		}
+
+		MMailText mailText = new Query(getCtx(), MMailText.Table_Name, "R_MailText_UU=?", get_TrxName())
+				.setParameters(LEVY_IMPORT_MAIL_TEMPLATE_UU).firstOnly();
+		if (mailText == null) {
+			addLog("WARN: Mail template not found (UUID=" + LEVY_IMPORT_MAIL_TEMPLATE_UU + ") – email notification skipped.");
+			return;
+		}
+
+		String subject  = mailText.getMailHeader();
+		String baseBody = mailText.getMailText(false);
+
+		int roleId = MSysConfig.getIntValue("SNR_MGR_SDR_ROLE_ID", 0);
+		if (roleId <= 0)
+			roleId = DB.getSQLValueEx(get_TrxName(),
+					"SELECT AD_Role_ID FROM AD_Role WHERE Name='Snr Mgr - SDR' AND IsActive='Y' FETCH FIRST 1 ROWS ONLY");
+		if (roleId <= 0) {
+			addLog("WARN: Could not find 'Snr Mgr - SDR' role – email notification skipped.");
+			return;
+		}
+
+		MClient client = MClient.get(getCtx());
+		MUser from = MUser.get(getCtx(), Notifications.FROM_EMAIL_USER_ID);
+
+		int emailsSent = 0;
+		for (MUserRoles ur : MUserRoles.getOfRole(getCtx(), roleId)) {
+			if (!ur.isActive()) continue;
+			MUser user = new MUser(getCtx(), ur.getAD_User_ID(), null);
+			if (Util.isEmpty(user.getEMail())) continue;
+			String body = baseBody
+					.replace("@Name@",        user.getName() != null ? user.getName() : "")
+					.replace("@FiscalYear@",  year)
+					.replace("@ZZ_Month@",    mthName);
+			client.sendEMail(from, user, subject, body, null, mailText.isHtml());
+			emailsSent++;
+		}
+		addLog("Email notification sent to " + emailsSent + " Snr Mgr - SDR user(s).");
 	}
 
 
