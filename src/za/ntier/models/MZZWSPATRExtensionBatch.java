@@ -54,8 +54,8 @@ public class MZZWSPATRExtensionBatch extends X_ZZ_WSP_ATR_EXTENSION_BATCH
 	{
 	    boolean ok = super.afterSave(newRecord, success);
 
-	    if (ok && is_ValueChanged(COLUMNNAME_ZZ_DocStatus) && "AP".equals(getZZ_DocStatus()))
-	    {
+		if (ok && is_ValueChanged(COLUMNNAME_ZZ_DocStatus) && MZZWSPATRExtensionBatch.ZZ_DOCSTATUS_Approved.equals(getZZ_DocStatus()))
+		{
 	        try
 	        {
 	            updateLinkedSubmissionDueDates();
@@ -170,21 +170,21 @@ public class MZZWSPATRExtensionBatch extends X_ZZ_WSP_ATR_EXTENSION_BATCH
 
 		for (X_ZZ_WSP_ATR_EXTENSION ext : extensions)
 		{
-			try
-			{
-				mailText.setPO(ext, true);
-			}
-			catch (Throwable t)
-			{
-				mailText.setPO(ext);
-			}
-
 			String html = mailText.getMailText(true);
+
+			String firstName = ext.getZZ_SDF_FirstName() != null ? ext.getZZ_SDF_FirstName() : "";
+			String surname = ext.getZZ_SDF_Surname() != null ? ext.getZZ_SDF_Surname() : "";
+			String name = (firstName + " " + surname).trim();
+			String documentNo = ext.getDocumentNo() != null ? ext.getDocumentNo() : "";
+
+			html = html.replace("@Name@", name);
+			html = html.replace("@DocumentNo@", documentNo);
 			String subject = mailText.getMailHeader();
 			if (subject == null || subject.trim().isEmpty())
 			{
 				subject = "WSP-ATR Extension Application Update: Approval Confirmation";
 			}
+			subject = subject.replace("@DocumentNo@", documentNo);
 
 			// Collect emails specific to this single extension and remove
 			// duplicates
