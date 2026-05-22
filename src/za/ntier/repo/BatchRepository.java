@@ -58,8 +58,9 @@ public class BatchRepository {
         b.setC_Currency_ID(currencyId);
         b.setSalesRep_ID(adUserId);
         b.setZZ_Monthly_Levy_Files_Hdr_ID(hdr.get_ID());
-        b.setZZ_Status(X_C_InvoiceBatch.ZZ_DOCSTATUS_Submitted);
+     //   b.setZZ_Status(X_C_InvoiceBatch.ZZ_DOCSTATUS_Submitted);
         b.setZZ_IS_WSP_ATR(true);
+        b.setZZ_DocStatus(X_C_InvoiceBatch.ZZ_DOCSTATUS_Submitted);
         b.setZZ_DocAction(X_C_InvoiceBatch.ZZ_DOCACTION_Recommend);
         b.setIsSOTrx(false);
         b.setDescription("MG Generated for Year: " + year + " Month: " + month);
