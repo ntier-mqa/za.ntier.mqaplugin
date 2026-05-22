@@ -173,7 +173,7 @@ public class ImportMonthlyLevyFromHdrAttachments extends SvrProcess {
 					rec.setZZ_Year(fileYear);				
 					if (!sdlNo.isEmpty()) {
 						int bpId = DB.getSQLValueEx(get_TrxName(),
-								"SELECT C_BPartner_ID FROM C_BPartner WHERE ZZ_SDL_No=? AND IsActive='Y' FETCH FIRST 1 ROWS ONLY", sdlNo);
+								"SELECT C_BPartner_ID FROM C_BPartner WHERE value=? AND IsActive='Y' FETCH FIRST 1 ROWS ONLY", sdlNo);
 						if (bpId > 0) {
 							int approvalId = DB.getSQLValueEx(get_TrxName(),
 									"SELECT ZZ_WSP_ATR_Approvals_ID FROM ZZ_WSP_ATR_Approvals WHERE C_BPartner_ID=? AND ZZ_Financial_Year=? AND IsActive='Y' FETCH FIRST 1 ROWS ONLY",
