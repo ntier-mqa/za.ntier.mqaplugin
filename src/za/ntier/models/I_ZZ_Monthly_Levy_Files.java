@@ -175,6 +175,15 @@ public interface I_ZZ_Monthly_Levy_Files
 	/** Get File Name	  */
 	public String getZZ_File_Name();
 
+    /** Column name ZZ_Grant_Status */
+    public static final String COLUMNNAME_ZZ_Grant_Status = "ZZ_Grant_Status";
+
+	/** Set Grant Status	  */
+	public void setZZ_Grant_Status (String ZZ_Grant_Status);
+
+	/** Get Grant Status	  */
+	public String getZZ_Grant_Status();
+
     /** Column name ZZ_MG */
     public static final String COLUMNNAME_ZZ_MG = "ZZ_MG";
 

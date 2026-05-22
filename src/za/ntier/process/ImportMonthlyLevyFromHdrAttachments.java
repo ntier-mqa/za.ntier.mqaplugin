@@ -145,14 +145,15 @@ public class ImportMonthlyLevyFromHdrAttachments extends SvrProcess {
 				rec.setC_Year_ID(C_Year_ID);
 				rec.setZZ_Month(month2);
 				rec.setZZ_Seta_Code(cols.get(1).trim());
-				rec.setZZ_SDL_No(cols.get(2).trim());
+				String sdlNo = cols.get(2).trim();
+				rec.setZZ_SDL_No(sdlNo);				
 				rec.setZZ_MG(toBD(cols.get(4)));
 				rec.setZZ_DG(toBD(cols.get(5)));
 				rec.setZZ_Admin(toBD(cols.get(6)));
 				rec.setZZ_Penalties(toBD(cols.get(7)));
 				rec.setzz_Interest(toBD(cols.get(8)));
 				rec.setzz_Total(toBD(cols.get(9)));
-				
+
 				String schemeAdj = cols.get(12).trim();
 				if (!schemeAdj.isEmpty()) rec.setZZ_Scheme_Year_Adjust(schemeAdj);
 				rec.setZZ_Current_Date(new Timestamp(System.currentTimeMillis()));
@@ -169,7 +170,24 @@ public class ImportMonthlyLevyFromHdrAttachments extends SvrProcess {
 				rec.setZZ_File_Name(fn);
 				String fileYear = extractYearFromFileName(fileName);
 				if (fileYear != null) {
-					rec.setZZ_Year(fileYear);
+					rec.setZZ_Year(fileYear);				
+					if (!sdlNo.isEmpty()) {
+						int bpId = DB.getSQLValueEx(get_TrxName(),
+								"SELECT C_BPartner_ID FROM C_BPartner WHERE ZZ_SDL_No=? AND IsActive='Y' FETCH FIRST 1 ROWS ONLY", sdlNo);
+						if (bpId > 0) {
+							int approvalId = DB.getSQLValueEx(get_TrxName(),
+									"SELECT ZZ_WSP_ATR_Approvals_ID FROM ZZ_WSP_ATR_Approvals WHERE C_BPartner_ID=? AND ZZ_Financial_Year=? AND IsActive='Y' FETCH FIRST 1 ROWS ONLY",
+									bpId, fileYear);
+							if (approvalId > 0) {
+								String grantStatus = DB.getSQLValueStringEx(get_TrxName(),
+										"SELECT ZZ_Grant_Status FROM ZZ_WSP_ATR_Approvals WHERE ZZ_WSP_ATR_Approvals_ID=?", approvalId);
+								if (grantStatus != null && hasColumn(rec, "ZZ_Grant_Status")) {
+									rec.setZZ_Grant_Status(grantStatus);
+								}
+								
+							}
+						}
+					}
 				} else {
 					addLog("WARN: No 4-digit trailing year found in filename: " + fileName);
 				}
@@ -190,13 +208,7 @@ public class ImportMonthlyLevyFromHdrAttachments extends SvrProcess {
 	private boolean hasColumn(org.compiere.model.PO po, String column) {
 		return po.get_ColumnIndex(column) >= 0;
 	}
-
-	private void safeSet(org.compiere.model.PO po, String column, Object value) {
-		int idx = po.get_ColumnIndex(column);
-		if (idx >= 0) {
-			po.set_ValueNoCheck(column, value);
-		}
-	}
+	
 
 	private BigDecimal toBD(String raw) {
 		if (raw == null) return BigDecimal.ZERO;
@@ -272,8 +284,8 @@ public class ImportMonthlyLevyFromHdrAttachments extends SvrProcess {
 			return;
 		}
 
-		String subject  = mailText.getMailHeader();
-		String baseBody = mailText.getMailText(false);
+		String baseSubject = mailText.getMailHeader();
+		String baseBody    = mailText.getMailText(false);
 
 		int roleId = MSysConfig.getIntValue("SNR_MGR_SDR_ROLE_ID", 0);
 		if (roleId <= 0)
@@ -292,10 +304,15 @@ public class ImportMonthlyLevyFromHdrAttachments extends SvrProcess {
 			if (!ur.isActive()) continue;
 			MUser user = new MUser(getCtx(), ur.getAD_User_ID(), null);
 			if (Util.isEmpty(user.getEMail())) continue;
+			String name = user.getName() != null ? user.getName() : "";
+			String subject = baseSubject
+					.replace("@Name@",       name)
+					.replace("@FiscalYear@", year)
+					.replace("@ZZ_Month@",   mthName);
 			String body = baseBody
-					.replace("@Name@",        user.getName() != null ? user.getName() : "")
-					.replace("@FiscalYear@",  year)
-					.replace("@ZZ_Month@",    mthName);
+					.replace("@Name@",       name)
+					.replace("@FiscalYear@", year)
+					.replace("@ZZ_Month@",   mthName);
 			client.sendEMail(from, user, subject, body, null, mailText.isHtml());
 			emailsSent++;
 		}

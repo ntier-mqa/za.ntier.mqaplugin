@@ -34,7 +34,7 @@ public class X_ZZ_Monthly_Levy_Files extends PO implements I_ZZ_Monthly_Levy_Fil
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20251007L;
+	private static final long serialVersionUID = 20260522L;
 
     /** Standard Constructor */
     public X_ZZ_Monthly_Levy_Files (Properties ctx, int ZZ_Monthly_Levy_Files_ID, String trxName)
@@ -224,6 +224,26 @@ public class X_ZZ_Monthly_Levy_Files extends PO implements I_ZZ_Monthly_Levy_Fil
 	public String getZZ_File_Name()
 	{
 		return (String)get_Value(COLUMNNAME_ZZ_File_Name);
+	}
+
+	/** Approved = A */
+	public static final String ZZ_GRANT_STATUS_Approved = "A";
+	/** Rejected = R */
+	public static final String ZZ_GRANT_STATUS_Rejected = "R";
+	/** Set Grant Status.
+		@param ZZ_Grant_Status Grant Status
+	*/
+	public void setZZ_Grant_Status (String ZZ_Grant_Status)
+	{
+
+		set_Value (COLUMNNAME_ZZ_Grant_Status, ZZ_Grant_Status);
+	}
+
+	/** Get Grant Status.
+		@return Grant Status	  */
+	public String getZZ_Grant_Status()
+	{
+		return (String)get_Value(COLUMNNAME_ZZ_Grant_Status);
 	}
 
 	/** Set MG.
