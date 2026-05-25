@@ -44,6 +44,8 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.compiere.model.MAttachment;
 import org.compiere.model.MAttachmentEntry;
 import org.compiere.model.MProcess;
+import org.compiere.model.MRefList;
+import org.compiere.model.MReference;
 import org.compiere.model.MTable;
 import org.compiere.util.CLogger;
 import org.compiere.util.DB;
@@ -80,6 +82,9 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 	// TODO: set to AD_Process_ID of ValidateAndImportWspAtrDataFromTemplate
 	private static final String PROCESS_VALIDATE_IMPORT_UU = "09da67a2-963d-4663-8484-f0b1d4fc6820";
+
+	private static final String ZZ_DOCSTATUS_REF_UU = "98479fb5-df5d-440d-86aa-92d77a320857";
+	private static int docStatusRefId = 0;
 
 	private Borderlayout layout = new Borderlayout();
 	private North north = new North();
@@ -491,25 +496,15 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 	}
 
 	private String statusLabel(String code) {
-		if (Util.isEmpty(code, true)) return "Draft";	  
-		switch (code) {
-		case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Draft: return "Draft";
-		case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating: return "Validating";
-		case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_ValidationError: return "Validation Error";
-		case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Importing: return "Importing";
-		case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported: return "Imported";
-		case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_ErrorImporting: return "Error Importing";
-		case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Submitted: return "Submitted";
-		case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Uploaded: return "Uploaded";
-		case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Query: return "Query";
-		case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_RecommendedForEvaluation: return "Recommended For Evaluation";
-		case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_RecommendedForApproval: return "Recommended For Approval";
-		case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Approved: return "Approved";
-
-
-
-		default: return code;
+		if (Util.isEmpty(code, true)) return "Draft";
+		if (docStatusRefId == 0) {
+			MReference ref = MReference.get(Env.getCtx(), ZZ_DOCSTATUS_REF_UU);
+			if (ref != null)
+				docStatusRefId = ref.getAD_Reference_ID();
 		}
+		if (docStatusRefId == 0) return code;
+		String name = MRefList.getListName(Env.getCtx(), docStatusRefId, code);
+		return Util.isEmpty(name, true) ? code : name;
 	}
 
 

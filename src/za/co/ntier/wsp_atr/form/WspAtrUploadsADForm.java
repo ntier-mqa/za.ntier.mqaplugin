@@ -18,6 +18,8 @@ import org.adempiere.webui.component.ListItem;
 import org.adempiere.webui.component.Listbox;
 import org.adempiere.webui.panel.ADForm;
 import org.adempiere.webui.util.ZKUpdateUtil;
+import org.compiere.model.MRefList;
+import org.compiere.model.MReference;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Util;
@@ -42,6 +44,9 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
     private static final long serialVersionUID = 1L;
 
     private static final String PROCESS_GENERATE_REPORT_UU = "2760c2cf-56ad-405e-92fe-86b873b81025";
+
+    private static final String ZZ_DOCSTATUS_REF_UU = "98479fb5-df5d-440d-86aa-92d77a320857";
+    private static int docStatusRefId = 0;
 
     private final Properties ctx = Env.getCtx();
     private final WspAtrUploadsRepository repo = new WspAtrUploadsRepository(ctx);
@@ -159,22 +164,14 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
 
     private String statusLabel(String code) {
         if (Util.isEmpty(code, true)) return "Draft";
-        switch (code) {
-            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Draft: return "Draft";
-            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Validating: return "Validating";
-            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_ValidationError: return "Validation Error";
-            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Importing: return "Importing";
-            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported: return "Imported";
-            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_ErrorImporting: return "Error Importing";
-            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Submitted: return "Submitted";
-            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Uploaded: return "Uploaded";
-            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_RecommendedForEvaluation: return "Recommended For Evaluation";
-            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_RecommendedForApproval: return "Recommended For Approval";
-            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Approved: return "Approved";
-            case za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Query: return "Query";
-            
-            default: return code;
+        if (docStatusRefId == 0) {
+            MReference ref = MReference.get(Env.getCtx(), ZZ_DOCSTATUS_REF_UU);
+            if (ref != null)
+                docStatusRefId = ref.getAD_Reference_ID();
         }
+        if (docStatusRefId == 0) return code;
+        String name = MRefList.getListName(Env.getCtx(), docStatusRefId, code);
+        return Util.isEmpty(name, true) ? code : name;
     }
 
     private void addRow(int submittedId, int zzSdfOrganisationId, String orgName, Timestamp submittedDate, String status) {
