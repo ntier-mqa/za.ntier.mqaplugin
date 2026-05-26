@@ -4,6 +4,8 @@ import java.io.File;
 import java.nio.file.Files;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.compiere.model.MAttachment;
@@ -33,6 +35,10 @@ import za.ntier.models.MZZSdfOrganisation;
  *           find one with that BPartner and no SdfId, then set the SdfId.
  *        c. Attach all files under every subfolder to ZZSdfOrganisation.
  *
+ * All diagnostic messages (skips, duplicates, errors) are collected during
+ * the run and flushed to the process log only after every directory has been
+ * attempted, so a single bad record never stops the rest.
+ *
  * Process parameter:
  *   ClearAttachments (Y/N) — when Y, deletes existing attachments on each
  *                            AD_User and ZZSdfOrganisation before loading.
@@ -46,12 +52,21 @@ public class ImportSgSdfDocuments extends SvrProcess {
     private static final int TABLE_AD_USER = MTable.getTable_ID("AD_User");
     private static final int TABLE_SDF_ORG = X_ZZSdfOrganisation.Table_ID;
 
+    // Outcome codes returned by attachFile()
+    private static final int ATTACH_LOADED    =  1;
+    private static final int ATTACH_DUPLICATE =  0;
+    private static final int ATTACH_SKIPPED   = -1;
+
     private boolean clearAttachments = false;
 
-    private int processed   = 0;
-    private int idCopyFiles = 0;
-    private int orgFiles    = 0;
-    private int skipped     = 0;
+    private int processed      = 0;
+    private int idCopyFiles    = 0;
+    private int orgFiles       = 0;
+    private int alreadyAttached = 0;
+    private int skipped        = 0;
+
+    /** All diagnostic messages collected during the run, flushed at the end. */
+    private final List<String> deferredLog = new ArrayList<>();
 
     @Override
     protected void prepare() {
@@ -71,12 +86,23 @@ public class ImportSgSdfDocuments extends SvrProcess {
             throw new AdempiereException("Base directory not found: " + BASE_DIR);
 
         for (File idDir : dirs(base)) {
-            processIdDirectory(idDir);
+            try {
+                processIdDirectory(idDir);
+            } catch (Exception e) {
+                deferredLog.add("FATAL ERROR in directory " + idDir.getName() + ": " + e.getMessage());
+                skipped++;
+            }
+        }
+
+        // Flush everything to the process log after all directories are done
+        for (String msg : deferredLog) {
+            addLog(msg);
         }
 
         return "Processed=" + processed
                 + "  IDCopyFiles=" + idCopyFiles
                 + "  OrgFiles=" + orgFiles
+                + "  AlreadyAttached=" + alreadyAttached
                 + "  Skipped=" + skipped;
     }
 
@@ -100,10 +126,10 @@ public class ImportSgSdfDocuments extends SvrProcess {
             if (clearAttachments)
                 clearAttachment(TABLE_AD_USER, adUserId);
             for (File f : files(idCopyDir)) {
-                if (attachFile(TABLE_AD_USER, adUserId, f, "ID=" + idNumber))
-                    idCopyFiles++;
-                else
-                    skipped++;
+                int result = attachFile(TABLE_AD_USER, adUserId, f, "ID=" + idNumber);
+                if      (result == ATTACH_LOADED)    idCopyFiles++;
+                else if (result == ATTACH_DUPLICATE) alreadyAttached++;
+                else                                 skipped++;
             }
         }
 
@@ -124,14 +150,14 @@ public class ImportSgSdfDocuments extends SvrProcess {
 
         int bpId = findBPartner(sdlNumber);
         if (bpId <= 0) {
-            addLog("No C_BPartner for SDL=" + sdlNumber + " (ID=" + idNumber + ") — skipped");
+            deferredLog.add("No C_BPartner for SDL=" + sdlNumber + " (ID=" + idNumber + ") — skipped");
             skipped++;
             return;
         }
 
         int orgId = findOrLinkOrg(bpId, sdfId, sdlNumber);
         if (orgId <= 0) {
-            addLog("No ZZSdfOrganisation for SDL=" + sdlNumber + " BP=" + bpId + " — skipped");
+            deferredLog.add("No ZZSdfOrganisation for SDL=" + sdlNumber + " BP=" + bpId + " — skipped");
             skipped++;
             return;
         }
@@ -141,18 +167,18 @@ public class ImportSgSdfDocuments extends SvrProcess {
 
         for (File subDir : dirs(lDir)) {
             for (File f : files(subDir)) {
-                if (attachFile(TABLE_SDF_ORG, orgId, f, "SDL=" + sdlNumber))
-                    orgFiles++;
-                else
-                    skipped++;
+                int result = attachFile(TABLE_SDF_ORG, orgId, f, "SDL=" + sdlNumber);
+                if      (result == ATTACH_LOADED)    orgFiles++;
+                else if (result == ATTACH_DUPLICATE) alreadyAttached++;
+                else                                 skipped++;
             }
         }
         // Files placed directly in the SDL dir (edge case)
         for (File f : files(lDir)) {
-            if (attachFile(TABLE_SDF_ORG, orgId, f, "SDL=" + sdlNumber))
-                orgFiles++;
-            else
-                skipped++;
+            int result = attachFile(TABLE_SDF_ORG, orgId, f, "SDL=" + sdlNumber);
+            if      (result == ATTACH_LOADED)    orgFiles++;
+            else if (result == ATTACH_DUPLICATE) alreadyAttached++;
+            else                                 skipped++;
         }
     }
 
@@ -161,8 +187,9 @@ public class ImportSgSdfDocuments extends SvrProcess {
     // -------------------------------------------------------------------------
 
     /**
-     * Returns [sdfId, adUserId] or null.
-     * Logs and returns null if zero or multiple ZZSdf records match.
+     * Returns [sdfId, adUserId], or null if not found or ambiguous.
+     * Messages are deferred; null is returned in both the "not found"
+     * and "multiple found" cases so the caller always skips cleanly.
      */
     private int[] findSdf(String idNumber) {
         PreparedStatement pst = null;
@@ -181,14 +208,14 @@ public class ImportSgSdfDocuments extends SvrProcess {
                     duplicate = true;
             }
             if (duplicate) {
-                addLog("ERROR: multiple ZZSdf records for ID=" + idNumber + " — skipped");
+                deferredLog.add("ERROR: multiple ZZSdf records for ID=" + idNumber + " — skipped");
                 return null;
             }
             if (first == null)
-                addLog("No ZZSdf record for ID=" + idNumber + " — skipped");
+                deferredLog.add("No ZZSdf record for ID=" + idNumber + " — skipped");
             return first;
         } catch (Exception e) {
-            addLog("Error looking up ZZSdf for ID=" + idNumber + ": " + e.getMessage());
+            deferredLog.add("Error looking up ZZSdf for ID=" + idNumber + ": " + e.getMessage());
             return null;
         } finally {
             DB.close(rs, pst);
@@ -204,7 +231,7 @@ public class ImportSgSdfDocuments extends SvrProcess {
     /**
      * Finds ZZSdfOrganisation for the given BP and SDF.
      * First tries an exact match (BP + SdfId already set).
-     * Falls back to a row with the same BP but no SdfId, and links the SdfId.
+     * Falls back to a row with the same BP but no SdfId, and links it.
      * Returns -1 if nothing is found.
      */
     private int findOrLinkOrg(int bpId, int sdfId, String sdlNumber) {
@@ -232,11 +259,11 @@ public class ImportSgSdfDocuments extends SvrProcess {
             org.setZZSdf_ID(sdfId);
             org.saveEx();
             trx.commit(true);
-            addLog("Linked ZZSdf_ID=" + sdfId + " to ZZSdfOrganisation_ID=" + orgId
+            deferredLog.add("Linked ZZSdf_ID=" + sdfId + " to ZZSdfOrganisation_ID=" + orgId
                     + " (SDL=" + sdlNumber + ")");
         } catch (Exception e) {
             trx.rollback();
-            addLog("WARN: Failed to link ZZSdf_ID=" + sdfId + " to org=" + orgId
+            deferredLog.add("WARN: Failed to link ZZSdf_ID=" + sdfId + " to org=" + orgId
                     + " (SDL=" + sdlNumber + "): " + e.getMessage());
         } finally {
             trx.close();
@@ -247,25 +274,41 @@ public class ImportSgSdfDocuments extends SvrProcess {
     //  Attachment helpers
     // -------------------------------------------------------------------------
 
-    /** Returns true on success, false on zero-byte or error. */
-    private boolean attachFile(int tableId, int recordId, File file, String context) {
+    /**
+     * Tries to attach one file to the given record.
+     *
+     * @return ATTACH_LOADED    – file was attached successfully
+     *         ATTACH_DUPLICATE – a same-named entry already exists on this record
+     *         ATTACH_SKIPPED   – zero-byte file or unexpected error
+     */
+    private int attachFile(int tableId, int recordId, File file, String context) {
         if (file.length() == 0) {
-            addLog("Zero-byte file skipped: " + file.getName() + " [" + context + "]");
-            return false;
+            deferredLog.add("Zero-byte file skipped: " + file.getName() + " [" + context + "]");
+            return ATTACH_SKIPPED;
         }
         String trxName = Trx.createTrxName("SGSdfAtt");
         Trx trx = Trx.get(trxName, true);
         try {
             byte[] data = Files.readAllBytes(file.toPath());
             MAttachment att = new MAttachment(getCtx(), tableId, recordId, null, trxName);
+
+            // Duplicate check — skip if a same-named entry is already stored
+            for (int i = 0; i < att.getEntryCount(); i++) {
+                if (file.getName().equals(att.getEntry(i).getName())) {
+                    deferredLog.add("Already attached: " + file.getName() + " [" + context + "]");
+                    trx.rollback();
+                    return ATTACH_DUPLICATE;
+                }
+            }
+
             att.addEntry(file.getName(), data);
             att.saveEx();
             trx.commit(true);
-            return true;
+            return ATTACH_LOADED;
         } catch (Exception e) {
             trx.rollback();
-            addLog("ERROR attaching " + file.getName() + " [" + context + "]: " + e.getMessage());
-            return false;
+            deferredLog.add("ERROR attaching " + file.getName() + " [" + context + "]: " + e.getMessage());
+            return ATTACH_SKIPPED;
         } finally {
             trx.close();
         }
@@ -277,7 +320,7 @@ public class ImportSgSdfDocuments extends SvrProcess {
                 "DELETE FROM ad_attachment WHERE ad_table_id = ? AND record_id = ?",
                 new Object[]{ tableId, recordId }, null);
         } catch (Exception e) {
-            addLog("WARN: Could not clear attachment for table=" + tableId
+            deferredLog.add("WARN: Could not clear attachment for table=" + tableId
                     + " record=" + recordId + ": " + e.getMessage());
         }
     }
