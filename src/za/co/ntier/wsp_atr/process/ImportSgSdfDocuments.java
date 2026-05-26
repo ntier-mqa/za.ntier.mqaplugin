@@ -46,7 +46,7 @@ import za.ntier.models.MZZSdfOrganisation;
 @org.adempiere.base.annotation.Process(name = "za.co.ntier.wsp_atr.process.ImportSgSdfDocuments")
 public class ImportSgSdfDocuments extends SvrProcess {
 
-    private static final String BASE_DIR    = "/tmp/SG_Data_070526";
+    private static final String BASE_DIR    = "/tmp/SG_Data_070526/MQAR008388";
     private static final String ID_COPY_DIR = "ID Copy";
 
     private static final int TABLE_AD_USER = MTable.getTable_ID("AD_User");
