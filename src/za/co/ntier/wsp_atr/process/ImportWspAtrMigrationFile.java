@@ -646,11 +646,13 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                 }
                 X_ZZSdfOrganisation newOrg = new X_ZZSdfOrganisation(ctx, 0, trxName);
                 newOrg.setC_BPartner_ID(bpId);
+                newOrg.setZZSdfRoleType(X_ZZSdfOrganisation.ZZSDFROLETYPE_PrimarySDF);
                 newOrg.setZZActingForEmployer(false);
                 newOrg.setZZReplacingPrimarySDF(false);
                 newOrg.setZZSecondarySdf(false);
                 newOrg.setZZSdf_ID(DB.getSQLValue(trxName,
                         "Select s.ZZSDF_ID from ZZSdf s where ZZSdf_UU='" + DEFAULT_SDF_UU + "'"));
+                newOrg.setZZ_DocStatus("AP");
                 newOrg.setAD_Org_ID(0);
                 newOrg.saveEx();
                 return Integer.valueOf(newOrg.get_ID());
