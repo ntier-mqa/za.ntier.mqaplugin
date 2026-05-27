@@ -22,7 +22,6 @@ import org.compiere.model.MUser;
 import org.compiere.model.Query;
 import org.compiere.util.CLogger;
 import org.compiere.util.DB;
-import org.compiere.util.Env;
 
 import com.lowagie.text.Document;
 import com.lowagie.text.Element;
@@ -40,7 +39,7 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
 	private static final String SDF_APPROVAL_LETTER_TEMPLATE_UUID = "6be8b4db-3ce0-44b4-850b-4138deabfcfe";
 
     // Your fixed mail template UUID
-    private static final String SDF_APPROVED_MAILTEXT_UU = "00a3c0c0-93e6-40d1-ac00-962e92d0977e";
+//    private static final String SDF_APPROVED_MAILTEXT_UU = "00a3c0c0-93e6-40d1-ac00-962e92d0977e";
 
     public MZZSdfOrganisation(Properties ctx, int ZZSdfOrganisation_ID, String trxName) {
         super(ctx, ZZSdfOrganisation_ID, trxName);
@@ -86,8 +85,8 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
 
                 Object oldStatus = get_ValueOld(COLUMNNAME_ZZ_DocStatus);
                 if (oldStatus != null && !ZZ_DOCSTATUS_Approved.equals(oldStatus)) {
-                    MClient client = MClient.get(Env.getCtx());
-                    sendSdfApprovedMail(client);
+//                    MClient client = MClient.get(Env.getCtx());
+//                    sendSdfApprovedMail(client);
                     try {
                         sendSdfApprovalLetter();
                     } catch (Exception e) {
@@ -106,63 +105,63 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
     /**
      * Send email to the SDF linked to this organisation when approved.
      */
-    private void sendSdfApprovedMail(MClient client) {
-        // 1) Find SDF user
-        int adUserId = getSdfUserId();
-        if (adUserId <= 0) {
-            log.warning("No SDF AD_User found for ZZSdfOrganisation_ID=" + getZZSdfOrganisation_ID());
-            return;
-        }
-
-        MUser user = MUser.get(getCtx(), adUserId);
-        if (user == null) {
-            log.warning("MUser not found for AD_User_ID=" + adUserId);
-            return;
-        }
-
-        String to = user.getEMail();
-        if (to == null || to.trim().isEmpty()) {
-            log.warning("SDF user has no email. AD_User_ID=" + adUserId);
-            return;
-        }
-
-        // 2) Load mail text by UU
-        MMailText mText = new MMailText(getCtx(), SDF_APPROVED_MAILTEXT_UU, get_TrxName());
-        if (mText.get_ID() <= 0) {
-            log.warning("Mail text not found for UU=" + SDF_APPROVED_MAILTEXT_UU);
-            return;
-        }
-
-        mText.setUser(user);
-        try {
-            mText.setPO(this, true); // if your version has (PO, boolean)
-        } catch (Throwable t) {
-            mText.setPO(this);       // fallback for older versions
-        }
-
-        String subject = mText.getMailHeader();
-        String message = mText.getMailText(true); // html
-
-        if (subject == null || subject.trim().isEmpty()) {
-            subject = "SDF Organisation Approved";
-        }
-
-
-        // 3) Send via client
-
-        
-        MUser from = MUser.get(Env.getCtx(), FROM_EMAIL_USER_ID);
-        
-        boolean sent = client.sendEMail(from, user, subject, message, null, mText.isHtml());
-        
-        if (!sent) {
-            log.warning("Failed to send SDF approval email to " + to
-                    + " for ZZSdfOrganisation_ID=" + getZZSdfOrganisation_ID());
-        } else {
-            log.info("SDF approval email sent to " + to
-                    + " for ZZSdfOrganisation_ID=" + getZZSdfOrganisation_ID());
-        }
-    }
+//    private void sendSdfApprovedMail(MClient client) {
+//        // 1) Find SDF user
+//        int adUserId = getSdfUserId();
+//        if (adUserId <= 0) {
+//            log.warning("No SDF AD_User found for ZZSdfOrganisation_ID=" + getZZSdfOrganisation_ID());
+//            return;
+//        }
+//
+//        MUser user = MUser.get(getCtx(), adUserId);
+//        if (user == null) {
+//            log.warning("MUser not found for AD_User_ID=" + adUserId);
+//            return;
+//        }
+//
+//        String to = user.getEMail();
+//        if (to == null || to.trim().isEmpty()) {
+//            log.warning("SDF user has no email. AD_User_ID=" + adUserId);
+//            return;
+//        }
+//
+//        // 2) Load mail text by UU
+//        MMailText mText = new MMailText(getCtx(), SDF_APPROVED_MAILTEXT_UU, get_TrxName());
+//        if (mText.get_ID() <= 0) {
+//            log.warning("Mail text not found for UU=" + SDF_APPROVED_MAILTEXT_UU);
+//            return;
+//        }
+//
+//        mText.setUser(user);
+//        try {
+//            mText.setPO(this, true); // if your version has (PO, boolean)
+//        } catch (Throwable t) {
+//            mText.setPO(this);       // fallback for older versions
+//        }
+//
+//        String subject = mText.getMailHeader();
+//        String message = mText.getMailText(true); // html
+//
+//        if (subject == null || subject.trim().isEmpty()) {
+//            subject = "SDF Organisation Approved";
+//        }
+//
+//
+//        // 3) Send via client
+//
+//        
+//        MUser from = MUser.get(Env.getCtx(), FROM_EMAIL_USER_ID);
+//        
+//        boolean sent = client.sendEMail(from, user, subject, message, null, mText.isHtml());
+//        
+//        if (!sent) {
+//            log.warning("Failed to send SDF approval email to " + to
+//                    + " for ZZSdfOrganisation_ID=" + getZZSdfOrganisation_ID());
+//        } else {
+//            log.info("SDF approval email sent to " + to
+//                    + " for ZZSdfOrganisation_ID=" + getZZSdfOrganisation_ID());
+//        }
+//    }
 
     /**
      * FROM adempiere.zzsdforganisation orglink
