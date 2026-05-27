@@ -346,8 +346,13 @@ public class ImportSgSdfDocuments extends SvrProcess {
         PreparedStatement pst = null;
         ResultSet rs = null;
         try {
+            // zz_id_passport_no on ZZSdf is a virtual column derived from AD_User,
+            // so we join through AD_User to find the physical value.
             pst = DB.prepareStatement(
-                    "SELECT zzsdf_id, ad_user_id FROM zzsdf WHERE zz_id_passport_no = ?", null);
+                    "SELECT s.zzsdf_id, s.ad_user_id " +
+                    "FROM zzsdf s " +
+                    "JOIN ad_user u ON u.ad_user_id = s.ad_user_id " +
+                    "WHERE u.zz_id_passport_no = ?", null);
             pst.setString(1, idNumber);
             rs = pst.executeQuery();
             int[] first = null;
@@ -416,6 +421,10 @@ public class ImportSgSdfDocuments extends SvrProcess {
             int altIdTypeId = lookupByName("ZZ_AlternateIDType", "ZZ_AlternateIDType_ID", row.alternateIdType);
             if (altIdTypeId > 0) user.setZZ_AlternateIDType_ID(altIdTypeId);
 
+            // ZZ_ID_Passport_No is a physical column on AD_User; the same-named
+            // column on ZZSdf is a virtual column derived from it.
+            user.setZZ_ID_Passport_No(row.idNo);
+
             user.saveEx();
             int adUserId = user.get_ID();
 
@@ -423,7 +432,6 @@ public class ImportSgSdfDocuments extends SvrProcess {
             X_ZZSdf sdf = new X_ZZSdf(getCtx(), 0, trxName);
             sdf.setAD_Org_ID(Env.getAD_Org_ID(getCtx()));
             sdf.setAD_User_ID(adUserId);
-            sdf.setZZ_ID_Passport_No(row.idNo);
             sdf.setZZ_DocStatus(X_ZZSdf.ZZ_DOCSTATUS_Draft);
             sdf.setZZ_DocAction(X_ZZSdf.ZZ_DOCACTION_Submit);
 
