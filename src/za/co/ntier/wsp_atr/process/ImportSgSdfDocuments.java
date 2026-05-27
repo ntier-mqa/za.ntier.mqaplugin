@@ -5,6 +5,8 @@ import java.io.FileFilter;
 import java.nio.file.Files;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -101,8 +103,8 @@ public class ImportSgSdfDocuments extends SvrProcess {
 
     private static class ExcelSdfRow {
         String title, firstName, middleName, surname, initials;
-        String idNo, alternateIdType;
-        String gender, email, phone, mobile;
+        String idNo, alternateIdType, dateOfBirth;
+        String gender, populationGroup, email, phone, mobile;
         String disability, homeLanguage, nationality;
         String citizenStatus, socioEconomicStatus, highestEducation;
         String currentOccupation, experience;
@@ -206,7 +208,9 @@ public class ImportSgSdfDocuments extends SvrProcess {
                 sr.surname            = cell(row, colIdx, "Surname",               fmt);
                 sr.initials           = cell(row, colIdx, "Initials",              fmt);
                 sr.alternateIdType    = cell(row, colIdx, "AlternateIDType",       fmt);
+                sr.dateOfBirth        = cell(row, colIdx, "Date of Birth",         fmt);
                 sr.gender             = cell(row, colIdx, "Gender",                fmt);
+                sr.populationGroup    = cell(row, colIdx, "PopulationGroup",       fmt);
                 sr.email              = cell(row, colIdx, "EMail",                 fmt);
                 sr.phone              = cell(row, colIdx, "TelephoneNumber",       fmt);
                 sr.mobile             = cell(row, colIdx, "CellPhoneNumber",       fmt);
@@ -399,6 +403,16 @@ public class ImportSgSdfDocuments extends SvrProcess {
             if (!trim(row.middleName).isEmpty())  user.setZZMiddleName(row.middleName.trim());
             if (!trim(row.title).isEmpty())       user.setZZLkpTitle(row.title.trim());
 
+            if (!trim(row.dateOfBirth).isEmpty()) {
+                try {
+                    java.util.Date d = new SimpleDateFormat("yyyy/MM/dd").parse(row.dateOfBirth.trim());
+                    user.setBirthday(new Timestamp(d.getTime()));
+                } catch (Exception e) {
+                    deferredLog.add("WARN: Could not parse Date of Birth '"
+                            + row.dateOfBirth + "' for ID=" + row.idNo);
+                }
+            }
+
             int altIdTypeId = lookupByName("ZZ_AlternateIDType", "ZZ_AlternateIDType_ID", row.alternateIdType);
             if (altIdTypeId > 0) user.setZZ_AlternateIDType_ID(altIdTypeId);
 
@@ -414,6 +428,8 @@ public class ImportSgSdfDocuments extends SvrProcess {
             sdf.setZZ_DocAction(X_ZZSdf.ZZ_DOCACTION_Submit);
 
             if (!trim(row.gender).isEmpty())           sdf.setZZGender(row.gender.trim().substring(0, 1).toUpperCase());
+            String equityCode = mapEquity(row.populationGroup);
+            if (!equityCode.isEmpty())                 sdf.setZZEquity(equityCode);
             if (!trim(row.initials).isEmpty())         sdf.setZZInitials(row.initials.trim());
             if (!trim(row.currentOccupation).isEmpty())sdf.setZZCurrentOccupation(row.currentOccupation.trim());
             if (row.yearsInOccupation > 0)             sdf.setZZYearsInOccupation(row.yearsInOccupation);
@@ -587,6 +603,21 @@ public class ImportSgSdfDocuments extends SvrProcess {
     /** Null-safe trim returning empty string instead of null. */
     private static String trim(String s) {
         return s == null ? "" : s.trim();
+    }
+
+    /**
+     * Maps a PopulationGroup display value to the ZZEquity list code.
+     * Matching is case-insensitive and substring-based to handle values
+     * like "Black: African" → "Afr".
+     */
+    private static String mapEquity(String populationGroup) {
+        if (populationGroup == null || populationGroup.trim().isEmpty()) return "";
+        String s = populationGroup.trim().toLowerCase();
+        if (s.contains("african")) return X_ZZSdf.ZZEQUITY_African;   // "Afr"
+        if (s.contains("coloured")) return X_ZZSdf.ZZEQUITY_Coloured; // "Col"
+        if (s.contains("indian"))  return X_ZZSdf.ZZEQUITY_Indian;    // "Ind"
+        if (s.contains("white"))   return X_ZZSdf.ZZEQUITY_White;     // "Wh"
+        return "";
     }
 
     /**
