@@ -201,7 +201,9 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 					p_ZZ_WSP_ATR_Submitted_ID,
 					X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported
 					);
-			
+
+			updateParentSubmissionIfDrafted(p_ZZ_WSP_ATR_Submitted_ID);
+
 			return "";
 
 		} catch (Exception ex) {
@@ -574,6 +576,43 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 
 		String ts = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 		return "ERROR_" + safeName + "_" + ts + ext;
+	}
+
+	private void updateParentSubmissionIfDrafted(int childSubmittedId) throws Exception {
+		// Find the parent org's zzsdforganisation_id for the child submission's org
+		int childOrgId = DB.getSQLValueEx(null,
+				"SELECT zzsdforganisation_id FROM zz_wsp_atr_submitted WHERE zz_wsp_atr_submitted_id = ?",
+				childSubmittedId);
+		if (childOrgId <= 0)
+			return;
+
+		int parentOrgId = DB.getSQLValueEx(null,
+				"SELECT parent_so.zzsdforganisation_id "
+				+ "FROM adempiere.zzsdforganisation child_so "
+				+ "JOIN adempiere.zzorganisationlinkage l ON l.c_bpartner_id = child_so.c_bpartner_id "
+				+ "JOIN adempiere.zzsdforganisation parent_so ON parent_so.c_bpartner_id = l.bpartner_parent_id "
+				+ "WHERE child_so.zzsdforganisation_id = ? "
+				+ "  AND child_so.isactive = 'Y' "
+				+ "  AND parent_so.isactive = 'Y' "
+				+ "  AND l.isactive = 'Y' "
+				+ "LIMIT 1",
+				childOrgId);
+		if (parentOrgId <= 0)
+			return;
+
+		int childFinYearId = DB.getSQLValueEx(null,
+				"SELECT zz_finyear_id FROM zz_wsp_atr_submitted WHERE zz_wsp_atr_submitted_id = ?",
+				childSubmittedId);
+
+		int parentSubmittedId = DB.getSQLValueEx(null,
+				"SELECT zz_wsp_atr_submitted_id FROM zz_wsp_atr_submitted "
+				+ "WHERE zzsdforganisation_id = ? AND zz_docstatus = ? AND zz_finyear_id = ? "
+				+ "ORDER BY created DESC LIMIT 1",
+				parentOrgId, X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Draft, childFinYearId);
+		if (parentSubmittedId <= 0)
+			return;
+
+		updateSubmittedStatusCommitted(parentSubmittedId, X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported);
 	}
 
 	private void updateSubmittedStatusCommitted(int submittedId, String status) throws Exception {

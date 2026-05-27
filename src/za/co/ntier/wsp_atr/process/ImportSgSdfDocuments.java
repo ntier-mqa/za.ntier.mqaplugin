@@ -348,12 +348,14 @@ public class ImportSgSdfDocuments extends SvrProcess {
         try {
             // zz_id_passport_no on ZZSdf is a virtual column derived from AD_User,
             // so we join through AD_User to find the physical value.
+            // Filter by the current client to avoid cross-tenant collisions.
             pst = DB.prepareStatement(
                     "SELECT s.zzsdf_id, s.ad_user_id " +
                     "FROM zzsdf s " +
                     "JOIN ad_user u ON u.ad_user_id = s.ad_user_id " +
-                    "WHERE u.zz_id_passport_no = ?", null);
+                    "WHERE u.zz_id_passport_no = ? AND s.ad_client_id = ?", null);
             pst.setString(1, idNumber);
+            pst.setInt(2, Env.getAD_Client_ID(getCtx()));
             rs = pst.executeQuery();
             int[] first = null;
             boolean duplicate = false;
@@ -486,8 +488,9 @@ public class ImportSgSdfDocuments extends SvrProcess {
 
     private int findBPartner(String sdlNumber) {
         return DB.getSQLValueEx(null,
-                "SELECT c_bpartner_id FROM c_bpartner WHERE value = ? LIMIT 1",
-                sdlNumber);
+                "SELECT c_bpartner_id FROM c_bpartner " +
+                "WHERE value = ? AND ad_client_id = ? LIMIT 1",
+                sdlNumber, Env.getAD_Client_ID(getCtx()));
     }
 
     /**
@@ -495,18 +498,22 @@ public class ImportSgSdfDocuments extends SvrProcess {
      * First tries an exact match (BP + SdfId already set).
      * Falls back to a row with the same BP but no SdfId, and links it.
      * Returns -1 if nothing is found.
+     * Only considers records belonging to the current AD_Client to avoid
+     * cross-tenant write errors.
      */
     private int findOrLinkOrg(int bpId, int sdfId, String sdlNumber) {
+        int clientId = Env.getAD_Client_ID(getCtx());
         int orgId = DB.getSQLValueEx(null,
                 "SELECT zzsdforganisation_id FROM zzsdforganisation " +
-                "WHERE c_bpartner_id = ? AND zzsdf_id = ? LIMIT 1",
-                bpId, sdfId);
+                "WHERE c_bpartner_id = ? AND zzsdf_id = ? AND ad_client_id = ? LIMIT 1",
+                bpId, sdfId, clientId);
         if (orgId > 0) return orgId;
 
         orgId = DB.getSQLValueEx(null,
                 "SELECT zzsdforganisation_id FROM zzsdforganisation " +
-                "WHERE c_bpartner_id = ? AND (zzsdf_id IS NULL OR zzsdf_id = 1000002) LIMIT 1",
-                bpId);
+                "WHERE c_bpartner_id = ? AND (zzsdf_id IS NULL OR zzsdf_id = 1000002) " +
+                "AND ad_client_id = ? LIMIT 1",
+                bpId, clientId);
         if (orgId <= 0) return -1;
 
         linkSdf(orgId, sdfId, sdlNumber);
