@@ -497,7 +497,7 @@ public class ImportSgSdfDocuments extends SvrProcess {
 
         orgId = DB.getSQLValueEx(null,
                 "SELECT zzsdforganisation_id FROM zzsdforganisation " +
-                "WHERE c_bpartner_id = ? AND zzsdf_id IS NULL LIMIT 1",
+                "WHERE c_bpartner_id = ? AND (zzsdf_id IS NULL OR zzsdf_id = 1000002) LIMIT 1",
                 bpId);
         if (orgId <= 0) return -1;
 
