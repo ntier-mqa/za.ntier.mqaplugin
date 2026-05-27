@@ -413,7 +413,7 @@ public class ImportSgSdfDocuments extends SvrProcess {
             sdf.setZZ_DocStatus(X_ZZSdf.ZZ_DOCSTATUS_Draft);
             sdf.setZZ_DocAction(X_ZZSdf.ZZ_DOCACTION_Submit);
 
-            if (!trim(row.gender).isEmpty())           sdf.setZZGender(row.gender.trim());
+            if (!trim(row.gender).isEmpty())           sdf.setZZGender(row.gender.trim().substring(0, 1).toUpperCase());
             if (!trim(row.initials).isEmpty())         sdf.setZZInitials(row.initials.trim());
             if (!trim(row.currentOccupation).isEmpty())sdf.setZZCurrentOccupation(row.currentOccupation.trim());
             if (row.yearsInOccupation > 0)             sdf.setZZYearsInOccupation(row.yearsInOccupation);
@@ -422,12 +422,6 @@ public class ImportSgSdfDocuments extends SvrProcess {
             // Parse numeric experience from strings like "18years" or "29"
             int expYears = parseDigits(row.experience);
             if (expYears > 0) sdf.setZZExperience(expYears);
-
-            // Columns added after model generation — use set_Value directly
-            if (!trim(row.firstName).isEmpty())  sdf.set_Value("ZZFirstName",  row.firstName.trim());
-            if (!trim(row.surname).isEmpty())    sdf.set_Value("ZZSurname",    row.surname.trim());
-            if (!trim(row.middleName).isEmpty()) sdf.set_Value("ZZMiddleName", row.middleName.trim());
-            if (!trim(row.title).isEmpty())      sdf.set_Value("ZZLkpTitle",   row.title.trim());
 
             // List-of-value foreign keys
             int highEduId  = lookupByName("ZZ_LI_HighestEducation",      "ZZ_LI_HighestEducation_ID",      row.highestEducation);
