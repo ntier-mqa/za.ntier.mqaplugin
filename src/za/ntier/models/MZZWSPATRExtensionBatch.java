@@ -151,13 +151,13 @@ public class MZZWSPATRExtensionBatch extends X_ZZ_WSP_ATR_EXTENSION_BATCH
 
 		if (mailText.get_ID() <= 0)
 		{
-			log.severe("Mail template not found for Extension Batch Approval UUID: "
-					+ EXTENSION_BATCH_FINAL_APPROVAL_TEMPLATE_UUID);
+			log.severe(	"Mail template not found for Extension Batch Approval UUID: "
+						+ EXTENSION_BATCH_FINAL_APPROVAL_TEMPLATE_UUID);
 			return;
 		}
 
 		List<X_ZZ_WSP_ATR_EXTENSION> extensions = new Query(getCtx(), X_ZZ_WSP_ATR_EXTENSION.Table_Name,
-				"ZZ_WSP_ATR_EXTENSION_BATCH_ID=?", get_TrxName()).setParameters(batchId).list();
+															"ZZ_WSP_ATR_EXTENSION_BATCH_ID=?", get_TrxName()).setParameters(batchId).list();
 
 		if (extensions.isEmpty())
 		{
@@ -168,62 +168,59 @@ public class MZZWSPATRExtensionBatch extends X_ZZ_WSP_ATR_EXTENSION_BATCH
 		MClient client = MClient.get(getCtx());
 		int successCount = 0;
 
+		String messageTemplate = mailText.getMailText(true);
+		String subjectTemplate = mailText.getMailHeader();
+
+		if (messageTemplate == null)
+			messageTemplate = "";
+		if (subjectTemplate == null || subjectTemplate.trim().isEmpty())
+			subjectTemplate = "Request for Extension Has Been Approved (@OrgName@)";
+
 		for (X_ZZ_WSP_ATR_EXTENSION ext : extensions)
 		{
-			String html = mailText.getMailText(true);
+			String orgName = ext.getZZ_Organisation_Name();
+			String sdlNo = ext.getZZ_SDL_No();
+			String documentNo = ext.getDocumentNo();
 
-			String firstName = ext.getZZ_SDF_FirstName() != null ? ext.getZZ_SDF_FirstName() : "";
-			String surname = ext.getZZ_SDF_Surname() != null ? ext.getZZ_SDF_Surname() : "";
-			String name = (firstName + " " + surname).trim();
-			String documentNo = ext.getDocumentNo() != null ? ext.getDocumentNo() : "";
+			orgName = orgName != null ? orgName : "";
+			sdlNo = sdlNo != null ? sdlNo : "";
+			documentNo = documentNo != null ? documentNo : "";
 
-			html = html.replace("@Name@", name);
-			html = html.replace("@DocumentNo@", documentNo);
-			String subject = mailText.getMailHeader();
-			if (subject == null || subject.trim().isEmpty())
-			{
-				subject = "WSP-ATR Extension Application Update: Approval Confirmation";
-			}
-			subject = subject.replace("@DocumentNo@", documentNo);
+			String baseMessage = messageTemplate
+												.replace("@OrgName@", orgName)
+												.replace("@SDLNo@", sdlNo)
+												.replace("@DocumentNo@", documentNo);
 
-			// Collect emails specific to this single extension and remove
-			// duplicates
-			Set<String> emailsForExt = new HashSet<>();
-			if (ext.getZZ_SDF_EMAIL() != null && !ext.getZZ_SDF_EMAIL().trim().isEmpty())
-			{
-				emailsForExt.add(ext.getZZ_SDF_EMAIL().trim().toLowerCase());
-			}
-			if (ext.getZZ_SOR_EMAIL() != null && !ext.getZZ_SOR_EMAIL().trim().isEmpty())
-			{
-				emailsForExt.add(ext.getZZ_SOR_EMAIL().trim().toLowerCase());
-			}
+			String baseSubject = subjectTemplate
+												.replace("@OrgName@", orgName);
 
-			if (emailsForExt.isEmpty())
-			{
-				log.warning("No recipient emails (SDF or SOR) found related to Extension ID: " + ext.get_ID());
-				continue;
-			}
+			String sdfEmail = ext.getZZ_SDF_EMAIL();
+			String sorEmail = ext.getZZ_SOR_EMAIL();
 
-			// Send the personalized email configured for this specific
-			// extension
-			for (String email : emailsForExt)
+			if (sdfEmail != null && !sdfEmail.isBlank())
 			{
-				if (email != null && !email.isBlank())
-				{
-					boolean sent = client.sendEMail(email, subject, html, null, true);
-					if (sent)
-					{
-						successCount++;
-					}
-					else
-					{
-						log.warning("Failed to dispatch Extension Notification to " + email);
-					}
-				}
+				String sdfName = (ext.getZZ_SDF_FirstName() != null ? ext.getZZ_SDF_FirstName() : "")	+ " " +
+									(ext.getZZ_SDF_Surname() != null ? ext.getZZ_SDF_Surname() : "");
+				String sdfMessage = baseMessage.replace("@Name@", sdfName.trim());
+
+				boolean sent = client.sendEMail(sdfEmail.trim(), baseSubject, sdfMessage, null, true);
+				if (sent)
+					successCount++;
 				else
-				{
-					log.warning("WSP Extension Notification Error: No valid Email for extension " + ext.get_ID());
-				}
+					log.warning("Failed to dispatch Extension Notification to " + sdfEmail);
+			}
+
+			if (sorEmail != null && !sorEmail.isBlank() && !sorEmail.trim().equalsIgnoreCase(sdfEmail != null ? sdfEmail.trim() : ""))
+			{
+				String sorName = (ext.getZZ_SOR_FirstName() != null ? ext.getZZ_SOR_FirstName() : "")	+ " " +
+									(ext.getZZ_SOR_Surname() != null ? ext.getZZ_SOR_Surname() : "");
+				String sorMessage = baseMessage.replace("@Name@", sorName.trim());
+
+				boolean sent = client.sendEMail(sorEmail.trim(), baseSubject, sorMessage, null, true);
+				if (sent)
+					successCount++;
+				else
+					log.warning("Failed to dispatch Extension Notification to " + sorEmail);
 			}
 		}
 
