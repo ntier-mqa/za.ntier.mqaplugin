@@ -27,6 +27,8 @@ import za.co.ntier.wf.util.ADColumnUtil;
 import za.co.ntier.wf.util.MailNoticeUtil;
 import za.co.ntier.wf.util.MailNoticeUtil.NotificationFields;
 import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Submitted;
+import za.ntier.models.I_ZZ_WF_Next_Node;
+import za.ntier.models.X_ZZ_WF_Next_Node;
 
 @org.adempiere.base.annotation.Process(name="za.co.ntier.wf.process.ZZ_WF_RunProcess")
 public class ZZ_WF_RunProcess extends SvrProcess {
@@ -144,6 +146,13 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 
 		String nextStatus = approve ? step.getNextStatusOnApprove() : step.getNextStatusOnReject();
 		String nextAction = approve ? step.getNextActionOnApprove() : step.getNextActionOnReject();
+
+		// --- Option-based routing via ZZ_WF_Next_Node ---
+		String selectedValue = (pApprove != null && !pApprove.isBlank()) ? pApprove : pRecommend;
+		if (doNextNode(step, approve, curStatus, curAction, selectedValue, comment))
+			return;
+
+		// --- Standard approval/rejection logic (no next node configured) ---
 		validateChecklistPromptSetup(approve, nextStatus);
 		updateSubmittedChecklistFields(approve, nextStatus);
 		// reset values after a rejection and user starts first step
@@ -358,6 +367,63 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 
 	private String yesNo(String value) {
 		return "Y".equalsIgnoreCase(value) ? "Y" : "N";
+	}
+
+	/**
+	 * Handles option-based routing when a matching ZZ_WF_Next_Node record exists.
+	 * Derives the next status and action from the linked ZZ_WF_Lines record,
+	 * persists the new state on the PO, sends the node's mail template to the
+	 * responsible role, and audits the transition.
+	 *
+	 * @return true if a next node was found and processed (caller should return),
+	 *         false if no next node matched (standard logic should proceed)
+	 */
+	private boolean doNextNode(MZZWFLines step, boolean approve,
+			String curStatus, String curAction, String selectedValue, String comment) {
+		X_ZZ_WF_Next_Node nextNode = findNextNode(step.get_ID(), selectedValue);
+		if (nextNode == null || nextNode.getZZ_WF_Next_Lines_ID() <= 0)
+			return false;
+
+		// Derive status and action from the linked ZZ_WF_Lines record
+		MZZWFLines nextLines = new MZZWFLines(ctx, nextNode.getZZ_WF_Next_Lines_ID(), trxName);
+		String nextStatus = nextLines.getAllowedFromStatus();
+		String nextAction = nextLines.getSetDocAction();
+
+		// Persist new state
+		po.set_ValueOfColumn("ZZ_DocStatus", nextStatus);
+		po.set_ValueOfColumn("ZZ_DocAction", nextAction);
+		po.saveEx();
+
+		// Notify responsible role on the next WF line using the node's mail template
+		if (nextNode.getMMailText_ID() > 0) {
+			org.compiere.model.MMailText nextNodeMail = MailNoticeUtil.setPOForMail(nextNode.getMMailText(), po);
+			List<za.ntier.models.X_ZZ_WF_Line_Role> respRoles = new org.compiere.model.Query(ctx,
+					za.ntier.models.X_ZZ_WF_Line_Role.Table_Name,
+					"ZZ_WF_Lines_ID=? AND ZZ_Is_Responsible='Y'", trxName)
+					.setParameters(nextLines.get_ID())
+					.setOnlyActiveRecords(true)
+					.list();
+			for (za.ntier.models.X_ZZ_WF_Line_Role role : respRoles) {
+				MailNoticeUtil.queueNotifyForRole(queueNotifis, role.getAD_Role_ID(),
+						getTable_ID(), getRecord_ID(), nextNodeMail);
+			}
+		}
+
+		// Audit the transition
+		int currUserID = Env.getAD_User_ID(Env.getCtx());
+		AuditUtil.createAudit(ctx, trxName, po.get_Table_ID(), po.get_ID(), step.get_ID(),
+				approve ? "APPROVE" : "REJECT",
+				curStatus, nextStatus, curAction, nextAction, comment, currUserID);
+		return true;
+	}
+
+	private X_ZZ_WF_Next_Node findNextNode(int wfLinesId, String optionValue) {
+		if (optionValue == null || optionValue.isBlank()) return null;
+		return new org.compiere.model.Query(ctx, I_ZZ_WF_Next_Node.Table_Name,
+				"ZZ_WF_Lines_ID=? AND ZZ_Option_Value=?", trxName)
+				.setParameters(wfLinesId, optionValue)
+				.setOnlyActiveRecords(true)
+				.first();
 	}
 
 }
