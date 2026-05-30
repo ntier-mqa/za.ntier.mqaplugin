@@ -98,6 +98,7 @@ public class MyModelFactory implements IModelFactory {
         register(I_ZZ_SETA_Master.Table_Name,X_ZZ_SETA_Master.class);
         register(I_ZZ_WSP_ATR_EXTENSION_BATCH.Table_Name,MZZWSPATRExtensionBatch.class);
         register(I_ZZAssessorPerson.Table_Name, X_ZZAssessorPerson.class);
+        register(I_ZZ_WF_Next_Node.Table_Name, X_ZZ_WF_Next_Node.class);
     }
 
     private static void register(String tableName, Class<? extends PO> modelClass) {

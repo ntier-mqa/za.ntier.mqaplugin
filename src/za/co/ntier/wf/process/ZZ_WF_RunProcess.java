@@ -148,8 +148,11 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 		String nextAction = approve ? step.getNextActionOnApprove() : step.getNextActionOnReject();
 
 		// --- Option-based routing via ZZ_WF_Next_Node ---
-		String selectedValue = (pApprove != null && !pApprove.isBlank()) ? pApprove : pRecommend;
-		if (doNextNode(step, approve, curStatus, curAction, selectedValue, comment))
+		// Try each submitted parameter value independently so that e.g. pRecommend='R'
+		// is not shadowed by a non-blank pApprove='N'.
+		if (doNextNode(step, approve, curStatus, curAction, pApprove, comment))
+			return;
+		if (doNextNode(step, approve, curStatus, curAction, pRecommend, comment))
 			return;
 
 		// --- Standard approval/rejection logic (no next node configured) ---
@@ -419,11 +422,13 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 
 	private X_ZZ_WF_Next_Node findNextNode(int wfLinesId, String optionValue) {
 		if (optionValue == null || optionValue.isBlank()) return null;
-		return new org.compiere.model.Query(ctx, I_ZZ_WF_Next_Node.Table_Name,
+		int id = new org.compiere.model.Query(ctx, I_ZZ_WF_Next_Node.Table_Name,
 				"ZZ_WF_Lines_ID=? AND ZZ_Option_Value=?", trxName)
 				.setParameters(wfLinesId, optionValue)
 				.setOnlyActiveRecords(true)
-				.first();
+				.firstId();
+		if (id <= 0) return null;
+		return new X_ZZ_WF_Next_Node(ctx, id, trxName);
 	}
 
 }

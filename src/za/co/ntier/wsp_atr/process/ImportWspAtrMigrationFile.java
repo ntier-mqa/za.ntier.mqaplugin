@@ -686,6 +686,9 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             submitted.setZZ_Import_Submitted_Data("N");
             submitted.setZZSdfOrganisation_ID(orgId);
             submitted.setZZ_DocAction(null);
+            if (wspStatus.equals("SU") ) {
+            	submitted.setZZ_DocAction("VE");
+            }
             submitted.setZZ_DocStatus(wspStatus);
             submitted.setZZ_FinYear_ID(finYearId);
             submitted.setZZ_Submission_Due_Date(
