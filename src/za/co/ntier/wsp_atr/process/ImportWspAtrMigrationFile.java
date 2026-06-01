@@ -119,8 +119,16 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                 throw new AdempiereException("Could not resolve financial year from FinancialYear column in workbook.");
             }
             if (vr.wspStatusByOrgId.isEmpty()) {
-                throw new AdempiereException("Could not resolve WSP status from WSPStatus column in workbook"
+                StringBuilder msg = new StringBuilder(
+                        "Could not resolve WSP status from WSPStatus column in workbook"
                         + " (no row produced a recognised status).");
+                if (!vr.wspStatusFailures.isEmpty()) {
+                    msg.append(" Unresolved rows (first ").append(
+                            Math.min(vr.wspStatusFailures.size(), 10)).append("):");
+                    vr.wspStatusFailures.stream().limit(10)
+                            .forEach(f -> msg.append("\n  ").append(f));
+                }
+                throw new AdempiereException(msg.toString());
             }
 
             // Pass 2: stream again and create the POs.
@@ -220,6 +228,8 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
              * workbook-wide single status which collapsed all SDLs to one status.
              */
             final Map<Integer, String> wspStatusByOrgId = new HashMap<>();
+            /** Diagnostic rows where WSPStatus was present but could not be resolved. */
+            final List<String> wspStatusFailures = new ArrayList<>();
             // Detection bookkeeping:
             String detectedSdl;        // SDL that yielded singleOrgId
             boolean multipleOrgsDetected;
@@ -333,7 +343,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                     // Piggyback workbook-wide value detection on this same scan.
                     detectSingleOrg(ctx, cells, orgMeta, result, trxName);
                     detectFinYear(ctx, cells, finYearMeta, result, trxName);
-                    detectWspStatus(ctx, cells, statusMeta, orgMeta, result, trxName);
+                    detectWspStatus(ctx, cells, statusMeta, orgMeta, result, trxName, sheetName, rowIdx);
 
                     return StreamingXlsxReader.Action.CONTINUE;
                 });
@@ -562,26 +572,34 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
          */
         private void detectWspStatus(Properties ctx, Map<Integer, String> cells,
                                      ColumnMeta statusMeta, ColumnMeta orgMeta,
-                                     ValidationResult result, String trxName) {
-            if (statusMeta == null || orgMeta == null) {
+                                     ValidationResult result, String trxName,
+                                     String sheetName, int rowIdx) {
+            String location = "tab='" + sheetName + "' row=" + (rowIdx + 1);
+            if (statusMeta == null) {
+                result.wspStatusFailures.add(location + " — WSPStatus column not found in mapping");
                 return;
             }
-            // Resolve current row's orgId from SDL — cheap re-lookup, but skip if we
-            // already have a status for this org.
+            if (orgMeta == null) {
+                result.wspStatusFailures.add(location + " — SDLNumber column not found in mapping");
+                return;
+            }
             String orgTxt = cells.get(orgMeta.columnIndex);
             if (Util.isEmpty(orgTxt, true)) {
+                result.wspStatusFailures.add(location + " — SDLNumber cell is blank");
                 return;
             }
             int orgIdVal = lookupOrgIdBySdl(ctx, orgTxt.trim(), trxName);
-            if (orgIdVal <= 0) {
-                return;
-            }
-            Integer orgKey = Integer.valueOf(orgIdVal);
+            // orgIdVal <= 0 is expected when the SDL doesn't exist yet — it will be
+            // created during the import pass. Still resolve the status so the map
+            // is not empty; store under key 0 as a fallback for newly created orgs.
+            Integer orgKey = orgIdVal > 0 ? Integer.valueOf(orgIdVal) : Integer.valueOf(0);
             if (result.wspStatusByOrgId.containsKey(orgKey)) {
-                return;
+                return; // already resolved for this org — not a failure
             }
             String txt = cells.get(statusMeta.columnIndex);
             if (Util.isEmpty(txt, true)) {
+                result.wspStatusFailures.add(location + " SDL=" + orgTxt.trim()
+                        + " — WSPStatus cell is blank");
                 return;
             }
             String lookupTxt = txt.trim();
@@ -596,6 +614,9 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                     lookupTxt);
             if (!Util.isEmpty(value, true)) {
                 result.wspStatusByOrgId.put(orgKey, value);
+            } else {
+                result.wspStatusFailures.add(location + " SDL=" + orgTxt.trim()
+                        + " — WSPStatus value '" + txt.trim() + "' not found in AD_Ref_List");
             }
         }
 
