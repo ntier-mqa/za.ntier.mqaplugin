@@ -37,6 +37,8 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
     private static final CLogger log = CLogger.getCLogger(MZZSdfOrganisation.class);
     public static final int FROM_EMAIL_USER_ID = MSysConfig.getIntValue("FROM_EMAIL_USER_ID",1000011);
 	private static final String SDF_APPROVAL_LETTER_TEMPLATE_UUID = "6be8b4db-3ce0-44b4-850b-4138deabfcfe";
+	private static final String SDF_NOT_APPROVAL_LETTER_TEMPLATE_UUID = "1eade0de-1c9e-41ca-8e9c-ab3edc5b2a48";
+	private static final String SDF_NOT_APPROVAL_EMAIL_BODY_UUID = "0fda3062-a8b0-43f6-aeef-006fe68989df";
 
     // Your fixed mail template UUID
 //    private static final String SDF_APPROVED_MAILTEXT_UU = "00a3c0c0-93e6-40d1-ac00-962e92d0977e";
@@ -79,23 +81,43 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
             return false;
         }
 
-        if (!newRecord) {
-            if (is_ValueChanged(COLUMNNAME_ZZ_DocStatus)
-                    && ZZ_DOCSTATUS_Approved.equals(getZZ_DocStatus())) {
+		if (!newRecord)
+		{
+			if (is_ValueChanged(COLUMNNAME_ZZ_DocStatus))
+			{
 
-                Object oldStatus = get_ValueOld(COLUMNNAME_ZZ_DocStatus);
-                if (oldStatus != null && !ZZ_DOCSTATUS_Approved.equals(oldStatus)) {
-//                    MClient client = MClient.get(Env.getCtx());
-//                    sendSdfApprovedMail(client);
-                    try {
-                        sendSdfApprovalLetter();
-                    } catch (Exception e) {
-                        log.severe("Failed to send SDF approval letter: " + e.getMessage());
-                    }
-                }
-                
-            }
-        }
+				Object oldStatus = get_ValueOld(COLUMNNAME_ZZ_DocStatus);
+				String newStatus = getZZ_DocStatus();
+
+				if (newStatus != null && !newStatus.equals(oldStatus))
+				{
+					// Send Approval
+					if (ZZ_DOCSTATUS_Approved.equals(newStatus))
+					{
+						try
+						{
+							sendSdfApprovalLetter();
+						}
+						catch (Exception e)
+						{
+							log.severe("Failed to send SDF approval letter: " + e.getMessage());
+						}
+					}
+					// Send Not Approval
+					else if (ZZ_DOCSTATUS_NotApproved.equals(newStatus))
+					{
+						try
+						{
+							sendSdfNotApprovalLetter();
+						}
+						catch (Exception e)
+						{
+							log.severe("Failed to send SDF Not Approval letter: " + e.getMessage());
+						}
+					}
+				}
+			}
+		}
         return super.afterSave(newRecord, success);
     }
     
@@ -234,11 +256,22 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
     
 	private void sendSdfApprovalLetter() throws Exception
 	{
+		// Approval uses the exact same template for both Email Body and PDF content
+		sendSdfLetter(SDF_APPROVAL_LETTER_TEMPLATE_UUID, SDF_APPROVAL_LETTER_TEMPLATE_UUID, "SDF_Approval_");
+	}
 
+	private void sendSdfNotApprovalLetter() throws Exception
+	{
+		// Not Approval uses separate templates
+		sendSdfLetter(SDF_NOT_APPROVAL_EMAIL_BODY_UUID, SDF_NOT_APPROVAL_LETTER_TEMPLATE_UUID, "SDF_Not_Approval_");
+	}
+
+	private void sendSdfLetter(String emailBodyUuid, String pdfContentUuid, String pdfPrefix) throws Exception
+	{
 		int adUserId = getSdfUserId();
 		if (adUserId <= 0)
 		{
-			log.warning("No recipient AD_User found for SDF approval letter.");
+			log.warning("No recipient AD_User found for SDF letter.");
 			return;
 		}
 
@@ -250,29 +283,46 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
 			return;
 		}
 
-		// Load approval letter template
-		MMailText mailText = new MMailText(getCtx(), SDF_APPROVAL_LETTER_TEMPLATE_UUID, get_TrxName());
-
-		if (mailText.get_ID() <= 0)
+		// Load Email Body Template
+		MMailText bodyMailText = new MMailText(getCtx(), emailBodyUuid, get_TrxName());
+		if (bodyMailText.get_ID() <= 0)
 		{
-			log.severe("Approval mail template not found");
+			log.severe("Email body template not found for UUID: " + emailBodyUuid);
+			return;
+		}
+
+		// Load PDF Content Template
+		MMailText pdfMailText = new MMailText(getCtx(), pdfContentUuid, get_TrxName());
+		if (pdfMailText.get_ID() <= 0)
+		{
+			log.severe("PDF template not found for UUID: " + pdfContentUuid);
 			return;
 		}
 
 		try
 		{
-			mailText.setPO(this, true);
+			bodyMailText.setPO(this, true);
 		}
 		catch (Throwable t)
 		{
-			mailText.setPO(this);
+			bodyMailText.setPO(this);
+		}
+		try
+		{
+			pdfMailText.setPO(this, true);
+		}
+		catch (Throwable t)
+		{
+			pdfMailText.setPO(this);
 		}
 
-		String html = mailText.getMailText(true);
-		String subject = mailText.getMailHeader();
+		String html = bodyMailText.getMailText(true);
+		String subject = bodyMailText.getMailHeader();
 
 		if (subject == null || subject.trim().isEmpty())
-			subject = "SDF Approval Letter";
+			subject = "SDF Letter";
+
+		String pdfHtml = pdfMailText.getMailText(true);
 
 		String sdfName = getSdfUserName();
 		String orgName = getOrganisationName();
@@ -280,19 +330,32 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
 		String appDate = getApprovalDate();
 		String sdfEmail = toUser.getEMail();
 
-		// Replace custom tokens
+		// Replace custom tokens in BOTH htmls
 		if (sdfName != null)
+		{
 			html = html.replace("%SdfUserName%", sdfName);
+			pdfHtml = pdfHtml.replace("%SdfUserName%", sdfName);
+		}
 		if (sdfEmail != null)
+		{
 			html = html.replace("%SdfEmail%", sdfEmail);
+			pdfHtml = pdfHtml.replace("%SdfEmail%", sdfEmail);
+		}
 		if (orgName != null)
+		{
 			html = html.replace("%OrganisationName%", orgName);
+			pdfHtml = pdfHtml.replace("%OrganisationName%", orgName);
+		}
 		if (sdlNumber != null)
+		{
 			html = html.replace("%SdlNumber%", sdlNumber);
+			pdfHtml = pdfHtml.replace("%SdlNumber%", sdlNumber);
+		}
 		if (appDate != null)
+		{
 			html = html.replace("%ApprovalDate%", appDate);
-
-		String pdfHtml = html;
+			pdfHtml = pdfHtml.replace("%ApprovalDate%", appDate);
+		}
 		String logoFilePath = getLogoAsFilePath();
 		if (logoFilePath != null && !logoFilePath.isEmpty())
 		{
@@ -309,7 +372,7 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
 			html = html.replace("%Logo%", logoBase64);
 		}
 
-		File pdf = createPDF(pdfHtml, "SDF_Approval_" + (sdlNumber != null ? sdlNumber : "Unknown"));
+		File pdf = createPDF(pdfHtml, pdfPrefix + (sdlNumber != null ? sdlNumber : "Unknown"));
 
 		// Sender
 		MUser fromUser = MUser.get(getCtx(), FROM_EMAIL_USER_ID);
@@ -318,9 +381,9 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
 		boolean sent = client.sendEMail(fromUser, toUser, subject, html, pdf, true);
 
 		if (!sent)
-			log.severe("Failed to send SDF approval letter email");
+			log.severe("Failed to send SDF letter email");
 		else
-			log.info("SDF approval letter email sent successfully");
+			log.info("SDF letter email sent successfully");
 	}
     
 	private File createPDF(String html, String fileName) throws Exception
