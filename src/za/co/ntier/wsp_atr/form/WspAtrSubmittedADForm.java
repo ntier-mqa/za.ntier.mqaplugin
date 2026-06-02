@@ -353,6 +353,18 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 			if (existingId > 0) {
 				submitted = new MZZWSPATRSubmitted(Env.getCtx(), existingId, trxName);
 
+				String currentStatus = submitted.getZZ_DocStatus();
+				if (currentStatus != null && (
+						currentStatus.equals(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Submitted) ||
+						currentStatus.equals(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Approved) ||
+						currentStatus.equals(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Verified) ||
+						currentStatus.equals(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Query) ||
+						currentStatus.equals(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_RecommendedForEvaluation) ||
+						currentStatus.equals(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_RecommendedForApproval) ||
+						currentStatus.equals(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_NotRecommended))) {
+					throw new AdempiereException("Upload not allowed. Submission is in status: " + statusLabel(currentStatus));
+				}
+
 				deleteAllAttachmentsForSubmitted(existingId);
 				// deleteRelatedRecordsBeforeProcessing(existingId, trxName);
 
