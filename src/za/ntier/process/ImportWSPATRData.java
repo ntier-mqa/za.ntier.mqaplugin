@@ -198,6 +198,15 @@ public class ImportWSPATRData extends SvrProcess {
 		            bpl.setIsShipTo(true);
 		            bpl.setIsPayFrom(true);
 		            bpl.setIsRemitTo(true);
+
+		            String bizDialCode  = byHeader(row, H, "Business Dialing Code");
+		            String bizTelNum    = byHeader(row, H, "Business Telephone Number");
+		            String bizCellphone = byHeader(row, H, "Business Cellphone Number");
+
+		            String phone = buildPhone(bizDialCode, bizTelNum);
+		            if (phone != null && !phone.isBlank()) bpl.setPhone(phone);
+		            if (bizCellphone != null && !bizCellphone.isBlank()) bpl.setPhone2(bizCellphone);
+
 		            bpl.saveEx();
 		        }
 				
@@ -340,6 +349,17 @@ public class ImportWSPATRData extends SvrProcess {
 	}
 
 	/** Normalize header text for matching (case/space-insensitive). */
+	private String buildPhone(String dialCode, String number) {
+		if (number == null || number.isBlank()) return null;
+		number = number.trim();
+		if (dialCode != null && !dialCode.isBlank()) {
+			String code = dialCode.trim();
+			if (code.length() == 2) code = "0" + code;
+			return code + number;
+		}
+		return number;
+	}
+
 	private String norm(String s) {
 		return s == null ? "" : s.trim().toLowerCase().replaceAll("\\s+", " ");
 	}
