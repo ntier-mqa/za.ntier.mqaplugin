@@ -80,6 +80,52 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
 
     private final ReferenceLookupService refService = new ReferenceLookupService();
 
+    /**
+     * Validates all prerequisites before any processing begins and returns the
+     * ZZSdf_ID linked to the logged-on user.
+     * Throws a descriptive AdempiereException if anything is missing so the
+     * user gets a clear message instead of a silent mid-import failure.
+     */
+    private int checkPrerequisites() {
+        // 1. SDF record for the logged-on user — used when creating new ZZSdfOrganisation rows.
+        int loggedOnUserId = Env.getAD_User_ID(getCtx());
+        int defaultSdfId = DB.getSQLValue(get_TrxName(),
+                "SELECT ZZSDF_ID FROM ZZSdf WHERE AD_User_ID = ? AND IsActive = 'Y'"
+                + " ORDER BY ZZSDF_ID FETCH FIRST 1 ROWS ONLY",
+                loggedOnUserId);
+        if (defaultSdfId <= 0) {
+            throw new AdempiereException(
+                    "Setup error: no active ZZSdf record found for the logged-on user (AD_User_ID="
+                    + loggedOnUserId + "). "
+                    + "Please ensure your user account is linked to an SDF record before running this import.");
+        }
+
+        // 2. 'UNKNOWN' BPartner group required when creating new BPartner rows.
+        int bpGroupId = DB.getSQLValue(get_TrxName(),
+                "SELECT C_BP_Group_ID FROM C_BP_Group WHERE C_BP_Group_ID = ? AND IsActive = 'Y'",
+                1000018);
+        if (bpGroupId <= 0) {
+            throw new AdempiereException(
+                    "Setup error: BPartner group 1000018 (UNKNOWN) not found or inactive. "
+                    + "Please ensure this group exists before running this import.");
+        }
+
+        // 3. WSP Status reference list required to resolve WSPStatus column values.
+        int refCount = DB.getSQLValue(get_TrxName(),
+                "SELECT COUNT(*) FROM AD_Ref_List rl"
+                + " JOIN AD_Reference r ON r.AD_Reference_ID = rl.AD_Reference_ID"
+                + " WHERE r.AD_Reference_UU = ?",
+                MigrationSheetProcessor.WSP_STATUS_REF_UU);
+        if (refCount <= 0) {
+            throw new AdempiereException(
+                    "Setup error: WSP Status reference list not found (AD_Reference_UU = '"
+                    + MigrationSheetProcessor.WSP_STATUS_REF_UU + "'). "
+                    + "Please ensure the WSP Status reference list exists before running this import.");
+        }
+
+        return defaultSdfId;
+    }
+
     @Override
     protected void prepare() {
         for (ProcessInfoParameter para : getParameter()) {
@@ -89,6 +135,8 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
 
     @Override
     protected String doIt() throws Exception {
+        int defaultSdfId = checkPrerequisites();
+
         File file = new File(BULK_UPLOAD_PATH);
         if (!file.exists() || !file.isFile()) {
             throw new AdempiereException("File not found or not a regular file: " + BULK_UPLOAD_PATH);
@@ -99,7 +147,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             throw new AdempiereException("No active WSP/ATR mapping header records found.");
         }
 
-        MigrationSheetProcessor processor = new MigrationSheetProcessor(refService, this);
+        MigrationSheetProcessor processor = new MigrationSheetProcessor(refService, this, defaultSdfId);
 
         try (StreamingXlsxReader reader = new StreamingXlsxReader(file)) {
 
@@ -194,14 +242,15 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
         private static final int MAX_ERRORS = 500;
         private static final int MAX_EMPTY_ROWS = 10;
 
-        private static final String WSP_STATUS_REF_UU = "98479fb5-df5d-440d-86aa-92d77a320857";
-        private static final String DEFAULT_SDF_UU    = "06baf540-649a-40d2-84db-75b907bb9d99";
+        static final String WSP_STATUS_REF_UU = "98479fb5-df5d-440d-86aa-92d77a320857";
 
+        private final int defaultSdfId;
         private final Map<Integer, Map<Integer, ColumnMeta>> columnMetaCache = new HashMap<>();
         private final List<MigrationError> importErrors = new ArrayList<>();
 
-        MigrationSheetProcessor(ReferenceLookupService refService, SvrProcess process) {
+        MigrationSheetProcessor(ReferenceLookupService refService, SvrProcess process, int defaultSdfId) {
             super(refService, process);
+            this.defaultSdfId = defaultSdfId;
         }
 
         List<MigrationError> getImportErrors() {
@@ -671,8 +720,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                 newOrg.setZZActingForEmployer(false);
                 newOrg.setZZReplacingPrimarySDF(false);
                 newOrg.setZZSecondarySdf(false);
-                newOrg.setZZSdf_ID(DB.getSQLValue(trxName,
-                        "Select s.ZZSDF_ID from ZZSdf s where ZZSdf_UU='" + DEFAULT_SDF_UU + "'"));
+                newOrg.setZZSdf_ID(defaultSdfId);
                 newOrg.setZZ_DocStatus("AP");
                 newOrg.setAD_Org_ID(0);
                 newOrg.saveEx();
