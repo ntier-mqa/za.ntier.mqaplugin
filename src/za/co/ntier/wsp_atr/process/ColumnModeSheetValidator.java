@@ -1,5 +1,6 @@
 package za.co.ntier.wsp_atr.process;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +17,7 @@ import org.compiere.process.SvrProcess;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Util;
 
+import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Col_Check;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping_Detail;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
@@ -45,6 +47,7 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
         if (details == null || details.isEmpty()) {
             return 0;
         }
+        List<X_ZZ_WSP_ATR_Col_Check> numericChecks = loadNumericChecks(mappingHeader, trxName);
 
         Map<Integer, ColumnMeta> colIndexToMeta = new HashMap<>();
         for (X_ZZ_WSP_ATR_Lookup_Mapping_Detail det : details) {
@@ -173,6 +176,15 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
                     }
                 }
             }
+
+            // Numeric cross-column checks (e.g. Male+Female = African+Coloured+Indian+White)
+            if (!numericChecks.isEmpty()) {
+                errors += runNumericChecks(wb, sheet, row, numericChecks, formatter);
+                if (errors >= MAX_ERRORS) {
+                    errorLog.appendTooManyErrors(wb);
+                    return errors;
+                }
+            }
         }
 
         boolean isBiodataTab = "Biodata".equalsIgnoreCase(mappingHeader.getZZ_Tab_Name());
@@ -183,6 +195,87 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
         }
 
         return errors;
+    }
+
+    // -----------------------------------------------------------------------
+    // Numeric cross-column check helpers
+    // -----------------------------------------------------------------------
+
+    /**
+     * Runs all configured numeric checks for one data row.
+     * Returns the number of new errors added.
+     */
+    private int runNumericChecks(Workbook wb,
+                                  Sheet sheet,
+                                  Row row,
+                                  List<X_ZZ_WSP_ATR_Col_Check> checks,
+                                  DataFormatter formatter) {
+        int errs = 0;
+        for (X_ZZ_WSP_ATR_Col_Check check : checks) {
+            String type = check.getZZ_Check_Type();
+            int[] colsA = parseColLetters(check.getZZ_Col_Letters_A());
+            int[] colsB = parseColLetters(check.getZZ_Col_Letters_B());
+            String checkName = Util.isEmpty(check.getZZ_Check_Name(), true)
+                    ? "Numeric check failed" : check.getZZ_Check_Name();
+
+            boolean failed = false;
+
+            if (X_ZZ_WSP_ATR_Col_Check.ZZ_CHECK_TYPE_NOT_ZERO.equals(type)) {
+                // Sum of group A must be > 0
+                failed = (sumCols(row, colsA, formatter) == 0.0);
+
+            } else if (X_ZZ_WSP_ATR_Col_Check.ZZ_CHECK_TYPE_SUM_EQUALS_SUM.equals(type)) {
+                // Sum of group A must equal sum of group B
+                failed = (sumCols(row, colsA, formatter) != sumCols(row, colsB, formatter));
+            }
+
+            if (failed) {
+                // Mark the first column of group A in the spreadsheet
+                int markCol = (colsA.length > 0) ? colsA[0] : 0;
+                marker.markError(wb, sheet, row, markCol, checkName);
+                errorLog.appendError(
+                        wb,
+                        sheet.getSheetName(),
+                        checkName,
+                        row.getRowNum(),
+                        markCol,
+                        checkName);
+                errs++;
+            }
+        }
+        return errs;
+    }
+
+    /**
+     * Parses a comma-separated string of column letters (e.g. "C,D") into
+     * zero-based column indices.  Returns an empty array for blank input.
+     */
+    private int[] parseColLetters(String letters) {
+        if (Util.isEmpty(letters, true))
+            return new int[0];
+        String[] parts = letters.split(",");
+        int[] indices = new int[parts.length];
+        for (int i = 0; i < parts.length; i++) {
+            indices[i] = columnLetterToIndex(parts[i].trim());
+        }
+        return indices;
+    }
+
+    /**
+     * Sums the numeric values of the given column indices for a row.
+     * Blank or non-numeric cells count as zero.
+     */
+    private double sumCols(Row row, int[] colIndices, DataFormatter formatter) {
+        double sum = 0.0;
+        for (int colIdx : colIndices) {
+            String txt = getCellText(row, colIdx, formatter);
+            if (!Util.isEmpty(txt, true)) {
+                BigDecimal bd = parseBigDecimal(txt);
+                if (bd != null)
+                    sum += bd.doubleValue();
+            }
+        }
+        return sum;
     }
 
     @Override

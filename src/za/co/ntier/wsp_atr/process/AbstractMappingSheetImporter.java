@@ -26,6 +26,7 @@ import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 import org.compiere.util.Util;
 
+import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Col_Check;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping_Detail;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
@@ -73,6 +74,18 @@ public abstract class AbstractMappingSheetImporter implements IWspAtrSheetImport
 				.setParameters(mappingHeader.getZZ_WSP_ATR_Lookup_Mapping_ID())
 				.setOnlyActiveRecords(true)
 				.setOrderBy(X_ZZ_WSP_ATR_Lookup_Mapping_Detail.COLUMNNAME_ZZ_Column_Letter)
+				.list();
+	}
+
+	protected List<X_ZZ_WSP_ATR_Col_Check> loadNumericChecks(X_ZZ_WSP_ATR_Lookup_Mapping mappingHeader,
+			String trxName) {
+		return new Query(Env.getCtx(),
+				X_ZZ_WSP_ATR_Col_Check.Table_Name,
+				"ZZ_WSP_ATR_Lookup_Mapping_ID=?",
+				trxName)
+				.setParameters(mappingHeader.getZZ_WSP_ATR_Lookup_Mapping_ID())
+				.setOnlyActiveRecords(true)
+				.setOrderBy("SeqNo")
 				.list();
 	}
 
