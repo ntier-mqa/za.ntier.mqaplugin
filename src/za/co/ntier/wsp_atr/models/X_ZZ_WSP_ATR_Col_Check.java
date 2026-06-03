@@ -80,7 +80,7 @@ public class X_ZZ_WSP_ATR_Col_Check extends PO implements I_ZZ_WSP_ATR_Col_Check
     }
 
     /** AccessLevel
-      * @return 3 - Client - Org
+      * @return 4 - System
       */
     protected int get_AccessLevel()
     {
@@ -184,6 +184,21 @@ public class X_ZZ_WSP_ATR_Col_Check extends PO implements I_ZZ_WSP_ATR_Col_Check
 	public String getZZ_Col_Letters_B()
 	{
 		return (String)get_Value(COLUMNNAME_ZZ_Col_Letters_B);
+	}
+
+	/** Set Error Message.
+		@param ZZ_Error_Message Error Message
+	*/
+	public void setZZ_Error_Message (String ZZ_Error_Message)
+	{
+		set_Value (COLUMNNAME_ZZ_Error_Message, ZZ_Error_Message);
+	}
+
+	/** Get Error Message.
+		@return Error Message	  */
+	public String getZZ_Error_Message()
+	{
+		return (String)get_Value(COLUMNNAME_ZZ_Error_Message);
 	}
 
 	/** Set WSP ATR Import Column Check.

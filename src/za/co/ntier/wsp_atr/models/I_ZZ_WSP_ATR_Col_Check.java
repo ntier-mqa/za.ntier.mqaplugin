@@ -37,9 +37,9 @@ public interface I_ZZ_WSP_ATR_Col_Check
 
     KeyNamePair Model = new KeyNamePair(Table_ID, Table_Name);
 
-    /** AccessLevel = 3 - Client - Org 
+    /** AccessLevel = 4 - System 
      */
-    BigDecimal accessLevel = BigDecimal.valueOf(3);
+    BigDecimal accessLevel = BigDecimal.valueOf(4);
 
     /** Load Meta Data */
 
@@ -163,6 +163,15 @@ public interface I_ZZ_WSP_ATR_Col_Check
 
 	/** Get Col Letters B	  */
 	public String getZZ_Col_Letters_B();
+
+    /** Column name ZZ_Error_Message */
+    public static final String COLUMNNAME_ZZ_Error_Message = "ZZ_Error_Message";
+
+	/** Set Error Message	  */
+	public void setZZ_Error_Message (String ZZ_Error_Message);
+
+	/** Get Error Message	  */
+	public String getZZ_Error_Message();
 
     /** Column name ZZ_WSP_ATR_Col_Check_ID */
     public static final String COLUMNNAME_ZZ_WSP_ATR_Col_Check_ID = "ZZ_WSP_ATR_Col_Check_ID";
