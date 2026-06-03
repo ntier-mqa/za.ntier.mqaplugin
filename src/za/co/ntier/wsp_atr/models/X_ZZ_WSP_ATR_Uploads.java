@@ -167,6 +167,8 @@ public class X_ZZ_WSP_ATR_Uploads extends PO implements I_ZZ_WSP_ATR_Uploads, I_
 
 	/** Upload Attendance Register  = A */
 	public static final String ZZ_WSP_ATR_UPLOAD_TYPE_UploadAttendanceRegister = "A";
+	/** History Submission File = H */
+	public static final String ZZ_WSP_ATR_UPLOAD_TYPE_HistorySubmissionFile = "H";
 	/** Upload WSP-ATR Report = R */
 	public static final String ZZ_WSP_ATR_UPLOAD_TYPE_UploadWSP_ATRReport = "R";
 	/** Upload Signed Minutes = S */

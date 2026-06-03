@@ -70,6 +70,7 @@ import org.zkoss.zul.Vlayout;
 import za.co.ntier.api.model.X_ZZSdfOrganisation;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Sub_Levy_Orgs;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
+import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Uploads;
 import za.co.ntier.wsp_atr.repo.WspAtrUploadsRepository;
 import za.ntier.models.MZZWSPATRSubmitted;
 
@@ -345,6 +346,11 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 		int submittedId = 0;
 
+		// Holds previous file data when re-uploading, so we can archive it as history after the trx commits
+		String prevFileName = null;
+		byte[] prevFileBytes = null;
+		Timestamp prevSubmittedDate = null;
+
 		try {
 			int existingId = findExistingSubmittedIdForOrg(org.zzSdfOrganisationId, trxName);
 
@@ -364,6 +370,11 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 						currentStatus.equals(X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_NotRecommended))) {
 					throw new AdempiereException("Upload not allowed. Submission is in status: " + statusLabel(currentStatus));
 				}
+
+				// Capture the previous file before deleting so we can archive it as history
+				prevFileName = findUploadedFileName(existingId);
+				prevFileBytes = extractCurrentSubmissionFileBytes(existingId);
+				prevSubmittedDate = submitted.getSubmittedDate();
 
 				deleteAllAttachmentsForSubmitted(existingId);
 				// deleteRelatedRecordsBeforeProcessing(existingId, trxName);
@@ -414,6 +425,11 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 			throw e;
 		} finally {
 			trx.close();
+		}
+
+		// Archive the previous file as a history record now that the new file is committed
+		if (prevFileBytes != null && prevFileName != null) {
+			saveHistoryUpload(submittedId, prevFileName, prevFileBytes, prevSubmittedDate);
 		}
 
 		// Verify again after commit / fresh reload
@@ -504,6 +520,23 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 			String status = statusLabel(statusCode);
 
 			addRow(id, orgName, submittedDate, uploaded, latestError, status);
+
+			// Show history (previously uploaded) files beneath the current row
+			List<List<Object>> histRows = DB.getSQLArrayObjectsEx(null,
+					"SELECT u.ZZ_WSP_ATR_Uploads_ID, u.Date_Uploaded, u.Name " +
+					"FROM ZZ_WSP_ATR_Uploads u " +
+					"WHERE u.ZZ_WSP_ATR_Submitted_ID = ? " +
+					"  AND u.ZZ_WSP_ATR_Upload_Type = 'H' " +
+					"ORDER BY u.Date_Uploaded DESC", id);
+
+			if (histRows != null) {
+				for (List<Object> h : histRows) {
+					int uploadsId = ((Number) h.get(0)).intValue();
+					Timestamp histDate = (Timestamp) h.get(1);
+					String histFile = (String) h.get(2);
+					addHistoryRow(uploadsId, orgName, histDate, histFile);
+				}
+			}
 		}
 	}
 
@@ -561,6 +594,57 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 		list.appendChild(item);
 	}	
+
+	private byte[] extractCurrentSubmissionFileBytes(int submittedId) {
+		MAttachment att = MAttachment.get(Env.getCtx(), X_ZZ_WSP_ATR_Submitted.Table_ID, submittedId);
+		if (att == null || att.getEntryCount() <= 0)
+			return null;
+		for (MAttachmentEntry e : att.getEntries()) {
+			if (e == null) continue;
+			String n = e.getName();
+			if (!Util.isEmpty(n, true) && !n.toUpperCase().startsWith("ERROR")) {
+				try (InputStream is = e.getInputStream()) {
+					return readAllBytes(is);
+				} catch (Exception ex) {
+					log.warning("Could not read existing submission file for history archive: " + ex.getMessage());
+					return null;
+				}
+			}
+		}
+		return null;
+	}
+
+	private void saveHistoryUpload(int submittedId, String filename, byte[] data, Timestamp dateUploaded) {
+		X_ZZ_WSP_ATR_Uploads hist = new X_ZZ_WSP_ATR_Uploads(Env.getCtx(), 0, null);
+		hist.setZZ_WSP_ATR_Submitted_ID(submittedId);
+		hist.setZZ_WSP_ATR_Upload_Type(X_ZZ_WSP_ATR_Uploads.ZZ_WSP_ATR_UPLOAD_TYPE_HistorySubmissionFile);
+		hist.setDate_Uploaded(dateUploaded != null ? dateUploaded : new Timestamp(System.currentTimeMillis()));
+		hist.setName(filename);
+		hist.saveEx();
+
+		MAttachment histAtt = hist.createAttachment();
+		histAtt.addEntry(filename, data);
+		histAtt.saveEx();
+	}
+
+	private void addHistoryRow(int uploadsId, String orgName, Timestamp dateUploaded, String filename) {
+		ListItem item = new ListItem();
+		item.setValue(Integer.valueOf(uploadsId));
+
+		String formattedDate = dateUploaded != null
+				? dateUploaded.toLocalDateTime().format(TS_FORMAT) : "";
+
+		item.appendChild(new ListCell("  ↳ " + (!Util.isEmpty(orgName, true) ? orgName : "")));
+		item.appendChild(new ListCell(formattedDate));
+		item.appendChild(new ListCell(filename != null ? filename : ""));
+		item.appendChild(new ListCell(""));
+		item.appendChild(new ListCell("History"));
+		item.appendChild(new ListCell(""));
+
+		item.setStyle("background-color:#f5f5f5; color:#888;");
+
+		list.appendChild(item);
+	}
 
 	private void runValidateImportInBackground(final int submittedId) {
 		final Properties ctx = Env.getCtx();
