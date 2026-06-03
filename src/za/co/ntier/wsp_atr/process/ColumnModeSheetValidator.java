@@ -103,8 +103,8 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
                       
             
             emptyRowsInARow = 0;
-            
-          
+            rowCnt++;
+
             if (shouldIgnoreRowBecauseOfIgnoreIfBlank(row, colIndexToMeta.values(), formatter)) {
                 continue;
             }
@@ -173,6 +173,13 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
                     }
                 }
             }
+        }
+
+        boolean isBiodataTab = "Biodata".equalsIgnoreCase(mappingHeader.getZZ_Tab_Name());
+        if (isBiodataTab && rowCnt == 0) {
+            String msg = "No BioData";
+            errorLog.appendError(wb, sheet.getSheetName(), "", 0, 0, msg);
+            errors++;
         }
 
         return errors;

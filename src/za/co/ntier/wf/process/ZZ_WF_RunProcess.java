@@ -36,6 +36,8 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 	private String pApprove; // 'Y' or 'N' or null
 	@Parameter(name="Recommend")
 	private String pRecommend;
+	@Parameter(name="Verify")
+	private String pVerify;
 	@Parameter(name="Comment")
 	private String pComment;
 	@Parameter(name=I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Sen_Fin_CFO_Sign)
@@ -98,7 +100,7 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 						: null;
 
 		if (currentStep != null) {
-			if ((pApprove == null || pApprove.isBlank()) && (pRecommend == null || pRecommend.isBlank())) {
+			if ((pApprove == null || pApprove.isBlank()) && (pRecommend == null || pRecommend.isBlank()) && (pVerify == null || pVerify.isBlank())) {
 				if (curAction != null && curAction.equals("S1")) {
 					pApprove = "Y";  // no option for submit
 				} else {
@@ -109,7 +111,7 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 					pApprove = "Y";  // no option for submit
 				} 
 			}
-			boolean approve = "Y".equalsIgnoreCase(pApprove) || "Y".equalsIgnoreCase(pRecommend);
+			boolean approve = "Y".equalsIgnoreCase(pApprove) || "Y".equalsIgnoreCase(pRecommend) || "Y".equalsIgnoreCase(pVerify);
 			doApproveReject(hdr, currentStep, approve, pComment);
 		} else {
 			currentStep = doRequest(hdr, curStatus);
@@ -153,6 +155,8 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 		if (doNextNode(step, approve, curStatus, curAction, pApprove, comment))
 			return;
 		if (doNextNode(step, approve, curStatus, curAction, pRecommend, comment))
+			return;		
+		if (doNextNode(step, approve, curStatus, curAction, pVerify, comment))
 			return;
 
 		// --- Standard approval/rejection logic (no next node configured) ---
