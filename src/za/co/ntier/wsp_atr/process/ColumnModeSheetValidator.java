@@ -217,6 +217,8 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
             int[] colsB = parseColLetters(check.getZZ_Col_Letters_B());
             String checkName = Util.isEmpty(check.getZZ_Check_Name(), true)
                     ? "Numeric check failed" : check.getZZ_Check_Name();
+            String errorMsg = Util.isEmpty(check.getZZ_Error_Message(), true)
+                    ? checkName : check.getZZ_Error_Message();
 
             boolean failed = false;
 
@@ -232,14 +234,14 @@ public class ColumnModeSheetValidator extends AbstractMappingSheetImporter {
             if (failed) {
                 // Mark the first column of group A in the spreadsheet
                 int markCol = (colsA.length > 0) ? colsA[0] : 0;
-                marker.markError(wb, sheet, row, markCol, checkName);
+                marker.markError(wb, sheet, row, markCol, errorMsg);
                 errorLog.appendError(
                         wb,
                         sheet.getSheetName(),
                         checkName,
                         row.getRowNum(),
                         markCol,
-                        checkName);
+                        errorMsg);
                 errs++;
             }
         }
