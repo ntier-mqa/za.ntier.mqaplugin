@@ -175,6 +175,10 @@ public class ImportWSPATRData extends SvrProcess {
 		            bp.setIsCustomer(false);
 		            bp.setIsEmployee(false);
 		            bp.setIsProspect(false);
+		            // set trading name as name2 if present
+		            String tradingName = byHeaderAny(row, H,
+		                    new String[]{"organisation trading name", "trading name", "trading_name", "organisationtradingname"});
+		            if (tradingName != null && !tradingName.isBlank()) bp.setName2(tradingName.trim());
 		            // set number of employees if provided
 		            try {
 		                int n = Integer.parseInt(numEmpStr.replaceAll("\\s", ""));
