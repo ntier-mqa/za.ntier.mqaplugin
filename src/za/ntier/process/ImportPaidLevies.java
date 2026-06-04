@@ -5,6 +5,7 @@ import java.sql.ResultSet;
 
 import org.compiere.model.MBPartner;
 import org.compiere.model.Query;
+import org.compiere.process.ProcessInfoParameter;
 import org.compiere.process.SvrProcess;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
@@ -14,15 +15,21 @@ import za.ntier.models.X_ZZ_Levy_Paying;
 @org.adempiere.base.annotation.Process(name="za.ntier.process.ImportPaidLevies")
 public class ImportPaidLevies extends SvrProcess {
 
-    private static final int C_YEAR_ID = 1000001;
+    private int C_YEAR_ID = 0;
 
     @Override
     protected void prepare() {
-        // no parameters
+        for (ProcessInfoParameter param : getParameter()) {
+            if ("C_Year_ID".equals(param.getParameterName()))
+                C_YEAR_ID = param.getParameterAsInt();
+        }
     }
 
     @Override
     protected String doIt() throws Exception {
+        if (C_YEAR_ID <= 0)
+            throw new IllegalArgumentException("C_Year_ID parameter is required");
+
         String sql = "SELECT value FROM paid_levies";
         int created = 0;
         int skippedExisting = 0;
