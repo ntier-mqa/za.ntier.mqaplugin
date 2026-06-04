@@ -141,6 +141,8 @@ public class ProcessDHET_File extends SvrProcess {
 							log.warning("Invalid NumberOfEmployees for " + sdlNumber);
 						}
 					}
+					if ((bp.getName2() == null || bp.getName2().isBlank()) && tradingName != null && !tradingName.isBlank())
+						bp.setName2(tradingName.trim());
 					bp.saveEx();
 
 					ensurePartnerLocation(bp, BUSINESS_ADDRESS,
