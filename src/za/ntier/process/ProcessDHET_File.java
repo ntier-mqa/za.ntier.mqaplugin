@@ -70,6 +70,10 @@ public class ProcessDHET_File extends SvrProcess {
 				String businessAddress3 = getField(fields, headerIndexes, "Business Address 3");
 				String businessAddress4 = getField(fields, headerIndexes, "Business Address 4");
 				String businessPostal = getField(fields, headerIndexes, "Business Postal Code");
+				String bizDialCode  = getField(fields, headerIndexes, "Business Dialing Code");
+				String bizTelNum    = getField(fields, headerIndexes, "Business Telephone Number");
+				String bizCellphone = getField(fields, headerIndexes, "Business Cellphone Number");
+				String tradingName  = getField(fields, headerIndexes, "Trading Name");
 
 				String residentialAddress1 = getField(fields, headerIndexes, "Residential Address 1");
 				String residentialAddress2 = getField(fields, headerIndexes, "Residential Address 2");
@@ -95,6 +99,7 @@ public class ProcessDHET_File extends SvrProcess {
 					bp = new MBPartner_New(getCtx(), 0, get_TrxName());
 					bp.setValue(sdlNumber);
 					bp.setName(name);
+					if (tradingName != null && !tradingName.isBlank()) bp.setName2(tradingName.trim());
 					bp.setReferenceNo(regNo);
 					bp.setC_BP_Group_ID(1000018);  // UNKNOWN GROUP
 					bp.setIsVendor(true);
@@ -114,11 +119,14 @@ public class ProcessDHET_File extends SvrProcess {
 					bp.saveEx();
 
 					ensurePartnerLocation(bp, BUSINESS_ADDRESS,
-							businessAddress1, businessAddress2, businessAddress3, businessAddress4, businessPostal);
+							businessAddress1, businessAddress2, businessAddress3, businessAddress4, businessPostal,
+							buildPhone(bizDialCode, bizTelNum), bizCellphone);
 					ensurePartnerLocation(bp, RESIDENTIAL_ADDRESS,
-							residentialAddress1, residentialAddress2, residentialAddress3, residentialAddress4, residentialPostal);
+							residentialAddress1, residentialAddress2, residentialAddress3, residentialAddress4, residentialPostal,
+							null, null);
 					ensurePartnerLocation(bp, POSTAL_ADDRESS,
-							postalAddress1, postalAddress2, postalAddress3, postalAddress4, postalPostal);
+							postalAddress1, postalAddress2, postalAddress3, postalAddress4, postalPostal,
+							null, null);
 				} else {
 					cntBPsUpdated++;
 					bp.setZZ_Is_MQA_Sector(true);
@@ -136,11 +144,14 @@ public class ProcessDHET_File extends SvrProcess {
 					bp.saveEx();
 
 					ensurePartnerLocation(bp, BUSINESS_ADDRESS,
-							businessAddress1, businessAddress2, businessAddress3, businessAddress4, businessPostal);
+							businessAddress1, businessAddress2, businessAddress3, businessAddress4, businessPostal,
+							buildPhone(bizDialCode, bizTelNum), bizCellphone);
 					ensurePartnerLocation(bp, RESIDENTIAL_ADDRESS,
-							residentialAddress1, residentialAddress2, residentialAddress3, residentialAddress4, residentialPostal);
+							residentialAddress1, residentialAddress2, residentialAddress3, residentialAddress4, residentialPostal,
+							null, null);
 					ensurePartnerLocation(bp, POSTAL_ADDRESS,
-							postalAddress1, postalAddress2, postalAddress3, postalAddress4, postalPostal);
+							postalAddress1, postalAddress2, postalAddress3, postalAddress4, postalPostal,
+							null, null);
 				}
 			}
 		}
@@ -189,7 +200,8 @@ public class ProcessDHET_File extends SvrProcess {
 	}
 
 	private void ensurePartnerLocation(MBPartner_New bp, String locationName,
-			String address1, String address2, String address3, String address4, String postal) {
+			String address1, String address2, String address3, String address4, String postal,
+			String phone, String phone2) {
 		if (!hasImportedAddress(address1, address2, address3, address4, postal)) {
 			return;
 		}
@@ -203,14 +215,18 @@ public class ProcessDHET_File extends SvrProcess {
 			MBPartnerLocation newPartnerLocation = new MBPartnerLocation(bp);
 			newPartnerLocation.setC_Location_ID(newLocation.getC_Location_ID());
 			newPartnerLocation.setName(locationName);
+			if (phone != null && !phone.isBlank()) newPartnerLocation.setPhone(phone);
+			if (phone2 != null && !phone2.isBlank()) newPartnerLocation.setPhone2(phone2);
 			newPartnerLocation.saveEx();
 			return;
 		}
 
 		if (!locationName.equals(existingLocationLink.getName())) {
 			existingLocationLink.setName(locationName);
-			existingLocationLink.saveEx();
 		}
+		if (phone != null && !phone.isBlank()) existingLocationLink.setPhone(phone);
+		if (phone2 != null && !phone2.isBlank()) existingLocationLink.setPhone2(phone2);
+		existingLocationLink.saveEx();
 
 		MLocation existingLocation = new MLocation(getCtx(), existingLocationLink.getC_Location_ID(), get_TrxName());
 		if (existingLocation.get_ID() <= 0 || isMostlyBlank(existingLocation)) {
@@ -222,6 +238,17 @@ public class ProcessDHET_File extends SvrProcess {
 			existingLocationLink.setC_Location_ID(existingLocation.getC_Location_ID());
 			existingLocationLink.saveEx();
 		}
+	}
+
+	private String buildPhone(String dialCode, String number) {
+		if (number == null || number.isBlank()) return null;
+		number = number.trim();
+		if (dialCode != null && !dialCode.isBlank()) {
+			String code = dialCode.trim();
+			if (code.length() == 2) code = "0" + code;
+			return code + number;
+		}
+		return number;
 	}
 
 	private MBPartnerLocation findPartnerLocation(MBPartner_New bp, String locationName) {
