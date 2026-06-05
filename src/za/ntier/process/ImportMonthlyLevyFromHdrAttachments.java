@@ -65,6 +65,7 @@ public class ImportMonthlyLevyFromHdrAttachments extends SvrProcess {
 
 		String yyyymm = fiscalYear + month2;
 		Pattern filePattern = Pattern.compile(".*Fin_" + Pattern.quote(yyyymm) + ".*\\.csv$", Pattern.CASE_INSENSITIVE);
+		Pattern employersPattern = Pattern.compile(".*_Employers_.*\\.csv$", Pattern.CASE_INSENSITIVE);
 
 		// Read attachments from header
 		MAttachment att = MAttachment.get(getCtx(), hdr.get_Table_ID(), hdr.get_ID());
@@ -97,6 +98,20 @@ public class ImportMonthlyLevyFromHdrAttachments extends SvrProcess {
 			addLog("Imported " + inserted + " rows from " + fname);
 			totalInserted += inserted;
 			filesProcessed++;
+		}
+
+		// Import Employers file if present
+		for (MAttachmentEntry e : att.getEntries()) {
+			String rawName = e.getName() != null ? e.getName() : "";
+			String fname = normalizeFileName(rawName);
+			if (!employersPattern.matcher(fname).matches()) continue;
+			addLog("Processing employers file: " + fname);
+			DHETEmployersImporter importer = new DHETEmployersImporter(
+					getCtx(), get_TrxName(), msg -> addLog(msg));
+			String result = importer.importFromStream(
+					new java.io.ByteArrayInputStream(e.getData()));
+			addLog("Employers import: " + result);
+			break; // only process the first matching file
 		}
 
 		// Update header tracking fields (if present)
