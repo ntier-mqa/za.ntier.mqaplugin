@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter;
 
 import org.compiere.model.MClient;
 import org.compiere.model.MSequence;
+import org.compiere.model.MTable;
 import org.compiere.model.ModelValidationEngine;
 import org.compiere.model.ModelValidator;
 import org.compiere.model.PO;
@@ -13,8 +14,16 @@ import org.compiere.util.CLogger;
 import org.compiere.util.Util;
 
 import za.co.ntier.api.model.I_ZZAssessorPerson;
+import za.co.ntier.api.model.I_ZZ_Allocations;
+import za.co.ntier.api.model.I_ZZ_NAMB_Alloc_TTC;
+import za.co.ntier.api.model.I_ZZ_NAMB_Alloc_Trades;
+import za.co.ntier.api.model.I_ZZ_QCTO_Alloc_AC;
+import za.co.ntier.api.model.I_ZZ_QCTO_Alloc_OC;
+import za.co.ntier.api.model.I_ZZ_QCTO_Alloc_Skills;
 import za.co.ntier.api.model.I_ZZ_WPA_Application;
 import za.co.ntier.api.model.X_ZZAssessorPerson;
+import za.co.ntier.api.model.X_ZZ_Allocations;
+import za.co.ntier.api.model.X_ZZ_QAAuditAllocations;
 import za.co.ntier.api.model.X_ZZ_WPA_Application;
 
 public class NtierModelValidator implements ModelValidator
@@ -31,6 +40,10 @@ public class NtierModelValidator implements ModelValidator
 		}
 		engine.addModelChange(X_ZZ_WPA_Application.Table_Name, this);
 		engine.addModelChange(X_ZZAssessorPerson.Table_Name, this);
+		
+		engine.addModelChange(X_ZZ_Allocations.Table_Name, this);
+		engine.addModelChange(X_ZZ_QAAuditAllocations.Table_Name, this);
+		
 	}
 
 	@Override
@@ -118,7 +131,49 @@ public class NtierModelValidator implements ModelValidator
 				}
 			}
 		}
+		
+		if (type == ModelValidator.TYPE_AFTER_CHANGE	&&
+			(X_ZZ_Allocations.Table_Name.equals(po.get_TableName()) ||
+				X_ZZ_QAAuditAllocations.Table_Name.equals(po.get_TableName())))
+		{
+			updateRelatedAllocationStatus(po);
+		}
 		return null;
+	}
+
+	private void updateRelatedAllocationStatus(PO po)
+	{
+		String colStatus = I_ZZ_Allocations.COLUMNNAME_ZZ_DocStatus;
+		if (!po.is_ValueChanged(colStatus))
+			return;
+
+		String newStatus = po.get_ValueAsString(colStatus);
+		if (Util.isEmpty(newStatus))
+			return;
+
+		updateIfPresent(po, I_ZZ_Allocations.COLUMNNAME_ZZ_QCTO_Alloc_OC_ID, I_ZZ_QCTO_Alloc_OC.Table_Name, colStatus, newStatus);
+		updateIfPresent(po, I_ZZ_Allocations.COLUMNNAME_ZZ_QCTO_Alloc_Skills_ID, I_ZZ_QCTO_Alloc_Skills.Table_Name, colStatus, newStatus);
+		updateIfPresent(po, I_ZZ_Allocations.COLUMNNAME_ZZ_QCTO_Alloc_AC_ID, I_ZZ_QCTO_Alloc_AC.Table_Name, colStatus, newStatus);
+		updateIfPresent(po, I_ZZ_Allocations.COLUMNNAME_ZZ_NAMB_Alloc_Trades_ID, I_ZZ_NAMB_Alloc_Trades.Table_Name, colStatus, newStatus);
+		updateIfPresent(po, I_ZZ_Allocations.COLUMNNAME_ZZ_NAMB_Alloc_TTC_ID, I_ZZ_NAMB_Alloc_TTC.Table_Name, colStatus, newStatus);
+	}
+
+	private void updateIfPresent(PO po, String idColumn, String tableName, String statusColumn, String newStatus)
+	{
+		int recordId = po.get_ValueAsInt(idColumn);
+		if (recordId <= 0)
+			return;
+
+		MTable table = MTable.get(po.getCtx(), tableName);
+		if (table == null)
+			return;
+
+		PO relatedPO = table.getPO(recordId, po.get_TrxName());
+		if (relatedPO != null)
+		{
+			relatedPO.set_ValueNoCheck(statusColumn, newStatus);
+			relatedPO.saveEx();
+		}
 	}
 
 	@Override
