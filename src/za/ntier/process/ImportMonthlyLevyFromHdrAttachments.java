@@ -90,8 +90,10 @@ public class ImportMonthlyLevyFromHdrAttachments extends SvrProcess {
 			String fname = normalizeFileName(rawName);
 			if (!fname.toLowerCase().endsWith(".csv")) continue;
 			if (!filePattern.matcher(fname).matches()) {
-				if (skippedFiles.length() > 0) skippedFiles.append(", ");
-				skippedFiles.append(fname);
+				if (!employersPattern.matcher(fname).matches()) {
+					if (skippedFiles.length() > 0) skippedFiles.append(", ");
+					skippedFiles.append(fname);
+				}
 				continue;
 			}
 			int inserted = importCsvEntry(e, C_Year_ID, month2,fname);
