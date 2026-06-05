@@ -60,6 +60,16 @@ public class EnterAuditResultsProcess extends SvrProcess
 				auditHeader.setZZ_AuditLead_IDs(org.getZZ_AuditLead_IDs());
 			}
 
+			if (org.getDateFrom() != null)
+			{
+				auditHeader.setDateFrom(org.getDateFrom());
+			}
+
+			if (org.getDateTo() != null)
+			{
+				auditHeader.setDateTo(org.getDateTo());
+			}
+
 			auditHeader.saveEx();
 			countHeader++;
 
