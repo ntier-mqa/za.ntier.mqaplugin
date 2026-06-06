@@ -32,7 +32,7 @@ public class X_ZZ_WSP_ATR_Uploads extends PO implements I_ZZ_WSP_ATR_Uploads, I_
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260222L;
+	private static final long serialVersionUID = 20260606L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Uploads (Properties ctx, int ZZ_WSP_ATR_Uploads_ID, String trxName)
@@ -137,6 +137,114 @@ public class X_ZZ_WSP_ATR_Uploads extends PO implements I_ZZ_WSP_ATR_Uploads, I_
 		return (String)get_Value(COLUMNNAME_Name);
 	}
 
+	/** Approved By Manager Finance Consumables = AC */
+	public static final String ZZ_DOCSTATUS_ApprovedByManagerFinanceConsumables = "AC";
+	/** Approved = AP */
+	public static final String ZZ_DOCSTATUS_Approved = "AP";
+	/** Prepared for CEO = CF */
+	public static final String ZZ_DOCSTATUS_PreparedForCEO = "CF";
+	/** Completed = CO */
+	public static final String ZZ_DOCSTATUS_Completed = "CO";
+	/** Draft = DR */
+	public static final String ZZ_DOCSTATUS_Draft = "DR";
+	/** Error Importing = EE */
+	public static final String ZZ_DOCSTATUS_ErrorImporting = "EE";
+	/** Validation Error = ER */
+	public static final String ZZ_DOCSTATUS_ValidationError = "ER";
+	/** Evaluated = EV */
+	public static final String ZZ_DOCSTATUS_Evaluated = "EV";
+	/** Importing = IG */
+	public static final String ZZ_DOCSTATUS_Importing = "IG";
+	/** Imported = IM */
+	public static final String ZZ_DOCSTATUS_Imported = "IM";
+	/** In Progress = IP */
+	public static final String ZZ_DOCSTATUS_InProgress = "IP";
+	/** Not Recommended By Senior Mgr SDR = N1 */
+	public static final String ZZ_DOCSTATUS_NotRecommendedBySeniorMgrSDR = "N1";
+	/** Not Recommended By Senior Mgr Finance = N2 */
+	public static final String ZZ_DOCSTATUS_NotRecommendedBySeniorMgrFinance = "N2";
+	/** Not Recommended By COO = N3 */
+	public static final String ZZ_DOCSTATUS_NotRecommendedByCOO = "N3";
+	/** Not Recommended By CFO = N4 */
+	public static final String ZZ_DOCSTATUS_NotRecommendedByCFO = "N4";
+	/** Not Recommended By CEO = N5 */
+	public static final String ZZ_DOCSTATUS_NotRecommendedByCEO = "N5";
+	/** Not Approved by Snr Manager = NA */
+	public static final String ZZ_DOCSTATUS_NotApprovedBySnrManager = "NA";
+	/** Not Approved By Manager Finance Consumables = NC */
+	public static final String ZZ_DOCSTATUS_NotApprovedByManagerFinanceConsumables = "NC";
+	/** Not Approved By SDL Finance Mgr = ND */
+	public static final String ZZ_DOCSTATUS_NotApprovedBySDLFinanceMgr = "ND";
+	/** Not Approved By IT Manager = NI */
+	public static final String ZZ_DOCSTATUS_NotApprovedByITManager = "NI";
+	/** Not Approved by LM = NL */
+	public static final String ZZ_DOCSTATUS_NotApprovedByLM = "NL";
+	/** Not Approved = NP */
+	public static final String ZZ_DOCSTATUS_NotApproved = "NP";
+	/** Not Recommended = NR */
+	public static final String ZZ_DOCSTATUS_NotRecommended = "NR";
+	/** Not Approved by Snr Admin Finance = NS */
+	public static final String ZZ_DOCSTATUS_NotApprovedBySnrAdminFinance = "NS";
+	/** Not Verified = NV */
+	public static final String ZZ_DOCSTATUS_NotVerified = "NV";
+	/** Pending = PE */
+	public static final String ZZ_DOCSTATUS_Pending = "PE";
+	/** Query = QR */
+	public static final String ZZ_DOCSTATUS_Query = "QR";
+	/** Recommended By Senior Mgr Finance = R1 */
+	public static final String ZZ_DOCSTATUS_RecommendedBySeniorMgrFinance = "R1";
+	/** Recommended By COO = R2 */
+	public static final String ZZ_DOCSTATUS_RecommendedByCOO = "R2";
+	/** Recommended By CFO = R3 */
+	public static final String ZZ_DOCSTATUS_RecommendedByCFO = "R3";
+	/** Recommended By CEO = R4 */
+	public static final String ZZ_DOCSTATUS_RecommendedByCEO = "R4";
+	/** Recommended for Approval = RA */
+	public static final String ZZ_DOCSTATUS_RecommendedForApproval = "RA";
+	/** Recommended = RC */
+	public static final String ZZ_DOCSTATUS_Recommended = "RC";
+	/** Recommended By Senior Mgr SDR = RD */
+	public static final String ZZ_DOCSTATUS_RecommendedBySeniorMgrSDR = "RD";
+	/** Recommended for Evaluation = RE */
+	public static final String ZZ_DOCSTATUS_RecommendedForEvaluation = "RE";
+	/** Submitted to Manager Finance Consumables = SC */
+	public static final String ZZ_DOCSTATUS_SubmittedToManagerFinanceConsumables = "SC";
+	/** Submitted To SDL Finance Mgr = SD */
+	public static final String ZZ_DOCSTATUS_SubmittedToSDLFinanceMgr = "SD";
+	/** Submitted To IT Manager = SI */
+	public static final String ZZ_DOCSTATUS_SubmittedToITManager = "SI";
+	/** Submitted To IT Admin = ST */
+	public static final String ZZ_DOCSTATUS_SubmittedToITAdmin = "ST";
+	/** Submitted = SU */
+	public static final String ZZ_DOCSTATUS_Submitted = "SU";
+	/** Transfer Out = TO */
+	public static final String ZZ_DOCSTATUS_TransferOut = "TO";
+	/** Updated by SDR Admin = UA */
+	public static final String ZZ_DOCSTATUS_UpdatedBySDRAdmin = "UA";
+	/** Uploaded = UP */
+	public static final String ZZ_DOCSTATUS_Uploaded = "UP";
+	/** Delinked = UnSdfOrg */
+	public static final String ZZ_DOCSTATUS_Delinked = "UnSdfOrg";
+	/** Validating = VA */
+	public static final String ZZ_DOCSTATUS_Validating = "VA";
+	/** Verified = VE */
+	public static final String ZZ_DOCSTATUS_Verified = "VE";
+	/** Set Document Status.
+		@param ZZ_DocStatus Document Status
+	*/
+	public void setZZ_DocStatus (String ZZ_DocStatus)
+	{
+
+		set_Value (COLUMNNAME_ZZ_DocStatus, ZZ_DocStatus);
+	}
+
+	/** Get Document Status.
+		@return Document Status	  */
+	public String getZZ_DocStatus()
+	{
+		return (String)get_Value(COLUMNNAME_ZZ_DocStatus);
+	}
+
 	public I_ZZ_WSP_ATR_Submitted getZZ_WSP_ATR_Submitted() throws RuntimeException
 	{
 		return (I_ZZ_WSP_ATR_Submitted)MTable.get(getCtx(), I_ZZ_WSP_ATR_Submitted.Table_ID)
@@ -167,12 +275,18 @@ public class X_ZZ_WSP_ATR_Uploads extends PO implements I_ZZ_WSP_ATR_Uploads, I_
 
 	/** Upload Attendance Register  = A */
 	public static final String ZZ_WSP_ATR_UPLOAD_TYPE_UploadAttendanceRegister = "A";
-	/** History Submission File = H */
-	public static final String ZZ_WSP_ATR_UPLOAD_TYPE_HistorySubmissionFile = "H";
+	/** Upload Cancelled Cheque = C */
+	public static final String ZZ_WSP_ATR_UPLOAD_TYPE_UploadCancelledCheque = "C";
+	/** History Of Submission Files = H */
+	public static final String ZZ_WSP_ATR_UPLOAD_TYPE_HistoryOfSubmissionFiles = "H";
+	/** Upload Authorisation Page = P */
+	public static final String ZZ_WSP_ATR_UPLOAD_TYPE_UploadAuthorisationPage = "P";
 	/** Upload WSP-ATR Report = R */
 	public static final String ZZ_WSP_ATR_UPLOAD_TYPE_UploadWSP_ATRReport = "R";
 	/** Upload Signed Minutes = S */
 	public static final String ZZ_WSP_ATR_UPLOAD_TYPE_UploadSignedMinutes = "S";
+	/** Upload Proof of Training = T */
+	public static final String ZZ_WSP_ATR_UPLOAD_TYPE_UploadProofOfTraining = "T";
 	/** Set Upload Type.
 		@param ZZ_WSP_ATR_Upload_Type Upload Type
 	*/

@@ -70,6 +70,7 @@ import org.zkoss.zul.Vlayout;
 import za.co.ntier.api.model.X_ZZSdfOrganisation;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Sub_Levy_Orgs;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
+import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Uploads;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Uploads;
 import za.co.ntier.wsp_atr.repo.WspAtrUploadsRepository;
 import za.ntier.models.MZZWSPATRSubmitted;
@@ -349,7 +350,10 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 		// Holds previous file data when re-uploading, so we can archive it as history after the trx commits
 		String prevFileName = null;
 		byte[] prevFileBytes = null;
+		String prevErrorFileName = null;
+		byte[] prevErrorFileBytes = null;
 		Timestamp prevSubmittedDate = null;
+		String prevDocStatus = null;
 
 		try {
 			int existingId = findExistingSubmittedIdForOrg(org.zzSdfOrganisationId, trxName);
@@ -374,7 +378,10 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 				// Capture the previous file before deleting so we can archive it as history
 				prevFileName = findUploadedFileName(existingId);
 				prevFileBytes = extractCurrentSubmissionFileBytes(existingId);
+				prevErrorFileName = findLatestErrorFileName(existingId);
+				prevErrorFileBytes = extractCurrentErrorFileBytes(existingId);
 				prevSubmittedDate = submitted.getSubmittedDate();
+				prevDocStatus = submitted.getZZ_DocStatus();
 
 				deleteAllAttachmentsForSubmitted(existingId);
 				// deleteRelatedRecordsBeforeProcessing(existingId, trxName);
@@ -429,7 +436,9 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 		// Archive the previous file as a history record now that the new file is committed
 		if (prevFileBytes != null && prevFileName != null) {
-			saveHistoryUpload(submittedId, prevFileName, prevFileBytes, prevSubmittedDate);
+			saveHistoryUpload(submittedId, prevFileName, prevFileBytes,
+					prevErrorFileName, prevErrorFileBytes,
+					prevSubmittedDate, prevDocStatus);
 		}
 
 		// Verify again after commit / fresh reload
@@ -523,7 +532,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 			// Show history (previously uploaded) files beneath the current row
 			List<List<Object>> histRows = DB.getSQLArrayObjectsEx(null,
-					"SELECT u.ZZ_WSP_ATR_Uploads_ID, u.Date_Uploaded, u.Name " +
+					"SELECT u.ZZ_WSP_ATR_Uploads_ID, u.Date_Uploaded, u.Name, u.ZZ_DocStatus " +
 					"FROM ZZ_WSP_ATR_Uploads u " +
 					"WHERE u.ZZ_WSP_ATR_Submitted_ID = ? " +
 					"  AND u.ZZ_WSP_ATR_Upload_Type = 'H' " +
@@ -534,7 +543,9 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 					int uploadsId = ((Number) h.get(0)).intValue();
 					Timestamp histDate = (Timestamp) h.get(1);
 					String histFile = (String) h.get(2);
-					addHistoryRow(uploadsId, orgName, histDate, histFile);
+					String histDocStatus = (String) h.get(3);
+					String histErrorFile = findHistoryErrorFileName(uploadsId);
+					addHistoryRow(uploadsId, orgName, histDate, histFile, histErrorFile, histDocStatus);
 				}
 			}
 		}
@@ -614,20 +625,42 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 		return null;
 	}
 
-	private void saveHistoryUpload(int submittedId, String filename, byte[] data, Timestamp dateUploaded) {
+	private byte[] extractCurrentErrorFileBytes(int submittedId) {
+		MAttachment att = MAttachment.get(Env.getCtx(), X_ZZ_WSP_ATR_Submitted.Table_ID, submittedId);
+		if (att == null || att.getEntryCount() <= 0)
+			return null;
+		MAttachmentEntry err = findLatestErrorEntry(att);
+		if (err == null)
+			return null;
+		try (InputStream is = err.getInputStream()) {
+			return readAllBytes(is);
+		} catch (Exception ex) {
+			log.warning("Could not read existing error file for history archive: " + ex.getMessage());
+			return null;
+		}
+	}
+
+	private void saveHistoryUpload(int submittedId, String filename, byte[] data,
+			String errorFileName, byte[] errorData,
+			Timestamp dateUploaded, String docStatus) {
 		X_ZZ_WSP_ATR_Uploads hist = new X_ZZ_WSP_ATR_Uploads(Env.getCtx(), 0, null);
 		hist.setZZ_WSP_ATR_Submitted_ID(submittedId);
-		hist.setZZ_WSP_ATR_Upload_Type(X_ZZ_WSP_ATR_Uploads.ZZ_WSP_ATR_UPLOAD_TYPE_HistorySubmissionFile);
+		hist.setZZ_WSP_ATR_Upload_Type(X_ZZ_WSP_ATR_Uploads.ZZ_WSP_ATR_UPLOAD_TYPE_HistoryOfSubmissionFiles);
 		hist.setDate_Uploaded(dateUploaded != null ? dateUploaded : new Timestamp(System.currentTimeMillis()));
 		hist.setName(filename);
+		if (!Util.isEmpty(docStatus, true))
+			hist.setZZ_DocStatus(docStatus);
 		hist.saveEx();
 
 		MAttachment histAtt = hist.createAttachment();
 		histAtt.addEntry(filename, data);
+		if (errorData != null && !Util.isEmpty(errorFileName, true))
+			histAtt.addEntry(errorFileName, errorData);
 		histAtt.saveEx();
 	}
 
-	private void addHistoryRow(int uploadsId, String orgName, Timestamp dateUploaded, String filename) {
+	private void addHistoryRow(int uploadsId, String orgName, Timestamp dateUploaded,
+			String filename, String errorFilename, String docStatusCode) {
 		ListItem item = new ListItem();
 		item.setValue(Integer.valueOf(uploadsId));
 
@@ -637,8 +670,8 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 		item.appendChild(new ListCell("  ↳ " + (!Util.isEmpty(orgName, true) ? orgName : "")));
 		item.appendChild(new ListCell(formattedDate));
 		item.appendChild(new ListCell(filename != null ? filename : ""));
-		item.appendChild(new ListCell(""));
-		item.appendChild(new ListCell("History"));
+		item.appendChild(new ListCell(errorFilename != null ? errorFilename : ""));
+		item.appendChild(new ListCell(statusLabel(docStatusCode)));
 		item.appendChild(new ListCell(""));
 
 		item.setStyle("background-color:#f5f5f5; color:#888;");
@@ -769,6 +802,14 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 			return n;
 		}
 		return null;
+	}
+
+	private String findHistoryErrorFileName(int uploadsId) {
+		MAttachment att = MAttachment.get(Env.getCtx(), I_ZZ_WSP_ATR_Uploads.Table_ID, uploadsId);
+		if (att == null || att.getEntryCount() <= 0)
+			return null;
+		MAttachmentEntry e = findLatestErrorEntry(att);
+		return e != null ? e.getName() : null;
 	}
 
 	private String findLatestErrorFileName(int submittedId) {

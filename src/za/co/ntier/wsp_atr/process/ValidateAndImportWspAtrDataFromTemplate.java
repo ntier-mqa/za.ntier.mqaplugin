@@ -195,7 +195,6 @@ public class ValidateAndImportWspAtrDataFromTemplate extends SvrProcess {
 					get_TrxName(),
 					this
 					);
-			addLog("Imported " + totalImported + " records from all mapped tabs");
 
 			updateSubmittedStatusCommitted(
 					p_ZZ_WSP_ATR_Submitted_ID,

@@ -108,13 +108,11 @@ public class WspAtrImportService {
             MZZWSPATRSubmitted mZZWSPATRSubmitted =
                     new MZZWSPATRSubmitted(ctx, submittedId, trxName);
 
-            process.addLog(
-                    "The WSP-ATR import for "
-                    + mZZWSPATRSubmitted.getOrganisationName()
-                    + " with SDL Number "
-                    + mZZWSPATRSubmitted.getSdlNumber()
-                    + " was successful."
-            );
+            try {
+                mZZWSPATRSubmitted.sendSuccessfulImportEmail();
+            } catch (Exception emailEx) {
+                process.addLog("Warning: could not send import success email: " + emailEx.getMessage());
+            }
             logHeap(process, "IMPORT SERVICE END");
             return totalImported;
 

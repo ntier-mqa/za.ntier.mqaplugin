@@ -131,6 +131,15 @@ public interface I_ZZ_WSP_ATR_Uploads
 	  */
 	public int getUpdatedBy();
 
+    /** Column name ZZ_DocStatus */
+    public static final String COLUMNNAME_ZZ_DocStatus = "ZZ_DocStatus";
+
+	/** Set Document Status	  */
+	public void setZZ_DocStatus (String ZZ_DocStatus);
+
+	/** Get Document Status	  */
+	public String getZZ_DocStatus();
+
     /** Column name ZZ_WSP_ATR_Submitted_ID */
     public static final String COLUMNNAME_ZZ_WSP_ATR_Submitted_ID = "ZZ_WSP_ATR_Submitted_ID";
 

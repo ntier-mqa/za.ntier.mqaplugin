@@ -474,6 +474,61 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 
 
+	public void sendSuccessfulImportEmail() throws Exception {
+
+		int adUserId = getSdfUserId();
+
+		if (adUserId <= 0) {
+			log.warning("No recipient AD_User found for import email");
+			return;
+		}
+
+		MUser toUser = MUser.get(getCtx(), adUserId);
+
+		if (toUser.getEMail() == null || toUser.getEMail().isEmpty()) {
+			log.warning("Recipient has no email address for import email");
+			return;
+		}
+
+		String orgName   = getOrganisationName();
+		String sdlNo     = getSdlNumber();
+		String refNo     = String.valueOf(getZZ_WSP_ATR_Submitted_ID());
+		String firstName = toUser.getName();
+
+		java.time.format.DateTimeFormatter fmt =
+				java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm");
+		String importedOn = java.time.LocalDateTime.now().format(fmt);
+
+		String subject = "Successful WSP-ATR Import";
+
+		String html =
+				"<p>Dear " + firstName + ",</p>" +
+				"<p>WSP-ATR Import with reference no. " + refNo +
+				" for " + orgName +
+				" and SDL No. " + sdlNo +
+				" was successfully imported on " + importedOn + ".</p>" +
+				"<p>Yours in Skill Development<br/>" +
+				"MQA Skills, Development and Research (SDR) Team</p>";
+
+		MUser fromUser = MUser.get(getCtx(), FROM_EMAIL_USER_ID);
+		MClient client = MClient.get(getCtx());
+
+		boolean sent = client.sendEMail(fromUser, toUser, subject, html, null, true);
+
+		if (!sent)
+			log.severe("Failed to send Successful Import email");
+		else
+			log.info("Successful Import email sent to " + toUser.getEMail());
+
+		// CC submissions address if different from recipient
+		String recipientEmail = toUser.getEMail() != null ? toUser.getEMail().trim() : "";
+		if (!SUCCESSFUL_SUBMISSION_CC_EMAIL.equalsIgnoreCase(recipientEmail)) {
+			boolean ccSent = client.sendEMail(SUCCESSFUL_SUBMISSION_CC_EMAIL, subject, html, null, true);
+			if (!ccSent)
+				log.severe("Failed to send Successful Import CC email to " + SUCCESSFUL_SUBMISSION_CC_EMAIL);
+		}
+	}
+
 	public String getQueryReasons()
 	{
 		StringBuilder reasons = new StringBuilder();
