@@ -491,12 +491,27 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                         }
                     }
 
-                    Integer orgId = resolveOrgIdForRow(ctx, cells, orgMeta, singleOrgId,
-                            metas, trxName, sheetName, rowIdx + 1);
+                    Integer orgId;
+                    try {
+                        orgId = resolveOrgIdForRow(ctx, cells, orgMeta, singleOrgId,
+                                metas, trxName, sheetName, rowIdx + 1);
+                    } catch (Exception e) {
+                        importErrors.add(new MigrationError(sheetName, rowIdx + 1, "SDLNumber",
+                                "Could not resolve or create ZZSdfOrganisation: " + e.getMessage()));
+                        if (importErrors.size() >= MAX_ERRORS) {
+                            stopAll[0] = true;
+                            return StreamingXlsxReader.Action.STOP;
+                        }
+                        return StreamingXlsxReader.Action.CONTINUE;
+                    }
                     if (orgId == null) {
-                        svrProcess.addLog("Tab " + sheetName + " row " + (rowIdx + 1)
-                                + ": no SDL number — skipping remainder of tab");
-                        return StreamingXlsxReader.Action.STOP;
+                        importErrors.add(new MigrationError(sheetName, rowIdx + 1, "SDLNumber",
+                                "SDL number is blank — row skipped (no ZZSdfOrganisation_ID, submission not created)"));
+                        if (importErrors.size() >= MAX_ERRORS) {
+                            stopAll[0] = true;
+                            return StreamingXlsxReader.Action.STOP;
+                        }
+                        return StreamingXlsxReader.Action.CONTINUE;
                     }
                     Integer submittedId = submittedIdByOrgId.get(orgId);
                     if (submittedId == null) {
@@ -724,6 +739,8 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                 newOrg.setZZ_DocStatus("AP");
                 newOrg.setAD_Org_ID(0);
                 newOrg.saveEx();
+                svrProcess.addLog("Tab " + tab + " row " + lineNo
+                        + ": created new ZZSdfOrganisation ID=" + newOrg.get_ID() + " for SDL " + sdl);
                 return Integer.valueOf(newOrg.get_ID());
             }
             if (singleOrgId != null && singleOrgId.intValue() > 0) {
