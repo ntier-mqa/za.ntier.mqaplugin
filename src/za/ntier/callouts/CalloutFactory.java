@@ -11,6 +11,7 @@ import org.osgi.service.component.annotations.Component;
 import za.ntier.models.X_ZZ_Open_Application;
 import za.ntier.models.X_ZZ_System_Access_Application;
 import za.co.ntier.api.model.X_C_BP_SkillsProgramme;
+import za.co.ntier.api.model.X_C_BP_TTC;
 import za.co.ntier.api.model.X_C_BP_OC;
 import za.co.ntier.api.model.X_C_BP_Trades;
 import za.co.ntier.api.model.X_C_BP_AC;
@@ -32,7 +33,8 @@ public class CalloutFactory implements IColumnCalloutFactory {
 			tableName.equals(X_C_BP_SkillsProgramme.Table_Name) ||
 			tableName.equals(X_C_BP_OC.Table_Name) ||
 			tableName.equals(X_C_BP_Trades.Table_Name) ||
-			tableName.equals(X_C_BP_AC.Table_Name)
+			tableName.equals(X_C_BP_AC.Table_Name) ||
+			tableName.equals(X_C_BP_TTC.Table_Name)
 			)
 		{
 			list.add(new CalloutFromFactory());

@@ -13,6 +13,7 @@ import org.compiere.util.Msg;
 import za.co.ntier.api.model.X_C_BP_AC;
 import za.co.ntier.api.model.X_C_BP_OC;
 import za.co.ntier.api.model.X_C_BP_SkillsProgramme;
+import za.co.ntier.api.model.X_C_BP_TTC;
 import za.co.ntier.api.model.X_C_BP_Trades;
 import za.co.ntier.api.model.X_ZZSkillsProgramme;
 import za.co.ntier.api.model.X_ZZ_Occupational_Certificates;
@@ -143,7 +144,8 @@ public class CalloutFromFactory implements IColumnCallout {
 
 		if ((mTab.getTableName().equals(X_C_BP_OC.Table_Name)	||
 				mTab.getTableName().equals(X_C_BP_Trades.Table_Name) ||
-				mTab.getTableName().equals(X_C_BP_AC.Table_Name))	&&
+				mTab.getTableName().equals(X_C_BP_AC.Table_Name) ||
+				mTab.getTableName().equals(X_C_BP_TTC.Table_Name))	&&
 			mField.getColumnName().equals(X_C_BP_OC.COLUMNNAME_ZZ_Occupational_Certificates_ID))
 		{
 
