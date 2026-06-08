@@ -16,14 +16,17 @@ import org.compiere.model.MAttachment;
 import org.compiere.model.MAttachmentEntry;
 import org.compiere.model.MClient;
 import org.compiere.model.MMailText;
+import org.compiere.model.MNote;
 import org.compiere.model.MSysConfig;
 import org.compiere.model.MUser;
 import org.compiere.model.MUserRoles;
 import org.compiere.model.Query;
 import org.compiere.process.SvrProcess;
 import org.compiere.util.DB;
+import org.compiere.util.Env;
 import org.compiere.util.Util;
 
+import za.ntier.models.I_ZZ_Monthly_Levy_Files_Hdr;
 import za.ntier.models.X_ZZ_Monthly_Levy_Files;
 // If you generated the header X-model, import it here:
 import za.ntier.models.X_ZZ_Monthly_Levy_Files_Hdr;
@@ -332,6 +335,10 @@ public class ImportMonthlyLevyFromHdrAttachments extends SvrProcess {
 					.replace("@ZZ_Month@",   mthName);
 			client.sendEMail(from, user, subject, body, null, mailText.isHtml());
 			emailsSent++;
+			MNote note = new MNote(Env.getCtx(), 0, user.getAD_User_ID(),
+					I_ZZ_Monthly_Levy_Files_Hdr.Table_ID, p_Record_ID, 
+					subject, body, get_TrxName());
+			note.saveEx();
 		}
 		addLog("Email notification sent to " + emailsSent + " Snr Mgr - SDR user(s).");
 	}

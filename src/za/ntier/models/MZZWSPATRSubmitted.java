@@ -642,6 +642,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 		LocalDateTime ldt = created.toLocalDateTime();
 		return String.valueOf(ldt.getYear());
 	}
-
+	
+	
 
 }
