@@ -16,6 +16,7 @@ import javax.xml.stream.XMLStreamReader;
 
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.openxml4j.opc.PackageAccess;
+import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.RichTextString;
 import org.apache.poi.xssf.eventusermodel.ReadOnlySharedStringsTable;
@@ -61,8 +62,20 @@ public class StreamingXlsxReader implements AutoCloseable {
     private final DataFormatter dataFormatter = new DataFormatter();
     private final List<String> sheetNames;
 
+    /** 500 MB — generous ceiling for large migration workbooks. */
+    private static final long MAX_ENTRY_SIZE_BYTES = 500L * 1024 * 1024;
+
     public StreamingXlsxReader(File file) throws Exception {
-        this.pkg = OPCPackage.open(file, PackageAccess.READ);
+        // Raise the zip-entry size limit before opening so large (but legitimate)
+        // migration workbooks are not rejected as potential zip bombs.
+        // The previous limit per entry was 200 MB; restore it after opening.
+        long previousLimit = ZipSecureFile.getMaxEntrySize();
+        ZipSecureFile.setMaxEntrySize(MAX_ENTRY_SIZE_BYTES);
+        try {
+            this.pkg = OPCPackage.open(file, PackageAccess.READ);
+        } finally {
+            ZipSecureFile.setMaxEntrySize(previousLimit);
+        }
         this.reader = new XSSFReader(pkg);
         this.sharedStrings = new ReadOnlySharedStringsTable(pkg);
         this.styles = reader.getStylesTable();
