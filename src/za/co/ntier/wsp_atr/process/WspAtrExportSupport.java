@@ -1,7 +1,7 @@
 package za.co.ntier.wsp_atr.process;
 
 import java.nio.file.Path;
-import java.util.List;
+import java.util.Iterator;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.compiere.model.MColumn;
@@ -117,7 +117,7 @@ final class TabContext {
 }
 
 interface WspAtrRowProvider {
-    List<PO> fetch(ExportSubmittedWspAtrToXlsm process, TabContext tabContext);
+    Iterator<PO> iterate(ExportSubmittedWspAtrToXlsm process, TabContext tabContext);
 }
 
 final class QueryRowProvider implements WspAtrRowProvider {
@@ -136,7 +136,8 @@ final class QueryRowProvider implements WspAtrRowProvider {
     }
 
     @Override
-    public List<PO> fetch(ExportSubmittedWspAtrToXlsm process, TabContext tabContext) {
+    @SuppressWarnings("unchecked")
+    public Iterator<PO> iterate(ExportSubmittedWspAtrToXlsm process, TabContext tabContext) {
         Query query = new Query(process.getCtx(), tabContext.getTable().getTableName(), whereClause, process.get_TrxName());
         if (parameters.length > 0) {
             query.setParameters(parameters);
@@ -144,7 +145,7 @@ final class QueryRowProvider implements WspAtrRowProvider {
         if (orderBy != null && !orderBy.isBlank()) {
             query.setOrderBy(orderBy);
         }
-        return query.list();
+        return query.iterate();
     }
 }
 

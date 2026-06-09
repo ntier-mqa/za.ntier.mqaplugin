@@ -2,6 +2,7 @@ package za.co.ntier.wsp_atr.process;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,46 +48,36 @@ final class WspAtrExportSheetWriter {
     }
 
     int writeSheet(Workbook workbook, WspAtrExportTab exportTab) {
-        List<PO> records = exportTab.getRowProvider().fetch(process, exportTab.getTabContext());
+        Iterator<PO> records = exportTab.getRowProvider().iterate(process, exportTab.getTabContext());
         List<WspAtrSheetColumn> columns = resolveColumns(exportTab);
         if (columns.isEmpty()) {
             throw new IllegalStateException("No exportable columns found for tab " + exportTab.getTabContext().getTabUu());
         }
 
         CellStyle headerStyle = createHeaderStyle(workbook);
-        int totalRows = records.size();
-        int offset = 0;
+        int totalRows = 0;
         int sheetSuffix = 1;
+        boolean needSheet = true;
 
-        while (offset < totalRows || (totalRows == 0 && sheetSuffix == 1)) {
-            int rowsForSheet = Math.min(MAX_DATA_ROWS_PER_SHEET, totalRows - offset);
-            Sheet sheet = workbook.createSheet(createSheetName(workbook, exportTab.getSheetName(), sheetSuffix));
+        while (needSheet || records.hasNext()) {
+            Sheet sheet = workbook.createSheet(createSheetName(workbook, exportTab.getSheetName(), sheetSuffix++));
             Row headerRow = sheet.createRow(0);
-
             for (int col = 0; col < columns.size(); col++) {
                 Cell headerCell = headerRow.createCell(col);
                 headerCell.setCellValue(columns.get(col).getHeader());
                 headerCell.setCellStyle(headerStyle);
             }
 
+            needSheet = false;
             int rowIndex = 1;
-            for (int i = 0; i < rowsForSheet; i++) {
-                PO record = records.get(offset + i);
+            while (records.hasNext() && rowIndex <= MAX_DATA_ROWS_PER_SHEET) {
+                PO record = records.next();
                 Row row = sheet.createRow(rowIndex++);
                 for (int col = 0; col < columns.size(); col++) {
                     columns.get(col).writeCell(valueFormatter, row.createCell(col), record);
                 }
+                totalRows++;
             }
-
-            for (int col = 0; col < columns.size(); col++) {
-                sheet.autoSizeColumn(col);
-            }
-
-            if (totalRows == 0) {
-                break;
-            }
-            offset += rowsForSheet;
-            sheetSuffix++;
         }
 
         return totalRows;

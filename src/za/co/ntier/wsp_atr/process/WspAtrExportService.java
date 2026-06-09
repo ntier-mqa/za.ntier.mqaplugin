@@ -7,8 +7,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.compiere.model.PO;
 import org.compiere.model.Query;
 import org.compiere.util.Util;
@@ -36,7 +35,7 @@ final class WspAtrExportService {
         Path exportPath = buildTimestampedTempXlsx(resolveExportFileNameBase());
         int totalRowsExported = 0;
 
-        try (Workbook workbook = new XSSFWorkbook()) {
+        try (SXSSFWorkbook workbook = new SXSSFWorkbook(100)) {
             for (WspAtrExportTab exportTab : exportTabs) {
                 totalRowsExported += sheetWriter.writeSheet(workbook, exportTab);
             }
