@@ -520,11 +520,22 @@ public class ImportSgSdfDocuments extends SvrProcess {
                 bpId, sdfId, clientId);
         if (orgId > 0) return orgId;
 
+        int loggedOnUserId = Env.getAD_User_ID(getCtx());
+        int defaultSdfId = DB.getSQLValue(get_TrxName(),
+                "SELECT ZZSDF_ID FROM ZZSdf WHERE AD_User_ID = ? AND IsActive = 'Y'"
+                + " ORDER BY ZZSDF_ID FETCH FIRST 1 ROWS ONLY",
+                loggedOnUserId);
+        if (defaultSdfId <= 0) {
+            throw new AdempiereException(
+                    "Setup error: no active ZZSdf record found for the logged-on user (AD_User_ID="
+                    + loggedOnUserId + "). "
+                    + "Please ensure your user account is linked to an SDF record before running this import.");
+        }
         orgId = DB.getSQLValueEx(null,
                 "SELECT zzsdforganisation_id FROM zzsdforganisation " +
-                "WHERE c_bpartner_id = ? AND (zzsdf_id IS NULL OR zzsdf_id = 1000002) " +
+                "WHERE c_bpartner_id = ? AND (zzsdf_id IS NULL OR zzsdf_id = ?) " +
                 "AND ad_client_id = ? LIMIT 1",
-                bpId, clientId);
+                bpId, defaultSdfId,clientId);
         if (orgId <= 0) return -1;
 
         linkSdf(orgId, sdfId, sdlNumber);
