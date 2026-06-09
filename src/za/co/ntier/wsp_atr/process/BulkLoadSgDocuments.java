@@ -20,7 +20,7 @@ import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Uploads;
  * Bulk-loads documents from the SG data dump into WSP/ATR upload records.
  *
  * Expected directory layout:
- *   BASE_DIR / <batch_folder> / <sdl_number> / <doc_type_folder> / <file>
+ *   BASE_DIR / MQAR008388 / <sdl_number> / <doc_type_folder> / <file>
  *
  * New upload type codes introduced for types not previously in the system:
  *   P = Upload Authorisation Page
@@ -71,10 +71,12 @@ public class BulkLoadSgDocuments extends SvrProcess {
         if (clearUploads)
             clearAllUploads();
 
-        for (File batchDir : dirs(base)) {
-            for (File sdlDir : dirs(batchDir)) {
-                processSDL(sdlDir.getName(), sdlDir);
-            }
+        File mqarDir = new File(base, "MQAR008388");
+        if (!mqarDir.isDirectory())
+            throw new IllegalStateException("MQAR008388 directory not found under: " + BASE_DIR);
+
+        for (File sdlDir : dirs(mqarDir)) {
+            processSDL(sdlDir.getName(), sdlDir);
         }
 
         return "Loaded=" + loaded + "  Skipped=" + skipped;

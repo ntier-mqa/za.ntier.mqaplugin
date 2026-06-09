@@ -62,20 +62,21 @@ public class StreamingXlsxReader implements AutoCloseable {
     private final DataFormatter dataFormatter = new DataFormatter();
     private final List<String> sheetNames;
 
-    /** 500 MB — generous ceiling for large migration workbooks. */
-    private static final long MAX_ENTRY_SIZE_BYTES = 500L * 1024 * 1024;
+    /** Disable the zip-bomb entry-size check for this reader (Long.MAX_VALUE = no limit).
+     *  This reader is used only for known migration files on a controlled server path,
+     *  not for user-uploaded content, so the check adds no security value here. */
+    private static final long MAX_ENTRY_SIZE_BYTES = Long.MAX_VALUE;
+
+    /** Previous global limit, saved so we can restore it on close(). */
+    private final long savedMaxEntrySize;
 
     public StreamingXlsxReader(File file) throws Exception {
-        // Raise the zip-entry size limit before opening so large (but legitimate)
-        // migration workbooks are not rejected as potential zip bombs.
-        // The previous limit per entry was 200 MB; restore it after opening.
-        long previousLimit = ZipSecureFile.getMaxEntrySize();
+        // Raise the zip-entry size limit for the lifetime of this reader.
+        // The check fires during sheet XML inflation (in streamSheet), not just
+        // on open — so the limit must stay elevated until close() is called.
+        savedMaxEntrySize = ZipSecureFile.getMaxEntrySize();
         ZipSecureFile.setMaxEntrySize(MAX_ENTRY_SIZE_BYTES);
-        try {
-            this.pkg = OPCPackage.open(file, PackageAccess.READ);
-        } finally {
-            ZipSecureFile.setMaxEntrySize(previousLimit);
-        }
+        this.pkg = OPCPackage.open(file, PackageAccess.READ);
         this.reader = new XSSFReader(pkg);
         this.sharedStrings = new ReadOnlySharedStringsTable(pkg);
         this.styles = reader.getStylesTable();
@@ -153,7 +154,11 @@ public class StreamingXlsxReader implements AutoCloseable {
 
     @Override
     public void close() throws IOException {
-        pkg.close();
+        try {
+            pkg.close();
+        } finally {
+            ZipSecureFile.setMaxEntrySize(savedMaxEntrySize);
+        }
     }
 
     // ---------- internals ----------

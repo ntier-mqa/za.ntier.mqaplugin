@@ -397,38 +397,49 @@ public class ImportSgSdfDocuments extends SvrProcess {
         Trx trx = Trx.get(trxName, true);
         try {
 
-            // --- 1. Create AD_User -------------------------------------------
-            MUser_New user = new MUser_New(getCtx(), 0, trxName);
+            // --- 1. Find or create AD_User ------------------------------------
+            int adUserId = DB.getSQLValue(trxName,
+                    "SELECT ad_user_id FROM ad_user " +
+                    "WHERE zz_id_passport_no = ? AND ad_client_id = ? LIMIT 1",
+                    row.idNo, Env.getAD_Client_ID(getCtx()));
+
             String fullName = (trim(row.firstName) + " " + trim(row.surname)).trim();
             if (fullName.isEmpty()) fullName = row.idNo;
-            user.setName(fullName);
-            if (!trim(row.email).isEmpty())  user.setEMail(row.email.trim());
-            if (!trim(row.phone).isEmpty())  user.setPhone(row.phone.trim());
-            if (!trim(row.mobile).isEmpty()) user.setPhone2(row.mobile.trim());
-            if (!trim(row.firstName).isEmpty())   user.setZZFirstName(row.firstName.trim());
-            if (!trim(row.surname).isEmpty())     user.setZZSurname(row.surname.trim());
-            if (!trim(row.middleName).isEmpty())  user.setZZMiddleName(row.middleName.trim());
-            if (!trim(row.title).isEmpty())       user.setZZLkpTitle(row.title.trim());
 
-            if (!trim(row.dateOfBirth).isEmpty()) {
-                try {
-                    java.util.Date d = new SimpleDateFormat("yyyy/MM/dd").parse(row.dateOfBirth.trim());
-                    user.setBirthday(new Timestamp(d.getTime()));
-                } catch (Exception e) {
-                    deferredLog.add("WARN: Could not parse Date of Birth '"
-                            + row.dateOfBirth + "' for ID=" + row.idNo);
+            if (adUserId > 0) {
+                deferredLog.add("INFO: Reusing existing AD_User_ID=" + adUserId
+                        + " for ID=" + row.idNo + " (" + fullName + ")");
+            } else {
+                MUser_New user = new MUser_New(getCtx(), 0, trxName);
+                user.setName(fullName);
+                if (!trim(row.email).isEmpty())  user.setEMail(row.email.trim());
+                if (!trim(row.phone).isEmpty())  user.setPhone(row.phone.trim());
+                if (!trim(row.mobile).isEmpty()) user.setPhone2(row.mobile.trim());
+                if (!trim(row.firstName).isEmpty())   user.setZZFirstName(row.firstName.trim());
+                if (!trim(row.surname).isEmpty())     user.setZZSurname(row.surname.trim());
+                if (!trim(row.middleName).isEmpty())  user.setZZMiddleName(row.middleName.trim());
+                if (!trim(row.title).isEmpty())       user.setZZLkpTitle(row.title.trim());
+
+                if (!trim(row.dateOfBirth).isEmpty()) {
+                    try {
+                        java.util.Date d = new SimpleDateFormat("yyyy/MM/dd").parse(row.dateOfBirth.trim());
+                        user.setBirthday(new Timestamp(d.getTime()));
+                    } catch (Exception e) {
+                        deferredLog.add("WARN: Could not parse Date of Birth '"
+                                + row.dateOfBirth + "' for ID=" + row.idNo);
+                    }
                 }
+
+                int altIdTypeId = lookupByName("ZZ_AlternateIDType", "ZZ_AlternateIDType_ID", row.alternateIdType);
+                if (altIdTypeId > 0) user.setZZ_AlternateIDType_ID(altIdTypeId);
+
+                // ZZ_ID_Passport_No is a physical column on AD_User; the same-named
+                // column on ZZSdf is a virtual column derived from it.
+                user.setZZ_ID_Passport_No(row.idNo);
+
+                user.saveEx();
+                adUserId = user.get_ID();
             }
-
-            int altIdTypeId = lookupByName("ZZ_AlternateIDType", "ZZ_AlternateIDType_ID", row.alternateIdType);
-            if (altIdTypeId > 0) user.setZZ_AlternateIDType_ID(altIdTypeId);
-
-            // ZZ_ID_Passport_No is a physical column on AD_User; the same-named
-            // column on ZZSdf is a virtual column derived from it.
-            user.setZZ_ID_Passport_No(row.idNo);
-
-            user.saveEx();
-            int adUserId = user.get_ID();
 
             // --- 2. Create ZZSdf ---------------------------------------------
             X_ZZSdf sdf = new X_ZZSdf(getCtx(), 0, trxName);
