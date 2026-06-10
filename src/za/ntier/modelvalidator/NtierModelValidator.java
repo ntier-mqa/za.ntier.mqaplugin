@@ -1,5 +1,7 @@
 package za.ntier.modelvalidator;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -7,12 +9,17 @@ import java.time.format.DateTimeFormatter;
 import org.compiere.model.MClient;
 import org.compiere.model.MSequence;
 import org.compiere.model.MTable;
+import org.compiere.model.MUser;
+import org.compiere.model.MMailText;
+import org.compiere.model.Query;
 import org.compiere.model.ModelValidationEngine;
 import org.compiere.model.ModelValidator;
 import org.compiere.model.PO;
 import org.compiere.util.CLogger;
+import org.compiere.util.DB;
 import org.compiere.util.Util;
 
+import za.co.ntier.api.model.MUser_New;
 import za.co.ntier.api.model.I_ZZAssessorPerson;
 import za.co.ntier.api.model.I_ZZ_Allocations;
 import za.co.ntier.api.model.I_ZZ_NAMB_Alloc_TTC;
@@ -29,7 +36,9 @@ import za.co.ntier.api.model.X_ZZ_WPA_Application;
 public class NtierModelValidator implements ModelValidator
 {
 	private static CLogger	log				= CLogger.getCLogger(NtierModelValidator.class);
+	private static final String ASSESSOR_APPROVAL_MAIL_TEMPLATE_UU = "fa008fdb-5ba8-4f28-87d5-8b15bfdb6e1f";
 	private int				m_AD_Client_ID	= -1;
+	private static final String ROLE_MGR_QA_AI = "635702d2-8ffb-4a31-a585-d2960d86383c";
 
 	@Override
 	public void initialize(ModelValidationEngine engine, MClient client)
@@ -128,6 +137,72 @@ public class NtierModelValidator implements ModelValidator
 					}
 					
 					assessorPerson.saveEx();
+				}
+				
+				if (X_ZZAssessorPerson.ZZ_DOCSTATUS_Recommended.equals(newStatus))
+				{
+					var assessorPerson = new X_ZZAssessorPerson(po.getCtx(), po.get_ID(), po.get_TrxName());
+					String sql = "SELECT u.AD_User_ID FROM AD_User u "
+									+ "INNER JOIN AD_User_Roles ur ON (u.AD_User_ID = ur.AD_User_ID) "
+									+ "INNER JOIN AD_Role r ON (ur.AD_Role_ID = r.AD_Role_ID) "
+									+ "WHERE r.AD_Role_UU = '" + ROLE_MGR_QA_AI + "'"
+									+ "AND u.NotificationType IN ('B', 'E') "
+									+ "AND u.IsActive = 'Y' AND ur.IsActive = 'Y' AND r.IsActive = 'Y'";
+
+					var mailTemplate = (MMailText) new Query(po.getCtx(), MMailText.Table_Name, "R_MailText_UU=?", po.get_TrxName())
+																																	.setParameters(ASSESSOR_APPROVAL_MAIL_TEMPLATE_UU)
+																																	.first();
+
+					if (mailTemplate != null)
+					{
+						try (PreparedStatement pstmt = DB.prepareStatement(sql, po.get_TrxName()))
+						{
+							try (ResultSet rs = pstmt.executeQuery())
+							{
+								MClient client = MClient.get(po.getCtx(), po.getAD_Client_ID());
+
+								String assessorNameStr = "";
+								int assessorUserId = assessorPerson.getAD_User_ID();
+								if (assessorUserId > 0)
+								{
+									MUser_New assessorUser = new MUser_New(po.getCtx(), assessorUserId, po.get_TrxName());
+									String fName = assessorUser.getZZFirstName() != null ? assessorUser.getZZFirstName().trim() : "";
+									String mName = assessorUser.getZZMiddleName() != null ? assessorUser.getZZMiddleName().trim() : "";
+									String sName = assessorUser.getZZSurname() != null ? assessorUser.getZZSurname().trim() : "";
+									assessorNameStr = (fName + " " + mName + " " + sName).replaceAll("\\s+", " ").trim();
+								}
+
+								if (Util.isEmpty(assessorNameStr))
+									assessorNameStr = "";
+
+								while (rs.next())
+								{
+									int adUserId = rs.getInt(1);
+									MUser user = new MUser(po.getCtx(), adUserId, po.get_TrxName());
+									if (user.getEMail() != null && !user.getEMail().isBlank())
+									{
+										String subject = mailTemplate.getMailHeader();
+										String msgBody = mailTemplate.getMailText(true);
+										if (msgBody != null)
+										{
+											msgBody = msgBody.replace("@Name@", user.getName() != null ? user.getName() : "");
+											msgBody = msgBody.replace("@AssessorName@", assessorNameStr);
+										}
+
+										client.sendEMail(user.getEMail(), subject, msgBody, null, mailTemplate.isHtml());
+									}
+								}
+							}
+						}
+						catch (Exception e)
+						{
+							log.severe("Error sending assessor registration approval email: " + e.getMessage());
+						}
+					}
+					else
+					{
+						log.severe("Mail template (UU: " + ASSESSOR_APPROVAL_MAIL_TEMPLATE_UU + ") could not be found.");
+					}
 				}
 			}
 		}
