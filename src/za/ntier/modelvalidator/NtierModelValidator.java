@@ -21,6 +21,10 @@ import org.compiere.util.Util;
 
 import za.co.ntier.api.model.MUser_New;
 import za.co.ntier.api.model.I_ZZAssessorPerson;
+import za.co.ntier.api.model.I_ZZLinkAssessorQualification;
+import za.co.ntier.api.model.I_ZZLinkAssessorSkillsProgramme;
+import za.co.ntier.api.model.I_ZZQualification;
+import za.co.ntier.api.model.I_ZZSkillsProgramme;
 import za.co.ntier.api.model.I_ZZ_Allocations;
 import za.co.ntier.api.model.I_ZZ_NAMB_Alloc_TTC;
 import za.co.ntier.api.model.I_ZZ_NAMB_Alloc_Trades;
@@ -37,6 +41,7 @@ public class NtierModelValidator implements ModelValidator
 {
 	private static CLogger	log				= CLogger.getCLogger(NtierModelValidator.class);
 	private static final String ASSESSOR_APPROVAL_MAIL_TEMPLATE_UU = "fa008fdb-5ba8-4f28-87d5-8b15bfdb6e1f";
+	private static final String ASSESSOR_APPROVED_MAIL_TEMPLATE_UU = "9f932747-a3e7-48ad-9c9f-5527b43c164d";
 	private int				m_AD_Client_ID	= -1;
 	private static final String ROLE_MGR_QA_AI = "635702d2-8ffb-4a31-a585-d2960d86383c";
 
@@ -109,9 +114,9 @@ public class NtierModelValidator implements ModelValidator
 			if (po.is_ValueChanged(ColStatus))
 			{
 				var newStatus = po.get_ValueAsString(ColStatus);
+				var assessorPerson = new X_ZZAssessorPerson(po.getCtx(), po.get_ID(), po.get_TrxName());
 				if (X_ZZAssessorPerson.ZZ_DOCSTATUS_Approved.equals(newStatus))
 				{
-					var assessorPerson = new X_ZZAssessorPerson(po.getCtx(), po.get_ID(), po.get_TrxName());
 					var now = LocalDateTime.now();
 					assessorPerson.setStartDate(Timestamp.valueOf(now));
 					assessorPerson.setEndDate(Timestamp.valueOf(now.plusYears(3))); // Set end date to 3 year from now
@@ -137,11 +142,73 @@ public class NtierModelValidator implements ModelValidator
 					}
 					
 					assessorPerson.saveEx();
+					
+					// Send email after approval
+					int assessorUserId = assessorPerson.getAD_User_ID();
+					if (assessorUserId > 0)
+					{
+						MUser_New assessorUser = new MUser_New(po.getCtx(), assessorUserId, po.get_TrxName());
+						String assessorEmail = assessorUser.getEMail();
+
+						if (!Util.isEmpty(assessorEmail))
+						{
+							var approvedMailTemplate = (MMailText) new Query(po.getCtx(), MMailText.Table_Name, "R_MailText_UU=?", po.get_TrxName())
+																																					.setParameters(ASSESSOR_APPROVED_MAIL_TEMPLATE_UU)
+																																					.first();
+
+							if (approvedMailTemplate != null)
+							{
+								String fName = assessorUser.getZZFirstName() != null ? assessorUser.getZZFirstName().trim() : "";
+								String sName = assessorUser.getZZSurname() != null ? assessorUser.getZZSurname().trim() : "";
+								String assessorNameStr = (fName + " " + sName).replaceAll("\\s+", " ").trim();
+								if (Util.isEmpty(assessorNameStr))
+									assessorNameStr = "";
+
+								String zzAssessor = assessorPerson.getZZ_Assessor();
+								if (zzAssessor == null)
+									zzAssessor = "";
+
+								String startDateStr = "";
+								if (assessorPerson.getStartDate() != null)
+									startDateStr = new java.text.SimpleDateFormat("yyyy-MM-dd").format(assessorPerson.getStartDate());
+
+								String endDateStr = "";
+								if (assessorPerson.getEndDate() != null)
+									endDateStr = new java.text.SimpleDateFormat("yyyy-MM-dd").format(assessorPerson.getEndDate());
+
+								String qualifications = fetchLinkedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorQualification.Table_Name,
+																			I_ZZQualification.Table_Name, I_ZZQualification.COLUMNNAME_ZZQualification_ID, po
+																																								.get_TrxName());
+								String skillsProgrammes = fetchLinkedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorSkillsProgramme.Table_Name,
+																			I_ZZSkillsProgramme.Table_Name, I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgramme_ID,
+																			po.get_TrxName());
+
+								String subject = approvedMailTemplate.getMailHeader();
+								String msgBody = approvedMailTemplate.getMailText(true);
+
+								if (msgBody != null)
+								{
+									msgBody = msgBody.replace("@AssessorName@", assessorNameStr);
+									msgBody = msgBody.replace("@ZZ_Assessor@", zzAssessor);
+									msgBody = msgBody.replace("@StartDate@", startDateStr);
+									msgBody = msgBody.replace("@EndDate@", endDateStr);
+									msgBody = msgBody.replace("@Qualifications@", qualifications);
+									msgBody = msgBody.replace("@SkillsProgrammes@", skillsProgrammes);
+								}
+
+								MClient client = MClient.get(po.getCtx(), po.getAD_Client_ID());
+								client.sendEMail(assessorEmail, subject, msgBody, null, approvedMailTemplate.isHtml());
+							}
+							else
+							{
+								log.severe("Mail template (UU: " + ASSESSOR_APPROVED_MAIL_TEMPLATE_UU + ") could not be found for approved assessor email.");
+							}
+						}
+					}
 				}
 				
 				if (X_ZZAssessorPerson.ZZ_DOCSTATUS_Recommended.equals(newStatus))
 				{
-					var assessorPerson = new X_ZZAssessorPerson(po.getCtx(), po.get_ID(), po.get_TrxName());
 					String sql = "SELECT u.AD_User_ID FROM AD_User u "
 									+ "INNER JOIN AD_User_Roles ur ON (u.AD_User_ID = ur.AD_User_ID) "
 									+ "INNER JOIN AD_Role r ON (ur.AD_Role_ID = r.AD_Role_ID) "
@@ -249,6 +316,44 @@ public class NtierModelValidator implements ModelValidator
 			relatedPO.set_ValueNoCheck(statusColumn, newStatus);
 			relatedPO.saveEx();
 		}
+	}
+
+	private String fetchLinkedItems(int assessorPersonId, String linkTableName, String masterTableName, String masterKeyCol, String trxName)
+	{
+		StringBuilder sb = new StringBuilder();
+		String sql = "SELECT m.Value, m.Name FROM " + linkTableName + " l "
+				+ "INNER JOIN " + masterTableName + " m ON (l." + masterKeyCol + " = m." + masterKeyCol + ") "
+				+ "WHERE l." + I_ZZAssessorPerson.COLUMNNAME_ZZAssessorPerson_ID + " = ? AND l.IsActive = 'Y' AND m.IsActive = 'Y'";
+		try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName))
+		{
+			pstmt.setInt(1, assessorPersonId);
+			try (ResultSet rs = pstmt.executeQuery())
+			{
+				while (rs.next())
+				{
+					String val = rs.getString(1);
+					String name = rs.getString(2);
+					String formatted = "";
+					if (val != null && !val.isBlank()) formatted += val.trim();
+					if (name != null && !name.isBlank())
+					{
+						if (!formatted.isEmpty()) formatted += " ";
+						formatted += name.trim();
+					}
+					
+					if (!formatted.isBlank())
+					{
+						if (sb.length() > 0) sb.append("<br>");
+						sb.append(formatted);
+					}
+				}
+			}
+		}
+		catch (Exception e)
+		{
+			log.severe("Error fetching linked items from " + linkTableName + ": " + e.getMessage());
+		}
+		return sb.toString();
 	}
 
 	@Override
