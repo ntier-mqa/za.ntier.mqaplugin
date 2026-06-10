@@ -47,6 +47,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	// Your fixed mail template UUID
 	private static final String WSP_ATRQuery_TEMPLATE_UUID = "c981b4f2-a103-4e62-a79f-f7401620bebe";
 	private static final String WSP_ATR_Successful_Submission_TEMPLATE_UUID = "8763dcdc-4b83-44e5-b84a-c54e6a5beafe";
+	private static final String WSP_ATR_Successful_Submission_Letter_TEMPLATE_UUID = "1d732262-1ade-41b1-bf4f-20d4b5609c35";
 	private static final String SUCCESSFUL_SUBMISSION_CC_EMAIL = "submissions@mqa.org.za";
 	private static final String WSP_ATR_FINAL_APPROVAL_TEMPLATE_UUID = "6a3d10f8-8f15-4106-a491-e365dff4a7b2";
 	public static final int FROM_EMAIL_USER_ID = MSysConfig.getIntValue("FROM_EMAIL_USER_ID",1000011);
@@ -132,7 +133,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 		}
 		return ok;
 	}	
-	
+
 	private void createWSPATR_Approval_Records (String financialYr) {
 		if (financialYr == null) {
 			return;
@@ -159,38 +160,38 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 		record.setProcessedOn(new Timestamp(System.currentTimeMillis()));
 		record.saveEx();
 	}
-	
-	public String getFiscalYear(int adClientId) {
-        // choose the “active” configuration row; if you have multiple per org, adjust filters
-        List<List<Object>> rows = DB.getSQLArrayObjectsEx(null,
-            "SELECT y.FiscalYear " +
-            "FROM zz_sdr_configuration s " +
-            "Join C_Year y on s.ZZ_FinYear_ID = y.C_Year_ID " +
-            "WHERE s.ad_client_id=? AND s.isactive='Y' " +
-            "ORDER BY s.updated DESC " +
-            "FETCH FIRST 1 ROWS ONLY",
-            adClientId
-        );
-        if (rows == null || rows.isEmpty())
-            return null;
 
-        List<Object> r = rows.get(0);
-        return (String) r.get(0);
-    }
-	
+	public String getFiscalYear(int adClientId) {
+		// choose the “active” configuration row; if you have multiple per org, adjust filters
+		List<List<Object>> rows = DB.getSQLArrayObjectsEx(null,
+				"SELECT y.FiscalYear " +
+						"FROM zz_sdr_configuration s " +
+						"Join C_Year y on s.ZZ_FinYear_ID = y.C_Year_ID " +
+						"WHERE s.ad_client_id=? AND s.isactive='Y' " +
+						"ORDER BY s.updated DESC " +
+						"FETCH FIRST 1 ROWS ONLY",
+						adClientId
+				);
+		if (rows == null || rows.isEmpty())
+			return null;
+
+		List<Object> r = rows.get(0);
+		return (String) r.get(0);
+	}
+
 	public String getFinYear() {
 		List<List<Object>> rows = DB.getSQLArrayObjectsEx(null,
-	            "SELECT y.FiscalYear " +
-	            "FROM C_Year y  " +
-	            "WHERE y.C_Year_ID = ? " +
-	            "FETCH FIRST 1 ROWS ONLY",
-	            getZZ_FinYear_ID()
-	        );
-	        if (rows == null || rows.isEmpty())
-	            return null;
+				"SELECT y.FiscalYear " +
+						"FROM C_Year y  " +
+						"WHERE y.C_Year_ID = ? " +
+						"FETCH FIRST 1 ROWS ONLY",
+						getZZ_FinYear_ID()
+				);
+		if (rows == null || rows.isEmpty())
+			return null;
 
-	        List<Object> r = rows.get(0);
-	        return (String) r.get(0);
+		List<Object> r = rows.get(0);
+		return (String) r.get(0);
 	}
 
 	private void ensureVerificationChecklist() {
@@ -408,6 +409,31 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 	public void sendSuccessfulSubmissionEmail() throws Exception {
 
+		try {
+			sendQueryEmailWithPDF(WSP_ATRQuery_TEMPLATE_UUID,"QueryLetter");
+		} catch (Exception e) {
+			log.severe("Failed to send query email: " + e.getMessage());
+		}
+
+		// Load letter template
+		MMailText mailTextLetter =
+				new MMailText(getCtx(), WSP_ATR_Successful_Submission_Letter_TEMPLATE_UUID, get_TrxName());
+
+		if (mailTextLetter.get_ID() <= 0) {
+			log.severe("Mail Letter template not found");
+			return;
+		}
+
+		try {
+			mailTextLetter.setPO(this, true);
+		} catch (Throwable t) {
+			mailTextLetter.setPO(this);
+		}
+
+		String fileName2 = "Acknowledgement_Letter";
+		String html2 = mailTextLetter.getMailText(true);
+		File pdf = createPDF(html2,fileName2);
+
 		int adUserId = getSdfUserId();
 
 		if (adUserId <= 0) {
@@ -454,7 +480,8 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 		MClient client = MClient.get(getCtx());
 
 		boolean sent =
-				client.sendEMail(fromUser, toUser, subject, html, null, true);
+				client.sendEMail(fromUser, toUser, subject, html, pdf, true);
+
 
 		if (!sent)
 			log.severe("Failed to send Successful Submission email");
@@ -503,12 +530,12 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 		String html =
 				"<p>Dear " + firstName + ",</p>" +
-				"<p>WSP-ATR Import with reference no. " + refNo +
-				" for " + orgName +
-				" and SDL No. " + sdlNo +
-				" was successfully imported on " + importedOn + ".</p>" +
-				"<p>Yours in Skill Development<br/>" +
-				"MQA Skills, Development and Research (SDR) Team</p>";
+						"<p>WSP-ATR Import with reference no. " + refNo +
+						" for " + orgName +
+						" and SDL No. " + sdlNo +
+						" was successfully imported on " + importedOn + ".</p>" +
+						"<p>Yours in Skill Development<br/>" +
+						"MQA Skills, Development and Research (SDR) Team</p>";
 
 		MUser fromUser = MUser.get(getCtx(), FROM_EMAIL_USER_ID);
 		MClient client = MClient.get(getCtx());
@@ -642,7 +669,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 		LocalDateTime ldt = created.toLocalDateTime();
 		return String.valueOf(ldt.getYear());
 	}
-	
-	
+
+
 
 }
