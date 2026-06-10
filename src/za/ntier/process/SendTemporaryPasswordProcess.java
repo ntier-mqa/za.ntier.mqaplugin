@@ -4,6 +4,7 @@ import java.util.Objects;
 import java.util.logging.Level;
 
 import org.adempiere.base.annotation.Process;
+import org.adempiere.webui.panel.PasswordGenerator;
 import org.compiere.model.MClient;
 import org.compiere.model.MMailText;
 import org.compiere.model.MUser;
@@ -50,6 +51,11 @@ public class SendTemporaryPasswordProcess extends SvrProcess
 		}
 
 		var user = new MUser(getCtx(), adUserId, get_TrxName());
+		
+		String tempPwd = PasswordGenerator.generatePassword(8);
+		user.setPassword(tempPwd);
+		user.saveEx();
+		
 		if (user.get_ID() <= 0)
 		{
 			return "Execution Error: User record could not be found.";
