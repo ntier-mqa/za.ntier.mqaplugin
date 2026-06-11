@@ -7,6 +7,7 @@ import org.adempiere.base.annotation.Process;
 import org.adempiere.webui.panel.PasswordGenerator;
 import org.compiere.model.MClient;
 import org.compiere.model.MMailText;
+import org.compiere.model.MPasswordRule;
 import org.compiere.model.MUser;
 import org.compiere.model.Query;
 import org.compiere.process.ProcessInfoParameter;
@@ -52,7 +53,7 @@ public class SendTemporaryPasswordProcess extends SvrProcess
 
 		var user = new MUser(getCtx(), adUserId, get_TrxName());
 		
-		String tempPwd = PasswordGenerator.generatePassword(8);
+		String tempPwd = MPasswordRule.getRules(getCtx(), null).generate();
 		user.setPassword(tempPwd);
 		user.saveEx();
 		
