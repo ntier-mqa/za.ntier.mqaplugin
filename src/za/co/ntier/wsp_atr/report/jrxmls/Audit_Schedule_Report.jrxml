@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.5.final using JasperReports Library version 6.20.5-3efcf2e67f959db3888d79f73dde2dbd7acb4f8e  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Audit_Schedule_Report" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="nTier_20260518.jrdax"/>
+	<style name="Table_TH" mode="Opaque" backcolor="#E3E3E3">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table_CH" mode="Opaque" backcolor="#E3E3E3">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<subDataset name="AuditDataset" uuid="b1c2d3e4-f5a6-7b8c-9d0e-1f2a3b4c5d6e">
+		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="nTier_20260518.jrdax"/>
+		<queryString>
+			<![CDATA[SELECT 
+				ZZ_AuditDate,
+				ZZLegalName,
+				zz_OccupationalQualification,
+				zz_SkillsProgrammes,
+				zz_Trade,
+				zz_AssessmentCentreTTC,
+				Region,
+				zz_LeadAuditor
+			FROM ZZ_AuditSchedule_rpt_v
+			ORDER BY ZZ_AuditDate, ZZLegalName]]>
+		</queryString>
+		<field name="zz_auditdate" class="java.lang.String"/>
+		<field name="zzlegalname" class="java.lang.String"/>
+		<field name="zz_occupationalqualification" class="java.lang.String"/>
+		<field name="zz_skillsprogrammes" class="java.lang.String"/>
+		<field name="zz_trade" class="java.lang.String"/>
+		<field name="zz_assessmentcentrettc" class="java.lang.String"/>
+		<field name="region" class="java.lang.String"/>
+		<field name="zz_leadauditor" class="java.lang.String"/>
+	</subDataset>
+	<parameter name="RESOURCE_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT 1]]>
+	</queryString>
+	<title>
+		<band height="89" splitType="Stretch">
+			<image onErrorType="Blank">
+				<reportElement x="697" y="27" width="90" height="61" uuid="f2483bbe-2d56-420d-94b0-37c10d138f4f"/>
+				<imageExpression><![CDATA[$P{RESOURCE_DIR} + "MQA_Logo.jpg"]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement x="0" y="5" width="230" height="83" forecolor="#1241A1" uuid="c14a3175-6352-47f7-a622-01865f65f3b7"/>
+				<textElement>
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Mining Qualification Authority
+7 Anerley Road, Parktown, Johannesburg, 2193
+Tel: 011 547 2600
+Email: info@mqa.org.za
+www.mqa.org.za 
+ Email: info@mqa.org.za<br />
+                www.mqa.org.]]></text>
+			</staticText>
+		</band>
+	</title>
+	<detail>
+		<band height="87" splitType="Stretch">
+			<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.FreeLayout"/>
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<componentElement>
+				<reportElement x="1" y="0" width="800" height="80" uuid="d3e4f5a6-b7c8-9d0e-1f2a-3b4c5d6e7f8a"/>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="AuditDataset" uuid="e4f5a6b7-c8d9-0e1f-2a3b-4c5d6e7f8a9b">
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<jr:column width="50" uuid="1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d">
+						<jr:columnHeader style="Table_CH" height="40">
+							<staticText>
+								<reportElement x="0" y="0" width="50" height="40" uuid="2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e"/>
+								<box padding="3"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font isBold="true"/>
+								</textElement>
+								<text><![CDATA[AUDIT DATE]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="40">
+							<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="50" height="40" uuid="3c4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f"/>
+								<box padding="3"/>
+								<textElement verticalAlignment="Middle"/>
+								<textFieldExpression><![CDATA[$F{zz_auditdate}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="80" uuid="4d5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a">
+						<jr:columnHeader style="Table_CH" height="40">
+							<staticText>
+								<reportElement x="0" y="0" width="80" height="40" uuid="5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b"/>
+								<box padding="3"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font isBold="true"/>
+								</textElement>
+								<text><![CDATA[PROVIDER]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="40">
+							<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="80" height="40" uuid="6f7a8b9c-0d1e-2f3a-4b5c-6d7e8f9a0b1c"/>
+								<box padding="3"/>
+								<textElement verticalAlignment="Middle"/>
+								<textFieldExpression><![CDATA[$F{zzlegalname}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="100" uuid="7a8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d">
+						<jr:columnHeader style="Table_CH" height="40">
+							<staticText>
+								<reportElement x="0" y="0" width="100" height="40" uuid="8b9c0d1e-2f3a-4b5c-6d7e-8f9a0b1c2d3e"/>
+								<box padding="3"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="10" isBold="true"/>
+								</textElement>
+								<text><![CDATA[OCCUPATIONAL QUALIFICATION]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="40">
+							<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="100" height="40" uuid="9c0d1e2f-3a4b-5c6d-7e8f-9a0b1c2d3e4f"/>
+								<box padding="3"/>
+								<textElement verticalAlignment="Middle"/>
+								<textFieldExpression><![CDATA[$F{zz_occupationalqualification}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="180" uuid="0d1e2f3a-4b5c-6d7e-8f9a-0b1c2d3e4f5a">
+						<jr:columnHeader style="Table_CH" height="40">
+							<staticText>
+								<reportElement x="0" y="0" width="180" height="40" uuid="1e2f3a4b-5c6d-7e8f-9a0b-1c2d3e4f5a6b"/>
+								<box padding="3"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font isBold="true"/>
+								</textElement>
+								<text><![CDATA[SKILLS PROGRAMMES]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="40">
+							<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="180" height="40" uuid="2f3a4b5c-6d7e-8f9a-0b1c-2d3e4f5a6b7c"/>
+								<box padding="3"/>
+								<textElement verticalAlignment="Middle"/>
+								<textFieldExpression><![CDATA[$F{zz_skillsprogrammes}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="80" uuid="3a4b5c6d-7e8f-9a0b-1c2d-3e4f5a6b7c8d">
+						<jr:columnHeader style="Table_CH" height="40">
+							<staticText>
+								<reportElement x="0" y="0" width="80" height="40" uuid="4b5c6d7e-8f9a-0b1c-2d3e-4f5a6b7c8d9e"/>
+								<box padding="3"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font isBold="true"/>
+								</textElement>
+								<text><![CDATA[TRADE]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="40">
+							<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="80" height="40" uuid="5c6d7e8f-9a0b-1c2d-3e4f-5a6b7c8d9ea0"/>
+								<box padding="3"/>
+								<textElement verticalAlignment="Middle"/>
+								<textFieldExpression><![CDATA[$F{zz_trade}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="90" uuid="6d7e8f9a-0b1c-2d3e-4f5a-6b7c8d9ea0b1">
+						<jr:columnHeader style="Table_CH" height="40">
+							<staticText>
+								<reportElement x="0" y="0" width="90" height="40" uuid="7e8f9a0b-1c2d-3e4f-5a6b-7c8d9ea0b1c2"/>
+								<box padding="3"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font isBold="true"/>
+								</textElement>
+								<text><![CDATA[ASSESSMENT CENTRE/TTC]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="40">
+							<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="90" height="40" uuid="8f9a0b1c-2d3e-4f5a-6b7c-8d9ea0b1c2d3"/>
+								<box padding="3"/>
+								<textElement verticalAlignment="Middle"/>
+								<textFieldExpression><![CDATA[$F{zz_assessmentcentrettc}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="80" uuid="9a0b1c2d-3e4f-5a6b-7c8d-9ea0b1c2d3e4">
+						<jr:columnHeader style="Table_CH" height="40">
+							<staticText>
+								<reportElement x="0" y="0" width="80" height="40" uuid="a0b1c2d3-e4f5-a6b7-c8d9-ea0b1c2d3e4f"/>
+								<box padding="3"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font isBold="true"/>
+								</textElement>
+								<text><![CDATA[PROVINCE]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="40">
+							<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="80" height="40" uuid="b1c2d3e4-f5a6-b7c8-d9ea-0b1c2d3e4f5a"/>
+								<box padding="3"/>
+								<textElement verticalAlignment="Middle"/>
+								<textFieldExpression><![CDATA[$F{region}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="70" uuid="c2d3e4f5-a6b7-c8d9-ea0b-1c2d3e4f5a6b">
+						<jr:columnHeader style="Table_CH" height="40">
+							<staticText>
+								<reportElement x="0" y="0" width="70" height="40" uuid="d3e4f5a6-b7c8-d9ea-0b1c-2d3e4f5a6b7c"/>
+								<box padding="3"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font isBold="true"/>
+								</textElement>
+								<text><![CDATA[LEAD AUDITOR]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="40">
+							<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="70" height="40" uuid="e4f5a6b7-c8d9-ea0b-1c2d-3e4f5a6b7c8d"/>
+								<box padding="3"/>
+								<textElement verticalAlignment="Middle"/>
+								<textFieldExpression><![CDATA[$F{zz_leadauditor}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="70" uuid="d2d3e4f5-a6b7-c8d9-ea0b-1c2d3e4f5a6b">
+						<jr:columnHeader style="Table_CH" height="40">
+							<staticText>
+								<reportElement x="0" y="0" width="70" height="40" uuid="e3e4f5a6-b7c8-d9ea-0b1c-2d3e4f5a6b7c"/>
+								<box padding="3"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font isBold="true"/>
+								</textElement>
+								<text><![CDATA[SIGNATURE]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="40">
+							<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="70" height="40" uuid="f4f5a6b7-c8d9-ea0b-1c2d-3e4f5a6b7c8d"/>
+								<box padding="3"/>
+								<textElement verticalAlignment="Middle"/>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+				</jr:table>
+			</componentElement>
+		</band>
+	</detail>
+	<lastPageFooter>
+		<band height="100">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<staticText>
+				<reportElement x="12" y="7" width="90" height="18" uuid="b1018e76-2014-4295-9662-447c8f37f63b">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Top">
+					<font size="12"/>
+				</textElement>
+				<text><![CDATA[COMPILED BY:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="12" y="25" width="30" height="18" uuid="21dfc0a4-0246-4289-b6d6-8107ee8e0949">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[DATE: ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="12" y="43" width="80" height="18" uuid="5e7d114a-5f9b-4ee8-8505-0cac141ab377">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[DESIGNATION:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="12" y="61" width="40" height="18" uuid="41572546-9e1b-432b-a416-2230c4bcf47b">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[NAME:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="12" y="79" width="60" height="18" uuid="cbeb4a5d-cc89-4e14-bf02-b8a64e887dba">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[SIGNATURE:]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="73" y="92" width="100" height="1" uuid="2bc0b317-e079-4bd9-9222-c86fd67352f2">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="305" y="7" width="110" height="18" uuid="e5f7f521-a417-43ba-9ef9-505d8092da69">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Top">
+					<font size="12"/>
+				</textElement>
+				<text><![CDATA[CONTROLLED BY:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="305" y="79" width="60" height="18" uuid="d29e749b-1cb1-45b3-9af7-b6da9668cc25">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[SIGNATURE:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="305" y="25" width="30" height="18" uuid="3604bfde-b9d3-4c71-8ee7-2cfc5b1c1746">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[DATE: ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="305" y="43" width="80" height="18" uuid="8e6c6705-57ee-4c70-b3dc-e0ea27375a30">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[DESIGNATION:]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="366" y="92" width="100" height="1" uuid="03e639c9-45d4-413a-9018-7d0d3571f6ee">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="305" y="61" width="40" height="18" uuid="0347e463-1627-406b-a1db-c68acb04a86c">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[NAME:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="588" y="7" width="90" height="18" uuid="06d63550-c7a1-443d-b2ed-5a5557677bc5">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Top">
+					<font size="12"/>
+				</textElement>
+				<text><![CDATA[VERIFIED BY:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="588" y="79" width="60" height="18" uuid="bfbc1668-4f7f-4ee6-a110-c7456079f679">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[SIGNATURE:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="588" y="25" width="30" height="18" uuid="cfcb3389-fdf4-4bcb-81a9-675112949ab8">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[DATE: ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="588" y="43" width="80" height="18" uuid="c4e5cec0-5660-4e6f-95de-294fb97be04b">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[DESIGNATION:]]></text>
+			</staticText>
+			<rectangle>
+				<reportElement x="649" y="92" width="100" height="1" uuid="d2525a5b-1ecd-4147-bc3b-1568a75ca1ff">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="588" y="61" width="40" height="18" uuid="9fa39a88-d7d0-4e1a-a055-8b56c22a9a3e">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<text><![CDATA[NAME:]]></text>
+			</staticText>
+		</band>
+	</lastPageFooter>
+</jasperReport>
