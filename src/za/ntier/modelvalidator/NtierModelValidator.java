@@ -42,8 +42,12 @@ public class NtierModelValidator implements ModelValidator
 	private static CLogger	log				= CLogger.getCLogger(NtierModelValidator.class);
 	private static final String ASSESSOR_APPROVAL_MAIL_TEMPLATE_UU = "fa008fdb-5ba8-4f28-87d5-8b15bfdb6e1f";
 	private static final String ASSESSOR_APPROVED_MAIL_TEMPLATE_UU = "9f932747-a3e7-48ad-9c9f-5527b43c164d";
+	private static final String MODERATOR_APPROVAL_MAIL_TEMPLATE_UU = "2355edbe-87d9-4a6f-b4d3-1ac733521a27";
+	private static final String MODERATOR_APPROVED_MAIL_TEMPLATE_UU = "f8af2182-e4be-405a-9648-12fb4e1464f0";
 	private int				m_AD_Client_ID	= -1;
 	private static final String ROLE_MGR_QA_AI = "635702d2-8ffb-4a31-a585-d2960d86383c";
+	private static final String ROLE_ASSESSOR = "Assessor";
+	private static final String ROLE_MODERATOR = "Moderator";
 
 	@Override
 	public void initialize(ModelValidationEngine engine, MClient client)
@@ -110,7 +114,7 @@ public class NtierModelValidator implements ModelValidator
 		if (type == ModelValidator.TYPE_AFTER_CHANGE && X_ZZAssessorPerson.Table_Name.equals(po.get_TableName()))
 		{
 			var ColStatus = I_ZZAssessorPerson.COLUMNNAME_ZZ_DocStatus;
-			
+
 			if (po.is_ValueChanged(ColStatus))
 			{
 				var newStatus = po.get_ValueAsString(ColStatus);
@@ -119,30 +123,32 @@ public class NtierModelValidator implements ModelValidator
 				{
 					var now = LocalDateTime.now();
 					assessorPerson.setStartDate(Timestamp.valueOf(now));
-					assessorPerson.setEndDate(Timestamp.valueOf(now.plusYears(3))); // Set end date to 3 year from now
-					
+					assessorPerson.setEndDate(Timestamp.valueOf(now.plusYears(3))); // Set end date
+																					// to 3 year
+																					// from now
+
 					if (Util.isEmpty(assessorPerson.getZZ_Assessor()))
 					{
 						var assDocNo = assessorPerson.getDocumentNo();
-						
+
 						if (!Util.isEmpty(assDocNo))
 						{
 							var dateStr = now.format(DateTimeFormatter.ofPattern("ddMMyy"));
-							if (assessorPerson.getZZAssessorRole().equals("Assessor"))
+							if (ROLE_ASSESSOR.equals(assessorPerson.getZZAssessorRole()))
 							{
 								var assessorNo = "MQA/ASS" + assDocNo + "/" + dateStr;
 								assessorPerson.setZZ_Assessor(assessorNo);
 							}
-							else if (assessorPerson.getZZAssessorRole().equals("Moderator"))
+							else if (ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()))
 							{
 								var moderatorNo = "MQA/MOD" + assDocNo + "/" + dateStr;
 								assessorPerson.setZZ_Moderator(moderatorNo);
 							}
 						}
 					}
-					
+
 					assessorPerson.saveEx();
-					
+
 					// Send email after approval
 					int assessorUserId = assessorPerson.getAD_User_ID();
 					if (assessorUserId > 0)
@@ -152,8 +158,12 @@ public class NtierModelValidator implements ModelValidator
 
 						if (!Util.isEmpty(assessorEmail))
 						{
+							String templateUU = ROLE_ASSESSOR.equals(assessorPerson.getZZAssessorRole())
+																											? ASSESSOR_APPROVED_MAIL_TEMPLATE_UU
+																											: MODERATOR_APPROVED_MAIL_TEMPLATE_UU;
+
 							var approvedMailTemplate = (MMailText) new Query(po.getCtx(), MMailText.Table_Name, "R_MailText_UU=?", po.get_TrxName())
-																																					.setParameters(ASSESSOR_APPROVED_MAIL_TEMPLATE_UU)
+																																					.setParameters(templateUU)
 																																					.first();
 
 							if (approvedMailTemplate != null)
@@ -167,6 +177,10 @@ public class NtierModelValidator implements ModelValidator
 								String zzAssessor = assessorPerson.getZZ_Assessor();
 								if (zzAssessor == null)
 									zzAssessor = "";
+
+								String zzModerator = assessorPerson.getZZ_Moderator();
+								if (zzModerator == null)
+									zzModerator = "";
 
 								String startDateStr = "";
 								if (assessorPerson.getStartDate() != null)
@@ -189,7 +203,9 @@ public class NtierModelValidator implements ModelValidator
 								if (msgBody != null)
 								{
 									msgBody = msgBody.replace("@AssessorName@", assessorNameStr);
+									msgBody = msgBody.replace("@ModeratorName@", assessorNameStr);
 									msgBody = msgBody.replace("@ZZ_Assessor@", zzAssessor);
+									msgBody = msgBody.replace("@ZZ_Moderator@", zzModerator);
 									msgBody = msgBody.replace("@StartDate@", startDateStr);
 									msgBody = msgBody.replace("@EndDate@", endDateStr);
 									msgBody = msgBody.replace("@Qualifications@", qualifications);
@@ -201,12 +217,12 @@ public class NtierModelValidator implements ModelValidator
 							}
 							else
 							{
-								log.severe("Mail template (UU: " + ASSESSOR_APPROVED_MAIL_TEMPLATE_UU + ") could not be found for approved assessor email.");
+								log.severe("Mail template could not be found for approved assessor/moderator email.");
 							}
 						}
 					}
 				}
-				
+
 				if (X_ZZAssessorPerson.ZZ_DOCSTATUS_Recommended.equals(newStatus))
 				{
 					String sql = "SELECT u.AD_User_ID FROM AD_User u "
@@ -216,8 +232,12 @@ public class NtierModelValidator implements ModelValidator
 									+ "AND u.NotificationType IN ('B', 'E') "
 									+ "AND u.IsActive = 'Y' AND ur.IsActive = 'Y' AND r.IsActive = 'Y'";
 
+					String templateUU = ROLE_ASSESSOR.equals(assessorPerson.getZZAssessorRole())
+																									? ASSESSOR_APPROVAL_MAIL_TEMPLATE_UU
+																									: MODERATOR_APPROVAL_MAIL_TEMPLATE_UU;
+
 					var mailTemplate = (MMailText) new Query(po.getCtx(), MMailText.Table_Name, "R_MailText_UU=?", po.get_TrxName())
-																																	.setParameters(ASSESSOR_APPROVAL_MAIL_TEMPLATE_UU)
+																																	.setParameters(templateUU)
 																																	.first();
 
 					if (mailTemplate != null)
@@ -254,6 +274,7 @@ public class NtierModelValidator implements ModelValidator
 										{
 											msgBody = msgBody.replace("@Name@", user.getName() != null ? user.getName() : "");
 											msgBody = msgBody.replace("@AssessorName@", assessorNameStr);
+											msgBody = msgBody.replace("@ModeratorName@", assessorNameStr);
 										}
 
 										client.sendEMail(user.getEMail(), subject, msgBody, null, mailTemplate.isHtml());
