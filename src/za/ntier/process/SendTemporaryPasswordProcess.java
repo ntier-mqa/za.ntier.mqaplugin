@@ -55,6 +55,7 @@ public class SendTemporaryPasswordProcess extends SvrProcess
 		
 		String tempPwd = MPasswordRule.getRules(getCtx(), null).generate();
 		user.setPassword(tempPwd);
+		user.setIsExpired(true);
 		user.saveEx();
 		
 		if (user.get_ID() <= 0)
