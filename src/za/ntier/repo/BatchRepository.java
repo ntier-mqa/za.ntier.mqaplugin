@@ -76,8 +76,8 @@ public class BatchRepository {
         b.setZZ_DocAction(X_C_InvoiceBatch.ZZ_DOCACTION_Recommend);
         b.setIsSOTrx(false);
         b.setDescription("MG Generated for Year: " + year + " Month: " + month);
-        b.setC_Year_ID(hdr.getC_Year_ID());
-        b.setZZ_Month(hdr.getZZ_Month());
+        b.setZZ_Year(year);
+        b.setZZ_Month(month);
         b.setDocumentAmt(Env.ZERO);
         b.saveEx();
 

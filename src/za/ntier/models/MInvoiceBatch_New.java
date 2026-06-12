@@ -456,7 +456,7 @@ public class MInvoiceBatch_New extends MInvoiceBatch implements I_C_InvoiceBatch
 	@Override
 	public void setZZ_CEO_ID(int ZZ_CEO_ID) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -474,7 +474,7 @@ public class MInvoiceBatch_New extends MInvoiceBatch implements I_C_InvoiceBatch
 	@Override
 	public void setZZ_CFO_ID(int ZZ_CFO_ID) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -492,7 +492,7 @@ public class MInvoiceBatch_New extends MInvoiceBatch implements I_C_InvoiceBatch
 	@Override
 	public void setZZ_COO_ID(int ZZ_COO_ID) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -510,7 +510,7 @@ public class MInvoiceBatch_New extends MInvoiceBatch implements I_C_InvoiceBatch
 	@Override
 	public void setZZ_Date_Not_Recom_CEO(Timestamp ZZ_Date_Not_Recom_CEO) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -522,7 +522,7 @@ public class MInvoiceBatch_New extends MInvoiceBatch implements I_C_InvoiceBatch
 	@Override
 	public void setZZ_Date_Not_Recom_CFO(Timestamp ZZ_Date_Not_Recom_CFO) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -534,7 +534,7 @@ public class MInvoiceBatch_New extends MInvoiceBatch implements I_C_InvoiceBatch
 	@Override
 	public void setZZ_Date_Not_Recom_COO(Timestamp ZZ_Date_Not_Recom_COO) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -546,7 +546,7 @@ public class MInvoiceBatch_New extends MInvoiceBatch implements I_C_InvoiceBatch
 	@Override
 	public void setZZ_Date_Recomm_CEO(Timestamp ZZ_Date_Recomm_CEO) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -558,7 +558,7 @@ public class MInvoiceBatch_New extends MInvoiceBatch implements I_C_InvoiceBatch
 	@Override
 	public void setZZ_Date_Recomm_CFO(Timestamp ZZ_Date_Recomm_CFO) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -570,7 +570,7 @@ public class MInvoiceBatch_New extends MInvoiceBatch implements I_C_InvoiceBatch
 	@Override
 	public void setZZ_Date_Recomm_COO(Timestamp ZZ_Date_Recomm_COO) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -582,7 +582,7 @@ public class MInvoiceBatch_New extends MInvoiceBatch implements I_C_InvoiceBatch
 	@Override
 	public void setZZ_Submitter_ID(int ZZ_Submitter_ID) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -597,23 +597,7 @@ public class MInvoiceBatch_New extends MInvoiceBatch implements I_C_InvoiceBatch
 		return null;
 	}
 
-	@Override
-	public org.compiere.model.I_C_Year getC_Year() throws RuntimeException
-	{
-		return (org.compiere.model.I_C_Year)MTable.get(getCtx(), org.compiere.model.I_C_Year.Table_ID)
-			.getPO(getC_Year_ID(), get_TrxName());
-	}
 
-	/** Set Year.
-		@param C_Year_ID Calendar Year
-	*/
-	public void setC_Year_ID (int C_Year_ID)
-	{
-		if (C_Year_ID < 1)
-			set_ValueNoCheck (COLUMNNAME_C_Year_ID, null);
-		else
-			set_ValueNoCheck (COLUMNNAME_C_Year_ID, Integer.valueOf(C_Year_ID));
-	}
 
 	public void setZZ_Month (String ZZ_Month)
 	{
@@ -628,12 +612,19 @@ public class MInvoiceBatch_New extends MInvoiceBatch implements I_C_InvoiceBatch
 		return (String)get_Value(COLUMNNAME_ZZ_Month);
 	}
 
-	public int getC_Year_ID()
+	/** Set Year.
+	@param ZZ_Year Year
+	 */
+	public void setZZ_Year (String ZZ_Year)
 	{
-		Integer ii = (Integer)get_Value(COLUMNNAME_C_Year_ID);
-		if (ii == null)
-			 return 0;
-		return ii.intValue();
+		set_Value (COLUMNNAME_ZZ_Year, ZZ_Year);
+	}
+
+	/** Get Year.
+	@return Year	  */
+	public String getZZ_Year()
+	{
+		return (String)get_Value(COLUMNNAME_ZZ_Year);
 	}
 
 
