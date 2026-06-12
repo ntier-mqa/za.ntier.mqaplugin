@@ -17,13 +17,10 @@
 /** Generated Model - DO NOT CHANGE */
 package za.ntier.models;
 
-import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.util.Properties;
 import org.compiere.model.*;
-import org.compiere.util.Env;
-import org.compiere.util.KeyNamePair;
 
 /** Generated Model for C_InvoiceBatch
  *  @author iDempiere (generated)
@@ -35,7 +32,7 @@ public class X_C_InvoiceBatch extends PO implements I_C_InvoiceBatch, I_Persiste
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20251215L;
+	private static final long serialVersionUID = 20260612L;
 
     /** Standard Constructor */
     public X_C_InvoiceBatch (Properties ctx, int C_InvoiceBatch_ID, String trxName)
@@ -43,19 +40,6 @@ public class X_C_InvoiceBatch extends PO implements I_C_InvoiceBatch, I_Persiste
       super (ctx, C_InvoiceBatch_ID, trxName);
       /** if (C_InvoiceBatch_ID == 0)
         {
-			setC_Currency_ID (0);
-// @$C_Currency_ID@
-			setC_InvoiceBatch_ID (0);
-			setControlAmt (Env.ZERO);
-// 0
-			setDateDoc (new Timestamp( System.currentTimeMillis() ));
-// @#Date@
-			setDocumentAmt (Env.ZERO);
-			setDocumentNo (null);
-			setIsSOTrx (false);
-// N
-			setProcessed (false);
-			setSalesRep_ID (0);
 			setZZ_Account_Reconned (false);
 // N
 			setZZ_Auth_PO_Order (false);
@@ -77,19 +61,6 @@ public class X_C_InvoiceBatch extends PO implements I_C_InvoiceBatch, I_Persiste
       super (ctx, C_InvoiceBatch_ID, trxName, virtualColumns);
       /** if (C_InvoiceBatch_ID == 0)
         {
-			setC_Currency_ID (0);
-// @$C_Currency_ID@
-			setC_InvoiceBatch_ID (0);
-			setControlAmt (Env.ZERO);
-// 0
-			setDateDoc (new Timestamp( System.currentTimeMillis() ));
-// @#Date@
-			setDocumentAmt (Env.ZERO);
-			setDocumentNo (null);
-			setIsSOTrx (false);
-// N
-			setProcessed (false);
-			setSalesRep_ID (0);
 			setZZ_Account_Reconned (false);
 // N
 			setZZ_Auth_PO_Order (false);
@@ -111,19 +82,6 @@ public class X_C_InvoiceBatch extends PO implements I_C_InvoiceBatch, I_Persiste
       super (ctx, C_InvoiceBatch_UU, trxName);
       /** if (C_InvoiceBatch_UU == null)
         {
-			setC_Currency_ID (0);
-// @$C_Currency_ID@
-			setC_InvoiceBatch_ID (0);
-			setControlAmt (Env.ZERO);
-// 0
-			setDateDoc (new Timestamp( System.currentTimeMillis() ));
-// @#Date@
-			setDocumentAmt (Env.ZERO);
-			setDocumentNo (null);
-			setIsSOTrx (false);
-// N
-			setProcessed (false);
-			setSalesRep_ID (0);
 			setZZ_Account_Reconned (false);
 // N
 			setZZ_Auth_PO_Order (false);
@@ -145,19 +103,6 @@ public class X_C_InvoiceBatch extends PO implements I_C_InvoiceBatch, I_Persiste
       super (ctx, C_InvoiceBatch_UU, trxName, virtualColumns);
       /** if (C_InvoiceBatch_UU == null)
         {
-			setC_Currency_ID (0);
-// @$C_Currency_ID@
-			setC_InvoiceBatch_ID (0);
-			setControlAmt (Env.ZERO);
-// 0
-			setDateDoc (new Timestamp( System.currentTimeMillis() ));
-// @#Date@
-			setDocumentAmt (Env.ZERO);
-			setDocumentNo (null);
-			setIsSOTrx (false);
-// N
-			setProcessed (false);
-			setSalesRep_ID (0);
 			setZZ_Account_Reconned (false);
 // N
 			setZZ_Auth_PO_Order (false);
@@ -201,284 +146,29 @@ public class X_C_InvoiceBatch extends PO implements I_C_InvoiceBatch, I_Persiste
       return sb.toString();
     }
 
-	public org.compiere.model.I_C_ConversionType getC_ConversionType() throws RuntimeException
+	public org.compiere.model.I_C_Year getC_Year() throws RuntimeException
 	{
-		return (org.compiere.model.I_C_ConversionType)MTable.get(getCtx(), org.compiere.model.I_C_ConversionType.Table_ID)
-			.getPO(getC_ConversionType_ID(), get_TrxName());
+		return (org.compiere.model.I_C_Year)MTable.get(getCtx(), org.compiere.model.I_C_Year.Table_ID)
+			.getPO(getC_Year_ID(), get_TrxName());
 	}
 
-	/** Set Currency Type.
-		@param C_ConversionType_ID Currency Conversion Rate Type
+	/** Set Year.
+		@param C_Year_ID Calendar Year
 	*/
-	public void setC_ConversionType_ID (int C_ConversionType_ID)
+	public void setC_Year_ID (int C_Year_ID)
 	{
-		if (C_ConversionType_ID < 1)
-			set_Value (COLUMNNAME_C_ConversionType_ID, null);
+		if (C_Year_ID < 1)
+			set_ValueNoCheck (COLUMNNAME_C_Year_ID, null);
 		else
-			set_Value (COLUMNNAME_C_ConversionType_ID, Integer.valueOf(C_ConversionType_ID));
+			set_ValueNoCheck (COLUMNNAME_C_Year_ID, Integer.valueOf(C_Year_ID));
 	}
 
-	/** Get Currency Type.
-		@return Currency Conversion Rate Type
+	/** Get Year.
+		@return Calendar Year
 	  */
-	public int getC_ConversionType_ID()
+	public int getC_Year_ID()
 	{
-		Integer ii = (Integer)get_Value(COLUMNNAME_C_ConversionType_ID);
-		if (ii == null)
-			 return 0;
-		return ii.intValue();
-	}
-
-	public org.compiere.model.I_C_Currency getC_Currency() throws RuntimeException
-	{
-		return (org.compiere.model.I_C_Currency)MTable.get(getCtx(), org.compiere.model.I_C_Currency.Table_ID)
-			.getPO(getC_Currency_ID(), get_TrxName());
-	}
-
-	/** Set Currency.
-		@param C_Currency_ID The Currency for this record
-	*/
-	public void setC_Currency_ID (int C_Currency_ID)
-	{
-		if (C_Currency_ID < 1)
-			set_Value (COLUMNNAME_C_Currency_ID, null);
-		else
-			set_Value (COLUMNNAME_C_Currency_ID, Integer.valueOf(C_Currency_ID));
-	}
-
-	/** Get Currency.
-		@return The Currency for this record
-	  */
-	public int getC_Currency_ID()
-	{
-		Integer ii = (Integer)get_Value(COLUMNNAME_C_Currency_ID);
-		if (ii == null)
-			 return 0;
-		return ii.intValue();
-	}
-
-	/** Set Invoice Batch.
-		@param C_InvoiceBatch_ID Expense Invoice Batch Header
-	*/
-	public void setC_InvoiceBatch_ID (int C_InvoiceBatch_ID)
-	{
-		if (C_InvoiceBatch_ID < 1)
-			set_ValueNoCheck (COLUMNNAME_C_InvoiceBatch_ID, null);
-		else
-			set_ValueNoCheck (COLUMNNAME_C_InvoiceBatch_ID, Integer.valueOf(C_InvoiceBatch_ID));
-	}
-
-	/** Get Invoice Batch.
-		@return Expense Invoice Batch Header
-	  */
-	public int getC_InvoiceBatch_ID()
-	{
-		Integer ii = (Integer)get_Value(COLUMNNAME_C_InvoiceBatch_ID);
-		if (ii == null)
-			 return 0;
-		return ii.intValue();
-	}
-
-	/** Set C_InvoiceBatch_UU.
-		@param C_InvoiceBatch_UU C_InvoiceBatch_UU
-	*/
-	public void setC_InvoiceBatch_UU (String C_InvoiceBatch_UU)
-	{
-		set_Value (COLUMNNAME_C_InvoiceBatch_UU, C_InvoiceBatch_UU);
-	}
-
-	/** Get C_InvoiceBatch_UU.
-		@return C_InvoiceBatch_UU	  */
-	public String getC_InvoiceBatch_UU()
-	{
-		return (String)get_Value(COLUMNNAME_C_InvoiceBatch_UU);
-	}
-
-	/** Set Control Amount.
-		@param ControlAmt If not zero, the Debit amount of the document must be equal this amount
-	*/
-	public void setControlAmt (BigDecimal ControlAmt)
-	{
-		set_Value (COLUMNNAME_ControlAmt, ControlAmt);
-	}
-
-	/** Get Control Amount.
-		@return If not zero, the Debit amount of the document must be equal this amount
-	  */
-	public BigDecimal getControlAmt()
-	{
-		BigDecimal bd = (BigDecimal)get_Value(COLUMNNAME_ControlAmt);
-		if (bd == null)
-			 return Env.ZERO;
-		return bd;
-	}
-
-	/** Set Document Date.
-		@param DateDoc Date of the Document
-	*/
-	public void setDateDoc (Timestamp DateDoc)
-	{
-		set_Value (COLUMNNAME_DateDoc, DateDoc);
-	}
-
-	/** Get Document Date.
-		@return Date of the Document
-	  */
-	public Timestamp getDateDoc()
-	{
-		return (Timestamp)get_Value(COLUMNNAME_DateDoc);
-	}
-
-	/** Set Description.
-		@param Description Optional short description of the record
-	*/
-	public void setDescription (String Description)
-	{
-		set_Value (COLUMNNAME_Description, Description);
-	}
-
-	/** Get Description.
-		@return Optional short description of the record
-	  */
-	public String getDescription()
-	{
-		return (String)get_Value(COLUMNNAME_Description);
-	}
-
-	/** Set Document Amt.
-		@param DocumentAmt Document Amount
-	*/
-	public void setDocumentAmt (BigDecimal DocumentAmt)
-	{
-		set_ValueNoCheck (COLUMNNAME_DocumentAmt, DocumentAmt);
-	}
-
-	/** Get Document Amt.
-		@return Document Amount
-	  */
-	public BigDecimal getDocumentAmt()
-	{
-		BigDecimal bd = (BigDecimal)get_Value(COLUMNNAME_DocumentAmt);
-		if (bd == null)
-			 return Env.ZERO;
-		return bd;
-	}
-
-	/** Set Document No.
-		@param DocumentNo Document sequence number of the document
-	*/
-	public void setDocumentNo (String DocumentNo)
-	{
-		set_Value (COLUMNNAME_DocumentNo, DocumentNo);
-	}
-
-	/** Get Document No.
-		@return Document sequence number of the document
-	  */
-	public String getDocumentNo()
-	{
-		return (String)get_Value(COLUMNNAME_DocumentNo);
-	}
-
-    /** Get Record ID/ColumnName
-        @return ID/ColumnName pair
-      */
-    public KeyNamePair getKeyNamePair()
-    {
-        return new KeyNamePair(get_ID(), getDocumentNo());
-    }
-
-	/** Set Sales Transaction.
-		@param IsSOTrx This is a Sales Transaction
-	*/
-	public void setIsSOTrx (boolean IsSOTrx)
-	{
-		set_Value (COLUMNNAME_IsSOTrx, Boolean.valueOf(IsSOTrx));
-	}
-
-	/** Get Sales Transaction.
-		@return This is a Sales Transaction
-	  */
-	public boolean isSOTrx()
-	{
-		Object oo = get_Value(COLUMNNAME_IsSOTrx);
-		if (oo != null)
-		{
-			 if (oo instanceof Boolean)
-				 return ((Boolean)oo).booleanValue();
-			return "Y".equals(oo);
-		}
-		return false;
-	}
-
-	/** Set Processed.
-		@param Processed The document has been processed
-	*/
-	public void setProcessed (boolean Processed)
-	{
-		set_Value (COLUMNNAME_Processed, Boolean.valueOf(Processed));
-	}
-
-	/** Get Processed.
-		@return The document has been processed
-	  */
-	public boolean isProcessed()
-	{
-		Object oo = get_Value(COLUMNNAME_Processed);
-		if (oo != null)
-		{
-			 if (oo instanceof Boolean)
-				 return ((Boolean)oo).booleanValue();
-			return "Y".equals(oo);
-		}
-		return false;
-	}
-
-	/** Set Process Now.
-		@param Processing Process Now
-	*/
-	public void setProcessing (boolean Processing)
-	{
-		set_Value (COLUMNNAME_Processing, Boolean.valueOf(Processing));
-	}
-
-	/** Get Process Now.
-		@return Process Now	  */
-	public boolean isProcessing()
-	{
-		Object oo = get_Value(COLUMNNAME_Processing);
-		if (oo != null)
-		{
-			 if (oo instanceof Boolean)
-				 return ((Boolean)oo).booleanValue();
-			return "Y".equals(oo);
-		}
-		return false;
-	}
-
-	public org.compiere.model.I_AD_User getSalesRep() throws RuntimeException
-	{
-		return (org.compiere.model.I_AD_User)MTable.get(getCtx(), org.compiere.model.I_AD_User.Table_ID)
-			.getPO(getSalesRep_ID(), get_TrxName());
-	}
-
-	/** Set Sales Representative.
-		@param SalesRep_ID Sales Representative or Company Agent
-	*/
-	public void setSalesRep_ID (int SalesRep_ID)
-	{
-		if (SalesRep_ID < 1)
-			set_Value (COLUMNNAME_SalesRep_ID, null);
-		else
-			set_Value (COLUMNNAME_SalesRep_ID, Integer.valueOf(SalesRep_ID));
-	}
-
-	/** Get Sales Representative.
-		@return Sales Representative or Company Agent
-	  */
-	public int getSalesRep_ID()
-	{
-		Integer ii = (Integer)get_Value(COLUMNNAME_SalesRep_ID);
+		Integer ii = (Integer)get_Value(COLUMNNAME_C_Year_ID);
 		if (ii == null)
 			 return 0;
 		return ii.intValue();
@@ -824,12 +514,22 @@ public class X_C_InvoiceBatch extends PO implements I_C_InvoiceBatch, I_Persiste
 	public static final String ZZ_DOCACTION_ApproveDoNotApprove = "AP";
 	/** Complete = CO */
 	public static final String ZZ_DOCACTION_Complete = "CO";
+	/** Evaluate = EV */
+	public static final String ZZ_DOCACTION_Evaluate = "EV";
 	/** Final Approval/Do not Approve = FA */
 	public static final String ZZ_DOCACTION_FinalApprovalDoNotApprove = "FA";
+	/** PrepareCEO = PC */
+	public static final String ZZ_DOCACTION_PrepareCEO = "PC";
+	/** Refer Back = RB */
+	public static final String ZZ_DOCACTION_ReferBack = "RB";
 	/** Recommend = RE */
 	public static final String ZZ_DOCACTION_Recommend = "RE";
+	/** Re-Submit = RS */
+	public static final String ZZ_DOCACTION_Re_Submit = "RS";
 	/** Submit = S1 */
 	public static final String ZZ_DOCACTION_Submit = "S1";
+	/** System Only (No manual action) = S2 */
+	public static final String ZZ_DOCACTION_SystemOnlyNoManualAction = "S2";
 	/** Submit to Manager Finance Consumables = SC */
 	public static final String ZZ_DOCACTION_SubmitToManagerFinanceConsumables = "SC";
 	/** Submit to SDL Finance Mgr = SD */
@@ -848,6 +548,10 @@ public class X_C_InvoiceBatch extends PO implements I_C_InvoiceBatch, I_Persiste
 	public static final String ZZ_DOCACTION_SubmitToSnrMgrSRU = "SS";
 	/** Submit to Line Manager = SU */
 	public static final String ZZ_DOCACTION_SubmitToLineManager = "SU";
+	/** Update = UP */
+	public static final String ZZ_DOCACTION_Update = "UP";
+	/** Verify = VE */
+	public static final String ZZ_DOCACTION_Verify = "VE";
 	/** Set Document Action.
 		@param ZZ_DocAction Document Action
 	*/
@@ -868,10 +572,22 @@ public class X_C_InvoiceBatch extends PO implements I_C_InvoiceBatch, I_Persiste
 	public static final String ZZ_DOCSTATUS_ApprovedByManagerFinanceConsumables = "AC";
 	/** Approved = AP */
 	public static final String ZZ_DOCSTATUS_Approved = "AP";
+	/** Prepared for CEO = CF */
+	public static final String ZZ_DOCSTATUS_PreparedForCEO = "CF";
 	/** Completed = CO */
 	public static final String ZZ_DOCSTATUS_Completed = "CO";
 	/** Draft = DR */
 	public static final String ZZ_DOCSTATUS_Draft = "DR";
+	/** Error Importing = EE */
+	public static final String ZZ_DOCSTATUS_ErrorImporting = "EE";
+	/** Validation Error = ER */
+	public static final String ZZ_DOCSTATUS_ValidationError = "ER";
+	/** Evaluated = EV */
+	public static final String ZZ_DOCSTATUS_Evaluated = "EV";
+	/** Importing = IG */
+	public static final String ZZ_DOCSTATUS_Importing = "IG";
+	/** Imported = IM */
+	public static final String ZZ_DOCSTATUS_Imported = "IM";
 	/** In Progress = IP */
 	public static final String ZZ_DOCSTATUS_InProgress = "IP";
 	/** Not Recommended By Senior Mgr SDR = N1 */
@@ -894,22 +610,34 @@ public class X_C_InvoiceBatch extends PO implements I_C_InvoiceBatch, I_Persiste
 	public static final String ZZ_DOCSTATUS_NotApprovedByITManager = "NI";
 	/** Not Approved by LM = NL */
 	public static final String ZZ_DOCSTATUS_NotApprovedByLM = "NL";
+	/** Not Approved = NP */
+	public static final String ZZ_DOCSTATUS_NotApproved = "NP";
 	/** Not Recommended = NR */
 	public static final String ZZ_DOCSTATUS_NotRecommended = "NR";
 	/** Not Approved by Snr Admin Finance = NS */
 	public static final String ZZ_DOCSTATUS_NotApprovedBySnrAdminFinance = "NS";
+	/** Not Verified = NV */
+	public static final String ZZ_DOCSTATUS_NotVerified = "NV";
 	/** Pending = PE */
 	public static final String ZZ_DOCSTATUS_Pending = "PE";
+	/** Query = QR */
+	public static final String ZZ_DOCSTATUS_Query = "QR";
 	/** Recommended By Senior Mgr Finance = R1 */
 	public static final String ZZ_DOCSTATUS_RecommendedBySeniorMgrFinance = "R1";
 	/** Recommended By COO = R2 */
 	public static final String ZZ_DOCSTATUS_RecommendedByCOO = "R2";
 	/** Recommended By CFO = R3 */
 	public static final String ZZ_DOCSTATUS_RecommendedByCFO = "R3";
+	/** Recommended By CEO = R4 */
+	public static final String ZZ_DOCSTATUS_RecommendedByCEO = "R4";
+	/** Recommended for Approval = RA */
+	public static final String ZZ_DOCSTATUS_RecommendedForApproval = "RA";
 	/** Recommended = RC */
 	public static final String ZZ_DOCSTATUS_Recommended = "RC";
 	/** Recommended By Senior Mgr SDR = RD */
 	public static final String ZZ_DOCSTATUS_RecommendedBySeniorMgrSDR = "RD";
+	/** Recommended for Evaluation = RE */
+	public static final String ZZ_DOCSTATUS_RecommendedForEvaluation = "RE";
 	/** Submitted to Manager Finance Consumables = SC */
 	public static final String ZZ_DOCSTATUS_SubmittedToManagerFinanceConsumables = "SC";
 	/** Submitted To SDL Finance Mgr = SD */
@@ -920,6 +648,18 @@ public class X_C_InvoiceBatch extends PO implements I_C_InvoiceBatch, I_Persiste
 	public static final String ZZ_DOCSTATUS_SubmittedToITAdmin = "ST";
 	/** Submitted = SU */
 	public static final String ZZ_DOCSTATUS_Submitted = "SU";
+	/** Transfer Out = TO */
+	public static final String ZZ_DOCSTATUS_TransferOut = "TO";
+	/** Updated by SDR Admin = UA */
+	public static final String ZZ_DOCSTATUS_UpdatedBySDRAdmin = "UA";
+	/** Uploaded = UP */
+	public static final String ZZ_DOCSTATUS_Uploaded = "UP";
+	/** Delinked = UnSdfOrg */
+	public static final String ZZ_DOCSTATUS_Delinked = "UnSdfOrg";
+	/** Validating = VA */
+	public static final String ZZ_DOCSTATUS_Validating = "VA";
+	/** Verified = VE */
+	public static final String ZZ_DOCSTATUS_Verified = "VE";
 	/** Set Document Status.
 		@param ZZ_DocStatus Document Status
 	*/
@@ -993,6 +733,46 @@ public class X_C_InvoiceBatch extends PO implements I_C_InvoiceBatch, I_Persiste
 			return "Y".equals(oo);
 		}
 		return false;
+	}
+
+	/** January = 01 */
+	public static final String ZZ_MONTH_January = "01";
+	/** February = 02 */
+	public static final String ZZ_MONTH_February = "02";
+	/** March = 03 */
+	public static final String ZZ_MONTH_March = "03";
+	/** April = 04 */
+	public static final String ZZ_MONTH_April = "04";
+	/** May = 05 */
+	public static final String ZZ_MONTH_May = "05";
+	/** June = 06 */
+	public static final String ZZ_MONTH_June = "06";
+	/** July = 07 */
+	public static final String ZZ_MONTH_July = "07";
+	/** August = 08 */
+	public static final String ZZ_MONTH_August = "08";
+	/** September = 09 */
+	public static final String ZZ_MONTH_September = "09";
+	/** October = 10 */
+	public static final String ZZ_MONTH_October = "10";
+	/** November = 11 */
+	public static final String ZZ_MONTH_November = "11";
+	/** December = 12 */
+	public static final String ZZ_MONTH_December = "12";
+	/** Set Month.
+		@param ZZ_Month Month
+	*/
+	public void setZZ_Month (String ZZ_Month)
+	{
+
+		set_Value (COLUMNNAME_ZZ_Month, ZZ_Month);
+	}
+
+	/** Get Month.
+		@return Month	  */
+	public String getZZ_Month()
+	{
+		return (String)get_Value(COLUMNNAME_ZZ_Month);
 	}
 
 	public I_ZZ_Monthly_Levy_Files_Hdr getZZ_Monthly_Levy_Files_Hdr() throws RuntimeException

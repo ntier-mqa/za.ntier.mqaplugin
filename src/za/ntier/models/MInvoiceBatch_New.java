@@ -16,7 +16,6 @@ import za.ntier.utils.Roles;
 public class MInvoiceBatch_New extends MInvoiceBatch implements I_C_InvoiceBatch {
 
 	private static final String MANAGER_OPS_SDL_ROLES = "MANAGER_OPS_SDL_ROLES";
-	private static final String FINACE_ROLES = "FINACE_ROLES";
 	private static final String FINANCE_ROLES_FOR_CREATE = "FINANCE_ROLES_FOR_CREATE";
 	private static final long serialVersionUID = 1L;
 
@@ -596,6 +595,45 @@ public class MInvoiceBatch_New extends MInvoiceBatch implements I_C_InvoiceBatch
 	public I_AD_User getZZ_Submitter() throws RuntimeException {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public org.compiere.model.I_C_Year getC_Year() throws RuntimeException
+	{
+		return (org.compiere.model.I_C_Year)MTable.get(getCtx(), org.compiere.model.I_C_Year.Table_ID)
+			.getPO(getC_Year_ID(), get_TrxName());
+	}
+
+	/** Set Year.
+		@param C_Year_ID Calendar Year
+	*/
+	public void setC_Year_ID (int C_Year_ID)
+	{
+		if (C_Year_ID < 1)
+			set_ValueNoCheck (COLUMNNAME_C_Year_ID, null);
+		else
+			set_ValueNoCheck (COLUMNNAME_C_Year_ID, Integer.valueOf(C_Year_ID));
+	}
+
+	public void setZZ_Month (String ZZ_Month)
+	{
+
+		set_Value (COLUMNNAME_ZZ_Month, ZZ_Month);
+	}
+
+	/** Get Month.
+		@return Month	  */
+	public String getZZ_Month()
+	{
+		return (String)get_Value(COLUMNNAME_ZZ_Month);
+	}
+
+	public int getC_Year_ID()
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_C_Year_ID);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
 	}
 
 
