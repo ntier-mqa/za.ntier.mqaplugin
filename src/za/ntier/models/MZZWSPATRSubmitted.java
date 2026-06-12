@@ -304,16 +304,17 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 		} finally {
 			DB.close(rs, pstmt);
 		}
-		return null;
+		return "";
 	}
 
 	public String getTradingAs() {
 
-		MBPartner bp = getBusinessPartner(); // reuse helper
+		MBPartner bp = getBusinessPartner();
 		if (bp == null)
-			return null;
+			return "";
 
-		return bp.getName2();
+		String name2 = bp.getName2();
+		return name2 != null ? name2 : "";
 	}
 
 	private MZZSdfOrganisation getSdfOrganisation() {
@@ -340,12 +341,12 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 	public String getOrganisationName() {
 		MBPartner bp = getBusinessPartner();
-		return bp != null ? bp.getName() : null;
+		return bp != null ? bp.getName() : "";
 	}
 
 	public String getSdlNumber() {
 		MBPartner bp = getBusinessPartner();
-		return bp != null ? bp.getValue() : null;
+		return bp != null ? bp.getValue() : "";
 	}
 
 
@@ -409,12 +410,6 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 	public void sendSuccessfulSubmissionEmail() throws Exception {
 
-		try {
-			sendQueryEmailWithPDF(WSP_ATRQuery_TEMPLATE_UUID,"QueryLetter");
-		} catch (Exception e) {
-			log.severe("Failed to send query email: " + e.getMessage());
-		}
-
 		// Load letter template
 		MMailText mailTextLetter =
 				new MMailText(getCtx(), WSP_ATR_Successful_Submission_Letter_TEMPLATE_UUID, get_TrxName());
@@ -432,6 +427,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 		String fileName2 = "Acknowledgement_Letter";
 		String html2 = mailTextLetter.getMailText(true);
+		html2 = html2.replace("[AT]", "@");
 		File pdf = createPDF(html2,fileName2);
 
 		int adUserId = getSdfUserId();
