@@ -54,7 +54,7 @@
 				<imageExpression><![CDATA[$P{RESOURCE_DIR} + "MQA_Logo.jpg"]]></imageExpression>
 			</image>
 			<staticText>
-				<reportElement x="0" y="5" width="230" height="83" forecolor="#1241A1" uuid="c14a3175-6352-47f7-a622-01865f65f3b7"/>
+				<reportElement x="2" y="5" width="230" height="83" forecolor="#1241A1" uuid="c14a3175-6352-47f7-a622-01865f65f3b7"/>
 				<textElement>
 					<font size="10" isBold="true"/>
 				</textElement>
@@ -62,9 +62,7 @@
 7 Anerley Road, Parktown, Johannesburg, 2193
 Tel: 011 547 2600
 Email: info@mqa.org.za
-www.mqa.org.za 
- Email: info@mqa.org.za<br />
-                www.mqa.org.]]></text>
+www.mqa.org.za]]></text>
 			</staticText>
 		</band>
 	</title>
