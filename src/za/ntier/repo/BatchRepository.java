@@ -77,7 +77,7 @@ public class BatchRepository {
         b.setIsSOTrx(false);
         b.setDescription("MG Generated for Year: " + year + " Month: " + month);
         b.setZZ_Year(year);
-        b.setZZ_Month(month);
+        b.setZZ_Month(hdr.getZZ_Month());
         b.setDocumentAmt(Env.ZERO);
         b.saveEx();
 
