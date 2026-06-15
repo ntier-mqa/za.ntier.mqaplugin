@@ -11,6 +11,7 @@ import org.compiere.model.MSequence;
 import org.compiere.model.MTable;
 import org.compiere.model.MUser;
 import org.compiere.model.MMailText;
+import org.compiere.model.MNote;
 import org.compiere.model.Query;
 import org.compiere.model.ModelValidationEngine;
 import org.compiere.model.ModelValidator;
@@ -278,6 +279,12 @@ public class NtierModelValidator implements ModelValidator
 										}
 
 										client.sendEMail(user.getEMail(), subject, msgBody, null, mailTemplate.isHtml());
+										
+										MNote note = new MNote(po.getCtx(), 0, user.getAD_User_ID(),
+												assessorPerson.get_Table_ID(), assessorPerson.get_ID(),
+												subject, msgBody, po.get_TrxName());
+										note.setAD_Org_ID(po.getAD_Org_ID());
+										note.saveEx();
 									}
 								}
 							}
