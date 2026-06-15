@@ -166,17 +166,20 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             if (vr.finYearId <= 0) {
                 throw new AdempiereException("Could not resolve financial year from FinancialYear column in workbook.");
             }
-            if (vr.wspStatusByOrgId.isEmpty()) {
+            if (!vr.wspStatusFailures.isEmpty()) {
                 StringBuilder msg = new StringBuilder(
+                        "WSPStatus value(s) not found in reference table"
+                        + " (note: 'Created' is remapped to 'Draft' before lookup)."
+                        + " Unresolved rows (first ")
+                    .append(Math.min(vr.wspStatusFailures.size(), 10)).append("):");
+                vr.wspStatusFailures.stream().limit(10)
+                        .forEach(f -> msg.append("\n  ").append(f));
+                throw new AdempiereException(msg.toString());
+            }
+            if (vr.wspStatusByOrgId.isEmpty()) {
+                throw new AdempiereException(
                         "Could not resolve WSP status from WSPStatus column in workbook"
                         + " (no row produced a recognised status).");
-                if (!vr.wspStatusFailures.isEmpty()) {
-                    msg.append(" Unresolved rows (first ").append(
-                            Math.min(vr.wspStatusFailures.size(), 10)).append("):");
-                    vr.wspStatusFailures.stream().limit(10)
-                            .forEach(f -> msg.append("\n  ").append(f));
-                }
-                throw new AdempiereException(msg.toString());
             }
 
             // Pass 2: stream again and create the POs.
@@ -771,11 +774,13 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             submitted.setFileName(sourceFileName);
             submitted.setZZ_Import_Submitted_Data("N");
             submitted.setZZSdfOrganisation_ID(orgId);
-            submitted.setZZ_DocAction(null);
-            if (wspStatus.equals("SU") ) {
-            	submitted.setZZ_DocAction("VE");
+            if (existingId <= 0) {
+                submitted.setZZ_DocAction(null);
+                if (wspStatus.equals("SU")) {
+                    submitted.setZZ_DocAction("VE");
+                }
+                submitted.setZZ_DocStatus(wspStatus);
             }
-            submitted.setZZ_DocStatus(wspStatus);
             submitted.setZZ_FinYear_ID(finYearId);
             submitted.setZZ_Submission_Due_Date(
                     WspAtrSubmittedADForm.getWSPATR_Due_Date(clientId, orgId, trxName));
