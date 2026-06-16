@@ -245,7 +245,8 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
         private static final int MAX_ERRORS = 500;
         private static final int MAX_EMPTY_ROWS = 10;
 
-        static final String WSP_STATUS_REF_UU = "98479fb5-df5d-440d-86aa-92d77a320857";
+        static final String WSP_STATUS_REF_UU  = "98479fb5-df5d-440d-86aa-92d77a320857";
+        static final String SUB_SECTOR_REF_UU  = "bc9bef41-360e-4fbc-b4f1-93ec2892cef9";
 
         private final int defaultSdfId;
         private final Map<Integer, Map<Integer, ColumnMeta>> columnMetaCache = new HashMap<>();
@@ -572,7 +573,6 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                         } catch (java.sql.SQLException e) {
                             throw new AdempiereException("Batch commit failed after " + rowsSaved[0] + " rows", e);
                         }
-                        svrProcess.addLog("Committed batch after " + rowsSaved[0] + " rows");
                     }
 
                     return StreamingXlsxReader.Action.CONTINUE;
@@ -712,8 +712,9 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                 int bpId = DB.getSQLValueEx(trxName,
                         "SELECT C_BPartner_ID FROM C_BPartner WHERE Value = ? AND AD_Client_ID = ?",
                         sdl, Env.getAD_Client_ID(ctx));
+                MBPartner_New bp;
                 if (bpId <= 0) {
-                    MBPartner_New bp = new MBPartner_New(ctx, 0, trxName);
+                    bp = new MBPartner_New(ctx, 0, trxName);
                     bp.setValue(sdl);
                     String legalName = getCellByHeader(cells, metas, "Legal Name");
                     bp.setName((legalName != null && !legalName.isBlank()) ? legalName.trim() : sdl);
@@ -728,7 +729,27 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                     bp.setIsEmployee(false);
                     bp.setIsProspect(false);
                     bp.setAD_Org_ID(0);
-                    bp.saveEx();
+                } else {
+                    bp = new MBPartner_New(ctx, bpId, trxName);
+                }
+                String subSectorName = getCellByHeader(cells, metas, "Organisation Sub Sector");
+                if (subSectorName != null && !subSectorName.isBlank()) {
+                    String subSectorValue = DB.getSQLValueStringEx(trxName,
+                            "SELECT rl.Value FROM AD_Ref_List rl"
+                            + " JOIN AD_Reference r ON r.AD_Reference_ID = rl.AD_Reference_ID"
+                            + " WHERE r.AD_Reference_UU = '" + SUB_SECTOR_REF_UU + "'"
+                            + " AND UPPER(rl.Name) = UPPER(?)",
+                            subSectorName.trim());
+                    if (subSectorValue != null) {
+                        bp.setZZSubSector(subSectorValue);
+                    } else {
+                        svrProcess.addLog("Tab " + tab + " row " + lineNo
+                                + ": SubSector '" + subSectorName.trim()
+                                + "' not found in reference table — ZZSubSector not set for SDL " + sdl);
+                    }
+                }
+                bp.saveEx();
+                if (bpId <= 0) {
                     bpId = bp.get_ID();
                     svrProcess.addLog("Tab " + tab + " row " + lineNo + ": created new BPartner for SDL " + sdl);
                 }
@@ -937,7 +958,8 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
         // Error CSV writer
         // ============================================================
         File writeErrorLog(List<MigrationError> errors) throws Exception {
-            File file = File.createTempFile("wspatr-migration-errors-", ".csv");
+            String timestamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date());
+            File file = new File("/tmp/wspatr-migration-errors-" + timestamp + ".csv");
             try (java.io.FileWriter fw = new java.io.FileWriter(file);
                  java.io.BufferedWriter bw = new java.io.BufferedWriter(fw);
                  java.io.PrintWriter out = new java.io.PrintWriter(bw)) {
@@ -946,6 +968,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                     out.println(toCsv(err.tab) + "," + err.lineNo + "," + toCsv(err.column) + "," + toCsv(err.message));
                 }
             }
+            svrProcess.addLog("Error log written to: " + file.getAbsolutePath());
             return file;
         }
 

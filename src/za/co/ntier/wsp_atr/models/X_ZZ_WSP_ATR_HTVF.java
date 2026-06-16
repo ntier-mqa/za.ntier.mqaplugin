@@ -244,6 +244,33 @@ public class X_ZZ_WSP_ATR_HTVF extends PO implements I_ZZ_WSP_ATR_HTVF, I_Persis
 		return ii.intValue();
 	}
 
+	public I_ZZ_Specializations_Ref getZZ_Specializations() throws RuntimeException
+	{
+		return (I_ZZ_Specializations_Ref)MTable.get(getCtx(), I_ZZ_Specializations_Ref.Table_ID)
+			.getPO(getZZ_Specializations_ID(), get_TrxName());
+	}
+
+	/** Set Specialization.
+		@param ZZ_Specializations_ID Specialization
+	*/
+	public void setZZ_Specializations_ID (int ZZ_Specializations_ID)
+	{
+		if (ZZ_Specializations_ID < 1)
+			set_Value (COLUMNNAME_ZZ_Specializations_ID, null);
+		else
+			set_Value (COLUMNNAME_ZZ_Specializations_ID, Integer.valueOf(ZZ_Specializations_ID));
+	}
+
+	/** Get Specialization.
+		@return Specialization	  */
+	public int getZZ_Specializations_ID()
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_ZZ_Specializations_ID);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
+	}
+
 	/** Set Vacancies EC Count.
 		@param ZZ_Vacancies_EC_Cnt Vacancies EC Count
 	*/

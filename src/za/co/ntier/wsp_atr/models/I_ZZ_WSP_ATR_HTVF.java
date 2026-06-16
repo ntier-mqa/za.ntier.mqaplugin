@@ -171,6 +171,17 @@ public interface I_ZZ_WSP_ATR_HTVF
 
 	public I_ZZ_Scarce_Reason_Ref getZZ_Scarce_Reason() throws RuntimeException;
 
+    /** Column name ZZ_Specializations_ID */
+    public static final String COLUMNNAME_ZZ_Specializations_ID = "ZZ_Specializations_ID";
+
+	/** Set Specialization	  */
+	public void setZZ_Specializations_ID (int ZZ_Specializations_ID);
+
+	/** Get Specialization	  */
+	public int getZZ_Specializations_ID();
+
+	public I_ZZ_Specializations_Ref getZZ_Specializations() throws RuntimeException;
+
     /** Column name ZZ_Vacancies_EC_Cnt */
     public static final String COLUMNNAME_ZZ_Vacancies_EC_Cnt = "ZZ_Vacancies_EC_Cnt";
 
