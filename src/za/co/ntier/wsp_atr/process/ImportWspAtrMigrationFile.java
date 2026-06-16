@@ -194,7 +194,12 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                     processUI.download(logFile);
                 }
                 throw new AdempiereException("Import failed with " + importErrors.size()
-                        + " error(s). Download the generated log file and correct the source spreadsheet.");
+                        + " error(s). See log file: " + (logFile != null ? logFile.getAbsolutePath() : "/tmp"));
+            }
+
+            if (!importErrors.isEmpty()) {
+                processor.writeErrorLog(importErrors);
+                addLog(importErrors.size() + " row(s) were skipped or had warnings — see log file in /tmp");
             }
 
             int total = 0;
@@ -480,6 +485,10 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                     emptyCounter[0] = 0;
 
                     if (shouldIgnoreRowMap(cells, metas.values())) {
+                        String sdlTxt = orgMeta != null ? cells.get(orgMeta.columnIndex) : null;
+                        String sdlInfo = Util.isEmpty(sdlTxt, true) ? "" : " SDL=" + sdlTxt.trim();
+                        importErrors.add(new MigrationError(sheetName, rowIdx + 1, "SDLNumber",
+                                "Row skipped — required column marked 'ignore if blank' was empty" + sdlInfo));
                         return StreamingXlsxReader.Action.CONTINUE;
                     }
 
@@ -705,9 +714,6 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                 }
                 String sdl = sdlNumber.trim();
                 int orgId = lookupOrgIdBySdl(ctx, sdl, trxName);
-                if (orgId > 0) {
-                    return Integer.valueOf(orgId);
-                }
                 // ZZSdfOrganisation not found — create one if the BPartner exists.
                 int bpId = DB.getSQLValueEx(trxName,
                         "SELECT C_BPartner_ID FROM C_BPartner WHERE Value = ? AND AD_Client_ID = ?",
@@ -752,6 +758,9 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                 if (bpId <= 0) {
                     bpId = bp.get_ID();
                     svrProcess.addLog("Tab " + tab + " row " + lineNo + ": created new BPartner for SDL " + sdl);
+                }
+                if (orgId > 0) {
+                    return Integer.valueOf(orgId);
                 }
                 X_ZZSdfOrganisation newOrg = new X_ZZSdfOrganisation(ctx, 0, trxName);
                 newOrg.setC_BPartner_ID(bpId);
