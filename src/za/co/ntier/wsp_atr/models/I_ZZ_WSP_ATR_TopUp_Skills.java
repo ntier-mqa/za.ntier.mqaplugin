@@ -142,6 +142,17 @@ public interface I_ZZ_WSP_ATR_TopUp_Skills
 
 	public I_ZZ_Occupations_Ref getZZ_OFO_Specialisation() throws RuntimeException;
 
+    /** Column name ZZ_Specializations_ID */
+    public static final String COLUMNNAME_ZZ_Specializations_ID = "ZZ_Specializations_ID";
+
+	/** Set Specialization	  */
+	public void setZZ_Specializations_ID (int ZZ_Specializations_ID);
+
+	/** Get Specialization	  */
+	public int getZZ_Specializations_ID();
+
+	public I_ZZ_Specializations_Ref getZZ_Specializations() throws RuntimeException;
+
     /** Column name ZZ_TopUpSkill_ID */
     public static final String COLUMNNAME_ZZ_TopUpSkill_ID = "ZZ_TopUpSkill_ID";
 
