@@ -195,6 +195,6 @@ final class WspAtrSyntheticColumn implements WspAtrSheetColumn {
 
     @Override
     public void writeCell(WspAtrExportValueFormatter formatter, Cell cell, PO record) {
-        formatter.writeValue(cell, null, valueProvider.getDocumentNo(record));
+        formatter.writeValue(cell, null, record == null ? "" : valueProvider.getDocumentNo(record));
     }
 }
