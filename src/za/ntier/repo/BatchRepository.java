@@ -5,10 +5,10 @@ import java.sql.Timestamp;
 import java.util.Map;
 import java.util.Properties;
 
-import org.compiere.model.MInvoiceBatchLine;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 
+import za.ntier.models.MInvoiceBatchLine_New;
 import za.ntier.models.MInvoiceBatch_New;
 import za.ntier.models.X_C_InvoiceBatch;
 import za.ntier.models.X_ZZ_Monthly_Levy_Files_Hdr;
@@ -100,8 +100,8 @@ public class BatchRepository {
     }
 
     public int createBatchLine(int batchId, int docTypeId, int lineNo, int bpId, int bpLocId,
-                               int chargeId, Timestamp date, BigDecimal amount, String description) {
-        MInvoiceBatchLine l = new MInvoiceBatchLine(ctx, 0, trx);
+                               int chargeId, Timestamp date, BigDecimal amount, String description,String zz_Grant_Status) {
+    	MInvoiceBatchLine_New l = new MInvoiceBatchLine_New(ctx, 0, trx);
         l.setAD_Org_ID(DB.getSQLValue(trx, SQL_ORG_ID, ORG_UU));
         l.setC_InvoiceBatch_ID(batchId);
         l.setC_DocType_ID(docTypeId);
@@ -118,6 +118,7 @@ public class BatchRepository {
         l.setLineNetAmt(amount);
         l.setLineTotalAmt(amount);
         l.setDescription(description);
+        l.setZZ_Grant_Status(zz_Grant_Status);
         l.saveEx();
         return l.getC_InvoiceBatchLine_ID();
     }

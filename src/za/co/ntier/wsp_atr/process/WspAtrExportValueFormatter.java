@@ -16,7 +16,6 @@ import org.compiere.model.Query;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Util;
 
-import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Submitted;
 
 final class WspAtrExportValueFormatter {
 
@@ -126,9 +125,15 @@ final class WspAtrExportValueFormatter {
         }
 
         if (displayType == DisplayType.Table || displayType == DisplayType.Search) {
-            String displayColumn = resolveRefTableDisplayColumn(referenceId, trxName);
-            String displayColumnValue = getStringValue(referencedRecord, displayColumn);
+            RefTableMeta refMeta = resolveRefTableMeta(referenceId, trxName);
+            String displayColumnValue = refMeta != null ? getStringValue(referencedRecord, refMeta.displayColumn) : null;
             if (!Util.isEmpty(displayColumnValue, true)) {
+                if (refMeta.isValueDisplayed) {
+                    String recordValue = getStringValue(referencedRecord, "Value");
+                    if (!Util.isEmpty(recordValue, true)) {
+                        return recordValue + " - " + displayColumnValue;
+                    }
+                }
                 return displayColumnValue;
             }
         }
@@ -137,8 +142,7 @@ final class WspAtrExportValueFormatter {
         String resolvedName = getStringValue(referencedRecord, "Name");
 
         if (!Util.isEmpty(resolvedValue, true) && !Util.isEmpty(resolvedName, true)) {
-            if (I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZSdfOrganisation_ID
-                    .equalsIgnoreCase(column.getColumnName())) {
+            if (isRefTableValueDisplayed(referenceId, trxName)) {
                 return resolvedValue + " - " + resolvedName;
             }
             return resolvedName;
@@ -153,7 +157,17 @@ final class WspAtrExportValueFormatter {
         return String.valueOf(value);
     }
 
-    private String resolveRefTableDisplayColumn(int referenceId, String trxName) {
+    private static final class RefTableMeta {
+        final String displayColumn;
+        final boolean isValueDisplayed;
+
+        RefTableMeta(String displayColumn, boolean isValueDisplayed) {
+            this.displayColumn = displayColumn;
+            this.isValueDisplayed = isValueDisplayed;
+        }
+    }
+
+    private RefTableMeta resolveRefTableMeta(int referenceId, String trxName) {
         if (referenceId <= 0) {
             return null;
         }
@@ -165,21 +179,33 @@ final class WspAtrExportValueFormatter {
             return null;
         }
 
+        boolean isValueDisplayed = "Y".equals(refTableRow.get_Value("IsValueDisplayed"));
+
         int displayColumnId = refTableRow.get_ValueAsInt("AD_Display");
         if (displayColumnId <= 0) {
-            return null;
+            return new RefTableMeta(null, isValueDisplayed);
         }
 
         MColumn displayColumn = MColumn.get(process.getCtx(), displayColumnId);
         if (displayColumn == null) {
-            return null;
+            return new RefTableMeta(null, isValueDisplayed);
         }
 
         String displayColumnName = displayColumn.getColumnName();
         if (Util.isEmpty(displayColumnName, true)) {
-            return null;
+            return new RefTableMeta(null, isValueDisplayed);
         }
-        return displayColumnName.trim();
+        return new RefTableMeta(displayColumnName.trim(), isValueDisplayed);
+    }
+
+    private boolean isRefTableValueDisplayed(int referenceId, String trxName) {
+        if (referenceId <= 0) {
+            return false;
+        }
+        PO refTableRow = new Query(process.getCtx(), "AD_Ref_Table", "AD_Reference_ID=?", trxName)
+                .setParameters(referenceId)
+                .firstOnly();
+        return refTableRow != null && "Y".equals(refTableRow.get_Value("IsValueDisplayed"));
     }
 
     private String resolveKnownTableDirDisplay(MColumn column, int recordId, String trxName) {

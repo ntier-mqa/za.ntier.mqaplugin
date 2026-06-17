@@ -174,7 +174,7 @@ public class LevyBatchCreationService {
             int batchLineId = batchRepo.createBatchLine(
                     batch.getC_InvoiceBatch_ID(), docTypeId, lineNo,
                     bpId, bpLocId, chargeId, p_DateDoc,
-                    lineAmt, desc);
+                    lineAmt, desc,currentLine.getZZ_Grant_Status());
 
             // --- Link all contributing levy lines to this batch line ---
             levyRepo.linkLinesToBatchLine(contributing, batchLineId);

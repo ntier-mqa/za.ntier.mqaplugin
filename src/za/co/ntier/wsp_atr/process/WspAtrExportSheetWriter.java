@@ -149,6 +149,7 @@ final class WspAtrExportSheetWriter {
     private List<WspAtrSheetColumn> resolveSharedSubmissionColumns() {
         Map<Integer, PO> submittedCache = new HashMap<>();
         Map<Integer, PO> organisationCache = new HashMap<>();
+        Map<Integer, String> subsectorCache = new HashMap<>();
 
         List<WspAtrSheetColumn> columns = new ArrayList<>();
         columns.add(new WspAtrSyntheticColumn("Legal Name", record ->
@@ -160,9 +161,43 @@ final class WspAtrExportSheetWriter {
         columns.add(new WspAtrSyntheticColumn("SDLNumber", record ->
                 getOrganisationField(resolveOrganisation(record, submittedCache, organisationCache),
                         "ZZ_SDL_No", "zz_sdl_no", "SDLNo", "sdlno", "Value", "value")));
+        columns.add(new WspAtrSyntheticColumn("Organisation Subsector", record ->
+                resolveSubsector(resolveOrganisation(record, submittedCache, organisationCache), subsectorCache)));
         columns.add(new WspAtrSyntheticColumn("FinancialYear", record ->
                 resolveFinancialYear(resolveSubmitted(record, submittedCache))));
         return columns;
+    }
+
+    private String resolveSubsector(PO orgRecord, Map<Integer, String> subsectorCache) {
+        if (orgRecord == null) {
+            return "";
+        }
+        int bPartnerId = orgRecord.get_ValueAsInt("C_BPartner_ID");
+        if (bPartnerId <= 0) {
+            return "";
+        }
+        return subsectorCache.computeIfAbsent(bPartnerId, id -> {
+            PO bPartner = new Query(process.getCtx(), "C_BPartner", "C_BPartner_ID=?", process.get_TrxName())
+                    .setParameters(id)
+                    .firstOnly();
+            if (bPartner == null) {
+                return "";
+            }
+            String subsectorKey = bPartner.get_ValueAsString("ZZSubSector");
+            if (Util.isEmpty(subsectorKey, true)) {
+                return "";
+            }
+            PO refListEntry = new Query(process.getCtx(), "AD_Ref_List",
+                    "Value=? AND AD_Reference_ID=(SELECT AD_Reference_ID FROM AD_Reference WHERE AD_Reference_UU=?)",
+                    process.get_TrxName())
+                            .setParameters(subsectorKey.trim(), "bc9bef41-360e-4fbc-b4f1-93ec2892cef9")
+                            .firstOnly();
+            if (refListEntry == null) {
+                return subsectorKey.trim();
+            }
+            String name = refListEntry.get_ValueAsString("Name");
+            return Util.isEmpty(name, true) ? subsectorKey.trim() : name.trim();
+        });
     }
 
     private PO resolveSubmitted(PO childRecord, Map<Integer, PO> submittedCache) {
