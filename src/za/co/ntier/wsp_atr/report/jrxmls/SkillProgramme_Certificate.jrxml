@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.5.final using JasperReports Library version 6.20.5-3efcf2e67f959db3888d79f73dde2dbd7acb4f8e  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SkillProgramme_Certificate" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="0" uuid="23594964-0177-44f0-8639-69c0bd268fe5">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="nTier_20260616.jrdax"/>
+	<parameter name="RECORD_ID" class="java.lang.Integer"/>
+	<parameter name="RESOURCE_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<queryString language="plsql">
+		<![CDATA[SELECT
+	TRIM(
+		COALESCE(P.ZZFIRSTNAME, '') || ' ' || COALESCE(P.SURNAME, '')
+	) AS SPNAME, --NAME
+	P.ZZ_ID_PASSPORT_NO AS PASSPORTNO, --PASSPORT NUMBER
+	QCTOSP.ZZSKILLSPROGRAMMETITLE, --TITLE
+	QCTOSP.ZZSKILLSPROGRAMMECODE, --REFERENCE
+	TO_CHAR(CURRENT_DATE, 'DD MON YYYY') AS DATEISSUED,
+	NULL AS CERTIFICATENO, --SEQUENCIAL NUMBER
+	NULL AS SIGNATURECHIEF, --ELECTRONIC
+	NULL AS SIGNATURESMQA --ELECTRONIC
+FROM
+	ZZLEARNER SP
+	JOIN ZZLEARNERQCTOSKILLSPROGRAMME QCTO ON QCTO.ZZLEARNER_ID = SP.ZZLEARNER_ID
+	JOIN ZZQCTOSKILLSPROGRAMME QCTOSP ON QCTOSP.ZZQCTOSKILLSPROGRAMME_ID = QCTO.ZZQCTOSKILLSPROGRAMME_ID
+	LEFT JOIN ZZQUALIFICATION Q ON Q.ZZQUALIFICATION_ID = QCTOSP.ZZQUALIFICATION_ID
+	JOIN ZZPERSON P ON P.ZZPERSON_ID = SP.ZZPERSON_ID;]]>
+	</queryString>
+	<field name="spname" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.name" value="spname"/>
+		<property name="com.jaspersoft.studio.field.label" value="spname"/>
+	</field>
+	<field name="passportno" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.name" value="passportno"/>
+		<property name="com.jaspersoft.studio.field.label" value="passportno"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="zzperson"/>
+	</field>
+	<field name="zzskillsprogrammetitle" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.name" value="zzskillsprogrammetitle"/>
+		<property name="com.jaspersoft.studio.field.label" value="zzskillsprogrammetitle"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="zzqctoskillsprogramme"/>
+	</field>
+	<field name="zzskillsprogrammecode" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.name" value="zzskillsprogrammecode"/>
+		<property name="com.jaspersoft.studio.field.label" value="zzskillsprogrammecode"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="zzqctoskillsprogramme"/>
+	</field>
+	<field name="dateissued" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.name" value="dateissued"/>
+		<property name="com.jaspersoft.studio.field.label" value="dateissued"/>
+	</field>
+	<field name="certificateno" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.name" value="certificateno"/>
+		<property name="com.jaspersoft.studio.field.label" value="certificateno"/>
+	</field>
+	<field name="signaturechief" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.name" value="signaturechief"/>
+		<property name="com.jaspersoft.studio.field.label" value="signaturechief"/>
+	</field>
+	<field name="signaturesmqa" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.name" value="signaturesmqa"/>
+		<property name="com.jaspersoft.studio.field.label" value="signaturesmqa"/>
+	</field>
+	<background>
+		<band height="822" splitType="Stretch">
+			<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.FreeLayout"/>
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<image scaleImage="FillFrame" onErrorType="Blank">
+				<reportElement x="-20" y="-20" width="595" height="842" uuid="b2b2b2b2-3c3c-4d4d-5e5e-6f6f6f6f6f6f"/>
+				<box>
+					<pen lineWidth="1.0"/>
+				</box>
+				<imageExpression><![CDATA[$P{RESOURCE_DIR} + "SkillProgramme_Certi_BG.png"]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement x="152" y="148" width="280" height="26" uuid="dbf37fc5-2f39-4e8d-be01-38333b66d023">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="Serif" size="18"/>
+				</textElement>
+				<text><![CDATA[STATEMENT OF ATTAINMENT]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="200" y="178" width="137" height="19" uuid="0398c656-040e-45d9-ae6b-8625738df4b3">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="Serif" size="12" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[This is to confirm that]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="80" y="200" width="390" height="30" uuid="3f294edb-3778-4113-bf5e-41d721424d7a"/>
+				<textElement textAlignment="Center">
+					<font fontName="Serif" size="16" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{spname}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="215" y="237" width="120" height="30" uuid="cd27df4b-5755-43c5-a42a-43dd61410be2">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="Serif" size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{passportno}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="120" y="269" width="300" height="19" uuid="e2a4216e-bb6a-4ea1-bbaa-afe3e77f41e0">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font fontName="Serif" size="12" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[successfully completed the Skills Programme for:]]></text>
+			</staticText>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement x="30" y="300" width="500" height="30" uuid="ad939f37-87c9-492f-af44-804859c423fe"/>
+				<textElement textAlignment="Center">
+					<font fontName="Serif" size="16" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{zzskillsprogrammetitle}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement positionType="Float" x="124" y="340" width="117" height="22" uuid="b938d56a-a324-477c-b509-5d6c673a8d7c">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left">
+					<font fontName="Serif" size="12" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[Reference Number: ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="124" y="375" width="117" height="22" uuid="6cd60a1f-208a-412b-8df7-9688e57e69d9">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left">
+					<font fontName="Serif" size="12" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[Date of Issue]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="124" y="412" width="117" height="22" uuid="7c789972-441d-43b8-a53d-7391c63eadb5">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left">
+					<font fontName="Serif" size="12" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[Certificate Number:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="285" y="556" width="183" height="36" uuid="b2a4b039-ee1b-4e50-8ccb-6d50fda26dbc">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement>
+					<font fontName="Serif" size="12" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[Senior Manager: QA
+Mining Qualifications Authority]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="82" y="556" width="183" height="36" uuid="86f68c32-61a7-4d08-9d55-b79a00bfdbb5"/>
+				<textElement>
+					<font fontName="Serif" size="12" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[Chief Executive Officer
+Mining Qualifications Authority]]></text>
+			</staticText>
+			<line>
+				<reportElement x="82" y="552" width="183" height="1" uuid="bfbfe0d3-1fcf-43c8-91f9-4ec3c4a14255">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement x="285" y="552" width="183" height="1" uuid="1b06b95b-fcbf-4b7f-af75-5bc0f0b1cbf3">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</line>
+			<textField isBlankWhenNull="true">
+				<reportElement positionType="Float" x="285" y="375" width="140" height="22" uuid="894575cd-620e-4bb2-9700-1ee07f194f66"/>
+				<textElement>
+					<font fontName="Serif" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{dateissued}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement positionType="Float" isPrintRepeatedValues="false" x="285" y="412" width="140" height="22" uuid="5980a159-ac84-468d-a83e-2d14c593288f"/>
+				<textElement>
+					<font fontName="Serif" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{certificateno}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement positionType="Float" isPrintRepeatedValues="false" x="284" y="341" width="206" height="22" uuid="a12257fe-cd8c-4c1a-9ade-f953be963e1c"/>
+				<textElement>
+					<font fontName="Serif" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{zzskillsprogrammecode}]]></textFieldExpression>
+			</textField>
+		</band>
+	</background>
+</jasperReport>
