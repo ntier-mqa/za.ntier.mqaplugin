@@ -80,6 +80,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
     ));
 
     private final ReferenceLookupService refService = new ReferenceLookupService();
+    private String selectedTabName; // optional — null/blank means process all tabs
 
     /**
      * Validates all prerequisites before any processing begins and returns the
@@ -130,7 +131,12 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
     @Override
     protected void prepare() {
         for (ProcessInfoParameter para : getParameter()) {
-            MProcessPara.validateUnknownParameter(getProcessInfo().getAD_Process_ID(), para);
+            String name = para.getParameterName();
+            if ("TabName".equals(name)) {
+                selectedTabName = para.getParameterAsString();
+            } else {
+                MProcessPara.validateUnknownParameter(getProcessInfo().getAD_Process_ID(), para);
+            }
         }
     }
 
@@ -154,7 +160,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
 
             // Pass 1: validate + capture workbook-wide single org / fin year / WSP status.
             MigrationSheetProcessor.ValidationResult vr =
-                    processor.validateWorkbook(getCtx(), reader, headers, get_TrxName());
+                    processor.validateWorkbook(getCtx(), reader, headers, get_TrxName(), selectedTabName);
 
             if (!vr.errors.isEmpty()) {
                 File logFile = processor.writeErrorLog(vr.errors);
@@ -186,7 +192,7 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             // Pass 2: stream again and create the POs.
             Map<Integer, Integer> importedBySubmittedId = processor.importWorkbook(
                     getCtx(), reader, headers, get_TrxName(), file.getName(),
-                    vr.singleOrgId, vr.finYearId, vr.wspStatusByOrgId);
+                    vr.singleOrgId, vr.finYearId, vr.wspStatusByOrgId, selectedTabName);
 
             List<MigrationError> importErrors = processor.getImportErrors();
             if (!importErrors.isEmpty()) {
@@ -281,6 +287,22 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
             return value == null ? null : value.replaceAll("[^a-zA-Z0-9]", "");
         }
 
+        /**
+         * For employee columns, suppress the name fallback lookup to avoid false matches
+         * where two employees share the same name. Passing null for mainText prevents the
+         * base-class name-fallback path from firing; valueText (column I) drives the lookup.
+         */
+        @Override
+        protected void setValueFromTextOrCreate(Properties ctx, PO po, ColumnMeta meta,
+                String mainText, String valueText, String nameText, String trxName) {
+            if (meta.column != null && meta.isRefColumn && meta.createIfNotExist
+                    && meta.column.getAD_Reference_Value_ID() == getEmployeeRefTableId(trxName)) {
+                super.setValueFromTextOrCreate(ctx, po, meta, null, valueText, nameText, trxName);
+                return;
+            }
+            super.setValueFromTextOrCreate(ctx, po, meta, mainText, valueText, nameText, trxName);
+        }
+
         List<MigrationError> getImportErrors() {
             return importErrors;
         }
@@ -318,11 +340,16 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
         ValidationResult validateWorkbook(final Properties ctx,
                                           StreamingXlsxReader reader,
                                           List<X_ZZ_WSP_ATR_Lookup_Mapping> mappingHeaders,
-                                          final String trxName) throws Exception {
+                                          final String trxName,
+                                          final String tabFilter) throws Exception {
             final ValidationResult result = new ValidationResult();
 
             for (final X_ZZ_WSP_ATR_Lookup_Mapping header : mappingHeaders) {
                 if (header.getAD_Table_ID() <= 0 || !header.isZZ_Is_For_Bulk()) {
+                    continue;
+                }
+                if (tabFilter != null && !tabFilter.isBlank()
+                        && !tabFilter.equalsIgnoreCase(header.getZZ_Tab_Name())) {
                     continue;
                 }
                 final String mappingName = header.getZZ_Tab_Name();
@@ -440,7 +467,8 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                                              final String sourceFileName,
                                              final Integer singleOrgId,
                                              final int finYearId,
-                                             final Map<Integer, String> wspStatusByOrgId) throws Exception {
+                                             final Map<Integer, String> wspStatusByOrgId,
+                                             final String tabFilter) throws Exception {
 
             // Fallback used when an SDL has no resolved status of its own (e.g. its
             // WSPStatus cell was blank or didn't resolve in AD_Ref_List). We use the
@@ -457,6 +485,10 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
 
             for (final X_ZZ_WSP_ATR_Lookup_Mapping header : mappingHeaders) {
                 if (header.getAD_Table_ID() <= 0 || !header.isZZ_Is_For_Bulk()) {
+                    continue;
+                }
+                if (tabFilter != null && !tabFilter.isBlank()
+                        && !tabFilter.equalsIgnoreCase(header.getZZ_Tab_Name())) {
                     continue;
                 }
                 final String mappingName = header.getZZ_Tab_Name();
