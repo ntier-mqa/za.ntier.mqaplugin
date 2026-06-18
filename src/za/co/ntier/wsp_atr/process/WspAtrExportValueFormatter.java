@@ -179,7 +179,7 @@ final class WspAtrExportValueFormatter {
             return null;
         }
 
-        boolean isValueDisplayed = "Y".equals(refTableRow.get_Value("IsValueDisplayed"));
+        boolean isValueDisplayed = refTableRow.get_ValueAsBoolean("IsValueDisplayed");
 
         int displayColumnId = refTableRow.get_ValueAsInt("AD_Display");
         if (displayColumnId <= 0) {
@@ -205,7 +205,7 @@ final class WspAtrExportValueFormatter {
         PO refTableRow = new Query(process.getCtx(), "AD_Ref_Table", "AD_Reference_ID=?", trxName)
                 .setParameters(referenceId)
                 .firstOnly();
-        return refTableRow != null && "Y".equals(refTableRow.get_Value("IsValueDisplayed"));
+        return refTableRow != null && refTableRow.get_ValueAsBoolean("IsValueDisplayed");
     }
 
     private String resolveKnownTableDirDisplay(MColumn column, int recordId, String trxName) {

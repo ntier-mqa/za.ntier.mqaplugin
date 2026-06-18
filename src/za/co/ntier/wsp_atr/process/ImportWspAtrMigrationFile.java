@@ -56,7 +56,8 @@ import za.ntier.models.MZZWSPATRWSP;
 @org.adempiere.base.annotation.Process(name = "za.co.ntier.wsp_atr.process.ImportWspAtrMigrationFile")
 public class ImportWspAtrMigrationFile extends SvrProcess {
 
-    private static final String BULK_UPLOAD_PATH = "/home/ntier/SG_Data_070526/MQAWSPATRDataDump2026.xlsx";
+    // private static final String BULK_UPLOAD_PATH = "/home/ntier/SG_Data_070526/MQAWSPATRDataDump2026.xlsx";
+    private static final String BULK_UPLOAD_PATH = "/home/ntier/SG_wsp_120626/MQAWSPATRDataDump2026_01062026.xlsx";
     //private static final String BULK_UPLOAD_PATH = "/tmp/bulkupload.xlsx";
 
     /**
@@ -252,14 +253,32 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
 
         static final String WSP_STATUS_REF_UU  = "98479fb5-df5d-440d-86aa-92d77a320857";
         static final String SUB_SECTOR_REF_UU  = "bc9bef41-360e-4fbc-b4f1-93ec2892cef9";
+        private static final String EMPLOYEE_REF_TABLE_UU = "47ecb061-680b-4198-86e6-48c6d66fbb12";
 
         private final int defaultSdfId;
         private final Map<Integer, Map<Integer, ColumnMeta>> columnMetaCache = new HashMap<>();
         private final List<MigrationError> importErrors = new ArrayList<>();
+        private int employeeRefTableId = -1; // lazily resolved
 
         MigrationSheetProcessor(ReferenceLookupService refService, SvrProcess process, int defaultSdfId) {
             super(refService, process);
             this.defaultSdfId = defaultSdfId;
+        }
+
+        private int getEmployeeRefTableId(String trxName) {
+            if (employeeRefTableId < 0) {
+                employeeRefTableId = DB.getSQLValue(trxName,
+                        "SELECT AD_Reference_ID FROM AD_Ref_Table WHERE AD_Ref_Table_UU = ?",
+                        EMPLOYEE_REF_TABLE_UU);
+                if (employeeRefTableId <= 0) {
+                    employeeRefTableId = 0; // not found — disable sanitization rather than throwing
+                }
+            }
+            return employeeRefTableId;
+        }
+
+        private String sanitizeEmployeeValue(String value) {
+            return value == null ? null : value.replaceAll("[^a-zA-Z0-9]", "");
         }
 
         List<MigrationError> getImportErrors() {
@@ -557,6 +576,10 @@ public class ImportWspAtrMigrationFile extends SvrProcess {
                                     && Util.isEmpty(nameText,  true);
                             if (allBlank) {
                                 continue;
+                            }
+                            if (meta.column.getAD_Reference_Value_ID() == getEmployeeRefTableId(trxName)) {
+                                mainText  = sanitizeEmployeeValue(mainText);
+                                valueText = sanitizeEmployeeValue(valueText);
                             }
                             setValueFromTextOrCreate(ctx, line, meta, mainText, valueText, nameText, trxName);
                         } else {
