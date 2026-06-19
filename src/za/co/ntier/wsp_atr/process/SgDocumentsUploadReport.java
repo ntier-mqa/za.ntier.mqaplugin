@@ -39,7 +39,8 @@ import org.compiere.util.DB;
 @org.adempiere.base.annotation.Process(name = "za.co.ntier.wsp_atr.process.SgDocumentsUploadReport")
 public class SgDocumentsUploadReport extends SvrProcess {
 
-    private static final String BASE_DIR    = "/tmp/SG_Data_070526";
+    private static final String BASE_DIR    = "/home/ntier/SG_wsp_120626";
+    //private static final String BASE_DIR    = "/tmp/SG_Data_070526";
     private static final String FISCAL_YEAR = "2026";
 
     /** Directory name → upload type code (must match BulkLoadSgDocuments). */
