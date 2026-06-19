@@ -251,9 +251,7 @@ public class ReconSgSdfDocuments extends SvrProcess {
             pst = DB.prepareStatement(
                 "SELECT a.record_id " +
                 "FROM ad_attachment a " +
-                "JOIN ad_attachmententry ae ON ae.ad_attachment_id = a.ad_attachment_id " +
-                "WHERE a.ad_table_id = ? AND a.ad_client_id = ? " +
-                "GROUP BY a.record_id", null);
+                "WHERE a.ad_table_id = ? AND a.ad_client_id = ?", null);
             pst.setInt(1, TABLE_SDF);
             pst.setInt(2, clientId);
             rs = pst.executeQuery();
