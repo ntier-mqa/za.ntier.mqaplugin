@@ -53,7 +53,8 @@ import za.co.ntier.api.model.X_ZZSdfOrganisation;
 @org.adempiere.base.annotation.Process(name = "za.co.ntier.wsp_atr.process.ReconSgSdfDocuments")
 public class ReconSgSdfDocuments extends SvrProcess {
 
-    private static final String BASE_DIR   = "/tmp/SG_Data_070526/MQAR008388_SDFs";
+	private static final String BASE_DIR    = "/home/ntier/SG_wsp_120626/MQAR008349_SDFs";
+  //  private static final String BASE_DIR   = "/tmp/SG_Data_070526/MQAR008388_SDFs";
     private static final int    TABLE_SDF  = X_ZZSdf.Table_ID;
     private static final int    TABLE_ORG  = X_ZZSdfOrganisation.Table_ID;
 
