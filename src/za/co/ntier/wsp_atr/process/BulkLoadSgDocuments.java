@@ -72,9 +72,9 @@ public class BulkLoadSgDocuments extends SvrProcess {
         if (clearUploads)
             clearAllUploads();
 
-        File mqarDir = new File(base, "MQAR008388");
+        File mqarDir = new File(base, "MQAR008349");
         if (!mqarDir.isDirectory())
-            throw new IllegalStateException("MQAR008388 directory not found under: " + BASE_DIR);
+            throw new IllegalStateException("MQAR008349 directory not found under: " + BASE_DIR);
 
         for (File sdlDir : dirs(mqarDir)) {
             processSDL(sdlDir.getName(), sdlDir);
