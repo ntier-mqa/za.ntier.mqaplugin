@@ -35,7 +35,8 @@ import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Uploads;
 @org.adempiere.base.annotation.Process(name = "za.co.ntier.wsp_atr.process.BulkLoadSgDocuments")
 public class BulkLoadSgDocuments extends SvrProcess {
 
-    private static final String BASE_DIR    = "/tmp/SG_Data_070526";
+    private static final String BASE_DIR    = "/home/ntier/SG_wsp_120626";
+    //private static final String BASE_DIR    = "/tmp/SG_Data_070526";
     private static final String FISCAL_YEAR = "2026";
 
     /** Maps directory names found in the dump to upload type codes. */

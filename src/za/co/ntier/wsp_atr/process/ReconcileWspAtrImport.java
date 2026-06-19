@@ -46,7 +46,8 @@ import org.compiere.util.DB;
 @org.adempiere.base.annotation.Process(name = "za.co.ntier.wsp_atr.process.ReconcileWspAtrImport")
 public class ReconcileWspAtrImport extends SvrProcess {
 
-    private static final String BULK_UPLOAD_PATH = "/home/ntier/SG_Data_070526/MQAWSPATRDataDump2026.xlsx";
+    // private static final String BULK_UPLOAD_PATH = "/home/ntier/SG_Data_070526/MQAWSPATRDataDump2026.xlsx";
+    private static final String BULK_UPLOAD_PATH = "/home/ntier/SG_wsp_120626/MQAWSPATRDataDump2026_01062026.xlsx";
     private static final String SDL_HEADER       = "SDLNumber";
     private static final String WSP_STATUS_HEADER = "WSPStatus";
     private static final String WSP_STATUS_REF_UU = "98479fb5-df5d-440d-86aa-92d77a320857";
@@ -95,7 +96,13 @@ public class ReconcileWspAtrImport extends SvrProcess {
     private static class CategoryCol {
         final String fkColumn;    // e.g. "Gender_ID"
         final String lookupTable; // e.g. "ZZ_Gender_Ref"
-        CategoryCol(String fk, String lookup) { fkColumn = fk; lookupTable = lookup; }
+        final String labelColumn; // column on lookupTable to use as display label
+        final String joinColumn;  // column on lookupTable to join on (null = use PK: lookupTable_ID)
+        CategoryCol(String fk, String lookup) { this(fk, lookup, "Name", null); }
+        CategoryCol(String fk, String lookup, String label) { this(fk, lookup, label, null); }
+        CategoryCol(String fk, String lookup, String label, String join) {
+            fkColumn = fk; lookupTable = lookup; labelColumn = label; joinColumn = join;
+        }
     }
 
     /** DB table (case-insensitive) → reference FK columns to count rows by category. */
@@ -113,7 +120,7 @@ public class ReconcileWspAtrImport extends SvrProcess {
         });
         // Top-up Skills Survey: count rows per top-up skill type
         CATEGORY_BY_TABLE.put("ZZ_WSP_ATR_TopUp_Skills", new CategoryCol[]{
-            new CategoryCol("ZZ_TopUpSkill_ID", "ZZ_Topup_Skills_Ref"),
+            new CategoryCol("ZZ_TopUpSkill_ID", "ZZ_Topup_Skills_Ref_V", "Value"),
         });
         // Non-Employee Skills Training: count rows by employment status and target beneficiary
         CATEGORY_BY_TABLE.put("ZZ_WSP_ATR_Non_Employees_Training", new CategoryCol[]{
@@ -256,7 +263,7 @@ public class ReconcileWspAtrImport extends SvrProcess {
             "  JOIN ZZ_WSP_ATR_Lookup_Mapping m " +
             "    ON m.ZZ_WSP_ATR_Lookup_Mapping_ID = d.ZZ_WSP_ATR_Lookup_Mapping_ID " +
             "  LEFT JOIN AD_Column c ON c.AD_Column_ID = d.AD_Column_ID " +
-            " WHERE m.ZZ_Tab_Name = ? AND d.IsActive='Y'";
+            " WHERE m.ZZ_Tab_Name = ? AND d.IsActive='Y' AND m.ZZ_Is_For_Bulk='Y'";
         PreparedStatement pst = null;
         ResultSet rs = null;
         try {
@@ -663,18 +670,18 @@ public class ReconcileWspAtrImport extends SvrProcess {
      * appear in the main numeric query get a fresh TabStats entry on-the-fly.
      */
     private void queryDbCategory(TabConfig tab, CategoryCol cat, Map<String, TabStats> out) {
-        String lookupPk = cat.lookupTable + "_ID";
+        String lookupJoinCol = (cat.joinColumn != null) ? cat.joinColumn : (cat.lookupTable + "_ID");
         String sql =
             "SELECT bp.Value AS sdl," +
-            "       LOWER(COALESCE(r.Name, CAST(c." + cat.fkColumn + " AS TEXT))) AS label," +
+            "       LOWER(COALESCE(r." + cat.labelColumn + ", CAST(c." + cat.fkColumn + " AS TEXT))) AS label," +
             "       COUNT(*) AS cnt" +
             "  FROM " + tab.dbTable + " c" +
             "  JOIN ZZ_WSP_ATR_Submitted s   ON s.ZZ_WSP_ATR_Submitted_ID = c.ZZ_WSP_ATR_Submitted_ID" +
             "  JOIN ZZSdfOrganisation org    ON org.ZZSdfOrganisation_ID  = s.ZZSdfOrganisation_ID" +
             "  JOIN C_BPartner         bp    ON bp.C_BPartner_ID          = org.C_BPartner_ID" +
-            "  LEFT JOIN " + cat.lookupTable + " r ON r." + lookupPk + " = c." + cat.fkColumn +
+            "  LEFT JOIN " + cat.lookupTable + " r ON r." + lookupJoinCol + " = c." + cat.fkColumn +
             " WHERE c.IsActive='Y'" +
-            " GROUP BY bp.Value, LOWER(COALESCE(r.Name, CAST(c." + cat.fkColumn + " AS TEXT)))";
+            " GROUP BY bp.Value, LOWER(COALESCE(r." + cat.labelColumn + ", CAST(c." + cat.fkColumn + " AS TEXT)))";
 
         PreparedStatement pst = null;
         ResultSet rs = null;
