@@ -334,10 +334,8 @@ public class ReconSgSdfDocuments extends SvrProcess {
             writeOrgLinks(wb.createSheet("Org Links"), s, dbMap);
             writeNoOrgLinks(wb.createSheet("No Org Links"), s, dbMap, excelMap);
 
-            // Save alongside the import spreadsheet, in the parent directory
-            File outDir = base.getParentFile() != null ? base.getParentFile() : base;
             String ts = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-            String outPath = new File(outDir, "SDF_Recon_" + ts + ".xlsx").getAbsolutePath();
+            String outPath = new File("/tmp", "SDF_Recon_" + ts + ".xlsx").getAbsolutePath();
             try (FileOutputStream fos = new FileOutputStream(outPath)) {
                 wb.write(fos);
             }
