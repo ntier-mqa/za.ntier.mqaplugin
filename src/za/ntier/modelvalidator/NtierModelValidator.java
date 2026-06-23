@@ -45,6 +45,7 @@ public class NtierModelValidator implements ModelValidator
 	private static final String ASSESSOR_APPROVED_MAIL_TEMPLATE_UU = "9f932747-a3e7-48ad-9c9f-5527b43c164d";
 	private static final String MODERATOR_APPROVAL_MAIL_TEMPLATE_UU = "2355edbe-87d9-4a6f-b4d3-1ac733521a27";
 	private static final String MODERATOR_APPROVED_MAIL_TEMPLATE_UU = "f8af2182-e4be-405a-9648-12fb4e1464f0";
+	private static final String NOT_RECOMMENDED_MAIL_TEMPLATE_UU = "53b701d6-077f-45c4-a095-b75de2c3a8a7";
 	private int				m_AD_Client_ID	= -1;
 	private static final String ROLE_MGR_QA_AI = "635702d2-8ffb-4a31-a585-d2960d86383c";
 	private static final String ROLE_ASSESSOR = "Assessor";
@@ -192,11 +193,11 @@ public class NtierModelValidator implements ModelValidator
 									endDateStr = new java.text.SimpleDateFormat("yyyy-MM-dd").format(assessorPerson.getEndDate());
 
 								String qualifications = fetchLinkedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorQualification.Table_Name,
-																			I_ZZQualification.Table_Name, I_ZZQualification.COLUMNNAME_ZZQualification_ID, po
-																																								.get_TrxName());
+																			I_ZZQualification.Table_Name, I_ZZQualification.COLUMNNAME_ZZQualification_ID, 
+																			I_ZZQualification.COLUMNNAME_ZZSaqaQualificationTitle, po.get_TrxName());
 								String skillsProgrammes = fetchLinkedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorSkillsProgramme.Table_Name,
 																			I_ZZSkillsProgramme.Table_Name, I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgramme_ID,
-																			po.get_TrxName());
+																			I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeTitle, po.get_TrxName());
 
 								String subject = approvedMailTemplate.getMailHeader();
 								String msgBody = approvedMailTemplate.getMailText(true);
@@ -222,6 +223,51 @@ public class NtierModelValidator implements ModelValidator
 							}
 						}
 					}
+					
+					// Send mail for the Not Recommended Qualification and Skills Programme to the Assessor/Moderator
+					String notRecQuals = fetchNotRecommendedItems(assessorPerson.get_ID(), I_ZZLinkAssessorQualification.Table_Name,
+							I_ZZQualification.Table_Name, I_ZZQualification.COLUMNNAME_ZZQualification_ID, "zz_isrecommended", 
+							I_ZZQualification.COLUMNNAME_ZZSaqaQualificationTitle, po.get_TrxName());
+					String notRecSkills = fetchNotRecommendedItems(assessorPerson.get_ID(), I_ZZLinkAssessorSkillsProgramme.Table_Name,
+							I_ZZSkillsProgramme.Table_Name, I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgramme_ID, "zz_isrecommended", 
+							I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeTitle, po.get_TrxName());
+
+					if (!Util.isEmpty(notRecQuals) || !Util.isEmpty(notRecSkills))
+					{
+						int assessorUserIdNotRec = assessorPerson.getAD_User_ID();
+						if (assessorUserIdNotRec > 0)
+						{
+							MUser_New assessorUser = new MUser_New(po.getCtx(), assessorUserIdNotRec, po.get_TrxName());
+							String assessorEmail = assessorUser.getEMail();
+
+							if (!Util.isEmpty(assessorEmail))
+							{
+								var notRecMailTemplate = (MMailText) new Query(po.getCtx(), MMailText.Table_Name, "R_MailText_UU=?", po.get_TrxName())
+																																						.setParameters(NOT_RECOMMENDED_MAIL_TEMPLATE_UU)
+																																						.first();
+
+								if (notRecMailTemplate != null)
+								{
+									String subject = notRecMailTemplate.getMailHeader();
+									String msgBody = notRecMailTemplate.getMailText(true);
+
+									if (msgBody != null)
+									{
+										msgBody = msgBody.replace("@NotRecommendedQualifications@", notRecQuals);
+										msgBody = msgBody.replace("@NotRecommendedSkillsProgrammes@", notRecSkills);
+									}
+
+									MClient client = MClient.get(po.getCtx(), po.getAD_Client_ID());
+									client.sendEMail(assessorEmail, subject, msgBody, null, notRecMailTemplate.isHtml());
+								}
+								else
+								{
+									log.warning("Mail template for 'Not Recommended' items not found (UU: " + NOT_RECOMMENDED_MAIL_TEMPLATE_UU + ")");
+								}
+							}
+						}
+					}
+					
 				}
 
 				if (X_ZZAssessorPerson.ZZ_DOCSTATUS_Recommended.equals(newStatus))
@@ -279,10 +325,10 @@ public class NtierModelValidator implements ModelValidator
 										}
 
 										client.sendEMail(user.getEMail(), subject, msgBody, null, mailTemplate.isHtml());
-										
-										MNote note = new MNote(po.getCtx(), 0, user.getAD_User_ID(),
-												assessorPerson.get_Table_ID(), assessorPerson.get_ID(),
-												subject, msgBody, po.get_TrxName());
+
+										MNote note = new MNote(	po.getCtx(), 0, user.getAD_User_ID(),
+																assessorPerson.get_Table_ID(), assessorPerson.get_ID(),
+																subject, msgBody, po.get_TrxName());
 										note.setAD_Org_ID(po.getAD_Org_ID());
 										note.saveEx();
 									}
@@ -346,12 +392,12 @@ public class NtierModelValidator implements ModelValidator
 		}
 	}
 
-	private String fetchLinkedItems(int assessorPersonId, String linkTableName, String masterTableName, String masterKeyCol, String trxName)
+	private String fetchLinkedItems(int assessorPersonId, String linkTableName, String masterTableName, String masterKeyCol, String titleCol, String trxName)
 	{
 		StringBuilder sb = new StringBuilder();
-		String sql = "SELECT m.Value, m.Name FROM " + linkTableName + " l "
-				+ "INNER JOIN " + masterTableName + " m ON (l." + masterKeyCol + " = m." + masterKeyCol + ") "
-				+ "WHERE l." + I_ZZAssessorPerson.COLUMNNAME_ZZAssessorPerson_ID + " = ? AND l.IsActive = 'Y' AND m.IsActive = 'Y'";
+		String sql = "SELECT m.Value, m." + titleCol + " FROM " + linkTableName + " l "
+						+ "INNER JOIN " + masterTableName + " m ON (l." + masterKeyCol + " = m." + masterKeyCol + ") "
+						+ "WHERE l." + I_ZZAssessorPerson.COLUMNNAME_ZZAssessorPerson_ID + " = ? AND l.IsActive = 'Y' AND m.IsActive = 'Y'";
 		try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName))
 		{
 			pstmt.setInt(1, assessorPersonId);
@@ -362,16 +408,19 @@ public class NtierModelValidator implements ModelValidator
 					String val = rs.getString(1);
 					String name = rs.getString(2);
 					String formatted = "";
-					if (val != null && !val.isBlank()) formatted += val.trim();
+					if (val != null && !val.isBlank())
+						formatted += val.trim();
 					if (name != null && !name.isBlank())
 					{
-						if (!formatted.isEmpty()) formatted += " ";
+						if (!formatted.isEmpty())
+							formatted += " ";
 						formatted += name.trim();
 					}
-					
+
 					if (!formatted.isBlank())
 					{
-						if (sb.length() > 0) sb.append("<br>");
+						if (sb.length() > 0)
+							sb.append("<br>");
 						sb.append(formatted);
 					}
 				}
@@ -380,6 +429,55 @@ public class NtierModelValidator implements ModelValidator
 		catch (Exception e)
 		{
 			log.severe("Error fetching linked items from " + linkTableName + ": " + e.getMessage());
+		}
+		return sb.toString();
+	}
+
+	private String fetchNotRecommendedItems(int assessorPersonId, String linkTableName, String masterTableName, String masterKeyCol, String isRecommendedCol, String titleCol, String trxName)
+	{
+		StringBuilder sb = new StringBuilder();
+		String sql = "SELECT m.Value, m." + titleCol + ", l.Comments FROM " + linkTableName + " l "
+						+ "INNER JOIN " + masterTableName + " m ON (l." + masterKeyCol + " = m." + masterKeyCol + ") "
+						+ "WHERE l." + I_ZZAssessorPerson.COLUMNNAME_ZZAssessorPerson_ID + " = ? AND l." + isRecommendedCol
+						+ " = 'N' AND l.IsActive = 'Y' AND m.IsActive = 'Y'";
+		try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName))
+		{
+			pstmt.setInt(1, assessorPersonId);
+			try (ResultSet rs = pstmt.executeQuery())
+			{
+				while (rs.next())
+				{
+					String val = rs.getString(1);
+					String name = rs.getString(2);
+					String comments = rs.getString(3);
+
+					String formatted = "";
+					if (val != null && !val.isBlank())
+						formatted += val.trim();
+					if (name != null && !name.isBlank())
+					{
+						if (!formatted.isEmpty())
+							formatted += " - ";
+						formatted += name.trim();
+					}
+
+					if (comments != null && !comments.isBlank())
+					{
+						formatted += " (<b>Reason:</b> " + comments.trim() + ")";
+					}
+
+					if (!formatted.isBlank())
+					{
+						if (sb.length() > 0)
+							sb.append("<br>");
+						sb.append(formatted);
+					}
+				}
+			}
+		}
+		catch (Exception e)
+		{
+			log.severe("Error fetching not recommended items from " + linkTableName + ": " + e.getMessage());
 		}
 		return sb.toString();
 	}
