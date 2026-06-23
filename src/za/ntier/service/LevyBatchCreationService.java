@@ -12,6 +12,7 @@ import java.util.Set;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.compiere.model.MBPartner;
+import org.compiere.util.DB;
 
 import za.ntier.models.MInvoiceBatch_New;
 import za.ntier.models.X_ZZ_Monthly_Levy_Files;
@@ -185,6 +186,8 @@ public class LevyBatchCreationService {
             processedKeys.add(processKey);
             createdLines++;
         }
+        if (createdLines > 0)
+            DB.executeUpdate("Update " + X_ZZ_Monthly_Levy_Files_Hdr.Table_Name + " lh set create_invoice_batch_lines = 'Y' where lh.ZZ_Monthly_Levy_Files_Hdr_ID = " + hdr.getZZ_Monthly_Levy_Files_Hdr_ID(),trxName );
 
         return stats("OK", batchByYearMonth.size(), currentLines.size(), createdLines,
                 skippedNoBP, skippedNoApproval, skippedZero);
