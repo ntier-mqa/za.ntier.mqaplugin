@@ -19,6 +19,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.compiere.process.ProcessInfo;
 import org.compiere.process.ProcessInfoParameter;
 import org.compiere.process.SvrProcess;
 import org.compiere.util.DB;
@@ -114,12 +115,18 @@ public class UpdateVendorNamesFromSheet extends SvrProcess {
 
 		addLog("Total updates: " + changes.size());
 
-		// --- write change log Excel ---
+		// --- write change log Excel and expose as download ---
 		if (!changes.isEmpty()) {
 			String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-			String outPath = inFile.getParent() + File.separator + "VendorNameChanges_" + timestamp + ".xlsx";
-			writeChangeLog(outPath, changes);
-			addLog("Change log written to: " + outPath);
+			File outFile = new File(System.getProperty("java.io.tmpdir"),
+					"VendorNameChanges_" + timestamp + ".xlsx");
+			writeChangeLog(outFile.getAbsolutePath(), changes);
+			addLog("Change log: " + outFile.getAbsolutePath());
+
+			ProcessInfo pi = getProcessInfo();
+			pi.setExport(true);
+			pi.setExportFile(outFile);
+			pi.setExportFileExtension("xlsx");
 		}
 
 		return "Done. " + lVendors.size() + " L-vendors checked, " + changes.size() + " updated.";

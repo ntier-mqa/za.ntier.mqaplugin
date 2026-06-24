@@ -350,9 +350,16 @@ public class StreamingXlsxReader implements AutoCloseable {
                 // fall through with defaults
             }
         }
+        if (org.apache.poi.ss.usermodel.DateUtil.isADateFormat(fmtId, fmtStr)) {
+            try {
+                double d = Double.parseDouble(raw.trim());
+                return dataFormatter.formatRawCellContents(d, fmtId, fmtStr);
+            } catch (NumberFormatException e) {
+                return raw;
+            }
+        }
         try {
-            double d = Double.parseDouble(raw.trim());
-            return dataFormatter.formatRawCellContents(d, fmtId, fmtStr);
+            return new java.math.BigDecimal(raw.trim()).stripTrailingZeros().toPlainString();
         } catch (NumberFormatException e) {
             return raw;
         }
