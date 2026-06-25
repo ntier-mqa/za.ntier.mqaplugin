@@ -242,7 +242,7 @@ public class UpdateBPartnerEmployeesFromExcel extends SvrProcess
 			}
 		}
 
-		File txtLogFile = new File(file.getParentFile(), "Update_BPartner_Employees_Log_" + timestamp + ".txt");
+		File txtLogFile = new File("/tmp", "Update_BPartner_Employees_Log_" + timestamp + ".txt");
 		try (PrintWriter pw = new PrintWriter(new FileWriter(txtLogFile)))
 		{
 			pw.println("====== SUMMARY ======");
@@ -282,7 +282,7 @@ public class UpdateBPartnerEmployeesFromExcel extends SvrProcess
 			log.log(Level.SEVERE, "Could not write to text log file: " + txtLogFile.getAbsolutePath(), ex);
 		}
 
-		File htmlLogFile = new File(file.getParentFile(), "Verified_BPartner_Employees_Log_" + timestamp + ".html");
+		File htmlLogFile = new File("/tmp", "Verified_BPartner_Employees_Log_" + timestamp + ".html");
 		try (PrintWriter pw = new PrintWriter(new FileWriter(htmlLogFile)))
 		{
 			pw.println("<html><head><style>body { font-family: sans-serif; } .success { color: green; font-weight: bold; } .error { color: red; font-weight: bold; } li { margin-bottom: 5px; } table { border-collapse: collapse; width: 60%; margin-bottom: 20px; } th, td { border: 1px solid #ddd; padding: 8px; text-align: left; } th { background-color: #f2f2f2; }</style></head><body>");
