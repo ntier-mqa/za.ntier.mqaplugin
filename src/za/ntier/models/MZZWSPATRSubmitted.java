@@ -389,8 +389,12 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 		if (subject == null || subject.trim().isEmpty())
 			subject = "WSP-ATR Query Notification";
 
-
 		File pdf = createPDF(html,fileName);
+
+		// Strip tables and trim leftover spacing tags for a clean email body
+		String emailHtml = html	.replaceAll("(?is)<table.*?>.*?</table>", "")
+								.replaceAll("(?i)^(\\s*<br\\s*/?>\\s*)+", "")
+								.replaceAll("(?i)(\\s*<br\\s*/?>\\s*|<p>(&nbsp;|\\s)*</p>\\s*)+$", "");
 
 		// Sender
 		MUser fromUser =
@@ -399,7 +403,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 		MClient client = MClient.get(getCtx());
 
 		boolean sent =
-				client.sendEMail(fromUser, toUser, subject, html, pdf, true);
+				client.sendEMail(fromUser, toUser, subject, emailHtml, pdf, true);
 
 		if (!sent)
 			log.severe("Failed to send query  email");
