@@ -60,10 +60,14 @@ public class UpdateBPartnerEmployeesFromExcel extends SvrProcess
 		int updatedTotalEmpOnly = 0;
 		int updatedTermEmpOnly = 0;
 		int updatedBoth = 0;
+		int updatedSubSector = 0;
 		int skippedMatchCount = 0;
 		List<String> successLog = new ArrayList<>();
 		List<String> errorLog = new ArrayList<>();
 		List<String> skippedCrossTenantLog = new ArrayList<>();
+
+		Map<String, Integer> subSectorUpdateCounts = new java.util.TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+		Map<String, Integer> skippedSubSectorCounts = new java.util.TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
 		long timestamp = System.currentTimeMillis();
 
@@ -76,6 +80,7 @@ public class UpdateBPartnerEmployeesFromExcel extends SvrProcess
 			int sdlColIdx = -1;
 			int totalEmpColIdx = -1;
 			int terminatedEmpColIdx = -1;
+			int subSectorColIdx = -1;
 
 			DataFormatter formatter = new DataFormatter();
 
@@ -96,12 +101,16 @@ public class UpdateBPartnerEmployeesFromExcel extends SvrProcess
 					{
 						terminatedEmpColIdx = i;
 					}
+					else if ("SubSector".equalsIgnoreCase(header) || "Sub Sector".equalsIgnoreCase(header))
+					{
+						subSectorColIdx = i;
+					}
 				}
 			}
 
-			if (sdlColIdx == -1 || totalEmpColIdx == -1 || terminatedEmpColIdx == -1)
+			if (sdlColIdx == -1 || totalEmpColIdx == -1 || terminatedEmpColIdx == -1 || subSectorColIdx == -1)
 			{
-				throw new Exception("Required columns ('SDLNumber', 'TotalEmployment', 'TerminatedEmployees') not found in the header row.");
+				throw new Exception("Required columns ('SDLNumber', 'TotalEmployment', 'TerminatedEmployees', 'SubSector') not found in the header row.");
 			}
 
 			Map<String, Integer> currentClientBPs = new java.util.TreeMap<>(String.CASE_INSENSITIVE_ORDER);
@@ -136,6 +145,7 @@ public class UpdateBPartnerEmployeesFromExcel extends SvrProcess
 				String sdlNumber = formatter.formatCellValue(row.getCell(sdlColIdx)).trim();
 				String totalEmpStr = formatter.formatCellValue(row.getCell(totalEmpColIdx)).trim();
 				String terminatedEmpStr = formatter.formatCellValue(row.getCell(terminatedEmpColIdx)).trim();
+				String subSectorStr = formatter.formatCellValue(row.getCell(subSectorColIdx)).trim();
 
 				if (sdlNumber.isEmpty())
 				{
@@ -164,6 +174,7 @@ public class UpdateBPartnerEmployeesFromExcel extends SvrProcess
 					boolean changed = false;
 					boolean changedTotal = false;
 					boolean changedTerm = false;
+					boolean changedSubSector = false;
 					StringBuilder actionLogNote = new StringBuilder();
 
 					Object rawPrevTotal = bp.get_Value("ZZ_Number_Of_Employees");
@@ -177,6 +188,15 @@ public class UpdateBPartnerEmployeesFromExcel extends SvrProcess
 					if (rawPrevTerminated instanceof BigDecimal) prevTerminated = (BigDecimal) rawPrevTerminated;
 					else if (rawPrevTerminated instanceof Number) prevTerminated = new BigDecimal(rawPrevTerminated.toString());
 					else if (rawPrevTerminated instanceof String) try { prevTerminated = new BigDecimal((String) rawPrevTerminated); } catch (Exception e) {}
+
+					String prevSubSector = (String) bp.get_Value("ZZSubSector");
+					String mappedSubSector = getMappedSubSector(subSectorStr);
+
+					if (!subSectorStr.isEmpty() && mappedSubSector == null)
+					{
+						errorLog.add("Row " + (r + 1) + " | SDL: " + sdlNumber + " | Reason: Unrecognized SubSector -> " + subSectorStr);
+						continue;
+					}
 
 					if (totalEmp != null && (prevTotal == null || prevTotal.compareTo(totalEmp) != 0))
 					{
@@ -200,6 +220,19 @@ public class UpdateBPartnerEmployeesFromExcel extends SvrProcess
 						}
 					}
 
+					if ( (mappedSubSector == null && prevSubSector != null) || 
+					     (mappedSubSector != null && !mappedSubSector.equals(prevSubSector)) )
+					{
+						bp.set_ValueOfColumn("ZZSubSector", mappedSubSector);
+						changed = true;
+						changedSubSector = true;
+						actionLogNote.append(" | SubSector: ")
+						             .append(prevSubSector == null ? "null" : prevSubSector + " (" + getSubSectorName(prevSubSector) + ")")
+						             .append(" -> ")
+						             .append(mappedSubSector == null ? "null" : mappedSubSector)
+						             .append(" (").append(subSectorStr.isEmpty() ? "empty" : subSectorStr).append(")");
+					}
+
 					if (changed)
 					{
 						if (bp.save())
@@ -208,6 +241,11 @@ public class UpdateBPartnerEmployeesFromExcel extends SvrProcess
 							if (changedTotal && changedTerm) updatedBoth++;
 							else if (changedTotal) updatedTotalEmpOnly++;
 							else if (changedTerm) updatedTermEmpOnly++;
+							
+							if (changedSubSector) {
+								updatedSubSector++;
+								subSectorUpdateCounts.put(subSectorStr, subSectorUpdateCounts.getOrDefault(subSectorStr, 0) + 1);
+							}
 							
 							successLog.add(	"SDL: " + sdlNumber + " | C_BPartner_ID: " + bpartnerId + actionLogNote.toString());
 						}
@@ -220,6 +258,10 @@ public class UpdateBPartnerEmployeesFromExcel extends SvrProcess
 					{
 						errorLog.add("Row " + (r + 1) + " | SDL: " + sdlNumber + " | Reason: Skipped, values already match DB.");
 						skippedMatchCount++;
+						if (mappedSubSector != null)
+						{
+							skippedSubSectorCounts.put(mappedSubSector, skippedSubSectorCounts.getOrDefault(mappedSubSector, 0) + 1);
+						}
 					}
 				}
 				else
@@ -249,12 +291,47 @@ public class UpdateBPartnerEmployeesFromExcel extends SvrProcess
 			pw.println("Total Successful Rows: " + updatedCount);
 			pw.println("   -> Updated Total Employment ONLY: " + updatedTotalEmpOnly);
 			pw.println("   -> Updated Terminated Employees ONLY: " + updatedTermEmpOnly);
-			pw.println("   -> Updated BOTH fields: " + updatedBoth);
+			pw.println("   -> Updated BOTH Employee fields: " + updatedBoth);
+			pw.println("   -> Updated SubSector: " + updatedSubSector);
 			pw.println("Not successful updates (Errors): " + (errorLog.size() - skippedMatchCount));
 			pw.println("Skipped (Already Match DB): " + skippedMatchCount);
 			pw.println("Skipped (Cross-Tenant): " + skippedCrossTenantLog.size());
 			pw.println("=====================");
 			pw.println();
+
+			if (!subSectorUpdateCounts.isEmpty())
+			{
+				pw.println("====== SUBSECTOR UPDATE DISTRIBUTION ======");
+				pw.println(String.format("%-40s | %-10s", "SubSector", "Updated Count"));
+				pw.println("----------------------------------------------------------");
+				int totalSubSectorUpdates = 0;
+				for (Map.Entry<String, Integer> entry : subSectorUpdateCounts.entrySet())
+				{
+					pw.println(String.format("%-40s | %-10d", entry.getKey(), entry.getValue()));
+					totalSubSectorUpdates += entry.getValue();
+				}
+				pw.println("----------------------------------------------------------");
+				pw.println(String.format("%-40s | %-10d", "TOTAL", totalSubSectorUpdates));
+				pw.println("===========================================");
+				pw.println();
+			}
+			
+			if (!skippedSubSectorCounts.isEmpty())
+			{
+				pw.println("====== SKIPPED SUBSECTORS (Already Match DB) ======");
+				pw.println(String.format("%-40s | %-10s", "SubSector", "Skipped Count"));
+				pw.println("----------------------------------------------------------");
+				int totalSkippedSubSectors = 0;
+				for (Map.Entry<String, Integer> entry : skippedSubSectorCounts.entrySet())
+				{
+					pw.println(String.format("%-40s | %-10d", getSubSectorName(entry.getKey()) + " (" + entry.getKey() + ")", entry.getValue()));
+					totalSkippedSubSectors += entry.getValue();
+				}
+				pw.println("----------------------------------------------------------");
+				pw.println(String.format("%-40s | %-10d", "TOTAL SKIPPED", totalSkippedSubSectors));
+				pw.println("===================================================");
+				pw.println();
+			}
 			
 			pw.println("====== FAILED / SKIPPED ROWS (" + errorLog.size() + ") ======");
 			for (String errMsg : errorLog)
@@ -293,12 +370,43 @@ public class UpdateBPartnerEmployeesFromExcel extends SvrProcess
 			pw.println("<tr><th>Category</th><th>Count</th></tr>");
 			pw.println("<tr><td>Updated Total Employment <b>ONLY</b></td><td>" + updatedTotalEmpOnly + "</td></tr>");
 			pw.println("<tr><td>Updated Terminated Employees <b>ONLY</b></td><td>" + updatedTermEmpOnly + "</td></tr>");
-			pw.println("<tr><td>Updated <b>BOTH</b> fields</td><td>" + updatedBoth + "</td></tr>");
+			pw.println("<tr><td>Updated <b>BOTH</b> Employee fields</td><td>" + updatedBoth + "</td></tr>");
+			pw.println("<tr><td>Updated <b>SubSector</b></td><td>" + updatedSubSector + "</td></tr>");
 			pw.println("<tr style='background-color: #e6ffe6; font-weight: bold;'><td>Total Successful Rows</td><td>" + updatedCount + "</td></tr>");
 			pw.println("<tr><td>Not successful updates (Errors)</td><td>" + (errorLog.size() - skippedMatchCount) + "</td></tr>");
 			pw.println("<tr><td>Skipped (Already Match DB)</td><td>" + skippedMatchCount + "</td></tr>");
 			pw.println("<tr><td>Skipped (Cross-Tenant)</td><td>" + skippedCrossTenantLog.size() + "</td></tr>");
 			pw.println("</table><hr/>");
+
+			if (!subSectorUpdateCounts.isEmpty())
+			{
+				pw.println("<h3>Updated SubSector Distribution</h3>");
+				pw.println("<table>");
+				pw.println("<tr><th>SubSector</th><th>Updated Count</th></tr>");
+				int totalSubSectorUpdates = 0;
+				for (Map.Entry<String, Integer> entry : subSectorUpdateCounts.entrySet())
+				{
+					pw.println("<tr><td>" + entry.getKey() + "</td><td>" + entry.getValue() + "</td></tr>");
+					totalSubSectorUpdates += entry.getValue();
+				}
+				pw.println("<tr><th><b>TOTAL</b></th><th><b>" + totalSubSectorUpdates + "</b></th></tr>");
+				pw.println("</table><hr/>");
+			}
+
+			if (!skippedSubSectorCounts.isEmpty())
+			{
+				pw.println("<h3>Skipped SubSectors (Already Match DB)</h3>");
+				pw.println("<table>");
+				pw.println("<tr><th>SubSector</th><th>Skipped Count</th></tr>");
+				int totalSkippedSubSectors = 0;
+				for (Map.Entry<String, Integer> entry : skippedSubSectorCounts.entrySet())
+				{
+					pw.println("<tr><td>" + getSubSectorName(entry.getKey()) + " (" + entry.getKey() + ")</td><td>" + entry.getValue() + "</td></tr>");
+					totalSkippedSubSectors += entry.getValue();
+				}
+				pw.println("<tr><th><b>TOTAL SKIPPED</b></th><th><b>" + totalSkippedSubSectors + "</b></th></tr>");
+				pw.println("</table><hr/>");
+			}
 
 			pw.println("<h3 class='error'>❌ FAILED / SKIPPED ROWS (" + errorLog.size() + ")</h3><ul>");
 			for (String errMsg : errorLog)
@@ -341,5 +449,42 @@ public class UpdateBPartnerEmployeesFromExcel extends SvrProcess
 		}
 
 		return "Process completed. Updated " + updatedCount + " records. Check logs at: " + txtLogFile.getAbsolutePath() + " and " + htmlLogFile.getAbsolutePath();
+	}
+
+	private String getMappedSubSector(String subSector)
+	{
+		if (subSector == null || subSector.trim().isEmpty())
+			return null;
+
+		String lower = subSector.trim().toLowerCase();
+		if (lower.equals("1") || lower.contains("coal")) return "1";
+		if (lower.equals("2") || lower.contains("gold")) return "2";
+		if (lower.equals("3") || lower.contains("pgm")) return "3";
+		if (lower.equals("4") || lower.contains("diamond mining")) return "4";
+		if (lower.equals("5") || lower.contains("other")) return "5";
+		if (lower.equals("6") || lower.contains("cement") || lower.contains("lime") || lower.contains("aggregates") || lower.contains("clas")) return "6";
+		if (lower.equals("7") || lower.contains("services incidental")) return "7";
+		if (lower.equals("8") || lower.contains("diamond processing")) return "8";
+		if (lower.equals("9") || lower.contains("jewel")) return "9";
+
+		return null;
+	}
+
+	private String getSubSectorName(String key)
+	{
+		if (key == null) return "null";
+		switch (key)
+		{
+			case "1": return "Coal Mining";
+			case "2": return "Gold Mining";
+			case "3": return "PGM Mining";
+			case "4": return "Diamond Mining";
+			case "5": return "Other Mining";
+			case "6": return "Cement, Lime, Aggregates and Sand (CLAS)";
+			case "7": return "Services Incidental to Mining";
+			case "8": return "Diamond Processing";
+			case "9": return "Jewellery Manufacturing";
+			default: return key;
+		}
 	}
 }
