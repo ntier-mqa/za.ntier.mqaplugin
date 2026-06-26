@@ -128,12 +128,6 @@ final class WspAtrExportValueFormatter {
             RefTableMeta refMeta = resolveRefTableMeta(referenceId, trxName);
             String displayColumnValue = refMeta != null ? getStringValue(referencedRecord, refMeta.displayColumn) : null;
             if (!Util.isEmpty(displayColumnValue, true)) {
-                if (refMeta.isValueDisplayed) {
-                    String recordValue = getStringValue(referencedRecord, "Value");
-                    if (!Util.isEmpty(recordValue, true)) {
-                        return recordValue + " - " + displayColumnValue;
-                    }
-                }
                 return displayColumnValue;
             }
         }
@@ -142,9 +136,6 @@ final class WspAtrExportValueFormatter {
         String resolvedName = getStringValue(referencedRecord, "Name");
 
         if (!Util.isEmpty(resolvedValue, true) && !Util.isEmpty(resolvedName, true)) {
-            if (isRefTableValueDisplayed(referenceId, trxName)) {
-                return resolvedValue + " - " + resolvedName;
-            }
             return resolvedName;
         }
         if (!Util.isEmpty(resolvedName, true)) {
@@ -165,6 +156,49 @@ final class WspAtrExportValueFormatter {
             this.displayColumn = displayColumn;
             this.isValueDisplayed = isValueDisplayed;
         }
+    }
+
+    boolean isRefValueDisplayed(MColumn column) {
+        if (column == null) {
+            return false;
+        }
+        int ref = column.getAD_Reference_ID();
+        if (ref != DisplayType.Table && ref != DisplayType.Search) {
+            return false;
+        }
+        int referenceValueId = column.getAD_Reference_Value_ID();
+        if (referenceValueId <= 0) {
+            return false;
+        }
+        return isRefTableValueDisplayed(referenceValueId, process.get_TrxName());
+    }
+
+    String resolveValuePartOnly(MColumn column, Object value) {
+        if (value == null || !(value instanceof Number)) {
+            return "";
+        }
+        int recordId = ((Number) value).intValue();
+        if (recordId <= 0) {
+            return "";
+        }
+        int referenceId = column.getAD_Reference_Value_ID();
+        if (referenceId <= 0) {
+            return "";
+        }
+        MRefTable refTable = MRefTable.get(process.getCtx(), referenceId, process.get_TrxName());
+        if (refTable == null || refTable.getAD_Table_ID() <= 0) {
+            return "";
+        }
+        MTable referenceTable = MTable.get(process.getCtx(), refTable.getAD_Table_ID());
+        if (referenceTable == null || referenceTable.getAD_Table_ID() <= 0) {
+            return "";
+        }
+        PO referencedRecord = referenceTable.getPO(recordId, process.get_TrxName());
+        if (referencedRecord == null) {
+            return "";
+        }
+        String v = getStringValue(referencedRecord, "Value");
+        return v != null ? v : "";
     }
 
     private RefTableMeta resolveRefTableMeta(int referenceId, String trxName) {

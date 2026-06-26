@@ -18,6 +18,7 @@ import org.compiere.model.MColumn;
 import org.compiere.model.MTable;
 import org.compiere.model.PO;
 import org.compiere.model.Query;
+import org.compiere.util.DB;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Util;
 
@@ -127,6 +128,13 @@ final class WspAtrExportSheetWriter {
 
             String header = fieldHeaderCache.computeIfAbsent(fieldRow.get_ID(),
                     key -> resolveFieldHeader(fieldRow, column));
+            if (valueFormatter.isRefValueDisplayed(column)) {
+                String valueHeader = resolveValueColumnHeader(column);
+                final MColumn col = column;
+                actualColumns.putIfAbsent(normalize(column.getColumnName()) + "__VALUE",
+                        new WspAtrSyntheticColumn(valueHeader, record ->
+                                valueFormatter.resolveValuePartOnly(col, record.get_Value(col.getColumnName()))));
+            }
             actualColumns.putIfAbsent(normalize(column.getColumnName()), new WspAtrTableColumn(column, header));
         }
 
@@ -290,6 +298,20 @@ final class WspAtrExportSheetWriter {
         }
 
         return column.getColumnName();
+    }
+
+    private String resolveValueColumnHeader(MColumn column) {
+        int referenceId = column.getAD_Reference_Value_ID();
+        if (referenceId <= 0) {
+            return "Value";
+        }
+        String name = DB.getSQLValueString(process.get_TrxName(),
+                "SELECT c.Name FROM AD_Column c"
+                + " JOIN AD_Ref_Table rt ON rt.AD_Table_ID = c.AD_Table_ID"
+                + " WHERE rt.AD_Reference_ID = ? AND c.ColumnName = 'Value'"
+                + " FETCH FIRST 1 ROWS ONLY",
+                referenceId);
+        return !Util.isEmpty(name, true) ? name.trim() : "Value";
     }
 
     private boolean shouldIgnoreColumn(TabContext tabContext, MColumn column) {
