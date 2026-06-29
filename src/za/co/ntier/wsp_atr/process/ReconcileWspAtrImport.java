@@ -71,7 +71,7 @@ public class ReconcileWspAtrImport extends SvrProcess {
             "ZZ_Vacancies_NP_Cnt","ZZ_Vacancies_NW_Cnt","ZZ_Vacancies_WC_Cnt"});
         // Non-Employee Skills Training: sum of demographic training counts
         NUMERIC_BY_TABLE.put("ZZ_WSP_ATR_Non_Employees_Training", new String[]{
-            "ZZ_African","ZZ_Coloured","ZZ_Indian","ZZ_Male","ZZ_Female",
+            "ZZ_African","ZZ_Coloured","ZZ_Indian","ZZ_White","ZZ_Male","ZZ_Female",
             "ZZ_Disabled_Done","ZZ_Disabled_Planned","ZZ_Total_Done","ZZ_Total_Planned"});
         // Contractors: sum of trained/planned per occupational group
         NUMERIC_BY_TABLE.put("ZZ_WSP_ATR_Contractors", new String[]{
