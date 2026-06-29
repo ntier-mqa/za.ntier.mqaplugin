@@ -127,6 +127,9 @@ final class WspAtrExportValueFormatter {
         if (displayType == DisplayType.Table || displayType == DisplayType.Search) {
             RefTableMeta refMeta = resolveRefTableMeta(referenceId, trxName);
             String displayColumnValue = refMeta != null ? getStringValue(referencedRecord, refMeta.displayColumn) : null;
+            process.addLog("DEBUG resolveReferenceDisplay: column=" + column.getColumnName()
+                    + " recordId=" + recordId + " refMeta=" + (refMeta != null ? refMeta.displayColumn + "/isValueDisplayed=" + refMeta.isValueDisplayed : "null")
+                    + " displayColumnValue='" + displayColumnValue + "'");
             if (!Util.isEmpty(displayColumnValue, true)) {
                 return displayColumnValue;
             }
@@ -164,13 +167,17 @@ final class WspAtrExportValueFormatter {
         }
         int ref = column.getAD_Reference_ID();
         if (ref != DisplayType.Table && ref != DisplayType.Search) {
+            process.addLog("DEBUG isRefValueDisplayed: " + column.getColumnName() + " refType=" + ref + " -> false (not Table/Search)");
             return false;
         }
         int referenceValueId = column.getAD_Reference_Value_ID();
         if (referenceValueId <= 0) {
+            process.addLog("DEBUG isRefValueDisplayed: " + column.getColumnName() + " refValueId=" + referenceValueId + " -> false (no ref value id)");
             return false;
         }
-        return isRefTableValueDisplayed(referenceValueId, process.get_TrxName());
+        boolean result = isRefTableValueDisplayed(referenceValueId, process.get_TrxName());
+        process.addLog("DEBUG isRefValueDisplayed: " + column.getColumnName() + " refValueId=" + referenceValueId + " IsValueDisplayed=" + result);
+        return result;
     }
 
     String resolveValuePartOnly(MColumn column, Object value) {
@@ -198,6 +205,7 @@ final class WspAtrExportValueFormatter {
             return "";
         }
         String v = getStringValue(referencedRecord, "Value");
+        process.addLog("DEBUG resolveValuePartOnly: column=" + column.getColumnName() + " recordId=" + recordId + " value='" + v + "'");
         return v != null ? v : "";
     }
 

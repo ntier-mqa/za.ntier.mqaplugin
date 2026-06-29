@@ -128,8 +128,16 @@ final class WspAtrExportSheetWriter {
 
             String header = fieldHeaderCache.computeIfAbsent(fieldRow.get_ID(),
                     key -> resolveFieldHeader(fieldRow, column));
-            if (valueFormatter.isRefValueDisplayed(column)) {
+            boolean splitCol = valueFormatter.isRefValueDisplayed(column);
+            process.addLog("DEBUG resolveColumns: column=" + column.getColumnName()
+                    + " refType=" + column.getAD_Reference_ID()
+                    + " refValueId=" + column.getAD_Reference_Value_ID()
+                    + " splitForValue=" + splitCol
+                    + " header=" + header);
+            if (splitCol) {
                 String valueHeader = resolveValueColumnHeader(column);
+                process.addLog("DEBUG splitting column " + column.getColumnName()
+                        + " -> valueHeader='" + valueHeader + "' displayHeader='" + header + "'");
                 final MColumn col = column;
                 actualColumns.putIfAbsent(normalize(column.getColumnName()) + "__VALUE",
                         new WspAtrSyntheticColumn(valueHeader, record ->

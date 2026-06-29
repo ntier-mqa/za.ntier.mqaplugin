@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.compiere.model.MBPartner;
@@ -26,6 +27,8 @@ import za.ntier.utils.MoneyMath;
 import za.ntier.utils.MonthUtil;
 
 public class LevyBatchCreationService {
+
+    private static final Logger log = Logger.getLogger(LevyBatchCreationService.class.getName());
 
     private final Properties ctx;
     private final String trxName;
@@ -123,6 +126,7 @@ public class LevyBatchCreationService {
 
             // --- Approval check for the current line's year ---
             if (!approvalsRepo.hasApprovedForYear(bpId, lineYear)) {
+                log.warning("Skipped - no approval: BPartner=" + sdlNo + ", Year=" + lineYear);
                 skippedNoApproval++;
                 continue;
             }
