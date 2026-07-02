@@ -46,6 +46,7 @@ import org.compiere.model.MAttachmentEntry;
 import org.compiere.model.MProcess;
 import org.compiere.model.MRefList;
 import org.compiere.model.MReference;
+import org.compiere.model.MSysConfig; // [WSP-ATR-WINDOW-GATE] used to toggle the upload window gate via AD_SysConfig
 import org.compiere.model.MTable;
 import org.compiere.util.CLogger;
 import org.compiere.util.DB;
@@ -87,6 +88,12 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 	private static final String ZZ_DOCSTATUS_REF_UU = "98479fb5-df5d-440d-86aa-92d77a320857";
 	private static int docStatusRefId = 0;
+
+	// ===== [WSP-ATR-WINDOW-GATE] BEGIN constant =====
+	// AD_SysConfig name that toggles the upload window gate. Value "Y"/"N";
+	// no AD_SysConfig record for a client => treated as "Y" (enforced).
+	private static final String GATE_SYSCONFIG_NAME = "ZZ_WSP_ATR_ENFORCE_UPLOAD_WINDOW";
+	// ===== [WSP-ATR-WINDOW-GATE] END constant =====
 
 	private Borderlayout layout = new Borderlayout();
 	private North north = new North();
@@ -325,6 +332,35 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 			throw new AdempiereException("File Name cannot start with Error, please rename and try again");
 		}
 
+		// ===== [WSP-ATR-WINDOW-GATE] BEGIN =====
+		// Blocks .xlsm uploads unless "now" falls inside the configured WSP-ATR
+		// submission window (zz_sdr_configuration), or inside the extension window
+		// AND the org is in an approved extension batch.
+		// Toggle via AD_SysConfig entry "ZZ_WSP_ATR_ENFORCE_UPLOAD_WINDOW" = Y/N
+		// (client-level). No AD_SysConfig record found => defaults to Y (enforced).
+		// TO REMOVE THIS GATE: delete this block, the GATE_SYSCONFIG_NAME constant,
+		// the MSysConfig import above, and the isBetween(...) helper method below
+		// (search the file for "WSP-ATR-WINDOW-GATE").
+		{
+			int gateClientId = Env.getAD_Client_ID(Env.getCtx());
+			boolean gateEnabled = MSysConfig.getBooleanValue(GATE_SYSCONFIG_NAME, true, gateClientId);
+
+			if (gateEnabled) {
+				WspAtrUploadsRepository gateRepo = new WspAtrUploadsRepository(Env.getCtx());
+				WspAtrUploadsRepository.SdrWindowConfig gateCfg = WspAtrUploadsRepository.getSdrWindowConfig(gateClientId);
+
+				Timestamp gateNow = new Timestamp(System.currentTimeMillis());
+				boolean inMainWindow = gateCfg != null && isBetween(gateNow, gateCfg.subStart, gateCfg.subEnd);
+				boolean inExtWindow = gateCfg != null && isBetween(gateNow, gateCfg.extStart, gateCfg.extEnd)
+						&& gateRepo.isOrgInApprovedWspAtrExtensionBatch(org.zzSdfOrganisationId, null);
+
+				if (!(inMainWindow || inExtWindow)) {
+					throw new AdempiereException("Upload not allowed: outside the WSP-ATR submission window.");
+				}
+			}
+		}
+		// ===== [WSP-ATR-WINDOW-GATE] END =====
+
 		byte[] data = getMediaBytes(media);
 
 		if (data == null || data.length == 0) {
@@ -450,7 +486,17 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 		runValidateImportInBackground(submittedId);
 	}
 
-	
+	// ===== [WSP-ATR-WINDOW-GATE] BEGIN helper =====
+	// Used only by the upload window gate in doUploadWithOrganisation(...).
+	// Safe to delete together with that block.
+	private static boolean isBetween(Timestamp now, Timestamp start, Timestamp end) {
+		if (start == null || end == null)
+			return false;
+		return !now.before(start) && !now.after(end);
+	}
+	// ===== [WSP-ATR-WINDOW-GATE] END helper =====
+
+
 	public static int getFiscalYear(int adClientId) {
 		int yearId = DB.getSQLValueEx(null,
 			    "SELECT y.C_Year_ID " +
