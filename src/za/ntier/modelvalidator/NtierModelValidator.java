@@ -34,6 +34,7 @@ import za.co.ntier.api.model.I_ZZ_QCTO_Alloc_OC;
 import za.co.ntier.api.model.I_ZZ_QCTO_Alloc_Skills;
 import za.co.ntier.api.model.I_ZZ_WPA_Application;
 import za.co.ntier.api.model.X_ZZAssessorPerson;
+import za.co.ntier.api.model.X_ZZLinkAssessorQualification;
 import za.co.ntier.api.model.X_ZZ_Allocations;
 import za.co.ntier.api.model.X_ZZ_QAAuditAllocations;
 import za.co.ntier.api.model.X_ZZ_WPA_Application;
@@ -45,7 +46,8 @@ public class NtierModelValidator implements ModelValidator
 	private static final String ASSESSOR_APPROVED_MAIL_TEMPLATE_UU = "9f932747-a3e7-48ad-9c9f-5527b43c164d";
 	private static final String MODERATOR_APPROVAL_MAIL_TEMPLATE_UU = "2355edbe-87d9-4a6f-b4d3-1ac733521a27";
 	private static final String MODERATOR_APPROVED_MAIL_TEMPLATE_UU = "f8af2182-e4be-405a-9648-12fb4e1464f0";
-	private static final String NOT_RECOMMENDED_MAIL_TEMPLATE_UU = "53b701d6-077f-45c4-a095-b75de2c3a8a7";
+	private static final String ASSESSOR_NOT_RECOMMENDED_MAIL_TEMPLATE_UU = "e9750b7e-5ccd-4e56-8c0f-e0f9d74bbdd2";
+	private static final String MODERATOR_NOT_RECOMMENDED_MAIL_TEMPLATE_UU = "9b1d46cd-80bd-4014-8c7e-eaf8ba948057";
 	private int				m_AD_Client_ID	= -1;
 	private static final String ROLE_MGR_QA_AI = "635702d2-8ffb-4a31-a585-d2960d86383c";
 	private static final String ROLE_ASSESSOR = "Assessor";
@@ -158,8 +160,27 @@ public class NtierModelValidator implements ModelValidator
 						MUser_New assessorUser = new MUser_New(po.getCtx(), assessorUserId, po.get_TrxName());
 						String assessorEmail = assessorUser.getEMail();
 
-						if (!Util.isEmpty(assessorEmail))
+						// Fetch the SDP user (creator of the document) for notification purposes
+						int createdByUserId = assessorPerson.getCreatedBy();
+						MUser_New createdByUser = new MUser_New(po.getCtx(), createdByUserId, po.get_TrxName());
+						String sdpEmail = createdByUser.getEMail();
+
+						if (!Util.isEmpty(assessorEmail) || !Util.isEmpty(sdpEmail))
 						{
+							String fName = assessorUser.getZZFirstName() != null ? assessorUser.getZZFirstName().trim() : "";
+							String sName = assessorUser.getZZSurname() != null ? assessorUser.getZZSurname().trim() : "";
+							String assessorNameStr = (fName + " " + sName).replaceAll("\\s+", " ").trim();
+							if (Util.isEmpty(assessorNameStr))
+								assessorNameStr = "";
+
+							String zzAssessor = assessorPerson.getZZ_Assessor();
+							if (zzAssessor == null)
+								zzAssessor = "";
+
+							String zzModerator = assessorPerson.getZZ_Moderator();
+							if (zzModerator == null)
+								zzModerator = "";
+
 							String templateUU = ROLE_ASSESSOR.equals(assessorPerson.getZZAssessorRole())
 																											? ASSESSOR_APPROVED_MAIL_TEMPLATE_UU
 																											: MODERATOR_APPROVED_MAIL_TEMPLATE_UU;
@@ -170,20 +191,6 @@ public class NtierModelValidator implements ModelValidator
 
 							if (approvedMailTemplate != null)
 							{
-								String fName = assessorUser.getZZFirstName() != null ? assessorUser.getZZFirstName().trim() : "";
-								String sName = assessorUser.getZZSurname() != null ? assessorUser.getZZSurname().trim() : "";
-								String assessorNameStr = (fName + " " + sName).replaceAll("\\s+", " ").trim();
-								if (Util.isEmpty(assessorNameStr))
-									assessorNameStr = "";
-
-								String zzAssessor = assessorPerson.getZZ_Assessor();
-								if (zzAssessor == null)
-									zzAssessor = "";
-
-								String zzModerator = assessorPerson.getZZ_Moderator();
-								if (zzModerator == null)
-									zzModerator = "";
-
 								String startDateStr = "";
 								if (assessorPerson.getStartDate() != null)
 									startDateStr = new java.text.SimpleDateFormat("yyyy-MM-dd").format(assessorPerson.getStartDate());
@@ -192,12 +199,12 @@ public class NtierModelValidator implements ModelValidator
 								if (assessorPerson.getEndDate() != null)
 									endDateStr = new java.text.SimpleDateFormat("yyyy-MM-dd").format(assessorPerson.getEndDate());
 
-								String qualifications = fetchLinkedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorQualification.Table_Name,
-																			I_ZZQualification.Table_Name, I_ZZQualification.COLUMNNAME_ZZQualification_ID, 
-																			I_ZZQualification.COLUMNNAME_ZZSaqaQualificationTitle, po.get_TrxName());
-								String skillsProgrammes = fetchLinkedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorSkillsProgramme.Table_Name,
+								String qualifications = fetchRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorQualification.Table_Name,
+																			I_ZZQualification.Table_Name, I_ZZQualification.COLUMNNAME_ZZQualification_ID,
+																			I_ZZLinkAssessorQualification.COLUMNNAME_ZZ_isRecommended, I_ZZQualification.COLUMNNAME_ZZSaqaQualificationTitle, po.get_TrxName());
+								String skillsProgrammes = fetchRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorSkillsProgramme.Table_Name,
 																			I_ZZSkillsProgramme.Table_Name, I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgramme_ID,
-																			I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeTitle, po.get_TrxName());
+																			I_ZZLinkAssessorSkillsProgramme.COLUMNNAME_ZZ_isRecommended, I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeTitle, po.get_TrxName());
 
 								String subject = approvedMailTemplate.getMailHeader();
 								String msgBody = approvedMailTemplate.getMailText(true);
@@ -215,7 +222,14 @@ public class NtierModelValidator implements ModelValidator
 								}
 
 								MClient client = MClient.get(po.getCtx(), po.getAD_Client_ID());
-								client.sendEMail(assessorEmail, subject, msgBody, null, approvedMailTemplate.isHtml());
+								
+								// Send approval notification to the Assessor/Moderator
+								if (!Util.isEmpty(assessorEmail))
+									client.sendEMail(assessorEmail, subject, msgBody, null, approvedMailTemplate.isHtml());
+								
+								// Send approval notification to the SDP, preventing duplicates if the SDP is the Assessor
+								if (!Util.isEmpty(sdpEmail) && (assessorEmail == null || !sdpEmail.equals(assessorEmail)))
+									client.sendEMail(sdpEmail, subject, msgBody, null, approvedMailTemplate.isHtml());
 							}
 							else
 							{
@@ -223,14 +237,22 @@ public class NtierModelValidator implements ModelValidator
 							}
 						}
 					}
-					
-					// Send mail for the Not Recommended Qualification and Skills Programme to the Assessor/Moderator
-					String notRecQuals = fetchNotRecommendedItems(assessorPerson.get_ID(), I_ZZLinkAssessorQualification.Table_Name,
-							I_ZZQualification.Table_Name, I_ZZQualification.COLUMNNAME_ZZQualification_ID, "zz_isrecommended", 
-							I_ZZQualification.COLUMNNAME_ZZSaqaQualificationTitle, po.get_TrxName());
-					String notRecSkills = fetchNotRecommendedItems(assessorPerson.get_ID(), I_ZZLinkAssessorSkillsProgramme.Table_Name,
-							I_ZZSkillsProgramme.Table_Name, I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgramme_ID, "zz_isrecommended", 
-							I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeTitle, po.get_TrxName());
+				}
+
+				// Process line-level non-recommendations for Qualifications and Skills Programmes.
+				// This notification is triggered only upon a final workflow decision (Approved or Not Approved).
+				if (X_ZZAssessorPerson.ZZ_DOCSTATUS_Approved.equals(newStatus) || X_ZZAssessorPerson.ZZ_DOCSTATUS_NotApproved.equals(newStatus))
+				{
+					// Send mail for the Not Recommended items to the SDP
+					String notRecQuals = fetchNotRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorQualification.Table_Name,
+																	I_ZZQualification.Table_Name, I_ZZQualification.COLUMNNAME_ZZQualification_ID,
+																	I_ZZLinkAssessorQualification.COLUMNNAME_ZZ_isRecommended,
+																	I_ZZQualification.COLUMNNAME_ZZSaqaQualificationTitle, po.get_TrxName());
+
+					String notRecSkills = fetchNotRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorSkillsProgramme.Table_Name,
+																	I_ZZSkillsProgramme.Table_Name, I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgramme_ID,
+																	I_ZZLinkAssessorSkillsProgramme.COLUMNNAME_ZZ_isRecommended,
+																	I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeTitle, po.get_TrxName());
 
 					if (!Util.isEmpty(notRecQuals) || !Util.isEmpty(notRecSkills))
 					{
@@ -238,36 +260,64 @@ public class NtierModelValidator implements ModelValidator
 						if (assessorUserIdNotRec > 0)
 						{
 							MUser_New assessorUser = new MUser_New(po.getCtx(), assessorUserIdNotRec, po.get_TrxName());
-							String assessorEmail = assessorUser.getEMail();
 
-							if (!Util.isEmpty(assessorEmail))
+							// Fetch the SDP user (creator of the document) to receive the itemized
+							// non-recommendation email
+							int createdByUserId = assessorPerson.getCreatedBy();
+							MUser_New createdByUser = new MUser_New(po.getCtx(), createdByUserId, po.get_TrxName());
+							String recipientEmail = createdByUser.getEMail();
+
+							if (!Util.isEmpty(recipientEmail))
 							{
+								// Select the appropriate email template based on the applicant's
+								// role
+								String notRecTemplateUU = ROLE_ASSESSOR.equals(assessorPerson.getZZAssessorRole())
+																													? ASSESSOR_NOT_RECOMMENDED_MAIL_TEMPLATE_UU
+																													: MODERATOR_NOT_RECOMMENDED_MAIL_TEMPLATE_UU;
+
 								var notRecMailTemplate = (MMailText) new Query(po.getCtx(), MMailText.Table_Name, "R_MailText_UU=?", po.get_TrxName())
-																																						.setParameters(NOT_RECOMMENDED_MAIL_TEMPLATE_UU)
+																																						.setParameters(notRecTemplateUU)
 																																						.first();
 
 								if (notRecMailTemplate != null)
 								{
+									String fName = assessorUser.getZZFirstName() != null ? assessorUser.getZZFirstName().trim() : "";
+									String sName = assessorUser.getZZSurname() != null ? assessorUser.getZZSurname().trim() : "";
+									String assessorNameStr = (fName + " " + sName).replaceAll("\\s+", " ").trim();
+									if (Util.isEmpty(assessorNameStr))
+										assessorNameStr = "";
+
+									String zzAssessor = assessorPerson.getZZ_Assessor();
+									if (zzAssessor == null)
+										zzAssessor = "";
+
+									String zzModerator = assessorPerson.getZZ_Moderator();
+									if (zzModerator == null)
+										zzModerator = "";
+
 									String subject = notRecMailTemplate.getMailHeader();
 									String msgBody = notRecMailTemplate.getMailText(true);
 
 									if (msgBody != null)
 									{
+										msgBody = msgBody.replace("@AssessorName@", assessorNameStr);
+										msgBody = msgBody.replace("@ModeratorName@", assessorNameStr);
+										msgBody = msgBody.replace("@ZZ_Assessor@", zzAssessor);
+										msgBody = msgBody.replace("@ZZ_Moderator@", zzModerator);
 										msgBody = msgBody.replace("@NotRecommendedQualifications@", notRecQuals);
 										msgBody = msgBody.replace("@NotRecommendedSkillsProgrammes@", notRecSkills);
 									}
 
 									MClient client = MClient.get(po.getCtx(), po.getAD_Client_ID());
-									client.sendEMail(assessorEmail, subject, msgBody, null, notRecMailTemplate.isHtml());
+									client.sendEMail(recipientEmail, subject, msgBody, null, notRecMailTemplate.isHtml());
 								}
 								else
 								{
-									log.warning("Mail template for 'Not Recommended' items not found (UU: " + NOT_RECOMMENDED_MAIL_TEMPLATE_UU + ")");
+									log.warning("Mail template for 'Not Recommended' items not found (UU: " + notRecTemplateUU + ")");
 								}
 							}
 						}
 					}
-					
 				}
 
 				if (X_ZZAssessorPerson.ZZ_DOCSTATUS_Recommended.equals(newStatus))
@@ -392,54 +442,34 @@ public class NtierModelValidator implements ModelValidator
 		}
 	}
 
-	private String fetchLinkedItems(int assessorPersonId, String linkTableName, String masterTableName, String masterKeyCol, String titleCol, String trxName)
+	private String fetchRecommendedItems(	int assessorPersonId, String linkTableName, String masterTableName, String masterKeyCol, String isRecommendedCol,
+											String titleCol, String trxName)
 	{
-		StringBuilder sb = new StringBuilder();
-		String sql = "SELECT m.Value, m." + titleCol + " FROM " + linkTableName + " l "
-						+ "INNER JOIN " + masterTableName + " m ON (l." + masterKeyCol + " = m." + masterKeyCol + ") "
-						+ "WHERE l." + I_ZZAssessorPerson.COLUMNNAME_ZZAssessorPerson_ID + " = ? AND l.IsActive = 'Y' AND m.IsActive = 'Y'";
-		try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName))
-		{
-			pstmt.setInt(1, assessorPersonId);
-			try (ResultSet rs = pstmt.executeQuery())
-			{
-				while (rs.next())
-				{
-					String val = rs.getString(1);
-					String name = rs.getString(2);
-					String formatted = "";
-					if (val != null && !val.isBlank())
-						formatted += val.trim();
-					if (name != null && !name.isBlank())
-					{
-						if (!formatted.isEmpty())
-							formatted += " ";
-						formatted += name.trim();
-					}
-
-					if (!formatted.isBlank())
-					{
-						if (sb.length() > 0)
-							sb.append("<br>");
-						sb.append(formatted);
-					}
-				}
-			}
-		}
-		catch (Exception e)
-		{
-			log.severe("Error fetching linked items from " + linkTableName + ": " + e.getMessage());
-		}
-		return sb.toString();
+		return fetchItemsInternal(assessorPersonId, linkTableName, masterTableName, masterKeyCol, isRecommendedCol, titleCol, true, trxName);
 	}
 
-	private String fetchNotRecommendedItems(int assessorPersonId, String linkTableName, String masterTableName, String masterKeyCol, String isRecommendedCol, String titleCol, String trxName)
+	private String fetchNotRecommendedItems(int assessorPersonId, String linkTableName, String masterTableName, String masterKeyCol, String isRecommendedCol,
+											String titleCol, String trxName)
+	{
+		return fetchItemsInternal(assessorPersonId, linkTableName, masterTableName, masterKeyCol, isRecommendedCol, titleCol, false, trxName);
+	}
+
+	private String fetchItemsInternal(	int assessorPersonId, String linkTableName, String masterTableName, String masterKeyCol, String isRecommendedCol,
+										String titleCol, boolean fetchRecommended, String trxName)
 	{
 		StringBuilder sb = new StringBuilder();
-		String sql = "SELECT m.Value, m." + titleCol + ", l.Comments FROM " + linkTableName + " l "
+
+		String selectClause = "SELECT m.Value, m." + titleCol + (fetchRecommended ? "" : ", l.Comments");
+		String recommendedCondition = fetchRecommended
+														? "AND (l." + isRecommendedCol + " = '" + X_ZZLinkAssessorQualification.ZZ_ISRECOMMENDED_Yes + "' OR l."
+															+ isRecommendedCol + " IS NULL)"
+														: "AND l." + isRecommendedCol + " = '" + X_ZZLinkAssessorQualification.ZZ_ISRECOMMENDED_No + "'";
+
+		String sql = selectClause	+ " FROM " + linkTableName + " l "
 						+ "INNER JOIN " + masterTableName + " m ON (l." + masterKeyCol + " = m." + masterKeyCol + ") "
-						+ "WHERE l." + I_ZZAssessorPerson.COLUMNNAME_ZZAssessorPerson_ID + " = ? AND l." + isRecommendedCol
-						+ " = 'N' AND l.IsActive = 'Y' AND m.IsActive = 'Y'";
+						+ "WHERE l." + I_ZZAssessorPerson.COLUMNNAME_ZZAssessorPerson_ID + " = ? AND l.IsActive = 'Y' AND m.IsActive = 'Y' "
+						+ recommendedCondition;
+
 		try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName))
 		{
 			pstmt.setInt(1, assessorPersonId);
@@ -449,7 +479,7 @@ public class NtierModelValidator implements ModelValidator
 				{
 					String val = rs.getString(1);
 					String name = rs.getString(2);
-					String comments = rs.getString(3);
+					String comments = fetchRecommended ? null : rs.getString(3);
 
 					String formatted = "";
 					if (val != null && !val.isBlank())
@@ -457,11 +487,11 @@ public class NtierModelValidator implements ModelValidator
 					if (name != null && !name.isBlank())
 					{
 						if (!formatted.isEmpty())
-							formatted += " - ";
+							formatted += fetchRecommended ? " " : " - ";
 						formatted += name.trim();
 					}
 
-					if (comments != null && !comments.isBlank())
+					if (!fetchRecommended && comments != null && !comments.isBlank())
 					{
 						formatted += " (<b>Reason:</b> " + comments.trim() + ")";
 					}
@@ -477,7 +507,7 @@ public class NtierModelValidator implements ModelValidator
 		}
 		catch (Exception e)
 		{
-			log.severe("Error fetching not recommended items from " + linkTableName + ": " + e.getMessage());
+			log.severe("Error fetching items from " + linkTableName + ": " + e.getMessage());
 		}
 		return sb.toString();
 	}
