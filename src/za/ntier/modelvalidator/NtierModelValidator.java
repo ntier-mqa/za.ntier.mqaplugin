@@ -203,11 +203,11 @@ public class NtierModelValidator implements ModelValidator
 
 								String qualifications = fetchRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorQualification.Table_Name,
 																			I_ZZQualification.Table_Name, I_ZZQualification.COLUMNNAME_ZZQualification_ID,
-																			I_ZZLinkAssessorQualification.COLUMNNAME_ZZ_isRecommended, I_ZZQualification.COLUMNNAME_ZZSaqaQualificationTitle, po.get_TrxName());
+																			I_ZZLinkAssessorQualification.COLUMNNAME_ZZ_isRecommended, I_ZZQualification.COLUMNNAME_ZZSaqaQualificationCode, I_ZZQualification.COLUMNNAME_ZZSaqaQualificationTitle, po.get_TrxName());
 								
 								String qctoQuals = fetchRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorQualification.Table_Name,
 																			I_ZZQctoQualification.Table_Name, I_ZZQctoQualification.COLUMNNAME_ZZQctoQualification_ID,
-																			I_ZZLinkAssessorQualification.COLUMNNAME_ZZ_isRecommended, I_ZZQctoQualification.COLUMNNAME_ZZSaqaQualificationTitle, po.get_TrxName());
+																			I_ZZLinkAssessorQualification.COLUMNNAME_ZZ_isRecommended, I_ZZQctoQualification.COLUMNNAME_ZZSaqaQualificationCode, I_ZZQctoQualification.COLUMNNAME_ZZSaqaQualificationTitle, po.get_TrxName());
 								
 								if (!Util.isEmpty(qctoQuals)) {
 									qualifications = Util.isEmpty(qualifications) ? qctoQuals : qualifications + "<br>" + qctoQuals;
@@ -215,11 +215,11 @@ public class NtierModelValidator implements ModelValidator
 
 								String skillsProgrammes = fetchRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorSkillsProgramme.Table_Name,
 																			I_ZZSkillsProgramme.Table_Name, I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgramme_ID,
-																			I_ZZLinkAssessorSkillsProgramme.COLUMNNAME_ZZ_isRecommended, I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeTitle, po.get_TrxName());
+																			I_ZZLinkAssessorSkillsProgramme.COLUMNNAME_ZZ_isRecommended, I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeCode, I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeTitle, po.get_TrxName());
 
 								String qctoSkills = fetchRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorSkillsProgramme.Table_Name,
 																			I_ZZQctoSkillsProgramme.Table_Name, I_ZZQctoSkillsProgramme.COLUMNNAME_ZZQctoSkillsProgramme_ID,
-																			I_ZZLinkAssessorSkillsProgramme.COLUMNNAME_ZZ_isRecommended, I_ZZQctoSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeTitle, po.get_TrxName());
+																			I_ZZLinkAssessorSkillsProgramme.COLUMNNAME_ZZ_isRecommended, I_ZZQctoSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeCode, I_ZZQctoSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeTitle, po.get_TrxName());
 
 								if (!Util.isEmpty(qctoSkills)) {
 									skillsProgrammes = Util.isEmpty(skillsProgrammes) ? qctoSkills : skillsProgrammes + "<br>" + qctoSkills;
@@ -266,13 +266,13 @@ public class NtierModelValidator implements ModelValidator
 					String notRecQuals = fetchNotRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorQualification.Table_Name,
 																	I_ZZQualification.Table_Name, I_ZZQualification.COLUMNNAME_ZZQualification_ID,
 																	I_ZZLinkAssessorQualification.COLUMNNAME_ZZ_isRecommended,
-																	I_ZZQualification.COLUMNNAME_ZZSaqaQualificationTitle, po.get_TrxName());
+																	I_ZZQualification.COLUMNNAME_ZZSaqaQualificationCode, I_ZZQualification.COLUMNNAME_ZZSaqaQualificationTitle, po.get_TrxName());
 
 					String notRecQctoQuals = fetchNotRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorQualification.Table_Name,
 																		I_ZZQctoQualification.Table_Name,
 																		I_ZZQctoQualification.COLUMNNAME_ZZQctoQualification_ID,
 																		I_ZZLinkAssessorQualification.COLUMNNAME_ZZ_isRecommended,
-																		I_ZZQctoQualification.COLUMNNAME_ZZSaqaQualificationTitle, po.get_TrxName());
+																		I_ZZQctoQualification.COLUMNNAME_ZZSaqaQualificationCode, I_ZZQctoQualification.COLUMNNAME_ZZSaqaQualificationTitle, po.get_TrxName());
 
 					if (!Util.isEmpty(notRecQctoQuals))
 					{
@@ -282,13 +282,13 @@ public class NtierModelValidator implements ModelValidator
 					String notRecSkills = fetchNotRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorSkillsProgramme.Table_Name,
 																	I_ZZSkillsProgramme.Table_Name, I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgramme_ID,
 																	I_ZZLinkAssessorSkillsProgramme.COLUMNNAME_ZZ_isRecommended,
-																	I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeTitle, po.get_TrxName());
+																	I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeCode, I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeTitle, po.get_TrxName());
 
 					String notRecQctoSkills = fetchNotRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorSkillsProgramme.Table_Name,
 																		I_ZZQctoSkillsProgramme.Table_Name,
 																		I_ZZQctoSkillsProgramme.COLUMNNAME_ZZQctoSkillsProgramme_ID,
 																		I_ZZLinkAssessorSkillsProgramme.COLUMNNAME_ZZ_isRecommended,
-																		I_ZZQctoSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeTitle, po.get_TrxName());
+																		I_ZZQctoSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeCode, I_ZZQctoSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeTitle, po.get_TrxName());
 
 					if (!Util.isEmpty(notRecQctoSkills))
 					{
@@ -484,23 +484,23 @@ public class NtierModelValidator implements ModelValidator
 	}
 
 	private String fetchRecommendedItems(	int assessorPersonId, String linkTableName, String masterTableName, String masterKeyCol, String isRecommendedCol,
-											String titleCol, String trxName)
+											String codeCol, String titleCol, String trxName)
 	{
-		return fetchItemsInternal(assessorPersonId, linkTableName, masterTableName, masterKeyCol, isRecommendedCol, titleCol, true, trxName);
+		return fetchItemsInternal(assessorPersonId, linkTableName, masterTableName, masterKeyCol, isRecommendedCol, codeCol, titleCol, true, trxName);
 	}
 
 	private String fetchNotRecommendedItems(int assessorPersonId, String linkTableName, String masterTableName, String masterKeyCol, String isRecommendedCol,
-											String titleCol, String trxName)
+											String codeCol, String titleCol, String trxName)
 	{
-		return fetchItemsInternal(assessorPersonId, linkTableName, masterTableName, masterKeyCol, isRecommendedCol, titleCol, false, trxName);
+		return fetchItemsInternal(assessorPersonId, linkTableName, masterTableName, masterKeyCol, isRecommendedCol, codeCol, titleCol, false, trxName);
 	}
 
 	private String fetchItemsInternal(	int assessorPersonId, String linkTableName, String masterTableName, String masterKeyCol, String isRecommendedCol,
-										String titleCol, boolean fetchRecommended, String trxName)
+										String codeCol, String titleCol, boolean fetchRecommended, String trxName)
 	{
 		StringBuilder sb = new StringBuilder();
 
-		String selectClause = "SELECT m.Value, m." + titleCol + (fetchRecommended ? "" : ", l.Comments");
+		String selectClause = "SELECT m." + codeCol + ", m." + titleCol + (fetchRecommended ? "" : ", l.Comments");
 		String recommendedCondition = fetchRecommended
 														? "AND (l." + isRecommendedCol + " = '" + X_ZZLinkAssessorQualification.ZZ_ISRECOMMENDED_Yes + "' OR l."
 															+ isRecommendedCol + " IS NULL)"
