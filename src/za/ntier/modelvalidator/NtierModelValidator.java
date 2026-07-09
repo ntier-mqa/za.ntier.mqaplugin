@@ -7,23 +7,24 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import org.compiere.model.MClient;
+import org.compiere.model.MMailText;
+import org.compiere.model.MNote;
 import org.compiere.model.MSequence;
 import org.compiere.model.MTable;
 import org.compiere.model.MUser;
-import org.compiere.model.MMailText;
-import org.compiere.model.MNote;
-import org.compiere.model.Query;
 import org.compiere.model.ModelValidationEngine;
 import org.compiere.model.ModelValidator;
 import org.compiere.model.PO;
+import org.compiere.model.Query;
 import org.compiere.util.CLogger;
 import org.compiere.util.DB;
 import org.compiere.util.Util;
 
-import za.co.ntier.api.model.MUser_New;
 import za.co.ntier.api.model.I_ZZAssessorPerson;
 import za.co.ntier.api.model.I_ZZLinkAssessorQualification;
 import za.co.ntier.api.model.I_ZZLinkAssessorSkillsProgramme;
+import za.co.ntier.api.model.I_ZZQctoQualification;
+import za.co.ntier.api.model.I_ZZQctoSkillsProgramme;
 import za.co.ntier.api.model.I_ZZQualification;
 import za.co.ntier.api.model.I_ZZSkillsProgramme;
 import za.co.ntier.api.model.I_ZZ_Allocations;
@@ -32,10 +33,10 @@ import za.co.ntier.api.model.I_ZZ_NAMB_Alloc_Trades;
 import za.co.ntier.api.model.I_ZZ_QCTO_Alloc_AC;
 import za.co.ntier.api.model.I_ZZ_QCTO_Alloc_OC;
 import za.co.ntier.api.model.I_ZZ_QCTO_Alloc_Skills;
-import za.co.ntier.api.model.I_ZZQctoQualification;
-import za.co.ntier.api.model.I_ZZQctoSkillsProgramme;
 import za.co.ntier.api.model.I_ZZ_WPA_Application;
+import za.co.ntier.api.model.MUser_New;
 import za.co.ntier.api.model.X_ZZAssessorPerson;
+import za.co.ntier.api.model.X_ZZAssessorPerson_v;
 import za.co.ntier.api.model.X_ZZLinkAssessorQualification;
 import za.co.ntier.api.model.X_ZZ_Allocations;
 import za.co.ntier.api.model.X_ZZ_QAAuditAllocations;
@@ -417,9 +418,17 @@ public class NtierModelValidator implements ModelValidator
 
 										client.sendEMail(user.getEMail(), subject, msgBody, null, mailTemplate.isHtml());
 
+										var noteMsgBody = msgBody;
+										if (noteMsgBody != null && noteMsgBody.contains("Regards,"))
+										{
+											noteMsgBody = noteMsgBody	.substring(0, noteMsgBody.lastIndexOf("Regards,"))
+																		.replaceAll("(?i)<br\\s*/?>\\s*$", "")
+																		.stripTrailing();
+										}
+
 										MNote note = new MNote(	po.getCtx(), 0, user.getAD_User_ID(),
-																assessorPerson.get_Table_ID(), assessorPerson.get_ID(),
-																subject, msgBody, po.get_TrxName());
+																X_ZZAssessorPerson_v.Table_ID, po.get_ID(),
+																subject, noteMsgBody, po.get_TrxName());
 										note.setAD_Org_ID(po.getAD_Org_ID());
 										note.saveEx();
 									}
