@@ -400,7 +400,12 @@ final class MigrationSupport {
      */
     static void stampCreatedUpdated(String table, String pkColumn, int pkValue,
             java.sql.Timestamp created, int createdBy, java.sql.Timestamp updated, int updatedBy,
-            long sourceId, String trxName) {
+            int sourceId, String trxName) {
+        // NOTE: sourceId must stay `int` (not `long`) - DB.setParameter() (org.compiere.util.DB)
+        // only knows how to bind String/Integer/BigDecimal/Timestamp/Boolean/byte[]/Clob; a
+        // boxed Long blows up with "Unknown parameter type" (confirmed 2026-07-09). ms_person.id
+        // / ms_learner.id are well within int range, and the bigint recon column accepts an
+        // Integer parameter fine.
         DB.executeUpdateEx(
                 "UPDATE " + table + " SET created = ?, createdby = ?, updated = ?, updatedby = ?, id = ? "
                 + "WHERE " + pkColumn + " = ?",
