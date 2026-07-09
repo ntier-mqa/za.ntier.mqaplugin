@@ -32,6 +32,8 @@ import za.co.ntier.api.model.I_ZZ_NAMB_Alloc_Trades;
 import za.co.ntier.api.model.I_ZZ_QCTO_Alloc_AC;
 import za.co.ntier.api.model.I_ZZ_QCTO_Alloc_OC;
 import za.co.ntier.api.model.I_ZZ_QCTO_Alloc_Skills;
+import za.co.ntier.api.model.I_ZZQctoQualification;
+import za.co.ntier.api.model.I_ZZQctoSkillsProgramme;
 import za.co.ntier.api.model.I_ZZ_WPA_Application;
 import za.co.ntier.api.model.X_ZZAssessorPerson;
 import za.co.ntier.api.model.X_ZZLinkAssessorQualification;
@@ -202,9 +204,26 @@ public class NtierModelValidator implements ModelValidator
 								String qualifications = fetchRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorQualification.Table_Name,
 																			I_ZZQualification.Table_Name, I_ZZQualification.COLUMNNAME_ZZQualification_ID,
 																			I_ZZLinkAssessorQualification.COLUMNNAME_ZZ_isRecommended, I_ZZQualification.COLUMNNAME_ZZSaqaQualificationTitle, po.get_TrxName());
+								
+								String qctoQuals = fetchRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorQualification.Table_Name,
+																			I_ZZQctoQualification.Table_Name, I_ZZQctoQualification.COLUMNNAME_ZZQctoQualification_ID,
+																			I_ZZLinkAssessorQualification.COLUMNNAME_ZZ_isRecommended, I_ZZQctoQualification.COLUMNNAME_ZZSaqaQualificationTitle, po.get_TrxName());
+								
+								if (!Util.isEmpty(qctoQuals)) {
+									qualifications = Util.isEmpty(qualifications) ? qctoQuals : qualifications + "<br>" + qctoQuals;
+								}
+
 								String skillsProgrammes = fetchRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorSkillsProgramme.Table_Name,
 																			I_ZZSkillsProgramme.Table_Name, I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgramme_ID,
 																			I_ZZLinkAssessorSkillsProgramme.COLUMNNAME_ZZ_isRecommended, I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeTitle, po.get_TrxName());
+
+								String qctoSkills = fetchRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorSkillsProgramme.Table_Name,
+																			I_ZZQctoSkillsProgramme.Table_Name, I_ZZQctoSkillsProgramme.COLUMNNAME_ZZQctoSkillsProgramme_ID,
+																			I_ZZLinkAssessorSkillsProgramme.COLUMNNAME_ZZ_isRecommended, I_ZZQctoSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeTitle, po.get_TrxName());
+
+								if (!Util.isEmpty(qctoSkills)) {
+									skillsProgrammes = Util.isEmpty(skillsProgrammes) ? qctoSkills : skillsProgrammes + "<br>" + qctoSkills;
+								}
 
 								String subject = approvedMailTemplate.getMailHeader();
 								String msgBody = approvedMailTemplate.getMailText(true);
@@ -249,10 +268,32 @@ public class NtierModelValidator implements ModelValidator
 																	I_ZZLinkAssessorQualification.COLUMNNAME_ZZ_isRecommended,
 																	I_ZZQualification.COLUMNNAME_ZZSaqaQualificationTitle, po.get_TrxName());
 
+					String notRecQctoQuals = fetchNotRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorQualification.Table_Name,
+																		I_ZZQctoQualification.Table_Name,
+																		I_ZZQctoQualification.COLUMNNAME_ZZQctoQualification_ID,
+																		I_ZZLinkAssessorQualification.COLUMNNAME_ZZ_isRecommended,
+																		I_ZZQctoQualification.COLUMNNAME_ZZSaqaQualificationTitle, po.get_TrxName());
+
+					if (!Util.isEmpty(notRecQctoQuals))
+					{
+						notRecQuals = Util.isEmpty(notRecQuals) ? notRecQctoQuals : notRecQuals + "<br>" + notRecQctoQuals;
+					}
+
 					String notRecSkills = fetchNotRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorSkillsProgramme.Table_Name,
 																	I_ZZSkillsProgramme.Table_Name, I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgramme_ID,
 																	I_ZZLinkAssessorSkillsProgramme.COLUMNNAME_ZZ_isRecommended,
 																	I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeTitle, po.get_TrxName());
+
+					String notRecQctoSkills = fetchNotRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorSkillsProgramme.Table_Name,
+																		I_ZZQctoSkillsProgramme.Table_Name,
+																		I_ZZQctoSkillsProgramme.COLUMNNAME_ZZQctoSkillsProgramme_ID,
+																		I_ZZLinkAssessorSkillsProgramme.COLUMNNAME_ZZ_isRecommended,
+																		I_ZZQctoSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeTitle, po.get_TrxName());
+
+					if (!Util.isEmpty(notRecQctoSkills))
+					{
+						notRecSkills = Util.isEmpty(notRecSkills) ? notRecQctoSkills : notRecSkills + "<br>" + notRecQctoSkills;
+					}
 
 					if (!Util.isEmpty(notRecQuals) || !Util.isEmpty(notRecSkills))
 					{
