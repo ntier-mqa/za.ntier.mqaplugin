@@ -279,8 +279,8 @@ public class NtierModelValidator implements ModelValidator
 
 								MClient client = MClient.get(po.getCtx(), po.getAD_Client_ID());
 								
-								// Generate the PDF Approval Letter and attach it to the assessor's email
-								if (!Util.isEmpty(assessorEmail))
+								// Generate the PDF Approval Letter and attach it to the SDP's email
+								if (!Util.isEmpty(sdpEmail))
 								{
 									File pdfAttachment = null;
 									try
@@ -342,12 +342,12 @@ public class NtierModelValidator implements ModelValidator
 																						jasperPrint, pdfAttachment.getAbsolutePath());
 										}
 
-										client.sendEMail(assessorEmail, subject, msgBody, pdfAttachment, approvedMailTemplate.isHtml());
+										client.sendEMail(sdpEmail, subject, msgBody, pdfAttachment, approvedMailTemplate.isHtml());
 									}
 									catch (Exception pdfEx)
 									{
 										log.severe("Failed to generate approval letter PDF: " + pdfEx.getMessage());
-										client.sendEMail(assessorEmail, subject, msgBody, null, approvedMailTemplate.isHtml());
+										client.sendEMail(sdpEmail, subject, msgBody, null, approvedMailTemplate.isHtml());
 									}
 									finally
 									{
@@ -361,9 +361,7 @@ public class NtierModelValidator implements ModelValidator
 									}
 								}
 
-								// Send approval notification to the SDP (plain email, no PDF)
-								if (!Util.isEmpty(sdpEmail) && (assessorEmail == null || !sdpEmail.equals(assessorEmail)))
-									client.sendEMail(sdpEmail, subject, msgBody, null, approvedMailTemplate.isHtml());
+
 							}
 							else
 							{
