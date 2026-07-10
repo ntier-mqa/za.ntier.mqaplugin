@@ -310,6 +310,8 @@ public class NtierModelValidator implements ModelValidator
 										}
 										jasperParams.put("SDPLinkedBPLocation", locationStr);
 										jasperParams.put("AssessorShortName", (userTitle + fName).trim());
+										jasperParams.put("RegistrationTitle", ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()) ? "MODERATOR REGISTRATION" : "ASSESSOR REGISTRATION");
+										jasperParams.put("RegistrationRole", ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()) ? "a moderator" : "an assessor");
 										jasperParams.put("RegistrationNumber", Util.isEmpty(zzAssessor) ? zzModerator : zzAssessor);
 										jasperParams.put("DateOfRegistration", startDateStr);
 										jasperParams.put("StartDate", startDateStr);
@@ -318,18 +320,21 @@ public class NtierModelValidator implements ModelValidator
 										jasperParams.put("SkillsProgrammes", skillsProgrammes);
 										jasperParams.put("AnnexureDataSource", buildAnnexureDataSource(assessorPerson.get_ID(), po.get_TrxName()));
 
+										String letterPrefix = ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()) ? "Moderator_Approval_Letter"
+																															: "Assessor_Approval_Letter";
+										String jasperName = ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()) ? "ModeratorApprovalLetter"
+																															: "AssessorApprovalLetter";
+
 										// Load .jasper
 										try (InputStream jasperStream = NtierModelValidator.class
-																									.getResourceAsStream("/za/co/ntier/wsp_atr/report/jrxmls/AssessorApprovalLetter.jasper"))
+																									.getResourceAsStream("/za/co/ntier/wsp_atr/report/jrxmls/" + jasperName + ".jasper"))
 										{
 											if (jasperStream == null)
-												throw new IOException("AssessorApprovalLetter.jasper not found on classpath");
+												throw new IOException(jasperName + ".jasper not found on classpath");
 
 											JasperPrint jasperPrint = JasperFillManager.fillReport(
 																									jasperStream, jasperParams, new JREmptyDataSource(1));
 
-											String letterPrefix = ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()) ? "Moderator_Approval_Letter"
-																															: "Assessor_Approval_Letter";
 											File tempDir = new File(System.getProperty("java.io.tmpdir"), "approval_" + System.currentTimeMillis());
 											tempDir.mkdirs();
 											pdfAttachment = new File(tempDir, letterPrefix + ".pdf");
