@@ -238,11 +238,11 @@ public class NtierModelValidator implements ModelValidator
 								if (assessorPerson.getEndDate() != null)
 									endDateStr = new SimpleDateFormat("dd MMMM yyyy").format(assessorPerson.getEndDate());
 
-								String qualifications = fetchRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorQualification.Table_Name,
+								String qualifications = fetchRecommendedItems(assessorPerson, I_ZZLinkAssessorQualification.Table_Name,
 																			I_ZZQualification.Table_Name, I_ZZQualification.COLUMNNAME_ZZQualification_ID,
 																			I_ZZLinkAssessorQualification.COLUMNNAME_ZZ_isRecommended, I_ZZQualification.COLUMNNAME_ZZSaqaQualificationCode, I_ZZQualification.COLUMNNAME_ZZSaqaQualificationTitle, po.get_TrxName());
 								
-								String qctoQuals = fetchRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorQualification.Table_Name,
+								String qctoQuals = fetchRecommendedItems(assessorPerson, I_ZZLinkAssessorQualification.Table_Name,
 																			I_ZZQctoQualification.Table_Name, I_ZZQctoQualification.COLUMNNAME_ZZQctoQualification_ID,
 																			I_ZZLinkAssessorQualification.COLUMNNAME_ZZ_isRecommended, I_ZZQctoQualification.COLUMNNAME_ZZSaqaQualificationCode, I_ZZQctoQualification.COLUMNNAME_ZZSaqaQualificationTitle, po.get_TrxName());
 								
@@ -250,11 +250,11 @@ public class NtierModelValidator implements ModelValidator
 									qualifications = Util.isEmpty(qualifications) ? qctoQuals : qualifications + "<br>" + qctoQuals;
 								}
 
-								String skillsProgrammes = fetchRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorSkillsProgramme.Table_Name,
+								String skillsProgrammes = fetchRecommendedItems(assessorPerson, I_ZZLinkAssessorSkillsProgramme.Table_Name,
 																			I_ZZSkillsProgramme.Table_Name, I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgramme_ID,
 																			I_ZZLinkAssessorSkillsProgramme.COLUMNNAME_ZZ_isRecommended, I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeCode, I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeTitle, po.get_TrxName());
 
-								String qctoSkills = fetchRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorSkillsProgramme.Table_Name,
+								String qctoSkills = fetchRecommendedItems(assessorPerson, I_ZZLinkAssessorSkillsProgramme.Table_Name,
 																			I_ZZQctoSkillsProgramme.Table_Name, I_ZZQctoSkillsProgramme.COLUMNNAME_ZZQctoSkillsProgramme_ID,
 																			I_ZZLinkAssessorSkillsProgramme.COLUMNNAME_ZZ_isRecommended, I_ZZQctoSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeCode, I_ZZQctoSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeTitle, po.get_TrxName());
 
@@ -279,7 +279,6 @@ public class NtierModelValidator implements ModelValidator
 
 								MClient client = MClient.get(po.getCtx(), po.getAD_Client_ID());
 								
-								// Generate the PDF Approval Letter and attach it to the SDP's email
 								if (!Util.isEmpty(sdpEmail))
 								{
 									File pdfAttachment = null;
@@ -318,14 +317,13 @@ public class NtierModelValidator implements ModelValidator
 										jasperParams.put("EndDate", endDateStr);
 										jasperParams.put("Qualifications", qualifications);
 										jasperParams.put("SkillsProgrammes", skillsProgrammes);
-										jasperParams.put("AnnexureDataSource", buildAnnexureDataSource(assessorPerson.get_ID(), po.get_TrxName()));
+										jasperParams.put("AnnexureDataSource", buildAnnexureDataSource(assessorPerson, po.get_TrxName()));
 
 										String letterPrefix = ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()) ? "Moderator_Approval_Letter"
 																															: "Assessor_Approval_Letter";
 										String jasperName = ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()) ? "ModeratorApprovalLetter"
 																															: "AssessorApprovalLetter";
 
-										// Load .jasper
 										try (InputStream jasperStream = NtierModelValidator.class
 																									.getResourceAsStream("/za/co/ntier/wsp_atr/report/jrxmls/" + jasperName + ".jasper"))
 										{
@@ -371,17 +369,14 @@ public class NtierModelValidator implements ModelValidator
 					}
 				}
 
-				// Process line-level non-recommendations for Qualifications and Skills Programmes.
-				// This notification is triggered only upon a final workflow decision (Approved or Not Approved).
 				if (X_ZZAssessorPerson.ZZ_DOCSTATUS_Approved.equals(newStatus) || X_ZZAssessorPerson.ZZ_DOCSTATUS_NotApproved.equals(newStatus))
 				{
-					// Send mail for the Not Recommended items to the SDP
-					String notRecQuals = fetchNotRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorQualification.Table_Name,
+					String notRecQuals = fetchNotRecommendedItems(assessorPerson, I_ZZLinkAssessorQualification.Table_Name,
 																	I_ZZQualification.Table_Name, I_ZZQualification.COLUMNNAME_ZZQualification_ID,
 																	I_ZZLinkAssessorQualification.COLUMNNAME_ZZ_isRecommended,
 																	I_ZZQualification.COLUMNNAME_ZZSaqaQualificationCode, I_ZZQualification.COLUMNNAME_ZZSaqaQualificationTitle, po.get_TrxName());
 
-					String notRecQctoQuals = fetchNotRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorQualification.Table_Name,
+					String notRecQctoQuals = fetchNotRecommendedItems(assessorPerson, I_ZZLinkAssessorQualification.Table_Name,
 																		I_ZZQctoQualification.Table_Name,
 																		I_ZZQctoQualification.COLUMNNAME_ZZQctoQualification_ID,
 																		I_ZZLinkAssessorQualification.COLUMNNAME_ZZ_isRecommended,
@@ -392,12 +387,12 @@ public class NtierModelValidator implements ModelValidator
 						notRecQuals = Util.isEmpty(notRecQuals) ? notRecQctoQuals : notRecQuals + "<br>" + notRecQctoQuals;
 					}
 
-					String notRecSkills = fetchNotRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorSkillsProgramme.Table_Name,
+					String notRecSkills = fetchNotRecommendedItems(assessorPerson, I_ZZLinkAssessorSkillsProgramme.Table_Name,
 																	I_ZZSkillsProgramme.Table_Name, I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgramme_ID,
 																	I_ZZLinkAssessorSkillsProgramme.COLUMNNAME_ZZ_isRecommended,
 																	I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeCode, I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeTitle, po.get_TrxName());
 
-					String notRecQctoSkills = fetchNotRecommendedItems(	assessorPerson.get_ID(), I_ZZLinkAssessorSkillsProgramme.Table_Name,
+					String notRecQctoSkills = fetchNotRecommendedItems(assessorPerson, I_ZZLinkAssessorSkillsProgramme.Table_Name,
 																		I_ZZQctoSkillsProgramme.Table_Name,
 																		I_ZZQctoSkillsProgramme.COLUMNNAME_ZZQctoSkillsProgramme_ID,
 																		I_ZZLinkAssessorSkillsProgramme.COLUMNNAME_ZZ_isRecommended,
@@ -415,16 +410,12 @@ public class NtierModelValidator implements ModelValidator
 						{
 							MUser_New assessorUser = new MUser_New(po.getCtx(), assessorUserIdNotRec, po.get_TrxName());
 
-							// Fetch the SDP user (creator of the document) to receive the itemized
-							// non-recommendation email
 							int createdByUserId = assessorPerson.getCreatedBy();
 							MUser_New createdByUser = new MUser_New(po.getCtx(), createdByUserId, po.get_TrxName());
 							String recipientEmail = createdByUser.getEMail();
 
 							if (!Util.isEmpty(recipientEmail))
 							{
-								// Select the appropriate email template based on the applicant's
-								// role
 								String notRecTemplateUU = ROLE_ASSESSOR.equals(assessorPerson.getZZAssessorRole())
 																													? ASSESSOR_NOT_RECOMMENDED_MAIL_TEMPLATE_UU
 																													: MODERATOR_NOT_RECOMMENDED_MAIL_TEMPLATE_UU;
@@ -604,37 +595,61 @@ public class NtierModelValidator implements ModelValidator
 		}
 	}
 
-	private String fetchRecommendedItems(	int assessorPersonId, String linkTableName, String masterTableName, String masterKeyCol, String isRecommendedCol,
+	private String fetchRecommendedItems(X_ZZAssessorPerson assessorPerson, String linkTableName, String masterTableName, String masterKeyCol, String isRecommendedCol,
 											String codeCol, String titleCol, String trxName)
 	{
-		return fetchItemsInternal(assessorPersonId, linkTableName, masterTableName, masterKeyCol, isRecommendedCol, codeCol, titleCol, true, trxName);
+		return fetchItemsInternal(assessorPerson, linkTableName, masterTableName, masterKeyCol, isRecommendedCol, codeCol, titleCol, true, trxName);
 	}
 
-	private String fetchNotRecommendedItems(int assessorPersonId, String linkTableName, String masterTableName, String masterKeyCol, String isRecommendedCol,
+	private String fetchNotRecommendedItems(X_ZZAssessorPerson assessorPerson, String linkTableName, String masterTableName, String masterKeyCol, String isRecommendedCol,
 											String codeCol, String titleCol, String trxName)
 	{
-		return fetchItemsInternal(assessorPersonId, linkTableName, masterTableName, masterKeyCol, isRecommendedCol, codeCol, titleCol, false, trxName);
+		return fetchItemsInternal(assessorPerson, linkTableName, masterTableName, masterKeyCol, isRecommendedCol, codeCol, titleCol, false, trxName);
 	}
 
-	private List<Map<String, String>> fetchItemsAsList(	int assessorPersonId, String linkTableName, String masterTableName, String masterKeyCol,
+	private List<Map<String, String>> fetchItemsAsList(X_ZZAssessorPerson assessorPerson, String linkTableName, String masterTableName, String masterKeyCol,
 														String isRecommendedCol,
 														String codeCol, String titleCol, boolean fetchRecommended, String trxName)
 	{
 		List<Map<String, String>> list = new ArrayList<>();
-		String selectClause = "SELECT m." + codeCol + ", m." + titleCol + (fetchRecommended ? "" : ", l.Comments");
+		String selectClause = "SELECT DISTINCT m." + codeCol + ", m." + titleCol + (fetchRecommended ? "" : ", l.Comments");
 		String recommendedCondition = fetchRecommended
 														? "AND (l." + isRecommendedCol + " = '" + X_ZZLinkAssessorQualification.ZZ_ISRECOMMENDED_Yes + "' OR l."
-															+ isRecommendedCol + " IS NULL)"
-														: "AND l." + isRecommendedCol + " = '" + X_ZZLinkAssessorQualification.ZZ_ISRECOMMENDED_No + "'";
+															+ isRecommendedCol + " IS NULL) "
+														: "AND l." + isRecommendedCol + " = '" + X_ZZLinkAssessorQualification.ZZ_ISRECOMMENDED_No + "' ";
 
-		String sql = selectClause	+ " FROM " + linkTableName + " l "
-						+ "INNER JOIN " + masterTableName + " m ON (l." + masterKeyCol + " = m." + masterKeyCol + ") "
-						+ "WHERE l." + I_ZZAssessorPerson.COLUMNNAME_ZZAssessorPerson_ID + " = ? AND l.IsActive = 'Y' AND m.IsActive = 'Y' "
-						+ recommendedCondition;
+		String sql;
+		if (fetchRecommended)
+		{
+			sql = selectClause	+ " FROM " + linkTableName + " l "
+							+ "INNER JOIN " + masterTableName + " m ON (l." + masterKeyCol + " = m." + masterKeyCol + ") "
+							+ "WHERE l." + I_ZZAssessorPerson.COLUMNNAME_ZZAssessorPerson_ID + " IN "
+							+ "(SELECT ZZAssessorPerson_ID FROM " + I_ZZAssessorPerson.Table_Name + " WHERE (ZZAssessorPerson_ID = ? OR Parent_ID = ?) "
+							+ "AND (ZZ_DocStatus = '" + X_ZZAssessorPerson.ZZ_DOCSTATUS_Approved + "' OR ZZAssessorPerson_ID = ?)) "
+							+ "AND l.IsActive = 'Y' AND m.IsActive = 'Y' "
+							+ recommendedCondition;
+		}
+		else
+		{
+			sql = selectClause	+ " FROM " + linkTableName + " l "
+							+ "INNER JOIN " + masterTableName + " m ON (l." + masterKeyCol + " = m." + masterKeyCol + ") "
+							+ "WHERE l." + I_ZZAssessorPerson.COLUMNNAME_ZZAssessorPerson_ID + " = ? AND l.IsActive = 'Y' AND m.IsActive = 'Y' "
+							+ recommendedCondition;
+		}
 
 		try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName))
 		{
-			pstmt.setInt(1, assessorPersonId);
+			if (fetchRecommended)
+			{
+				int ultimateParentId = assessorPerson.getParent_ID() > 0 ? assessorPerson.getParent_ID() : assessorPerson.get_ID();
+				pstmt.setInt(1, ultimateParentId);
+				pstmt.setInt(2, ultimateParentId);
+				pstmt.setInt(3, assessorPerson.get_ID());
+			}
+			else
+			{
+				pstmt.setInt(1, assessorPerson.get_ID());
+			}
 			try (ResultSet rs = pstmt.executeQuery())
 			{
 				while (rs.next())
@@ -658,10 +673,10 @@ public class NtierModelValidator implements ModelValidator
 		return list;
 	}
 
-	private String fetchItemsInternal(	int assessorPersonId, String linkTableName, String masterTableName, String masterKeyCol, String isRecommendedCol,
+	private String fetchItemsInternal(X_ZZAssessorPerson assessorPerson, String linkTableName, String masterTableName, String masterKeyCol, String isRecommendedCol,
 										String codeCol, String titleCol, boolean fetchRecommended, String trxName)
 	{
-		List<Map<String, String>> items = fetchItemsAsList(	assessorPersonId, linkTableName, masterTableName, masterKeyCol, isRecommendedCol, codeCol, titleCol,
+		List<Map<String, String>> items = fetchItemsAsList(assessorPerson, linkTableName, masterTableName, masterKeyCol, isRecommendedCol, codeCol, titleCol,
 															fetchRecommended, trxName);
 		StringBuilder sb = new StringBuilder();
 
@@ -699,52 +714,35 @@ public class NtierModelValidator implements ModelValidator
 	@Override
 	public String docValidate(PO po, int timing)
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 
-	/*
-	 * @Override public String docValidate(PO po, int timing) { log.info("PO: " +
-	 * po.toString() + "   - timing : " + timing); if
-	 * (po.get_TableName().equals(X_M_InOut.Table_Name )) { if (timing ==
-	 * TIMING_AFTER_COMPLETE) { MInOut_New mInOut = new MInOut_New(po.getCtx(),
-	 * po.get_ID(), po.get_TrxName()); X_ZZ_StockPile x_ZZ_StockPile = new
-	 * X_ZZ_StockPile(po.getCtx(), mInOut.getZZ_StockPile_ID(), po.get_TrxName());
-	 * BigDecimal deliveredQty = BigDecimal.ZERO; MInOut_New[] m_InOuts =
-	 * mInOut.getMInOutsForStockPile(); for (MInOut_New mInOut_New:m_InOuts) {
-	 * MInOutLine[] m_InOutLines = mInOut_New.getLines(); for (MInOutLine
-	 * mInOutLine:m_InOutLines) { deliveredQty =
-	 * deliveredQty.add(mInOutLine.getMovementQty()); } }
-	 * x_ZZ_StockPile.setZZ_Used_Tonnage(deliveredQty); x_ZZ_StockPile.saveEx(); }
-	 * } return null; }
-	 */
-
-	private JRMapCollectionDataSource buildAnnexureDataSource(int assessorPersonId, String trxName)
+	private JRMapCollectionDataSource buildAnnexureDataSource(X_ZZAssessorPerson assessorPerson, String trxName)
 	{
 		List<Map<String, ?>> list = new ArrayList<>();
 
-		list.addAll(fetchItemsAsList(assessorPersonId,
+		list.addAll(fetchItemsAsList(assessorPerson,
 				I_ZZLinkAssessorQualification.Table_Name, I_ZZQualification.Table_Name,
 				I_ZZQualification.COLUMNNAME_ZZQualification_ID,
 				I_ZZLinkAssessorQualification.COLUMNNAME_ZZ_isRecommended,
 				I_ZZQualification.COLUMNNAME_ZZSaqaQualificationCode,
 				I_ZZQualification.COLUMNNAME_ZZSaqaQualificationTitle, true, trxName));
 
-		list.addAll(fetchItemsAsList(assessorPersonId,
+		list.addAll(fetchItemsAsList(assessorPerson,
 				I_ZZLinkAssessorQualification.Table_Name, I_ZZQctoQualification.Table_Name,
 				I_ZZQctoQualification.COLUMNNAME_ZZQctoQualification_ID,
 				I_ZZLinkAssessorQualification.COLUMNNAME_ZZ_isRecommended,
 				I_ZZQctoQualification.COLUMNNAME_ZZSaqaQualificationCode,
 				I_ZZQctoQualification.COLUMNNAME_ZZSaqaQualificationTitle, true, trxName));
 
-		list.addAll(fetchItemsAsList(assessorPersonId,
+		list.addAll(fetchItemsAsList(assessorPerson,
 				I_ZZLinkAssessorSkillsProgramme.Table_Name, I_ZZSkillsProgramme.Table_Name,
 				I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgramme_ID,
 				I_ZZLinkAssessorSkillsProgramme.COLUMNNAME_ZZ_isRecommended,
 				I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeCode,
 				I_ZZSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeTitle, true, trxName));
 
-		list.addAll(fetchItemsAsList(assessorPersonId,
+		list.addAll(fetchItemsAsList(assessorPerson,
 				I_ZZLinkAssessorSkillsProgramme.Table_Name, I_ZZQctoSkillsProgramme.Table_Name,
 				I_ZZQctoSkillsProgramme.COLUMNNAME_ZZQctoSkillsProgramme_ID,
 				I_ZZLinkAssessorSkillsProgramme.COLUMNNAME_ZZ_isRecommended,
