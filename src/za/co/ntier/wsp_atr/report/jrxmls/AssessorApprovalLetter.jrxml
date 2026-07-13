@@ -38,10 +38,10 @@
 		<band height="620" splitType="Stretch">
 			<textField textAdjust="StretchHeight">
 				<reportElement positionType="Float" x="0" y="30" width="515" height="15" uuid="20000002-0000-0000-0000-000000000002"/>
-				<textElement markup="html">
-					<font fontName="SansSerif" size="10"/>
+				<textElement>
+					<font fontName="SansSerif" size="10" isBold="true"/>
 				</textElement>
-				<textFieldExpression><![CDATA["<b>" + ($P{AssessorFullName} != null ? $P{AssessorFullName} : "") + "</b>,"]]></textFieldExpression>
+				<textFieldExpression><![CDATA[($P{AssessorFullName} != null ? $P{AssessorFullName} : "") + ","]]></textFieldExpression>
 			</textField>
 			<staticText>
 				<reportElement positionType="Float" x="0" y="55" width="110" height="15" uuid="d0000001-2222-2222-2222-222222222222"/>
