@@ -350,6 +350,11 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	}
 
 
+	public void resendApprovalEmail() throws Exception
+	{
+		sendQueryEmailWithPDF(WSP_ATR_FINAL_APPROVAL_TEMPLATE_UUID, "WSP-ATR_Approval_" + getSdlNumber() + "_" + getFiscalYear(getAD_Client_ID()));
+	}
+
 	private void sendQueryEmailWithPDF(String templateUUID,String fileName) throws Exception {
 
 		int adUserId = getSdfUserId();
