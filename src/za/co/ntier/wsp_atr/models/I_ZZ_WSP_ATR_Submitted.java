@@ -348,6 +348,15 @@ public interface I_ZZ_WSP_ATR_Submitted
 	/** Get Missing Employee Representative Signature	  */
 	public boolean isZZ_Missing_Emp_Rep_Sign();
 
+    /** Column name ZZ_Missing_SDF_Signature */
+    public static final String COLUMNNAME_ZZ_Missing_SDF_Signature = "ZZ_Missing_SDF_Signature";
+
+	/** Set Missing SDF Signature	  */
+	public void setZZ_Missing_SDF_Signature (boolean ZZ_Missing_SDF_Signature);
+
+	/** Get Missing SDF Signature	  */
+	public boolean isZZ_Missing_SDF_Signature();
+
     /** Column name ZZ_Missing_Sen_Fin_CFO_Sign */
     public static final String COLUMNNAME_ZZ_Missing_Sen_Fin_CFO_Sign = "ZZ_Missing_Sen_Fin_CFO_Sign";
 

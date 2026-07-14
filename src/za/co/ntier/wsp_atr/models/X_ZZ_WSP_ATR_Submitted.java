@@ -32,7 +32,7 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260408L;
+	private static final long serialVersionUID = 20260714L;
 
     /** Standard Constructor */
     public X_ZZ_WSP_ATR_Submitted (Properties ctx, int ZZ_WSP_ATR_Submitted_ID, String trxName)
@@ -43,6 +43,8 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 			setZZ_IsQuery (false);
 // N
 			setZZ_Missing_Emp_Rep_Sign (false);
+// N
+			setZZ_Missing_SDF_Signature (false);
 // N
 			setZZ_Missing_Sen_Fin_CFO_Sign (false);
 // N
@@ -68,6 +70,8 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 // N
 			setZZ_Missing_Emp_Rep_Sign (false);
 // N
+			setZZ_Missing_SDF_Signature (false);
+// N
 			setZZ_Missing_Sen_Fin_CFO_Sign (false);
 // N
 			setZZ_Missing_Sen_Org_CEO_Sign (false);
@@ -92,6 +96,8 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 // N
 			setZZ_Missing_Emp_Rep_Sign (false);
 // N
+			setZZ_Missing_SDF_Signature (false);
+// N
 			setZZ_Missing_Sen_Fin_CFO_Sign (false);
 // N
 			setZZ_Missing_Sen_Org_CEO_Sign (false);
@@ -115,6 +121,8 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 			setZZ_IsQuery (false);
 // N
 			setZZ_Missing_Emp_Rep_Sign (false);
+// N
+			setZZ_Missing_SDF_Signature (false);
 // N
 			setZZ_Missing_Sen_Fin_CFO_Sign (false);
 // N
@@ -397,6 +405,8 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	public static final String ZZ_DOCACTION_FinalApprovalDoNotApprove = "FA";
 	/** PrepareCEO = PC */
 	public static final String ZZ_DOCACTION_PrepareCEO = "PC";
+	/** Refer Back = RB */
+	public static final String ZZ_DOCACTION_ReferBack = "RB";
 	/** Recommend = RE */
 	public static final String ZZ_DOCACTION_Recommend = "RE";
 	/** Re-Submit = RS */
@@ -485,10 +495,14 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	public static final String ZZ_DOCSTATUS_NotApprovedByITManager = "NI";
 	/** Not Approved by LM = NL */
 	public static final String ZZ_DOCSTATUS_NotApprovedByLM = "NL";
+	/** Not Approved = NP */
+	public static final String ZZ_DOCSTATUS_NotApproved = "NP";
 	/** Not Recommended = NR */
 	public static final String ZZ_DOCSTATUS_NotRecommended = "NR";
 	/** Not Approved by Snr Admin Finance = NS */
 	public static final String ZZ_DOCSTATUS_NotApprovedBySnrAdminFinance = "NS";
+	/** Not Verified = NV */
+	public static final String ZZ_DOCSTATUS_NotVerified = "NV";
 	/** Pending = PE */
 	public static final String ZZ_DOCSTATUS_Pending = "PE";
 	/** Query = QR */
@@ -723,6 +737,28 @@ public class X_ZZ_WSP_ATR_Submitted extends PO implements I_ZZ_WSP_ATR_Submitted
 	public boolean isZZ_Missing_Emp_Rep_Sign()
 	{
 		Object oo = get_Value(COLUMNNAME_ZZ_Missing_Emp_Rep_Sign);
+		if (oo != null)
+		{
+			 if (oo instanceof Boolean)
+				 return ((Boolean)oo).booleanValue();
+			return "Y".equals(oo);
+		}
+		return false;
+	}
+
+	/** Set Missing SDF Signature.
+		@param ZZ_Missing_SDF_Signature Missing SDF Signature
+	*/
+	public void setZZ_Missing_SDF_Signature (boolean ZZ_Missing_SDF_Signature)
+	{
+		set_Value (COLUMNNAME_ZZ_Missing_SDF_Signature, Boolean.valueOf(ZZ_Missing_SDF_Signature));
+	}
+
+	/** Get Missing SDF Signature.
+		@return Missing SDF Signature	  */
+	public boolean isZZ_Missing_SDF_Signature()
+	{
+		Object oo = get_Value(COLUMNNAME_ZZ_Missing_SDF_Signature);
 		if (oo != null)
 		{
 			 if (oo instanceof Boolean)

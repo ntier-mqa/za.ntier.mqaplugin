@@ -46,6 +46,8 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 	private String pZZ_Missing_Senior_Organisation_CEO_Signature = "N";
 	@Parameter(name=I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Emp_Rep_Sign)
 	private String pZZ_Missing_Employee_Representative_Signature = "N";
+	@Parameter(name=I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_SDF_Signature)
+	private String pZZ_Missing_SDF_Signature = "N";
 	@Parameter(name=I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Union_Rep_Sign)
 	private String pZZ_Missing_Union_Representative_Signature = "N";
 	@Parameter(name=I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Person_Sign_Many_Times)
@@ -333,6 +335,7 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 		po.set_ValueOfColumn(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Sen_Fin_CFO_Sign, yesNo(pZZ_Missing_Senior_Finance_CFO_Signature));
 		po.set_ValueOfColumn(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Sen_Org_CEO_Sign, yesNo(pZZ_Missing_Senior_Organisation_CEO_Signature));
 		po.set_ValueOfColumn(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Emp_Rep_Sign, yesNo(pZZ_Missing_Employee_Representative_Signature));
+		po.set_ValueOfColumn(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_SDF_Signature, yesNo(pZZ_Missing_SDF_Signature));
 		po.set_ValueOfColumn(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Union_Rep_Sign, yesNo(pZZ_Missing_Union_Representative_Signature));
 		po.set_ValueOfColumn(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Person_Sign_Many_Times, yesNo(pZZ_One_Person_Signed_More_Than_Once));
 		po.set_ValueOfColumn(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Sign_Pages_Not_Clear, yesNo(pZZ_Signature_Pages_Not_Clear));
@@ -356,6 +359,7 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 				|| presentParams.contains(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Sen_Org_CEO_Sign)
 				|| presentParams.contains(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Emp_Rep_Sign)
 				|| presentParams.contains(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Union_Rep_Sign)
+				|| presentParams.contains(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_SDF_Signature)
 				|| presentParams.contains(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Person_Sign_Many_Times)
 				|| presentParams.contains(I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Sign_Pages_Not_Clear);
 
@@ -367,6 +371,7 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 					+ I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Sen_Org_CEO_Sign + ", "
 					+ I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Emp_Rep_Sign + ", "
 					+ I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Union_Rep_Sign + ", "
+					+ I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_SDF_Signature + ", "
 					+ I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Person_Sign_Many_Times + ", and "
 					+ I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Sign_Pages_Not_Clear + ".");
 		}
