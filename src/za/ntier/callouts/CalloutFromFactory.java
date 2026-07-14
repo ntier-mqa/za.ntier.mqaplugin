@@ -17,6 +17,8 @@ import za.co.ntier.api.model.X_C_BP_TTC;
 import za.co.ntier.api.model.X_C_BP_Trades;
 import za.co.ntier.api.model.X_ZZQctoQualification;
 import za.co.ntier.api.model.X_ZZQctoSkillsProgramme;
+import za.co.ntier.api.model.X_ZZSkillsProgramme;
+import za.co.ntier.api.model.X_ZZQualification;
 import za.co.ntier.api.model.X_ZZ_Occupational_Certificates;
 import za.ntier.models.MZZOpenApplication;
 import za.ntier.models.OpenAppOverlapInput;
@@ -143,6 +145,40 @@ public class CalloutFromFactory implements IColumnCallout {
 			}
 		}
 
+		if (mTab.getTableName().equals(X_C_BP_SkillsProgramme.Table_Name)	&&
+			mField.getColumnName().equals(X_C_BP_SkillsProgramme.COLUMNNAME_ZZSkillsProgramme_ID))
+		{
+
+			if (value != null)
+			{
+				int srcID = 0;
+				if (value instanceof Number)
+				{
+					srcID = ((Number) value).intValue();
+				}
+				else
+				{
+					srcID = Integer.parseInt(value.toString());
+				}
+
+				if (srcID > 0)
+				{
+					X_ZZSkillsProgramme srcSkill = new X_ZZSkillsProgramme(ctx, srcID, null);
+
+					mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZLkpOfoOccupation_ID, srcSkill.getZZLkpOfoOccupationTree_ID());
+					mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZNqfLevel, srcSkill.getZZNqfLevel());
+					mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZCredits, srcSkill.getZZCredits());
+				}
+			}
+			else
+			{
+				// Clear values if ZZSkillsProgramme_ID is cleared
+				mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZLkpOfoOccupation_ID, null);
+				mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZNqfLevel, null);
+				mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZCredits, null);
+			}
+		}
+
 		if ((mTab.getTableName().equals(X_C_BP_AC.Table_Name)	||
 				mTab.getTableName().equals(X_C_BP_TTC.Table_Name))	&&
 			mField.getColumnName().equals(X_ZZ_Occupational_Certificates.COLUMNNAME_ZZ_Occupational_Certificates_ID))
@@ -206,6 +242,41 @@ public class CalloutFromFactory implements IColumnCallout {
 			else
 			{
 				// Clear values if ZZQctoQualification_ID is cleared
+				mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZLkpOfoOccupation_ID, null);
+				mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZNqfLevel, null);
+				mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZCredits, null);
+			}
+		}
+
+		if ((mTab.getTableName().equals(X_C_BP_OC.Table_Name)	||
+			mTab.getTableName().equals(X_C_BP_Trades.Table_Name))	&&
+																	mField.getColumnName().equals(X_ZZQualification.COLUMNNAME_ZZQualification_ID))
+		{
+
+			if (value != null)
+			{
+				int srcID = 0;
+				if (value instanceof Number)
+				{
+					srcID = ((Number) value).intValue();
+				}
+				else
+				{
+					srcID = Integer.parseInt(value.toString());
+				}
+
+				if (srcID > 0)
+				{
+					X_ZZQualification srcCert = new X_ZZQualification(ctx, srcID, null);
+
+					mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZLkpOfoOccupation_ID, srcCert.getZZLkpOfoOccupationTree_ID());
+					mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZNqfLevel, srcCert.getZZNqfLevel());
+					mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZCredits, srcCert.getZZCredits());
+				}
+			}
+			else
+			{
+				// Clear values if ZZQualification_ID is cleared
 				mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZLkpOfoOccupation_ID, null);
 				mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZNqfLevel, null);
 				mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZCredits, null);
