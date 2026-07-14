@@ -267,6 +267,129 @@ final class MigrationSupport {
     }
 
     /**
+     * Same rule as {@link #buildUniqueEmailIndex} but keyed off ms_user.email (the staged
+     * MSSQL "User" table, not ad_user) - used to resolve the various "who did this" actor
+     * columns on the QCTO join tables (enrolledby, registeredby, certificatecreatedby, etc.):
+     * look up the ms_user row's email, then find the matching ad_user by that same email.
+     * Returns MSSQL User.id -&gt; AD_User_ID directly so callers don't need two lookups.
+     * Link-only - never creates an AD_User (same rule as zzperson.ad_user_id, confirmed
+     * 2026-07-08 and re-confirmed 2026-07-10 for these actor columns).
+     */
+    static Map<Integer, Integer> buildMsUserToAdUserCrosswalk(String trxName) {
+        Map<String, Integer> emailToAdUser = buildUniqueEmailIndex(trxName);
+        Map<Integer, Integer> result = new HashMap<>();
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+        try {
+            pst = DB.prepareStatement(
+                    "SELECT id, lower(trim(email)) AS email_key FROM ms_user WHERE email IS NOT NULL AND trim(email) <> ''",
+                    trxName);
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                Integer adUserId = emailToAdUser.get(rs.getString("email_key"));
+                if (adUserId != null) {
+                    result.put(rs.getInt("id"), adUserId);
+                }
+            }
+        } catch (Exception e) {
+            throw new AdempiereException("Failed building ms_user -> AD_User crosswalk", e);
+        } finally {
+            DB.close(rs, pst);
+        }
+        return result;
+    }
+
+    /**
+     * Generic recon-column crosswalk: MS source id -&gt; already-migrated target row's PK,
+     * read straight off the "id" recon column this migration project adds to every target
+     * table (see Column Mapping doc, "Recon (new)" columns). Used to resolve FK columns that
+     * point at a parent/catalog table migrated earlier in the same run
+     * (e.g. ms_learnerqctoartisans.qctolearnershipid -&gt; zzqctolearnership_id via
+     * zzqctolearnership.id). Only rows where the recon column has been populated are
+     * included, so this naturally reflects "already migrated" state.
+     */
+    static Map<Integer, Integer> buildIdCrosswalk(String targetTable, String targetIdCol, String trxName) {
+        Map<Integer, Integer> result = new HashMap<>();
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+        try {
+            pst = DB.prepareStatement(
+                    "SELECT id, " + targetIdCol + " FROM " + targetTable + " WHERE id IS NOT NULL", trxName);
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                result.put(rs.getInt("id"), rs.getInt(targetIdCol));
+            }
+        } catch (Exception e) {
+            throw new AdempiereException("Failed building id crosswalk for " + targetTable, e);
+        } finally {
+            DB.close(rs, pst);
+        }
+        return result;
+    }
+
+    /**
+     * Generic plain-text lookup: MS lkp&lt;table&gt;.id -&gt; description. Used for every
+     * "Lookup" column on the QCTO tables whose target is a free-text column rather than a
+     * foreign key (socioeconomicstatus, sponsorship, project, terminationreason, seta,
+     * nqflevel, qualityassurancebody, etc. - see Column Mapping doc Section C).
+     */
+    static Map<Integer, String> buildDescriptionMap(String lkpTable, String trxName) {
+        Map<Integer, String> result = new HashMap<>();
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+        try {
+            pst = DB.prepareStatement("SELECT id, description FROM " + lkpTable, trxName);
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                result.put(rs.getInt("id"), rs.getString("description"));
+            }
+        } catch (Exception e) {
+            throw new AdempiereException("Failed building description map for " + lkpTable, e);
+        } finally {
+            DB.close(rs, pst);
+        }
+        return result;
+    }
+
+    /**
+     * MS lkpYesNo.id -&gt; Y/N flag. Confirmed directly against the MSSQL lkpYesNo table
+     * (2026-07-10): id=1 is "No", id=2 is "Yes" - NOT the more intuitive 1=Yes. Used for every
+     * "*YesNoId" column (leadsdproviderlevyyesnoid, walevyyesnoid, artisanlearnershipyesnoid,
+     * etc.). Returns null (leave column unset) if the id is missing/unrecognised.
+     */
+    static String yesNoIdToFlag(Integer yesNoId) {
+        if (yesNoId == null) {
+            return null;
+        }
+        if (yesNoId == 1) {
+            return "N";
+        }
+        if (yesNoId == 2) {
+            return "Y";
+        }
+        return null;
+    }
+
+    /** Direct 0/1 (or null) flag columns (isapproved, canassociategrants, isohs, rpl,
+     * belongtofasset, isendorsed, isreplacement, isreregistered, etc.) -&gt; Y/N. Unlike
+     * {@link #yesNoIdToFlag} these are NOT a lookup id - 0 = No, non-zero = Yes. */
+    static String flagToYN(Integer flag) {
+        if (flag == null) {
+            return null;
+        }
+        return flag != 0 ? "Y" : "N";
+    }
+
+    /** Same as {@link #flagToYN(Integer)} but for source columns already staged as a real
+     * Postgres boolean (e.g. ms_granttype.ispayable). */
+    static String flagToYN(Boolean flag) {
+        if (flag == null) {
+            return null;
+        }
+        return flag ? "Y" : "N";
+    }
+
+    /**
      * The health ratings are NOT pre-loaded into a Java map (that would mean holding up to
      * 881,799 String[6] arrays in the JVM heap on top of everything else this process
      * already caches). Instead {@link MigrateMsPersonToZZPerson} pivots
