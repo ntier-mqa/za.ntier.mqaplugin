@@ -566,6 +566,8 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 				"Missing Senior Organisation/CEO Signature");
 		appendReasonIfYes(reasons, I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Emp_Rep_Sign,
 				"Missing Employee Representative Signature");
+		appendReasonIfYes(reasons, I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_SDF_Signature,
+				"Missing SDF Signature");
 		appendReasonIfYes(reasons, I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Missing_Union_Rep_Sign,
 				"Missing Union Representative Signature");
 		appendReasonIfYes(reasons, I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Person_Sign_Many_Times,
