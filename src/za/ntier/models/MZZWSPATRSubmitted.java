@@ -21,6 +21,7 @@ import org.compiere.model.MUser;
 import org.compiere.model.PO;  // Required for getAllIDs
 import org.compiere.model.Query;
 import org.compiere.util.DB;
+import org.compiere.util.EMail;
 
 import com.lowagie.text.Document;
 import com.lowagie.text.html.simpleparser.HTMLWorker;
@@ -350,6 +351,11 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	}
 
 
+	public void resendApprovalEmail() throws Exception
+	{
+		sendQueryEmailWithPDF(WSP_ATR_FINAL_APPROVAL_TEMPLATE_UUID, "WSP-ATR_Approval_" + getSdlNumber() + "_" + getFiscalYear(getAD_Client_ID()));
+	}
+
 	private void sendQueryEmailWithPDF(String templateUUID,String fileName) throws Exception {
 
 		int adUserId = getSdfUserId();
@@ -387,7 +393,12 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 		String subject = mailText.getMailHeader();
 		if (subject == null || subject.trim().isEmpty())
-			subject = "WSP-ATR Query Notification";
+		{
+			if (WSP_ATR_FINAL_APPROVAL_TEMPLATE_UUID.equals(templateUUID))
+				subject = "WSP-ATR Approval Notification";
+			else
+				subject = "WSP-ATR Query Notification";
+		}
 
 		File pdf = createPDF(html,fileName);
 
@@ -402,13 +413,34 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 		MClient client = MClient.get(getCtx());
 
-		boolean sent =
-				client.sendEMail(fromUser, toUser, subject, emailHtml, pdf, true);
+		EMail email = client.createEMail(fromUser, toUser, subject, emailHtml, true);
+		if (email == null) {
+			log.severe("Failed to create email object");
+			return;
+		}
 
-		if (!sent)
-			log.severe("Failed to send query  email");
+		if (pdf != null && pdf.exists()) {
+			email.addAttachment(pdf);
+		}
+
+		if (WSP_ATR_FINAL_APPROVAL_TEMPLATE_UUID.equals(templateUUID))
+		{
+			String recipientEmail = toUser.getEMail() != null ? toUser.getEMail().trim() : "";
+			if (!SUCCESSFUL_SUBMISSION_CC_EMAIL.equalsIgnoreCase(recipientEmail))
+			{
+				email.addCc(SUCCESSFUL_SUBMISSION_CC_EMAIL);
+			}
+		}
+
+		String msg = email.send();
+		if (!EMail.SENT_OK.equals(msg))
+		{
+			log.severe("Failed to send email: " + msg);
+		}
 		else
-			log.info("Query email sent successfully");
+		{
+			log.info("Email sent successfully");
+		}
 	}
 
 
@@ -479,22 +511,26 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 		MClient client = MClient.get(getCtx());
 
-		boolean sent =
-				client.sendEMail(fromUser, toUser, subject, html, pdf, true);
+		EMail email = client.createEMail(fromUser, toUser, subject, html, true);
+		if (email == null) {
+			log.severe("Failed to create Successful Submission email object");
+			return;
+		}
 
+		if (pdf != null && pdf.exists()) {
+			email.addAttachment(pdf);
+		}
 
-		if (!sent)
-			log.severe("Failed to send Successful Submission email");
-		else {
+		String recipientEmail = toUser.getEMail() != null ? toUser.getEMail().trim() : "";
+		if (!SUCCESSFUL_SUBMISSION_CC_EMAIL.equalsIgnoreCase(recipientEmail)) {
+			email.addCc(SUCCESSFUL_SUBMISSION_CC_EMAIL);
+		}
+
+		String msg = email.send();
+		if (!EMail.SENT_OK.equals(msg)) {
+			log.severe("Failed to send Successful Submission email: " + msg);
+		} else {
 			log.info("Successfule Submission email sent successfully");
-
-			String recipientEmail = toUser.getEMail() != null ? toUser.getEMail().trim() : "";
-			if (!SUCCESSFUL_SUBMISSION_CC_EMAIL.equalsIgnoreCase(recipientEmail)) {
-				boolean ccSent = client.sendEMail(SUCCESSFUL_SUBMISSION_CC_EMAIL, subject, html, null, true);
-				if (!ccSent) {
-					log.severe("Failed to send Successful Submission CC email to " + SUCCESSFUL_SUBMISSION_CC_EMAIL);
-				}
-			}
 		}
 	}
 
@@ -540,19 +576,22 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 		MUser fromUser = MUser.get(getCtx(), FROM_EMAIL_USER_ID);
 		MClient client = MClient.get(getCtx());
 
-		boolean sent = client.sendEMail(fromUser, toUser, subject, html, null, true);
+		EMail email = client.createEMail(fromUser, toUser, subject, html, true);
+		if (email == null) {
+			log.severe("Failed to create Successful Import email object");
+			return;
+		}
 
-		if (!sent)
-			log.severe("Failed to send Successful Import email");
-		else
-			log.info("Successful Import email sent to " + toUser.getEMail());
-
-		// CC submissions address if different from recipient
 		String recipientEmail = toUser.getEMail() != null ? toUser.getEMail().trim() : "";
 		if (!SUCCESSFUL_SUBMISSION_CC_EMAIL.equalsIgnoreCase(recipientEmail)) {
-			boolean ccSent = client.sendEMail(SUCCESSFUL_SUBMISSION_CC_EMAIL, subject, html, null, true);
-			if (!ccSent)
-				log.severe("Failed to send Successful Import CC email to " + SUCCESSFUL_SUBMISSION_CC_EMAIL);
+			email.addCc(SUCCESSFUL_SUBMISSION_CC_EMAIL);
+		}
+
+		String msg = email.send();
+		if (!EMail.SENT_OK.equals(msg)) {
+			log.severe("Failed to send Successful Import email: " + msg);
+		} else {
+			log.info("Successful Import email sent to " + toUser.getEMail());
 		}
 	}
 
