@@ -46,6 +46,7 @@ import org.compiere.model.MAttachmentEntry;
 import org.compiere.model.MProcess;
 import org.compiere.model.MRefList;
 import org.compiere.model.MReference;
+import org.compiere.model.MStorageProvider;
 import org.compiere.model.MSysConfig; // [WSP-ATR-WINDOW-GATE] used to toggle the upload window gate via AD_SysConfig
 import org.compiere.model.MTable;
 import org.compiere.util.CLogger;
@@ -377,6 +378,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 		log.info("UPLOAD START | file=" + filename
 				+ " | uploadedLen=" + data.length
 				+ " | uploadedSha256=" + sha256Hex(data));
+		logAttachmentStorageConfig("UPLOAD START | file=" + filename);
 
 		String trxName = Trx.createTrxName("WSPATRUpload");
 		Trx trx = Trx.get(trxName, true);
@@ -1053,6 +1055,34 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 
 		} catch (Exception e) {
 			throw new AdempiereException("Attachment verification failed: " + e.getMessage(), e);
+		}
+	}
+
+	/**
+	 * WSPATR-DEBUG helper: logs which attachment storage provider (DB vs FileSystem)
+	 * and which host handled this request, to help correlate an "empty attachment"
+	 * failure between the node that received the upload and the node that later
+	 * reads it back for validation/import.
+	 */
+	private void logAttachmentStorageConfig(String label) {
+		try {
+			int spId = MStorageProvider.getDefaultStorageProviderID();
+			MStorageProvider prov = spId > 0 ? MStorageProvider.get(spId) : null;
+			log.warning("WSPATR-DEBUG | " + label
+					+ " | AD_StorageProvider_ID=" + spId
+					+ " | Method=" + (prov != null ? prov.getMethod() : "?")
+					+ " | Folder=" + (prov != null ? prov.getFolder() : "?")
+					+ " | host=" + safeHostname());
+		} catch (Exception e) {
+			log.warning("WSPATR-DEBUG | " + label + " | failed to read storage provider config: " + e.getMessage());
+		}
+	}
+
+	private String safeHostname() {
+		try {
+			return java.net.InetAddress.getLocalHost().getHostName();
+		} catch (Exception e) {
+			return "unknown";
 		}
 	}
 

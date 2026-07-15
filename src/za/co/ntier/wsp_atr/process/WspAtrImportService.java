@@ -12,8 +12,10 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.util.IOUtils;
 import org.compiere.model.MAttachment;
 import org.compiere.model.MAttachmentEntry;
+import org.compiere.model.MStorageProvider;
 import org.compiere.model.Query;
 import org.compiere.process.SvrProcess;
+import org.compiere.util.CLogger;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.compiere.util.Util;
@@ -31,7 +33,7 @@ public class WspAtrImportService {
     private static final String EXCEL_PASSWORD = "Learning2026";
 
     
-    //private static final CLogger log = CLogger.getCLogger(WspAtrImportService.class);
+    private static final CLogger log = CLogger.getCLogger(WspAtrImportService.class);
     
 
     public int importSubmitted(Properties ctx,
@@ -139,8 +141,12 @@ public class WspAtrImportService {
         }
 
         MAttachmentEntry[] entries = attachment.getEntries();
-        
+
         MAttachmentEntry selectedEntry = null;
+
+        log.warning("WSPATR-DEBUG | loadWorkbook(import) | submittedId=" + submitted.getZZ_WSP_ATR_Submitted_ID()
+                + " | host=" + safeHostname()
+                + " | entryCount=" + (entries != null ? entries.length : -1));
 
         if (entries != null) {
             for (MAttachmentEntry entry : entries) {
@@ -149,6 +155,8 @@ public class WspAtrImportService {
                 }
 
                 String name = entry.getName();
+                log.warning("WSPATR-DEBUG | loadWorkbook(import) | entryName=" + name
+                        + " | looksLikeMissingFilePlaceholder=" + isMissingFilePlaceholder(name));
                 if (Util.isEmpty(name, true)) {
                     continue;
                 }
@@ -170,6 +178,9 @@ public class WspAtrImportService {
             throw new AdempiereException("Attachment has no valid entries.");
         }
 
+        log.warning("WSPATR-DEBUG | loadWorkbook(import) | submittedId=" + submitted.getZZ_WSP_ATR_Submitted_ID()
+                + " | selectedEntry=" + selectedEntry.getName());
+
         try (InputStream is = selectedEntry.getInputStream()) {
             if (is == null) {
                 throw new AdempiereException(
@@ -180,8 +191,61 @@ public class WspAtrImportService {
 
             byte[] bytes = org.apache.commons.io.IOUtils.toByteArray(is);
 
+            log.warning("WSPATR-DEBUG | loadWorkbook(import) | submittedId=" + submitted.getZZ_WSP_ATR_Submitted_ID()
+                    + " | selectedEntry=" + selectedEntry.getName()
+                    + " | bytesRead=" + bytes.length
+                    + " | host=" + safeHostname());
+
+            if (bytes.length == 0) {
+                logAttachmentStorageConfig("EMPTY ATTACHMENT DETECTED (import stage)");
+                throw new AdempiereException(
+                        "Attachment entry '" + selectedEntry.getName() + "' read as 0 bytes for submitted ID "
+                                + submitted.getZZ_WSP_ATR_Submitted_ID() + " on host " + safeHostname()
+                                + ". If the attachment storage provider is FileSystem-based, this usually means "
+                                + "this server node could not find the file on local disk (check the server log "
+                                + "on host " + safeHostname() + " for 'file not found' from AttachmentFileSystem, "
+                                + "and compare against the host that handled the original upload, logged as "
+                                + "UPLOAD START/host in the WSP/ATR upload log).");
+            }
+
             return openWorkbookAuto(bytes, EXCEL_PASSWORD);
         }
+    }
+
+    /**
+     * WSPATR-DEBUG helper: logs which attachment storage provider (DB vs FileSystem)
+     * and which host is currently active, to help correlate an "empty attachment"
+     * failure between the node that received the upload and the node that later
+     * read it back for import.
+     */
+    private void logAttachmentStorageConfig(String label) {
+        try {
+            int spId = MStorageProvider.getDefaultStorageProviderID();
+            MStorageProvider prov = spId > 0 ? MStorageProvider.get(spId) : null;
+            log.warning("WSPATR-DEBUG | " + label
+                    + " | AD_StorageProvider_ID=" + spId
+                    + " | Method=" + (prov != null ? prov.getMethod() : "?")
+                    + " | Folder=" + (prov != null ? prov.getFolder() : "?")
+                    + " | host=" + safeHostname());
+        } catch (Exception e) {
+            log.warning("WSPATR-DEBUG | " + label + " | failed to read storage provider config: " + e.getMessage());
+        }
+    }
+
+    private String safeHostname() {
+        try {
+            return java.net.InetAddress.getLocalHost().getHostName();
+        } catch (Exception e) {
+            return "unknown";
+        }
+    }
+
+    /**
+     * AttachmentFileSystem substitutes a "~name~" placeholder entry with empty
+     * content when the backing file isn't found on local disk. Flag that pattern.
+     */
+    private boolean isMissingFilePlaceholder(String entryName) {
+        return entryName != null && entryName.startsWith("~") && entryName.endsWith("~") && entryName.length() > 1;
     }
     
     
