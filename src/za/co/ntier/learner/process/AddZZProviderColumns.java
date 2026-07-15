@@ -57,9 +57,16 @@ import org.compiere.util.Env;
  *       needed afterward.</li>
  * </ul>
  *
- * <p>Idempotent/resumable: any ZZProvider column that already exists (by name) is skipped;
- * any reference table that already exists (by name) is treated as already populated and
- * left alone - re-running this process is safe.
+ * <p>ZZProvider columns are DROP-and-RECREATE on every run (see
+ * {@link #dropColumnIfExists}): if a column already exists it is deleted (physically and
+ * from the Application Dictionary) and rebuilt fresh, rather than left alone. This is
+ * deliberately destructive - added 2026-07-15 because an earlier test run had created some
+ * of these columns as plain Integer, before this process used real Table Direct references,
+ * and simply skipping "already exists" would have left the wrong definition in place. Safe
+ * while ZZProvider holds no data (0 rows as of this writing); revisit before running against
+ * a populated table. Reference tables (Provider_Type etc.) are the one exception - if one
+ * already exists it is left as-is, not re-populated, since dropping it could lose real
+ * lookup data a user might have added.
  *
  * <p><b>Scope (2026-07-15):</b>
  * <ul>
@@ -211,20 +218,19 @@ public class AddZZProviderColumns extends SvrProcess {
         }
 
         int plainAdded = 0;
-        int plainSkipped = 0;
+        int plainRecreated = 0;
         for (ColumnSpec spec : PLAIN_COLUMNS) {
-            if (providerTable.getColumn(spec.columnName) != null) {
-                addLog(TABLE_NAME + "." + spec.columnName + " already exists - skipped.");
-                plainSkipped++;
-                continue;
+            if (dropColumnIfExists(providerTable, spec.columnName)) {
+                plainRecreated++;
+            } else {
+                plainAdded++;
             }
             addColumn(providerTable, spec.columnName, spec.referenceId, spec.fieldLength, spec.description);
-            plainAdded++;
         }
 
         int tablesCreated = 0;
         int refAdded = 0;
-        int refSkipped = 0;
+        int refRecreated = 0;
         for (ReferenceColumnSpec spec : REFERENCE_COLUMNS) {
             String targetTableName = spec.targetTableName();
             MTable targetTable = findTable(targetTableName);
@@ -239,28 +245,50 @@ public class AddZZProviderColumns extends SvrProcess {
                 addLog(targetTableName + " already exists - left as-is (not re-populated).");
             }
 
-            if (providerTable.getColumn(spec.columnName) != null) {
-                addLog(TABLE_NAME + "." + spec.columnName + " already exists - skipped.");
-                refSkipped++;
-                continue;
+            if (dropColumnIfExists(providerTable, spec.columnName)) {
+                refRecreated++;
+            } else {
+                refAdded++;
             }
             addColumn(providerTable, spec.columnName, DisplayType.TableDir, 10,
                     spec.description + " -> " + targetTableName);
-            refAdded++;
         }
 
-        int bpartnerAdded = 0;
-        if (providerTable.getColumn("C_BPartner_ID") != null) {
-            addLog(TABLE_NAME + ".C_BPartner_ID already exists - skipped.");
-        } else {
-            addColumn(providerTable, "C_BPartner_ID", DisplayType.TableDir, 10,
-                    "ms_skillsdevelopmentprovider.organisationid, resolved via ms_organisation.sdlnumber = c_bpartner.zz_sdl_no");
-            bpartnerAdded = 1;
-        }
+        boolean bpartnerRecreated = dropColumnIfExists(providerTable, "C_BPartner_ID");
+        addColumn(providerTable, "C_BPartner_ID", DisplayType.TableDir, 10,
+                "ms_skillsdevelopmentprovider.organisationid, resolved via ms_organisation.sdlnumber = c_bpartner.zz_sdl_no");
 
-        return TABLE_NAME + ": " + plainAdded + " plain column(s) added (" + plainSkipped + " already existed), "
+        return TABLE_NAME + ": " + plainAdded + " plain column(s) added (" + plainRecreated + " recreated), "
                 + tablesCreated + " reference table(s) created, " + refAdded + " reference column(s) added ("
-                + refSkipped + " already existed), " + bpartnerAdded + " C_BPartner_ID column added.";
+                + refRecreated + " recreated), C_BPartner_ID " + (bpartnerRecreated ? "recreated" : "added") + ".";
+    }
+
+    /**
+     * Per user instruction 2026-07-15 (an earlier test run had created some of these columns
+     * as plain Integer, before this process was changed to use real Table Direct
+     * references): every column this process manages is now dropped and recreated on every
+     * run, rather than left alone if already present. This is destructive - any data already
+     * in that column on any existing ZZProvider row is lost - but ZZProvider is still empty
+     * (0 rows) as of this writing, and this process only ever touches column DEFINITIONS,
+     * not data, so re-running it during schema iteration is the expected use. If ZZProvider
+     * ever holds real data, this behaviour needs revisiting before running again.
+     *
+     * @return true if a column existed and was dropped, false if there was nothing to drop
+     */
+    private boolean dropColumnIfExists(MTable table, String columnName) {
+        MColumn existing = table.getColumn(columnName);
+        if (existing == null) {
+            return false;
+        }
+        // Physically drop first - same as adding, saving/deleting an AD_Column record does
+        // not touch the physical database by itself (see class Javadoc), so this process
+        // does the DDL itself. No schema prefix, matches the framework's own
+        // getSQLAdd()/getSQLCreate() convention (relies on the DB connection's search_path).
+        DB.executeUpdateEx("ALTER TABLE " + table.getTableName() + " DROP COLUMN IF EXISTS " + columnName,
+                get_TrxName());
+        existing.deleteEx(true, get_TrxName());
+        addLog(table.getTableName() + "." + columnName + " dropped (will be recreated).");
+        return true;
     }
 
     private MTable findTable(String tableName) {
