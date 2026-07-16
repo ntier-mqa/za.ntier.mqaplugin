@@ -108,7 +108,7 @@ final class AddColumnsSupport {
      */
     static void addColumn(Properties ctx, MTable table, String columnName, int referenceId, int fieldLength,
             String description, String entityType, String trxName, Consumer<String> logger) {
-        M_Element element = M_Element.get(ctx, columnName);
+        M_Element element = M_Element.get(ctx, columnName, trxName);
         if (element == null) {
             element = new M_Element(ctx, columnName, entityType, trxName);
             element.setName(columnName.replace('_', ' ').trim());
@@ -266,7 +266,7 @@ final class AddColumnsSupport {
         if (table.getColumn(columnName) != null) {
             return;
         }
-        M_Element element = M_Element.get(ctx, columnName);
+        M_Element element = M_Element.get(ctx, columnName, trxName);
         if (element == null) {
             element = new M_Element(ctx, columnName, entityType, trxName);
             element.setName(table.getName());
@@ -297,7 +297,7 @@ final class AddColumnsSupport {
         if (table.getColumn(columnName) != null) {
             return;
         }
-        M_Element element = M_Element.get(ctx, columnName);
+        M_Element element = M_Element.get(ctx, columnName, trxName);
         if (element == null) {
             element = new M_Element(ctx, columnName, entityType, trxName);
             element.saveEx();
@@ -324,7 +324,7 @@ final class AddColumnsSupport {
         if (table.getColumn("id") != null) {
             return;
         }
-        M_Element element = M_Element.get(ctx, "id");
+        M_Element element = M_Element.get(ctx, "id", trxName);
         if (element == null) {
             element = new M_Element(ctx, "id", entityType, trxName);
             element.setName("Source Id");
