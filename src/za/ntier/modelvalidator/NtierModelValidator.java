@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.compiere.model.MBPartner;
 import org.compiere.model.MClient;
 import org.compiere.model.MLocation;
 import org.compiere.model.MMailText;
@@ -289,15 +290,18 @@ public class NtierModelValidator implements ModelValidator
 																													"/za/co/ntier/wsp_atr/report/jrxmls/MQA_Address_Logo_Header.png"));
 										jasperParams.put("FooterImagePath", NtierModelValidator.class.getResource(
 																													"/za/co/ntier/wsp_atr/report/jrxmls/MQA-Footer-Asse-Mod-Approval.png"));
-										String userTitle = assessorUser.getZZLkpTitle() != null ? assessorUser.getZZLkpTitle().trim() + " " : "";
-										jasperParams.put("AssessorFullName", (userTitle + assessorNameStr).trim());
+										jasperParams.put("AssessorFullName", (assessorNameStr).trim());
 										jasperParams.put("IDNumber", assessorUser.getZZ_ID_Passport_No() != null	? assessorUser.getZZ_ID_Passport_No()
 																													: assessorUser.getZZOtherIDNo());
-										jasperParams.put("SDPName", createdByUser.getName());
+										
+										MBPartner bp = (MBPartner) createdByUser.getC_BPartner();
+										String bpName = bp != null ? bp.getName() : "";
+
+										jasperParams.put("SDPName", bpName);
 
 										X_C_BPartner_Location bpLoc = (X_C_BPartner_Location) MTable.get(Env.getCtx(), X_C_BPartner_Location.Table_ID).getPO(
 																																								"C_BPartner_ID = "
-																																								+ createdByUser.getC_BPartner_ID(),
+																																								+ bp.getC_BPartner_ID(),
 																																								null);
 
 										String locationStr = "";
@@ -308,7 +312,7 @@ public class NtierModelValidator implements ModelValidator
 												locationStr = loc.toString();
 										}
 										jasperParams.put("SDPLinkedBPLocation", locationStr);
-										jasperParams.put("AssessorShortName", (userTitle + fName).trim());
+										jasperParams.put("AssessorShortName", (fName).trim());
 										jasperParams.put("RegistrationTitle", ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()) ? "MODERATOR REGISTRATION" : "ASSESSOR REGISTRATION");
 										jasperParams.put("RegistrationRole", ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()) ? "a moderator" : "an assessor");
 										jasperParams.put("RegistrationNumber", Util.isEmpty(zzAssessor) ? zzModerator : zzAssessor);
