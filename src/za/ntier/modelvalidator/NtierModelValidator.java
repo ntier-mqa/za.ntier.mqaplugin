@@ -68,6 +68,12 @@ public class NtierModelValidator implements ModelValidator
 	private static final String MODERATOR_APPROVED_MAIL_TEMPLATE_UU = "f8af2182-e4be-405a-9648-12fb4e1464f0";
 	private static final String ASSESSOR_NOT_RECOMMENDED_MAIL_TEMPLATE_UU = "e9750b7e-5ccd-4e56-8c0f-e0f9d74bbdd2";
 	private static final String MODERATOR_NOT_RECOMMENDED_MAIL_TEMPLATE_UU = "9b1d46cd-80bd-4014-8c7e-eaf8ba948057";
+	private static final String ASSESSOR_SCOPE_EXT_APPROVAL_MAIL_TEMPLATE_UU = "ac15f34e-2327-4bf0-b8b6-c8ee9f03de77";
+	private static final String ASSESSOR_SCOPE_EXT_APPROVED_MAIL_TEMPLATE_UU = "2da3098e-4e74-4881-88bb-cc91c6dc37d9";
+	private static final String MODERATOR_SCOPE_EXT_APPROVAL_MAIL_TEMPLATE_UU = "384532c5-b0f5-43bd-a712-fa87fdaf0499";
+	private static final String MODERATOR_SCOPE_EXT_APPROVED_MAIL_TEMPLATE_UU = "e27ca630-dd33-4946-af9f-cc16a4bf2d7b";
+	private static final String ASSESSOR_SCOPE_EXT_NOT_RECOMMENDED_MAIL_TEMPLATE_UU = "5d83ad12-003b-4401-afa2-f244979b3553";
+	private static final String MODERATOR_SCOPE_EXT_NOT_RECOMMENDED_MAIL_TEMPLATE_UU = "ee081c70-ea83-44b4-950a-7293e8f28c29";
 	private int				m_AD_Client_ID	= -1;
 	private static final String ROLE_MGR_QA_AI = "635702d2-8ffb-4a31-a585-d2960d86383c";
 	private static final String ROLE_ASSESSOR = "Assessor";
@@ -221,9 +227,10 @@ public class NtierModelValidator implements ModelValidator
 							if (zzModerator == null)
 								zzModerator = "";
 
+							boolean isScopeExt = assessorPerson.getParent_ID() > 0;
 							String templateUU = ROLE_ASSESSOR.equals(assessorPerson.getZZAssessorRole())
-																											? ASSESSOR_APPROVED_MAIL_TEMPLATE_UU
-																											: MODERATOR_APPROVED_MAIL_TEMPLATE_UU;
+									? (isScopeExt ? ASSESSOR_SCOPE_EXT_APPROVED_MAIL_TEMPLATE_UU : ASSESSOR_APPROVED_MAIL_TEMPLATE_UU)
+									: (isScopeExt ? MODERATOR_SCOPE_EXT_APPROVED_MAIL_TEMPLATE_UU : MODERATOR_APPROVED_MAIL_TEMPLATE_UU);
 
 							var approvedMailTemplate = (MMailText) new Query(po.getCtx(), MMailText.Table_Name, "R_MailText_UU=?", po.get_TrxName())
 																																					.setParameters(templateUU)
@@ -420,9 +427,10 @@ public class NtierModelValidator implements ModelValidator
 
 							if (!Util.isEmpty(recipientEmail))
 							{
+								boolean isScopeExt = assessorPerson.getParent_ID() > 0;
 								String notRecTemplateUU = ROLE_ASSESSOR.equals(assessorPerson.getZZAssessorRole())
-																													? ASSESSOR_NOT_RECOMMENDED_MAIL_TEMPLATE_UU
-																													: MODERATOR_NOT_RECOMMENDED_MAIL_TEMPLATE_UU;
+										? (isScopeExt ? ASSESSOR_SCOPE_EXT_NOT_RECOMMENDED_MAIL_TEMPLATE_UU : ASSESSOR_NOT_RECOMMENDED_MAIL_TEMPLATE_UU)
+										: (isScopeExt ? MODERATOR_SCOPE_EXT_NOT_RECOMMENDED_MAIL_TEMPLATE_UU : MODERATOR_NOT_RECOMMENDED_MAIL_TEMPLATE_UU);
 
 								var notRecMailTemplate = (MMailText) new Query(po.getCtx(), MMailText.Table_Name, "R_MailText_UU=?", po.get_TrxName())
 																																						.setParameters(notRecTemplateUU)
@@ -478,9 +486,10 @@ public class NtierModelValidator implements ModelValidator
 									+ "AND u.NotificationType IN ('B', 'E') "
 									+ "AND u.IsActive = 'Y' AND ur.IsActive = 'Y' AND r.IsActive = 'Y'";
 
+					boolean isScopeExt = assessorPerson.getParent_ID() > 0;
 					String templateUU = ROLE_ASSESSOR.equals(assessorPerson.getZZAssessorRole())
-																									? ASSESSOR_APPROVAL_MAIL_TEMPLATE_UU
-																									: MODERATOR_APPROVAL_MAIL_TEMPLATE_UU;
+							? (isScopeExt ? ASSESSOR_SCOPE_EXT_APPROVAL_MAIL_TEMPLATE_UU : ASSESSOR_APPROVAL_MAIL_TEMPLATE_UU)
+							: (isScopeExt ? MODERATOR_SCOPE_EXT_APPROVAL_MAIL_TEMPLATE_UU : MODERATOR_APPROVAL_MAIL_TEMPLATE_UU);
 
 					var mailTemplate = (MMailText) new Query(po.getCtx(), MMailText.Table_Name, "R_MailText_UU=?", po.get_TrxName())
 																																	.setParameters(templateUU)
