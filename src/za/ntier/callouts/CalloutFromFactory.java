@@ -6,10 +6,12 @@ import java.util.Properties;
 import org.adempiere.base.IColumnCallout;
 import org.compiere.model.GridField;
 import org.compiere.model.GridTab;
+import org.compiere.model.MBPartner;
 import org.compiere.model.X_M_InventoryLine;
 import org.compiere.util.DB;
 import org.compiere.util.Msg;
 
+import za.co.ntier.api.model.I_ZZ_WPA_Application;
 import za.co.ntier.api.model.X_C_BP_AC;
 import za.co.ntier.api.model.X_C_BP_OC;
 import za.co.ntier.api.model.X_C_BP_SkillsProgramme;
@@ -17,9 +19,10 @@ import za.co.ntier.api.model.X_C_BP_TTC;
 import za.co.ntier.api.model.X_C_BP_Trades;
 import za.co.ntier.api.model.X_ZZQctoQualification;
 import za.co.ntier.api.model.X_ZZQctoSkillsProgramme;
-import za.co.ntier.api.model.X_ZZSkillsProgramme;
 import za.co.ntier.api.model.X_ZZQualification;
+import za.co.ntier.api.model.X_ZZSkillsProgramme;
 import za.co.ntier.api.model.X_ZZ_Occupational_Certificates;
+import za.co.ntier.api.model.X_ZZ_WPA_Application;
 import za.ntier.models.MZZOpenApplication;
 import za.ntier.models.OpenAppOverlapInput;
 import za.ntier.models.X_ZZ_Open_Application;
@@ -29,6 +32,26 @@ public class CalloutFromFactory implements IColumnCallout {
 
 	@Override
 	public String start(Properties ctx, int WindowNo, GridTab mTab, GridField mField, Object value, Object oldValue) {
+		if (mTab.getTableName().equals(X_ZZ_WPA_Application.Table_Name))
+		{
+			if (mField.getColumnName().equals(I_ZZ_WPA_Application.COLUMNNAME_C_BPartner_ID))
+			{
+				int bpartnerId = tabInt(mTab, I_ZZ_WPA_Application.COLUMNNAME_C_BPartner_ID);
+				if (bpartnerId > 0)
+				{
+					MBPartner bp = new MBPartner(ctx, bpartnerId, null);
+					if (bp.get_ID() > 0)
+					{
+						mTab.setValue(I_ZZ_WPA_Application.COLUMNNAME_Value, bp.getValue());
+					}
+				}
+				else
+				{
+					mTab.setValue(I_ZZ_WPA_Application.COLUMNNAME_Value, null);
+				}
+			}
+			return "";
+		}
 		if (mTab.getTableName().equals(X_ZZ_Open_Application.Table_Name) && 
 				mField.getColumnName().equals(X_ZZ_Open_Application.COLUMNNAME_ZZ_Programs)) {
 			String programs = (String) value;
