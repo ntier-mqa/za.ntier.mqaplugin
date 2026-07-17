@@ -104,10 +104,24 @@ final class AddColumnsSupport {
     /**
      * Adds one column to an EXISTING, already-physical table: Element/MColumn registration
      * (mirrors org.compiere.process.TableCreateColumns) then MColumn.getSQLAdd() + execute
-     * (mirrors org.compiere.process.ColumnSync).
+     * (mirrors org.compiere.process.ColumnSync). Convenience overload for the common case with
+     * no AD_Reference_Value_ID (Table Direct columns resolved purely by name, plain columns).
      */
     static void addColumn(Properties ctx, MTable table, String columnName, int referenceId, int fieldLength,
             String description, String entityType, String trxName, Consumer<String> logger) {
+        addColumn(ctx, table, columnName, referenceId, 0, fieldLength, description, entityType, trxName, logger);
+    }
+
+    /**
+     * Same as {@link #addColumn(Properties, MTable, String, int, int, String, String, String,
+     * Consumer)} but also sets AD_Reference_Value_ID (referenceValueId &gt; 0) - needed for
+     * Search/Table columns whose column name does NOT match the target table's name (so Table
+     * Direct's naming convention can't resolve it), e.g. an actor column pointing at AD_User
+     * (SystemIDs.REFERENCE_AD_USER=110) or a business-meaning column pointing at C_BPartner via
+     * an explicit reference like "C_BPartner (all)".
+     */
+    static void addColumn(Properties ctx, MTable table, String columnName, int referenceId, int referenceValueId,
+            int fieldLength, String description, String entityType, String trxName, Consumer<String> logger) {
         M_Element element = M_Element.get(ctx, columnName, trxName);
         if (element == null) {
             element = new M_Element(ctx, columnName, entityType, trxName);
@@ -125,6 +139,9 @@ final class AddColumnsSupport {
         column.setAD_Element_ID(element.getAD_Element_ID());
         column.setIsMandatory(false);
         column.setAD_Reference_ID(referenceId);
+        if (referenceValueId > 0) {
+            column.setAD_Reference_Value_ID(referenceValueId);
+        }
         column.setFieldLength(fieldLength);
         column.setIsUpdateable(true);
         column.saveEx();
