@@ -16,6 +16,10 @@ import za.co.ntier.api.model.X_C_BP_OC;
 import za.co.ntier.api.model.X_C_BP_Trades;
 import za.co.ntier.api.model.X_C_BP_AC;
 import za.co.ntier.api.model.X_ZZ_WPA_Application;
+import za.co.ntier.api.model.X_ZZ_WPA_App_Qualifications;
+import za.co.ntier.api.model.X_ZZ_WPA_App_QCTOQualifications;
+import za.co.ntier.api.model.X_ZZ_WPA_App_SkillsProgramme;
+import za.co.ntier.api.model.X_ZZ_WPA_App_QCTOSkillsProg;
 
 @Component(
 
@@ -36,7 +40,11 @@ public class CalloutFactory implements IColumnCalloutFactory {
 			tableName.equals(X_C_BP_Trades.Table_Name) ||
 			tableName.equals(X_C_BP_AC.Table_Name) ||
 			tableName.equals(X_C_BP_TTC.Table_Name) ||
-			tableName.equals(X_ZZ_WPA_Application.Table_Name)
+			tableName.equals(X_ZZ_WPA_Application.Table_Name) ||
+			tableName.equals(X_ZZ_WPA_App_Qualifications.Table_Name) ||
+			tableName.equals(X_ZZ_WPA_App_QCTOQualifications.Table_Name) ||
+			tableName.equals(X_ZZ_WPA_App_SkillsProgramme.Table_Name) ||
+			tableName.equals(X_ZZ_WPA_App_QCTOSkillsProg.Table_Name)
 			)
 		{
 			list.add(new CalloutFromFactory());

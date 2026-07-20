@@ -23,6 +23,10 @@ import za.co.ntier.api.model.X_ZZQualification;
 import za.co.ntier.api.model.X_ZZSkillsProgramme;
 import za.co.ntier.api.model.X_ZZ_Occupational_Certificates;
 import za.co.ntier.api.model.X_ZZ_WPA_Application;
+import za.co.ntier.api.model.X_ZZ_WPA_App_Qualifications;
+import za.co.ntier.api.model.X_ZZ_WPA_App_QCTOQualifications;
+import za.co.ntier.api.model.X_ZZ_WPA_App_SkillsProgramme;
+import za.co.ntier.api.model.X_ZZ_WPA_App_QCTOSkillsProg;
 import za.ntier.models.MZZOpenApplication;
 import za.ntier.models.OpenAppOverlapInput;
 import za.ntier.models.X_ZZ_Open_Application;
@@ -303,6 +307,94 @@ public class CalloutFromFactory implements IColumnCallout {
 				mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZLkpOfoOccupation_ID, null);
 				mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZNqfLevel, null);
 				mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZCredits, null);
+			}
+		}
+
+		if (mTab.getTableName().equals(X_ZZ_WPA_App_Qualifications.Table_Name)	&&
+			mField.getColumnName().equals(X_ZZ_WPA_App_Qualifications.COLUMNNAME_ZZQualification_ID))
+		{
+			if (value != null)
+			{
+				int srcID = (Integer) value;
+				if (srcID > 0)
+				{
+					X_ZZQualification srcCert = new X_ZZQualification(ctx, srcID, null);
+					mTab.setValue(X_ZZ_WPA_App_Qualifications.COLUMNNAME_ZZProgrammeName, srcCert.getZZSaqaQualificationTitle());
+					mTab.setValue(X_ZZ_WPA_App_Qualifications.COLUMNNAME_ZZNqfLevel, srcCert.getZZNqfLevel());
+					mTab.setValue(X_ZZ_WPA_App_Qualifications.COLUMNNAME_ZZCredits, srcCert.getZZCredits());
+				}
+			}
+			else
+			{
+				mTab.setValue(X_ZZ_WPA_App_Qualifications.COLUMNNAME_ZZProgrammeName, null);
+				mTab.setValue(X_ZZ_WPA_App_Qualifications.COLUMNNAME_ZZNqfLevel, null);
+				mTab.setValue(X_ZZ_WPA_App_Qualifications.COLUMNNAME_ZZCredits, null);
+			}
+		}
+
+		if (mTab.getTableName().equals(X_ZZ_WPA_App_QCTOQualifications.Table_Name)	&&
+			mField.getColumnName().equals(X_ZZ_WPA_App_QCTOQualifications.COLUMNNAME_ZZQctoQualification_ID))
+		{
+			if (value != null)
+			{
+				int srcID = (Integer) value;
+				if (srcID > 0)
+				{
+					X_ZZQctoQualification srcCert = new X_ZZQctoQualification(ctx, srcID, null);
+					mTab.setValue(X_ZZ_WPA_App_QCTOQualifications.COLUMNNAME_ZZProgrammeName, srcCert.getZZSaqaQualificationTitle());
+					mTab.setValue(X_ZZ_WPA_App_QCTOQualifications.COLUMNNAME_ZZNqfLevel, srcCert.getZZNqfLevel());
+					mTab.setValue(X_ZZ_WPA_App_QCTOQualifications.COLUMNNAME_ZZCredits, srcCert.getZZCredits());
+				}
+			}
+			else
+			{
+				mTab.setValue(X_ZZ_WPA_App_QCTOQualifications.COLUMNNAME_ZZProgrammeName, null);
+				mTab.setValue(X_ZZ_WPA_App_QCTOQualifications.COLUMNNAME_ZZNqfLevel, null);
+				mTab.setValue(X_ZZ_WPA_App_QCTOQualifications.COLUMNNAME_ZZCredits, null);
+			}
+		}
+
+		if (mTab.getTableName().equals(X_ZZ_WPA_App_SkillsProgramme.Table_Name) &&
+			mField.getColumnName().equals(X_ZZ_WPA_App_SkillsProgramme.COLUMNNAME_ZZSkillsProgramme_ID))
+		{
+			if (value != null)
+			{
+				int srcID = (Integer) value;
+				if (srcID > 0)
+				{
+					X_ZZSkillsProgramme srcCert = new X_ZZSkillsProgramme(ctx, srcID, null);
+					mTab.setValue(X_ZZ_WPA_App_SkillsProgramme.COLUMNNAME_ZZProgrammeName, srcCert.getZZSkillsProgrammeTitle());
+					mTab.setValue(X_ZZ_WPA_App_SkillsProgramme.COLUMNNAME_ZZNqfLevel, srcCert.getZZNqfLevel());
+					mTab.setValue(X_ZZ_WPA_App_SkillsProgramme.COLUMNNAME_ZZCredits, srcCert.getZZCredits());
+				}
+			}
+			else
+			{
+				mTab.setValue(X_ZZ_WPA_App_SkillsProgramme.COLUMNNAME_ZZProgrammeName, null);
+				mTab.setValue(X_ZZ_WPA_App_SkillsProgramme.COLUMNNAME_ZZNqfLevel, null);
+				mTab.setValue(X_ZZ_WPA_App_SkillsProgramme.COLUMNNAME_ZZCredits, null);
+			}
+		}
+
+		if (mTab.getTableName().equals(X_ZZ_WPA_App_QCTOSkillsProg.Table_Name)	&&
+			mField.getColumnName().equals(X_ZZ_WPA_App_QCTOSkillsProg.COLUMNNAME_ZZQctoSkillsProgramme_ID))
+		{
+			if (value != null)
+			{
+				int srcID = (Integer) value;
+				if (srcID > 0)
+				{
+					X_ZZQctoSkillsProgramme srcCert = new X_ZZQctoSkillsProgramme(ctx, srcID, null);
+					mTab.setValue(X_ZZ_WPA_App_QCTOSkillsProg.COLUMNNAME_ZZProgrammeName, srcCert.getZZSkillsProgrammeTitle());
+					mTab.setValue(X_ZZ_WPA_App_QCTOSkillsProg.COLUMNNAME_ZZNqfLevel, srcCert.getZZNqfLevel());
+					mTab.setValue(X_ZZ_WPA_App_QCTOSkillsProg.COLUMNNAME_ZZCredits, srcCert.getZZCredits());
+				}
+			}
+			else
+			{
+				mTab.setValue(X_ZZ_WPA_App_QCTOSkillsProg.COLUMNNAME_ZZProgrammeName, null);
+				mTab.setValue(X_ZZ_WPA_App_QCTOSkillsProg.COLUMNNAME_ZZNqfLevel, null);
+				mTab.setValue(X_ZZ_WPA_App_QCTOSkillsProg.COLUMNNAME_ZZCredits, null);
 			}
 		}
 
