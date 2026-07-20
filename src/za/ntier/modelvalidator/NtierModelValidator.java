@@ -324,7 +324,6 @@ public class NtierModelValidator implements ModelValidator
 										jasperParams.put("RegistrationRole", ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()) ? "a moderator" : "an assessor");
 										jasperParams.put("RegistrationNumber", Util.isEmpty(zzAssessor) ? zzModerator : zzAssessor);
 										jasperParams.put("DateOfRegistration", startDateStr);
-										jasperParams.put("StartDate", startDateStr);
 										jasperParams.put("EndDate", endDateStr);
 										jasperParams.put("Qualifications", qualifications);
 										jasperParams.put("SkillsProgrammes", skillsProgrammes);
