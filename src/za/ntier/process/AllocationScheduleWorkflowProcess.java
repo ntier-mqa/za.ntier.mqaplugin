@@ -201,6 +201,8 @@ public class AllocationScheduleWorkflowProcess extends SvrProcess
 					List<String> ocQuals = new ArrayList<>();
 					List<String> skillsQuals = new ArrayList<>();
 					List<String> acQuals = new ArrayList<>();
+					List<String> tradesQuals = new ArrayList<>();
+					List<String> ttcQuals = new ArrayList<>();
 					List<Integer> groupedAllocIds = new ArrayList<>();
 
 					for (X_ZZ_Allocations line : orgLines)
@@ -217,6 +219,14 @@ public class AllocationScheduleWorkflowProcess extends SvrProcess
 						else if (line.getZZ_QCTO_Alloc_AC_ID() > 0 && !Util.isEmpty(line.getZZ_Qualification()))
 						{
 							acQuals.add(line.getZZ_Qualification());
+						}
+						else if (line.getZZ_NAMB_Alloc_Trades_ID() > 0 && !Util.isEmpty(line.getZZ_Qualification()))
+						{
+							tradesQuals.add(line.getZZ_Qualification());
+						}
+						else if (line.getZZ_NAMB_Alloc_TTC_ID() > 0 && !Util.isEmpty(line.getZZ_Qualification()))
+						{
+							ttcQuals.add(line.getZZ_Qualification());
 						}
 					}
 
@@ -251,6 +261,26 @@ public class AllocationScheduleWorkflowProcess extends SvrProcess
 								scopeBuilder.append("&emsp;&emsp;").append(j + 1).append(". ").append(acQuals.get(j)).append("<br/>");
 							}
 						}
+						if (!tradesQuals.isEmpty())
+						{
+							if (scopeBuilder.length() > 0)
+								scopeBuilder.append("<br/>");
+							scopeBuilder.append("&emsp;<b>Trades</b><br/>");
+							for (int j = 0; j < tradesQuals.size(); j++)
+							{
+								scopeBuilder.append("&emsp;&emsp;").append(j + 1).append(". ").append(tradesQuals.get(j)).append("<br/>");
+							}
+						}
+						if (!ttcQuals.isEmpty())
+						{
+							if (scopeBuilder.length() > 0)
+								scopeBuilder.append("<br/>");
+							scopeBuilder.append("&emsp;<b>Trade Test Center</b><br/>");
+							for (int j = 0; j < ttcQuals.size(); j++)
+							{
+								scopeBuilder.append("&emsp;&emsp;").append(j + 1).append(". ").append(ttcQuals.get(j)).append("<br/>");
+							}
+						}
 					}
 					else
 					{
@@ -280,6 +310,26 @@ public class AllocationScheduleWorkflowProcess extends SvrProcess
 							for (int j = 0; j < acQuals.size(); j++)
 							{
 								scopeBuilder.append("\t\t").append(j + 1).append(". ").append(acQuals.get(j)).append("\n");
+							}
+						}
+						if (!tradesQuals.isEmpty())
+						{
+							if (scopeBuilder.length() > 0)
+								scopeBuilder.append("\n");
+							scopeBuilder.append("\tTrades\n");
+							for (int j = 0; j < tradesQuals.size(); j++)
+							{
+								scopeBuilder.append("\t\t").append(j + 1).append(". ").append(tradesQuals.get(j)).append("\n");
+							}
+						}
+						if (!ttcQuals.isEmpty())
+						{
+							if (scopeBuilder.length() > 0)
+								scopeBuilder.append("\n");
+							scopeBuilder.append("\tTrade Test Center\n");
+							for (int j = 0; j < ttcQuals.size(); j++)
+							{
+								scopeBuilder.append("\t\t").append(j + 1).append(". ").append(ttcQuals.get(j)).append("\n");
 							}
 						}
 					}
