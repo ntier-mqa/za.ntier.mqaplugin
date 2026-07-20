@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.20.5.final using JasperReports Library version 6.20.5-3efcf2e67f959db3888d79f73dde2dbd7acb4f8e  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Audit_Schedule_Report" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d">
-	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="nTier_20260518.jrdax"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="SOR_Learnership/nTier_20260619_1.jrdax"/>
 	<style name="Table_TH" mode="Opaque" backcolor="#E3E3E3">
 		<box>
 			<pen lineWidth="0.5" lineColor="#000000"/>
@@ -266,14 +266,18 @@ www.mqa.org.za]]></text>
 		</band>
 	</detail>
 	<lastPageFooter>
-		<band height="100">
+		<band height="190">
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<image scaleImage="FillFrame" onErrorType="Blank">
+				<reportElement x="0" y="0" width="802" height="190" uuid="f007e41a-1234-4a4b-8c8d-1e1f1a1b1c1d"/>
+				<imageExpression><![CDATA[$P{RESOURCE_DIR} + "MQA-Footer.png"]]></imageExpression>
+			</image>
 			<staticText>
-				<reportElement x="12" y="7" width="90" height="18" uuid="b1018e76-2014-4295-9662-447c8f37f63b">
+				<reportElement x="12" y="7" width="100" height="18" uuid="b1018e76-2014-4295-9662-447c8f37f63b">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textElement textAlignment="Left" verticalAlignment="Top">
-					<font size="12"/>
+					<font size="12" isBold="true"/>
 				</textElement>
 				<text><![CDATA[COMPILED BY:]]></text>
 			</staticText>
@@ -306,17 +310,17 @@ www.mqa.org.za]]></text>
 				<text><![CDATA[SIGNATURE:]]></text>
 			</staticText>
 			<rectangle>
-				<reportElement x="73" y="92" width="100" height="1" uuid="2bc0b317-e079-4bd9-9222-c86fd67352f2">
+				<reportElement x="73" y="96" width="100" height="1" uuid="2bc0b317-e079-4bd9-9222-c86fd67352f2">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 				</reportElement>
 			</rectangle>
 			<staticText>
-				<reportElement x="305" y="7" width="110" height="18" uuid="e5f7f521-a417-43ba-9ef9-505d8092da69">
+				<reportElement x="305" y="7" width="120" height="18" uuid="e5f7f521-a417-43ba-9ef9-505d8092da69">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textElement textAlignment="Left" verticalAlignment="Top">
-					<font size="12"/>
+					<font size="12" isBold="true"/>
 				</textElement>
 				<text><![CDATA[CONTROLLED BY:]]></text>
 			</staticText>
@@ -342,7 +346,7 @@ www.mqa.org.za]]></text>
 				<text><![CDATA[DESIGNATION:]]></text>
 			</staticText>
 			<rectangle>
-				<reportElement x="366" y="92" width="100" height="1" uuid="03e639c9-45d4-413a-9018-7d0d3571f6ee">
+				<reportElement x="366" y="96" width="100" height="1" uuid="03e639c9-45d4-413a-9018-7d0d3571f6ee">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 				</reportElement>
@@ -355,13 +359,13 @@ www.mqa.org.za]]></text>
 				<text><![CDATA[NAME:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="588" y="7" width="90" height="18" uuid="06d63550-c7a1-443d-b2ed-5a5557677bc5">
+				<reportElement x="588" y="7" width="120" height="18" uuid="06d63550-c7a1-443d-b2ed-5a5557677bc5">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textElement textAlignment="Left" verticalAlignment="Top">
-					<font size="12"/>
+					<font size="12" isBold="true"/>
 				</textElement>
-				<text><![CDATA[VERIFIED BY:]]></text>
+				<text><![CDATA[APPROVED BY:]]></text>
 			</staticText>
 			<staticText>
 				<reportElement x="588" y="79" width="60" height="18" uuid="bfbc1668-4f7f-4ee6-a110-c7456079f679">
@@ -385,7 +389,7 @@ www.mqa.org.za]]></text>
 				<text><![CDATA[DESIGNATION:]]></text>
 			</staticText>
 			<rectangle>
-				<reportElement x="649" y="92" width="100" height="1" uuid="d2525a5b-1ecd-4147-bc3b-1568a75ca1ff">
+				<reportElement x="649" y="96" width="100" height="1" uuid="d2525a5b-1ecd-4147-bc3b-1568a75ca1ff">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 				</reportElement>
