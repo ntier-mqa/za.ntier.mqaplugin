@@ -14,6 +14,7 @@ import org.adempiere.base.annotation.Parameter;
 import org.adempiere.base.annotation.Process;
 import org.adempiere.exceptions.AdempiereException;
 import org.compiere.model.MProcessPara;
+import org.compiere.model.PO;
 import org.compiere.process.ProcessInfoParameter;
 import org.compiere.process.SvrProcess;
 import org.compiere.util.DB;
@@ -40,26 +41,35 @@ import za.co.ntier.api.model.X_ZZLearnerQCTOLearnership;
  * province/city crosswalks used by MigrateMsPersonToZZPerson) for ZZPhysicalLocation_ID.
  *
  * <p>AD_User actor columns (certificatecreatedby, terminatedcapturedby, extensioncapturedby,
- * registeredby, endorsedby) are resolved via ms_user.email -&gt; ad_user.email, link-only -
- * NEVER creates an AD_User, same rule as zzperson.ad_user_id.
+ * registeredby, endorsedby, approvedby, nambconfirmationuser) are resolved via
+ * ms_user.email -&gt; ad_user.email, link-only - NEVER creates an AD_User, same rule as
+ * zzperson.ad_user_id.
  *
- * <p>NOT handled (all documented as "Unmapped" in the mapping doc):
+ * <p>The Section A/B columns AddZZLearnerQctoLearnershipColumns.java added (2026-07-16) are
+ * set via the generic {@code PO.set_ValueOfColumn(String, Object)} API (no typed setter exists
+ * yet on the generated model class - see MigrateMsProviderToZZProvider's Javadoc for why). See
+ * "ZZLearnerQCTOLearnership - New Columns to Add.txt" for the full column-by-column reasoning
+ * - same conversions as the Artisans process (Is_Approved via flagToYN, Previous_Employed/
+ * WP_Agreement/Is_Terms_Employment/Emp_Contract/Emp_Contract_Copy via yesNoIdToFlag, Approved_By/
+ * Namb_Confirmation_User via the ms_user email-match crosswalk, Employer_ID via the same
+ * buildOrganisationToBPartnerCrosswalk as organisationid elsewhere - confirmed 4/4 join here).
+ *
+ * <p>FIXED 2026-07-16: ZZTerminationReason/ZZTerminationReasonText were previously swapped,
+ * same bug and same fix as MigrateMsLearnerQctoArtisansToZZLearnerQctoArtisans - see that
+ * class's Javadoc for the full explanation.
+ *
+ * <p>Still NOT handled (all documented as "Unmapped"/"Ignored" in the mapping doc):
  * <ul>
- *   <li>isapproved / approvedby / dateapproved - no target column.</li>
- *   <li>bi_registrationdate / bi_approvaldate - no target column.</li>
+ *   <li>bi_registrationdate / bi_approvaldate - 0 of 21 rows populated; "BI_" prefixed columns
+ *       exist ONLY on LearnerLearnership/LearnerQCTOLearnership in the whole MSSQL schema - a
+ *       reporting-mirror pattern, not source-of-truth data.</li>
+ *   <li>approvaldate / approvalby - confirmed an exact-value duplicate of dateapproved/
+ *       approvedby (same BI-mirror family) - dateapproved/approvedby already cover this.</li>
  *   <li>previousqctolearnershipcode / previousqctolearnershiptitle - redundant text mirrors,
  *       no separate target column.</li>
- *   <li>previousemployed / learneremployed / wpagreement / istermsemployment /
- *       termsemployment / empcontract / empcontractcopy / responsibleseta / asspartner /
- *       regsaqa / curregnumber / qcto / occupation - no target column for any of these.</li>
- *   <li>approvaldate / approvalby - distinct duplicates of dateapproved/approvedby above,
- *       same reason.</li>
- *   <li>nambconfirmation / nambconfirmationdate / nambconfirmationuser - no target column.</li>
  *   <li>physicalmunicipalityid / physicalurbanruralid / physicalsuburbid - C_Location has no
  *       matching fields.</li>
- *   <li>accountnumber - internal MSSQL row identifier, not needed.</li>
- *   <li>employerid - no target column exists anywhere for this on any of the 3 join
- *       tables.</li>
+ *   <li>accountnumber - the MSSQL row's own UUID, not business data.</li>
  *   <li>financialyearid -&gt; ZZFinancialYear_ID - FinancialYear-to-C_Year crosswalk not
  *       yet designed (Open Item #3 in the mapping doc).</li>
  * </ul>
@@ -125,20 +135,40 @@ public class MigrateMsLearnerQctoLearnershipToZZLearnerQctoLearnership extends S
         Map<Integer, Integer> qctoProgrammeStatusCrosswalk = MigrationSupport.buildIdCrosswalk("zzqctoprogrammestatus", "zzqctoprogrammestatus_id", get_TrxName());
         Map<Integer, Integer> grantTypeCrosswalk = MigrationSupport.buildIdCrosswalk("zzgranttype", "zzgranttype_id", get_TrxName());
         Map<Integer, Integer> msUserToAdUser = MigrationSupport.buildMsUserToAdUserCrosswalk(get_TrxName());
-        Map<Integer, String> socioEconomicStatusMap = MigrationSupport.buildDescriptionMap("ms_lkpsocioeconomicstatus", get_TrxName());
-        Map<Integer, String> sponsorshipMap = MigrationSupport.buildDescriptionMap("ms_lkpsponsorship", get_TrxName());
-        Map<Integer, String> projectMap = MigrationSupport.buildDescriptionMap("ms_lkpproject", get_TrxName());
-        Map<Integer, String> reasonForReprintMap = MigrationSupport.buildDescriptionMap("ms_lkpreasonforreprint", get_TrxName());
-        Map<Integer, String> setaMap = MigrationSupport.buildDescriptionMap("ms_lkpseta", get_TrxName());
-        Map<Integer, String> enrolmentStatusReasonMap = MigrationSupport.buildDescriptionMap("ms_lkpenrolmentstatusreason", get_TrxName());
+        // ZZSocioEconomicStatus/ZZSponsorship/ZZProject/ZZCertificateReasonForReprint/
+        // ZZEnrolmentStatusReason/ZZOtherSeta/ZZSeta/ZZLearnerQCTOLearnershipType/
+        // ZZQualificationRequirements are List references (AD_Reference_ID=17), NOT plain
+        // String columns as originally assumed - same discovery as
+        // MigrateMsLearnerQctoArtisansToZZLearnerQctoArtisans (see that class for the full
+        // explanation). buildListValueCrosswalk() matches by name against each column's own
+        // AD_Ref_List, returning the correct short Value code to store.
+        Map<Integer, String> socioEconomicStatusMap = MigrationSupport.buildListValueCrosswalk("ms_lkpsocioeconomicstatus", 1000250, get_TrxName());
+        Map<Integer, String> sponsorshipMap = MigrationSupport.buildListValueCrosswalk("ms_lkpsponsorship", 1000251, get_TrxName());
+        Map<Integer, String> projectMap = MigrationSupport.buildListValueCrosswalk("ms_lkpproject", 1000252, get_TrxName());
+        Map<Integer, String> reasonForReprintMap = MigrationSupport.buildListValueCrosswalk("ms_lkpreasonforreprint", 1000253, get_TrxName());
+        // KNOWN GAP (2026-07-16): ZZOtherSeta/ZZSeta's List (AD_Reference_ID=1000256) has ZERO
+        // AD_Ref_List entries defined, even though ms_lkpseta has 41 real rows - so this
+        // crosswalk will always resolve empty (safe no-op, not a crash) until someone adds the
+        // 41 matching List entries, or the column is redesigned. NOT fixed here - populating
+        // Application Dictionary List values is a bigger structural change than adding a
+        // column, flagged for a decision rather than done silently.
+        Map<Integer, String> setaMap = MigrationSupport.buildListValueCrosswalk("ms_lkpseta", 1000256, get_TrxName());
+        Map<Integer, String> enrolmentStatusReasonMap = MigrationSupport.buildListValueCrosswalk("ms_lkpenrolmentstatusreason", 1000255, get_TrxName());
+        // terminationReasonMap feeds ZZTerminationReason (also a List reference, 1000254) via
+        // plain description text - this happens to be correct as-is because that specific
+        // list's Value equals its Name for all 8 entries (confirmed directly), not because it's
+        // a String column - ZZTerminationReasonText (the real String column) gets the raw
+        // source text separately, see processOneRow().
         Map<Integer, String> terminationReasonMap = MigrationSupport.buildDescriptionMap("ms_lkpterminationreason", get_TrxName());
-        Map<Integer, String> learnerQctoLearnershipTypeMap = MigrationSupport.buildDescriptionMap("ms_lkplearnerqctolearnershiptype", get_TrxName());
-        Map<Integer, String> qualificationRequirementsMap = MigrationSupport.buildDescriptionMap("ms_lkpqualificationentryrequirements", get_TrxName());
+        Map<Integer, String> learnerQctoLearnershipTypeMap = MigrationSupport.buildListValueCrosswalk("ms_lkplearnerqctolearnershiptype", 1000336, get_TrxName());
+        Map<Integer, String> qualificationRequirementsMap = MigrationSupport.buildListValueCrosswalk("ms_lkpqualificationentryrequirements", 1000332, get_TrxName());
+        Map<Integer, Integer> organisationToBPartnerCrosswalk = MigrationSupport.buildOrganisationToBPartnerCrosswalk(get_TrxName());
 
         String sql =
                 "SELECT id, learnerid, qctolearnershipid, agreementreferencenumber, commencementdate, "
                 + "       completiondate, contractnumber, qctoprogrammestatusid, socioeconomicstatusid, "
-                + "       sponsorshipid, projectid, certificatenumber, certificatecreatedby, "
+                + "       sponsorshipid, projectid, isapproved, approvedby, dateapproved, certificatenumber, "
+                + "       certificatecreatedby, "
                 + "       datecertificatecreated, certificatereasonforreprintid, "
                 + "       certificateprintingerrorreason, statuseffectivedate, belongtofasset, othersetaid, "
                 + "       studentnumber, rpl, extensiondate, extensionreason, terminationdate, "
@@ -149,7 +179,11 @@ public class MigrateMsLearnerQctoLearnershipToZZLearnerQctoLearnership extends S
                 + "       setaid, physicaladdress1, physicaladdress2, physicaladdress3, physicalcode, "
                 + "       physicalprovinceid, physicalcityid, employmentstartdate, estimatecompletiondate, "
                 + "       statuscomments, learnerqctolearnershiptypeid, previousqctolearnership, "
-                + "       durationlearneremployed, granttypeid, qualificationentryrequirementsid, "
+                + "       previousemployed, learneremployed, wpagreement, durationlearneremployed, "
+                + "       istermsemployment, termsemployment, empcontract, empcontractcopy, "
+                + "       responsibleseta, asspartner, regsaqa, curregnumber, qcto, occupation, "
+                + "       nambconfirmation, nambconfirmationdate, nambconfirmationuser, employerid, "
+                + "       granttypeid, qualificationentryrequirementsid, "
                 + "       created, updated, isdeleted "
                 + "FROM ms_learnerqctolearnership "
                 + "WHERE NOT EXISTS (SELECT 1 FROM zzlearnerqctolearnership z WHERE z.id = ms_learnerqctolearnership.id) "
@@ -172,7 +206,7 @@ public class MigrateMsLearnerQctoLearnershipToZZLearnerQctoLearnership extends S
                     processOneRow(rs, learnerCrosswalk, qctoLearnershipCrosswalk, qctoProgrammeStatusCrosswalk,
                             grantTypeCrosswalk, msUserToAdUser, socioEconomicStatusMap, sponsorshipMap, projectMap,
                             reasonForReprintMap, setaMap, enrolmentStatusReasonMap, terminationReasonMap,
-                            learnerQctoLearnershipTypeMap, qualificationRequirementsMap);
+                            learnerQctoLearnershipTypeMap, qualificationRequirementsMap, organisationToBPartnerCrosswalk);
                     created++;
                 } catch (Exception e) {
                     logError(rs.getInt("id"), e);
@@ -218,7 +252,7 @@ public class MigrateMsLearnerQctoLearnershipToZZLearnerQctoLearnership extends S
             Map<Integer, String> projectMap, Map<Integer, String> reasonForReprintMap,
             Map<Integer, String> setaMap, Map<Integer, String> enrolmentStatusReasonMap,
             Map<Integer, String> terminationReasonMap, Map<Integer, String> learnerQctoLearnershipTypeMap,
-            Map<Integer, String> qualificationRequirementsMap) throws Exception {
+            Map<Integer, String> qualificationRequirementsMap, Map<Integer, Integer> organisationToBPartnerCrosswalk) throws Exception {
         int sourceId = rs.getInt("id");
         Integer learnerId = (Integer) rs.getObject("learnerid");
         Integer qctoLearnershipId = (Integer) rs.getObject("qctolearnershipid");
@@ -245,6 +279,16 @@ public class MigrateMsLearnerQctoLearnershipToZZLearnerQctoLearnership extends S
         Integer previousQctoLearnership = (Integer) rs.getObject("previousqctolearnership");
         Integer grantTypeId = (Integer) rs.getObject("granttypeid");
         Integer qualificationRequirementsId = (Integer) rs.getObject("qualificationrequirementsid");
+        Integer isApproved = (Integer) rs.getObject("isapproved");
+        Integer approvedBy = (Integer) rs.getObject("approvedby");
+        Integer previousEmployed = (Integer) rs.getObject("previousemployed");
+        Integer wpAgreement = (Integer) rs.getObject("wpagreement");
+        Integer isTermsEmployment = (Integer) rs.getObject("istermsemployment");
+        Integer empContract = (Integer) rs.getObject("empcontract");
+        Integer empContractCopy = (Integer) rs.getObject("empcontractcopy");
+        Integer nambConfirmation = (Integer) rs.getObject("nambconfirmation");
+        Integer nambConfirmationUser = (Integer) rs.getObject("nambconfirmationuser");
+        Integer employerId = (Integer) rs.getObject("employerid");
         Timestamp createdTs = rs.getTimestamp("created");
         Timestamp updatedTs = rs.getTimestamp("updated");
         int isDeleted = rs.getInt("isdeleted");
@@ -276,7 +320,9 @@ public class MigrateMsLearnerQctoLearnershipToZZLearnerQctoLearnership extends S
             learnership.setZZSponsorship(sponsorshipId == null ? null : sponsorshipMap.get(sponsorshipId));
             learnership.setZZProject(projectId == null ? null : projectMap.get(projectId));
             // ZZFinancialYear_ID (financialyearid): NOT SET - see class Javadoc.
-            // isapproved / approvedby / dateapproved: NOT SET - no target column, see class Javadoc.
+            setGeneric(learnership, "Is_Approved", MigrationSupport.flagToYN(isApproved));
+            setPoIfResolved(learnership, "Approved_By", msUserToAdUser, approvedBy);
+            setGeneric(learnership, "Date_Approved", rs.getTimestamp("dateapproved"));
             learnership.setZZCertificateNumber(rs.getString("certificatenumber"));
             setIfResolved(msUserToAdUser, certificateCreatedBy, learnership::setZZCertificateCreatedBy);
             setTimestamp(rs.getTimestamp("datecertificatecreated"), learnership::setZZDateCertificateCreated);
@@ -292,8 +338,11 @@ public class MigrateMsLearnerQctoLearnershipToZZLearnerQctoLearnership extends S
             setTimestamp(rs.getTimestamp("extensiondate"), learnership::setZZExtensionDate);
             learnership.setZZExtensionReason(rs.getString("extensionreason"));
             setTimestamp(rs.getTimestamp("terminationdate"), learnership::setZZTerminationDate);
-            learnership.setZZTerminationReason(rs.getString("terminationreason"));
-            learnership.setZZTerminationReasonText(terminationReasonId == null ? null : terminationReasonMap.get(terminationReasonId));
+            // FIXED 2026-07-16 - these were swapped (see class Javadoc): ZZTerminationReason is
+            // a List reference matching lkpTerminationReason verbatim (terminationreasonid's
+            // resolved description), ZZTerminationReasonText is the raw free text.
+            learnership.setZZTerminationReason(terminationReasonId == null ? null : terminationReasonMap.get(terminationReasonId));
+            learnership.setZZTerminationReasonText(rs.getString("terminationreason"));
             setIfResolved(msUserToAdUser, terminatedCapturedBy, learnership::setZZTerminatedCapturedBy);
             setTimestamp(rs.getTimestamp("dateterminationcaptured"), learnership::setZZDateTerminationCaptured);
             setIfResolved(msUserToAdUser, extensionCapturedBy, learnership::setZZExtensionCapturedBy);
@@ -320,18 +369,29 @@ public class MigrateMsLearnerQctoLearnershipToZZLearnerQctoLearnership extends S
             setIfResolved(qctoLearnershipCrosswalk, previousQctoLearnership, learnership::setZZPreviousQctoLearnership_ID);
             // previousqctolearnershipcode / previousqctolearnershiptitle: NOT SET - redundant
             // text mirrors, no separate target column, see class Javadoc.
-            // previousemployed / learneremployed / wpagreement: NOT SET, see class Javadoc.
+            setGeneric(learnership, "Previous_Employed", MigrationSupport.yesNoIdToFlag(previousEmployed));
+            setGeneric(learnership, "Learner_Employed", rs.getString("learneremployed"));
+            setGeneric(learnership, "WP_Agreement", MigrationSupport.yesNoIdToFlag(wpAgreement));
             learnership.setZZDurationLearnerEmployed(rs.getString("durationlearneremployed"));
-            // istermsemployment / termsemployment / empcontract / empcontractcopy /
-            // responsibleseta / asspartner / regsaqa / curregnumber / qcto / occupation:
-            // NOT SET - no target column, see class Javadoc.
-            // approvaldate / approvalby: NOT SET - duplicates of dateapproved/approvedby, see class Javadoc.
+            setGeneric(learnership, "Is_Terms_Employment", MigrationSupport.yesNoIdToFlag(isTermsEmployment));
+            setGeneric(learnership, "Terms_Employment", rs.getString("termsemployment"));
+            setGeneric(learnership, "Emp_Contract", MigrationSupport.yesNoIdToFlag(empContract));
+            setGeneric(learnership, "Emp_Contract_Copy", MigrationSupport.yesNoIdToFlag(empContractCopy));
+            setGeneric(learnership, "Responsible_Seta", rs.getString("responsibleseta"));
+            setGeneric(learnership, "Ass_Partner", rs.getString("asspartner"));
+            setGeneric(learnership, "Reg_Saqa", rs.getString("regsaqa"));
+            setGeneric(learnership, "Cur_Reg_Number", rs.getString("curregnumber"));
+            setGeneric(learnership, "Qcto", rs.getString("qcto"));
+            setGeneric(learnership, "Occupation", rs.getString("occupation"));
+            // approvaldate / approvalby: NOT SET - confirmed exact-value duplicates of
+            // dateapproved/approvedby, see class Javadoc.
             setIfResolved(grantTypeCrosswalk, grantTypeId, learnership::setZZGrantType_ID);
             learnership.setZZQualificationRequirements(qualificationRequirementsId == null ? null : qualificationRequirementsMap.get(qualificationRequirementsId));
-            // nambconfirmation / nambconfirmationdate / nambconfirmationuser: NOT SET - no
-            // target column, see class Javadoc.
-            // employerid: NOT SET - no target column exists anywhere, see class Javadoc.
-            // accountnumber: NOT SET - internal MSSQL row identifier, not needed.
+            setGeneric(learnership, "Namb_Confirmation", MigrationSupport.flagToYN(nambConfirmation));
+            setGeneric(learnership, "Namb_Confirmation_Date", rs.getTimestamp("nambconfirmationdate"));
+            setPoIfResolved(learnership, "Namb_Confirmation_User", msUserToAdUser, nambConfirmationUser);
+            setPoIfResolved(learnership, "Employer_ID", organisationToBPartnerCrosswalk, employerId);
+            // accountnumber: NOT SET - the MSSQL row's own UUID, not business data.
 
             learnership.saveEx();
             int zzId = learnership.get_ID();
@@ -357,6 +417,26 @@ public class MigrateMsLearnerQctoLearnershipToZZLearnerQctoLearnership extends S
         Integer targetId = crosswalk.get(sourceId);
         if (targetId != null) {
             setter.accept(targetId);
+        }
+    }
+
+    /** Sets a column via the generic PO API, only if the value is non-null (used for the new
+     * Section A/B columns, which have no typed setter on the generated model class yet). */
+    private static void setGeneric(PO po, String columnName, Object value) {
+        if (value != null) {
+            po.set_ValueOfColumn(columnName, value);
+        }
+    }
+
+    /** Same as {@link #setIfResolved(Map, Integer, java.util.function.IntConsumer)} but for a
+     * new column with no typed setter, set via the generic PO API. */
+    private static void setPoIfResolved(PO po, String columnName, Map<Integer, Integer> crosswalk, Integer sourceId) {
+        if (sourceId == null) {
+            return;
+        }
+        Integer targetId = crosswalk.get(sourceId);
+        if (targetId != null) {
+            po.set_ValueOfColumn(columnName, targetId);
         }
     }
 

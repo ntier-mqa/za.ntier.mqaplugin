@@ -8,10 +8,12 @@ import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.adempiere.base.annotation.Parameter;
 import org.adempiere.base.annotation.Process;
 import org.compiere.model.MProcessPara;
+import org.compiere.model.PO;
 import org.compiere.process.ProcessInfoParameter;
 import org.compiere.process.SvrProcess;
 import org.compiere.util.DB;
@@ -21,22 +23,27 @@ import org.compiere.util.Trx;
 import za.co.ntier.api.model.X_ZZWorkplaceApproval;
 
 /**
- * Migrates the staged ms_workplaceapproval table into ZZWorkplaceApproval - a bare
- * number-only reference table used by the QCTO join tables (WA, SecondaryWA FKs). See
- * "Column Mapping - QCTO Learner Programmes" doc, tab "WorkplaceApproval".
+ * Migrates the staged ms_workplaceapproval table into ZZWorkplaceApproval. See "Column
+ * Mapping - QCTO Learner Programmes" doc, tab "WorkplaceApproval", and
+ * "ZZWorkplaceApproval - New Columns to Add.txt" for the full column-by-column reasoning
+ * behind the columns added below (2026-07-16).
  *
  * <p>REQUIRES the recon column: {@code ALTER TABLE adempiere.zzworkplaceapproval ADD COLUMN id bigint;}
  * (already run 2026-07-10).
  *
- * <p>NOT handled - zzworkplaceapproval has no column to receive these (bare table, only
- * zzworkplaceapprovalnumber exists): organisationid, workplaceapprovaltypeid,
- * workplaceapprovalclassid, workplaceapprovalstatusid, workplaceapprovalstartdate/enddate,
- * qualityassurancebodyid, dhetregistration*, issaica, webaddress, accreditationtypeid,
- * workplaceapprovalcode, workplaceapprovalapplicationid, notapprovedreason,
- * applicationreceiveddate, workplaceapprovalinternalexternalid,
- * workplaceapprovalalertemail, workplaceapprovalbody, workplaceapprovalreviewdate, levy.
- * If the business wants any of these tracked, zzworkplaceapproval needs new columns first
- * (AD_Column change - out of scope here, needs sign-off).
+ * <p>Same generic-PO-setter approach as {@link MigrateMsProviderToZZProvider} for every new
+ * Section A/B column (no typed setter exists yet on the generated model class) - see that
+ * class's Javadoc for the full reasoning.
+ *
+ * <p>Reference columns resolved via MigrationSupport.buildIdCrosswalk() against the reference
+ * tables AddZZWorkplaceApprovalColumns created or reused. Quality_Assurance_Body_ID and
+ * Levy_ID crosswalks resolve against the SAME reference tables Provider uses (built once,
+ * shared) - not rebuilt here. C_BPartner_ID (from organisationid) uses the same
+ * MigrationSupport.buildOrganisationToBPartnerCrosswalk as Provider.
+ *
+ * <p>Is_Saica converted via {@link MigrationSupport#flagToYN(Integer)} - same reasoning as
+ * Provider's Is_Saica (confirmed 0/null only in the staged data, not the lkpYesNo id
+ * convention).
  */
 @Process(name = "za.co.ntier.learner.process.MigrateMsWorkplaceApprovalToZZWorkplaceApproval")
 public class MigrateMsWorkplaceApprovalToZZWorkplaceApproval extends SvrProcess {
@@ -71,7 +78,26 @@ public class MigrateMsWorkplaceApprovalToZZWorkplaceApproval extends SvrProcess 
             DB.commit(true, get_TrxName());
         }
 
-        String sql = "SELECT id, workplaceapprovalnumber, created, updated, isdeleted FROM " + SOURCE_TABLE
+        Map<Integer, Integer> typeCrosswalk = MigrationSupport.buildIdCrosswalk("workplace_approval_type", "workplace_approval_type_id", get_TrxName());
+        Map<Integer, Integer> classCrosswalk = MigrationSupport.buildIdCrosswalk("workplace_approval_class", "workplace_approval_class_id", get_TrxName());
+        Map<Integer, Integer> statusCrosswalk = MigrationSupport.buildIdCrosswalk("workplace_approval_status", "workplace_approval_status_id", get_TrxName());
+        Map<Integer, Integer> qualityAssuranceBodyCrosswalk = MigrationSupport.buildIdCrosswalk("quality_assurance_body", "quality_assurance_body_id", get_TrxName());
+        Map<Integer, Integer> workplaceAccreditationTypeCrosswalk = MigrationSupport.buildIdCrosswalk("workplace_accreditation_type", "workplace_accreditation_type_id", get_TrxName());
+        Map<Integer, Integer> applicationCrosswalk = MigrationSupport.buildIdCrosswalk("workplace_approval_application", "workplace_approval_application_id", get_TrxName());
+        Map<Integer, Integer> internalExternalCrosswalk = MigrationSupport.buildIdCrosswalk("workplace_approval_internal_external", "workplace_approval_internal_external_id", get_TrxName());
+        Map<Integer, Integer> bodyCrosswalk = MigrationSupport.buildIdCrosswalk("workplace_approval_body", "workplace_approval_body_id", get_TrxName());
+        Map<Integer, Integer> levyCrosswalk = MigrationSupport.buildIdCrosswalk("levy", "levy_id", get_TrxName());
+        Map<Integer, Integer> organisationToBPartnerCrosswalk = MigrationSupport.buildOrganisationToBPartnerCrosswalk(get_TrxName());
+
+        String sql = "SELECT id, workplaceapprovalnumber, organisationid, workplaceapprovaltypeid, "
+                + "       workplaceapprovalclassid, workplaceapprovalstatusid, workplaceapprovalstartdate, "
+                + "       workplaceapprovalenddate, qualityassurancebodyid, dhetregistrationstartdate, "
+                + "       dhetregistrationenddate, dhetregistrationnumber, issaica, webaddress, "
+                + "       accreditationtypeid, workplaceapprovalcode, workplaceapprovalapplicationid, "
+                + "       notapprovedreason, applicationreceiveddate, workplaceapprovalinternalexternalid, "
+                + "       workplaceapprovalalertemail, workplaceapprovalbody, workplaceapprovalreviewdate, levy, "
+                + "       created, updated, isdeleted "
+                + "FROM " + SOURCE_TABLE
                 + " WHERE NOT EXISTS (SELECT 1 FROM zzworkplaceapproval z WHERE z.id = " + SOURCE_TABLE + ".id) "
                 + "ORDER BY id" + (maxRows > 0 ? " LIMIT " + maxRows : "");
 
@@ -89,7 +115,9 @@ public class MigrateMsWorkplaceApprovalToZZWorkplaceApproval extends SvrProcess 
             while (rs.next()) {
                 processed++;
                 try {
-                    processOneRow(rs);
+                    processOneRow(rs, typeCrosswalk, classCrosswalk, statusCrosswalk, qualityAssuranceBodyCrosswalk,
+                            workplaceAccreditationTypeCrosswalk, applicationCrosswalk, internalExternalCrosswalk,
+                            bodyCrosswalk, levyCrosswalk, organisationToBPartnerCrosswalk);
                     created++;
                 } catch (Exception e) {
                     logError(rs.getInt("id"), e);
@@ -110,9 +138,24 @@ public class MigrateMsWorkplaceApprovalToZZWorkplaceApproval extends SvrProcess 
                 + " ZZWorkplaceApproval created, " + errors.size() + " error(s).";
     }
 
-    private void processOneRow(ResultSet rs) throws Exception {
+    private void processOneRow(ResultSet rs, Map<Integer, Integer> typeCrosswalk, Map<Integer, Integer> classCrosswalk,
+            Map<Integer, Integer> statusCrosswalk, Map<Integer, Integer> qualityAssuranceBodyCrosswalk,
+            Map<Integer, Integer> workplaceAccreditationTypeCrosswalk, Map<Integer, Integer> applicationCrosswalk,
+            Map<Integer, Integer> internalExternalCrosswalk, Map<Integer, Integer> bodyCrosswalk,
+            Map<Integer, Integer> levyCrosswalk, Map<Integer, Integer> organisationToBPartnerCrosswalk) throws Exception {
         int sourceId = rs.getInt("id");
         String workplaceApprovalNumber = rs.getString("workplaceapprovalnumber");
+        Integer organisationId = (Integer) rs.getObject("organisationid");
+        Integer workplaceApprovalTypeId = (Integer) rs.getObject("workplaceapprovaltypeid");
+        Integer workplaceApprovalClassId = (Integer) rs.getObject("workplaceapprovalclassid");
+        Integer workplaceApprovalStatusId = (Integer) rs.getObject("workplaceapprovalstatusid");
+        Integer qualityAssuranceBodyId = (Integer) rs.getObject("qualityassurancebodyid");
+        Integer issaica = (Integer) rs.getObject("issaica");
+        Integer accreditationTypeId = (Integer) rs.getObject("accreditationtypeid");
+        Integer workplaceApprovalApplicationId = (Integer) rs.getObject("workplaceapprovalapplicationid");
+        Integer workplaceApprovalInternalExternalId = (Integer) rs.getObject("workplaceapprovalinternalexternalid");
+        Integer workplaceApprovalBodyId = (Integer) rs.getObject("workplaceapprovalbody");
+        Integer levyId = (Integer) rs.getObject("levy");
         Timestamp createdTs = rs.getTimestamp("created");
         Timestamp updatedTs = rs.getTimestamp("updated");
         int isDeleted = rs.getInt("isdeleted");
@@ -124,6 +167,34 @@ public class MigrateMsWorkplaceApprovalToZZWorkplaceApproval extends SvrProcess 
             wa.setAD_Org_ID(Env.getAD_Org_ID(getCtx()));
             wa.setIsActive(isDeleted == 0);
             wa.setZZWorkplaceApprovalNumber(workplaceApprovalNumber);
+
+            // Section A - plain columns
+            setGeneric(wa, "Workplace_Approval_Start_Date", rs.getTimestamp("workplaceapprovalstartdate"));
+            setGeneric(wa, "Workplace_Approval_End_Date", rs.getTimestamp("workplaceapprovalenddate"));
+            setGeneric(wa, "Dhet_Registration_Start_Date", rs.getTimestamp("dhetregistrationstartdate"));
+            setGeneric(wa, "Dhet_Registration_End_Date", rs.getTimestamp("dhetregistrationenddate"));
+            setGeneric(wa, "Dhet_Registration_Number", rs.getString("dhetregistrationnumber"));
+            setGeneric(wa, "Is_Saica", MigrationSupport.flagToYN(issaica));
+            setGeneric(wa, "Web_Address", rs.getString("webaddress"));
+            setGeneric(wa, "Workplace_Approval_Code", rs.getString("workplaceapprovalcode"));
+            setGeneric(wa, "Not_Approved_Reason", rs.getString("notapprovedreason"));
+            setGeneric(wa, "Application_Received_Date", rs.getTimestamp("applicationreceiveddate"));
+            setGeneric(wa, "Workplace_Approval_Alert_Email", rs.getString("workplaceapprovalalertemail"));
+            setGeneric(wa, "Workplace_Approval_Review_Date", rs.getTimestamp("workplaceapprovalreviewdate"));
+
+            // Section B - reference columns
+            setIfResolved(wa, "Workplace_Approval_Type_ID", typeCrosswalk, workplaceApprovalTypeId);
+            setIfResolved(wa, "Workplace_Approval_Class_ID", classCrosswalk, workplaceApprovalClassId);
+            setIfResolved(wa, "Workplace_Approval_Status_ID", statusCrosswalk, workplaceApprovalStatusId);
+            setIfResolved(wa, "Quality_Assurance_Body_ID", qualityAssuranceBodyCrosswalk, qualityAssuranceBodyId);
+            setIfResolved(wa, "Workplace_Accreditation_Type_ID", workplaceAccreditationTypeCrosswalk, accreditationTypeId);
+            setIfResolved(wa, "Workplace_Approval_Application_ID", applicationCrosswalk, workplaceApprovalApplicationId);
+            setIfResolved(wa, "Workplace_Approval_Internal_External_ID", internalExternalCrosswalk, workplaceApprovalInternalExternalId);
+            setIfResolved(wa, "Workplace_Approval_Body_ID", bodyCrosswalk, workplaceApprovalBodyId);
+            setIfResolved(wa, "Levy_ID", levyCrosswalk, levyId);
+
+            // organisationid -> C_BPartner_ID
+            setIfResolved(wa, "C_BPartner_ID", organisationToBPartnerCrosswalk, organisationId);
 
             wa.saveEx();
             int zzWaId = wa.get_ID();
@@ -139,6 +210,22 @@ public class MigrateMsWorkplaceApprovalToZZWorkplaceApproval extends SvrProcess 
             throw e;
         } finally {
             trx.close();
+        }
+    }
+
+    private static void setGeneric(PO po, String columnName, Object value) {
+        if (value != null) {
+            po.set_ValueOfColumn(columnName, value);
+        }
+    }
+
+    private static void setIfResolved(PO po, String columnName, Map<Integer, Integer> crosswalk, Integer sourceId) {
+        if (sourceId == null) {
+            return;
+        }
+        Integer targetId = crosswalk.get(sourceId);
+        if (targetId != null) {
+            po.set_ValueOfColumn(columnName, targetId);
         }
     }
 

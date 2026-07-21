@@ -1,0 +1,78 @@
+package za.co.ntier.learner.process;
+
+import org.adempiere.base.annotation.Process;
+import org.compiere.model.MProcessPara;
+import org.compiere.model.MTable;
+import org.compiere.process.ProcessInfoParameter;
+import org.compiere.process.SvrProcess;
+import org.compiere.util.DisplayType;
+
+import za.co.ntier.learner.process.AddColumnsSupport.ReferenceColumnSpec;
+
+/**
+ * Creates the brand new ZZLearnerQCTOLearnershipEISADetails table (trade test date/result for a
+ * learner's QCTO learnership enrolment) - Phase 1, see "Phase 1 - New Tables - Mapping.txt"
+ * table #7. Same engine as {@link AddZZLearnerQCTOArtisanDocumentTable}.
+ *
+ * <p>NOTE: this table looks conceptually close to LearnerEISAReadiness (see
+ * {@link AddZZLearnerEISAReadinessTable}) - both attach EISA-related detail to a
+ * LearnerQCTOLearnership enrolment. Confirmed with the business 2026-07-20 to build both as
+ * separate tables (readiness paperwork vs the actual test date+result).
+ *
+ * <p>The "Results" reference table (from ms_lkpartisanstradetestsresults) is SHARED with
+ * {@link AddZZLearnerQCTOArtisanEISADetailsTable}.
+ */
+@Process(name = "za.co.ntier.learner.process.AddZZLearnerQCTOLearnershipEISADetailsTable")
+public class AddZZLearnerQCTOLearnershipEISADetailsTable extends SvrProcess {
+
+    private static final String TABLE_NAME = "ZZLearnerQCTOLearnershipEISADetails";
+    private static final String ENTITY_TYPE = "MQA Learner";
+    private static final String ACCESS_LEVEL = "3";
+
+    @Override
+    protected void prepare() {
+        for (ProcessInfoParameter para : getParameter()) {
+            MProcessPara.validateUnknownParameter(getProcessInfo().getAD_Process_ID(), para);
+        }
+    }
+
+    @Override
+    protected String doIt() throws Exception {
+        MTable existing = AddColumnsSupport.findTable(getCtx(), TABLE_NAME, get_TrxName());
+        if (existing != null) {
+            addLog(TABLE_NAME + " already exists - not recreated.");
+            return TABLE_NAME + " already exists - no action taken.";
+        }
+
+        ReferenceColumnSpec resultsSpec = new ReferenceColumnSpec("Results_ID",
+                "ms_lkpartisanstradetestsresults", "id", "description",
+                "ms_learnerqctoartisaneisadetails.resultsid / ms_learnerqctolearnershipeisadetails.resultsid");
+        String resultsTableName = resultsSpec.targetTableName();
+        MTable resultsTable = AddColumnsSupport.findTable(getCtx(), resultsTableName, get_TrxName());
+        if (resultsTable == null) {
+            resultsTable = AddColumnsSupport.createReferenceTableSchema(getCtx(), resultsTableName,
+                    "Reference values for " + resultsSpec.description, ENTITY_TYPE, ACCESS_LEVEL, get_TrxName(),
+                    this::addLog);
+            AddColumnsSupport.populateReferenceTable(getCtx(), resultsTable, resultsSpec, get_TrxName(), this::addLog);
+            addLog("Created and populated reference table " + resultsTableName + ".");
+        } else {
+            addLog(resultsTableName + " already exists - left as-is (not re-populated).");
+        }
+
+        MTable table = AddColumnsSupport.createNewTableSchema(getCtx(), TABLE_NAME,
+                "Trade test date/result for a learner's QCTO learnership enrolment",
+                ENTITY_TYPE, ACCESS_LEVEL, get_TrxName());
+
+        AddColumnsSupport.registerColumn(getCtx(), table, "ZZLearnerQCTOLearnership_ID", DisplayType.TableDir, 10,
+                "ms_learnerqctolearnershipeisadetails.learnerqctolearnershipid -> zzlearnerqctolearnership",
+                ENTITY_TYPE, get_TrxName());
+        AddColumnsSupport.registerColumn(getCtx(), table, "EISA_Date", DisplayType.DateTime, 7,
+                "ms_learnerqctolearnershipeisadetails.eisadate", ENTITY_TYPE, get_TrxName());
+        AddColumnsSupport.registerColumn(getCtx(), table, "Results_ID", DisplayType.TableDir, 10,
+                resultsSpec.description + " -> " + resultsTableName, ENTITY_TYPE, get_TrxName());
+
+        AddColumnsSupport.finalizeNewTable(table, get_TrxName(), this::addLog);
+
+        return TABLE_NAME + " created with 3 business columns.";
+    }
+}

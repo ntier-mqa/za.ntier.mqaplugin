@@ -300,6 +300,83 @@ final class MigrationSupport {
     }
 
     /**
+     * ms_organisation.id -&gt; c_bpartner_id, matched via ms_organisation.sdlnumber =
+     * c_bpartner.zz_sdl_no (trimmed, case-sensitive exact match - confirmed 2026-07-10 as the
+     * resolution for zzprovider/zzworkplaceapproval/zzassessmentcentre.C_BPartner_ID and
+     * zzlearnerqctoartisans/zzlearnerqctolearnership.Employer_ID - see "ZZProvider - New
+     * Columns to Add.txt" Section C). Link-only: never creates a new C_BPartner. Only ~7
+     * c_bpartner rows currently have zz_sdl_no populated (as of 2026-07-10), so most
+     * organisationid/employerid values are expected to resolve to nothing for now - not a bug.
+     */
+    static Map<Integer, Integer> buildOrganisationToBPartnerCrosswalk(String trxName) {
+        Map<String, Integer> bpartnerBySdlNo = new HashMap<>();
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+        try {
+            pst = DB.prepareStatement(
+                    "SELECT c_bpartner_id, zz_sdl_no FROM c_bpartner WHERE zz_sdl_no IS NOT NULL AND trim(zz_sdl_no) <> ''",
+                    trxName);
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                bpartnerBySdlNo.putIfAbsent(rs.getString("zz_sdl_no").trim(), rs.getInt("c_bpartner_id"));
+            }
+        } catch (Exception e) {
+            throw new AdempiereException("Failed loading c_bpartner.zz_sdl_no", e);
+        } finally {
+            DB.close(rs, pst);
+        }
+
+        Map<Integer, Integer> result = new HashMap<>();
+        pst = null;
+        rs = null;
+        try {
+            pst = DB.prepareStatement(
+                    "SELECT id, sdlnumber FROM ms_organisation WHERE sdlnumber IS NOT NULL AND trim(sdlnumber) <> ''",
+                    trxName);
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                Integer bpartnerId = bpartnerBySdlNo.get(rs.getString("sdlnumber").trim());
+                if (bpartnerId != null) {
+                    result.put(rs.getInt("id"), bpartnerId);
+                }
+            }
+        } catch (Exception e) {
+            throw new AdempiereException("Failed loading ms_organisation.sdlnumber", e);
+        } finally {
+            DB.close(rs, pst);
+        }
+        return result;
+    }
+
+    /**
+     * MS source id (of a lookup table's OWN row) -&gt; already-created reference table's own
+     * PK, matched via the target table's "Value" column rather than its "id" recon column -
+     * used for zzprovider/zzassessmentcentre.Saqa_QA_ID, where the source column
+     * (ms_skillsdevelopmentprovider.saqaqaid / ms_assessmentcentre.saqaqaid) stores
+     * lkpSAQADataSuppliers.ETQAID (text) directly, not lkpSAQADataSuppliers.ID - so the usual
+     * id-based {@link #buildIdCrosswalk} doesn't apply; the source int value itself (cast to
+     * text) is looked up directly against the target's Value column.
+     */
+    static Map<String, Integer> buildValueCrosswalk(String targetTable, String targetIdCol, String trxName) {
+        Map<String, Integer> result = new HashMap<>();
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+        try {
+            pst = DB.prepareStatement(
+                    "SELECT " + targetIdCol + ", value FROM " + targetTable + " WHERE value IS NOT NULL", trxName);
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                result.putIfAbsent(rs.getString("value").trim(), rs.getInt(1));
+            }
+        } catch (Exception e) {
+            throw new AdempiereException("Failed building value crosswalk for " + targetTable, e);
+        } finally {
+            DB.close(rs, pst);
+        }
+        return result;
+    }
+
+    /**
      * Generic recon-column crosswalk: MS source id -&gt; already-migrated target row's PK,
      * read straight off the "id" recon column this migration project adds to every target
      * table (see Column Mapping doc, "Recon (new)" columns). Used to resolve FK columns that
@@ -345,6 +422,103 @@ final class MigrationSupport {
             }
         } catch (Exception e) {
             throw new AdempiereException("Failed building description map for " + lkpTable, e);
+        } finally {
+            DB.close(rs, pst);
+        }
+        return result;
+    }
+
+    /**
+     * MS source table's own id -&gt; an already-fully-populated catalog target's PK, matched
+     * ORDINALLY (Nth source row by id &lt;-&gt; Nth target row by targetOrdinalCol) - same
+     * row_number()-based join MigrateMsQualificationToZZQualification (and its Tier 2 siblings)
+     * already use to match placeholder rows, but read-only here: for a catalog that's already
+     * fully migrated (e.g. zzqctomodule, confirmed 2026-07-16 to already hold all 579
+     * QCTOModule rows via zzmigrationcode ordinal matching, with no plain "id" recon column of
+     * its own) this just builds the crosswalk needed by OTHER tables' FK columns, without
+     * re-running any migration. Verify the ordinal assumption holds for a new catalog (e.g. by
+     * comparing a natural-language column on a few rows on both sides) before trusting this -
+     * it is not self-verifying.
+     */
+    static Map<Integer, Integer> buildOrdinalCrosswalk(String sourceTable, String targetTable, String targetIdCol,
+            String targetOrdinalCol, String trxName) {
+        Map<Integer, Integer> result = new HashMap<>();
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+        try {
+            pst = DB.prepareStatement(
+                    "SELECT s.id AS source_id, t.target_id FROM "
+                    + "(SELECT id, row_number() OVER (ORDER BY id) AS rn FROM " + sourceTable + ") s "
+                    + "JOIN (SELECT " + targetIdCol + " AS target_id, row_number() OVER (ORDER BY " + targetOrdinalCol + ") AS rn "
+                    + "      FROM " + targetTable + ") t ON t.rn = s.rn", trxName);
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                result.put(rs.getInt("source_id"), rs.getInt("target_id"));
+            }
+        } catch (Exception e) {
+            throw new AdempiereException("Failed building ordinal crosswalk for " + sourceTable + " -> " + targetTable, e);
+        } finally {
+            DB.close(rs, pst);
+        }
+        return result;
+    }
+
+    /**
+     * MS lkp&lt;table&gt;.id -&gt; the matching AD_Ref_List.Value for the given
+     * adReferenceId - matched by lkp&lt;table&gt;.description against AD_Ref_List.Name
+     * (case-insensitive, trimmed). Discovered 2026-07-16: several "resolved via description"
+     * target columns on the QCTO join tables (ZZSocioEconomicStatus, ZZSponsorship, ZZProject,
+     * ZZArtisanProject, ZZEnrolmentStatusReason, ZZOtherSeta/ZZSeta, ZZQualificationRequirements,
+     * ZZLearnerQCTOLearnershipType, ZZCertificateReasonForReprint) turned out to be List
+     * references (AD_Reference_ID=17), NOT plain String columns as originally assumed - a live
+     * migration run failed PO validation trying to store the raw description text
+     * ("Unemployed") into a column whose valid List values are short codes ("02"). Matching by
+     * NAME (not by the source lkp table's own SAQACode column) is the general fix: some of
+     * these lists use a short numeric/SAQA-style code as Value with a different, longer Name
+     * (e.g. SocioEconomicStatus: Value="01", Name="Employed"), while others self-map
+     * (Value=Name=the same free text, e.g. ArtisanProject, and mixed-case lists like
+     * EnrolmentStatusReason where SOME entries have a numeric code and SOME don't - matching by
+     * name handles both uniformly, unlike matching by SAQACode which doesn't exist on every
+     * lkp table (e.g. lkpproject) and wouldn't cover the self-mapped entries either. If a
+     * source description has no matching List entry, that id is simply absent from the result
+     * (safe no-op when looked up - same "not set" outcome as before this class existed, not a
+     * crash) - callers don't need to special-case this.
+     */
+    static Map<Integer, String> buildListValueCrosswalk(String lkpTable, int adReferenceId, String trxName) {
+        Map<String, String> valueByLowerName = new HashMap<>();
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+        try {
+            pst = DB.prepareStatement("SELECT value, name FROM ad_ref_list WHERE ad_reference_id = ?", trxName);
+            pst.setInt(1, adReferenceId);
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                String name = rs.getString("name");
+                if (name != null) {
+                    valueByLowerName.putIfAbsent(name.trim().toLowerCase(), rs.getString("value"));
+                }
+            }
+        } catch (Exception e) {
+            throw new AdempiereException("Failed loading ad_ref_list for ad_reference_id=" + adReferenceId, e);
+        } finally {
+            DB.close(rs, pst);
+        }
+
+        Map<Integer, String> result = new HashMap<>();
+        pst = null;
+        rs = null;
+        try {
+            pst = DB.prepareStatement("SELECT id, description FROM " + lkpTable, trxName);
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                String description = rs.getString("description");
+                String value = description == null ? null : valueByLowerName.get(description.trim().toLowerCase());
+                if (value != null) {
+                    result.put(rs.getInt("id"), value);
+                }
+            }
+        } catch (Exception e) {
+            throw new AdempiereException("Failed building list-value crosswalk for " + lkpTable, e);
         } finally {
             DB.close(rs, pst);
         }

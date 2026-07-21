@@ -122,6 +122,26 @@ final class AddColumnsSupport {
      */
     static void addColumn(Properties ctx, MTable table, String columnName, int referenceId, int referenceValueId,
             int fieldLength, String description, String entityType, String trxName, Consumer<String> logger) {
+        MColumn column = registerColumn(ctx, table, columnName, referenceId, referenceValueId, fieldLength,
+                description, entityType, trxName);
+
+        String sql = column.getSQLAdd(table);
+        if (sql == null || sql.trim().isEmpty()) {
+            throw new AdempiereException("MColumn.getSQLAdd() returned empty SQL for " + table.getTableName() + "." + columnName);
+        }
+        executeDdl(sql, trxName);
+        logger.accept(table.getTableName() + "." + columnName + " added (" + sql + ")");
+    }
+
+    /**
+     * Registers a business column's AD_Column metadata WITHOUT touching the physical database -
+     * shared by {@link #addColumn} (existing table: registers then immediately runs
+     * MColumn.getSQLAdd()) and {@link #registerColumn(Properties, MTable, String, int, int, int,
+     * String, String, String)} (brand new table: registers only, physical creation deferred
+     * until every column is registered - see {@link #finalizeNewTable}).
+     */
+    private static MColumn registerColumn(Properties ctx, MTable table, String columnName, int referenceId,
+            int referenceValueId, int fieldLength, String description, String entityType, String trxName) {
         M_Element element = M_Element.get(ctx, columnName, trxName);
         if (element == null) {
             element = new M_Element(ctx, columnName, entityType, trxName);
@@ -145,13 +165,30 @@ final class AddColumnsSupport {
         column.setFieldLength(fieldLength);
         column.setIsUpdateable(true);
         column.saveEx();
+        return column;
+    }
 
-        String sql = column.getSQLAdd(table);
-        if (sql == null || sql.trim().isEmpty()) {
-            throw new AdempiereException("MColumn.getSQLAdd() returned empty SQL for " + table.getTableName() + "." + columnName);
-        }
-        executeDdl(sql, trxName);
-        logger.accept(table.getTableName() + "." + columnName + " added (" + sql + ")");
+    /**
+     * Registers a business column's AD_Column metadata on a table that does NOT physically
+     * exist yet (no typed-value overload, no physical DDL) - for use while building a brand new
+     * main table with {@link #createNewTableSchema}: register every column first (this method,
+     * called once per column), then call {@link #finalizeNewTable} once at the very end to
+     * physically create the table via MTable.getSQLCreate() with every registered column
+     * included - same ordering org.idempiere.process.CreateTable's own column-then-table-DDL
+     * approach requires (getSQLCreate() only picks up columns already saved at the time it's
+     * called).
+     */
+    static void registerColumn(Properties ctx, MTable table, String columnName, int referenceId, int fieldLength,
+            String description, String entityType, String trxName) {
+        registerColumn(ctx, table, columnName, referenceId, 0, fieldLength, description, entityType, trxName);
+    }
+
+    /** Same as {@link #registerColumn(Properties, MTable, String, int, int, String, String,
+     * String)} but also sets AD_Reference_Value_ID - see {@link #addColumn(Properties, MTable,
+     * String, int, int, int, String, String, String, Consumer)} for when this is needed. */
+    static void registerColumnWithValue(Properties ctx, MTable table, String columnName, int referenceId,
+            int referenceValueId, int fieldLength, String description, String entityType, String trxName) {
+        registerColumn(ctx, table, columnName, referenceId, referenceValueId, fieldLength, description, entityType, trxName);
     }
 
     /**
@@ -194,6 +231,84 @@ final class AddColumnsSupport {
         executeDdl(createSql, trxName);
         logger.accept(tableName + " physically created (" + createSql + ")");
         return table;
+    }
+
+    /**
+     * Registers a brand new MAIN table (AD_Table + standard system columns + key + UUID + an
+     * "id" recon column) but, unlike {@link #createReferenceTableSchema}, does NOT create the
+     * physical table yet and does NOT add Value/Name (a main table's business columns are
+     * whatever the caller needs, not a fixed Value/Name shape). Caller must register every
+     * business column with {@link #registerColumn(Properties, MTable, String, int, int, String,
+     * String, String)} / {@link #registerColumnWithValue} in between this call and
+     * {@link #finalizeNewTable} - MTable.getSQLCreate() (called by finalizeNewTable) only
+     * includes columns already saved at the time it runs, so the order matters: register ALL
+     * columns first, create the physical table last. Same three-building-blocks reasoning as
+     * createReferenceTableSchema - see AddZZProviderColumns' class Javadoc for the full
+     * write-up of why the physical DDL step is needed at all.
+     */
+    static MTable createNewTableSchema(Properties ctx, String tableName, String description, String entityType,
+            String accessLevel, String trxName) {
+        MTable table = new MTable(ctx, 0, trxName);
+        table.setTableName(tableName);
+        table.setName(tableName.replace('_', ' ').trim());
+        table.setDescription(description);
+        table.setEntityType(entityType);
+        table.setAccessLevel(accessLevel);
+        table.setIsDeleteable(true);
+        table.setIsChangeLog(true);
+        table.saveEx();
+
+        createStandardColumn(ctx, table, "AD_Client_ID", entityType, trxName);
+        createStandardColumn(ctx, table, "AD_Org_ID", entityType, trxName);
+        createStandardColumn(ctx, table, "Created", entityType, trxName);
+        createStandardColumn(ctx, table, "CreatedBy", entityType, trxName);
+        createStandardColumn(ctx, table, "Updated", entityType, trxName);
+        createStandardColumn(ctx, table, "UpdatedBy", entityType, trxName);
+        createStandardColumn(ctx, table, "IsActive", entityType, trxName);
+        createKeyColumn(ctx, table, entityType, trxName);
+        createUUIDColumn(ctx, table, entityType, trxName);
+        createReconIdColumn(ctx, table, entityType, trxName);
+        return table;
+    }
+
+    /**
+     * Physically creates the table {@link #createNewTableSchema} registered, once every
+     * business column has been registered via {@link #registerColumn(Properties, MTable,
+     * String, int, int, String, String, String)} / {@link #registerColumnWithValue}. Mirrors
+     * org.compiere.process.ColumnSync's MTable.getSQLCreate() + execute step - see
+     * createReferenceTableSchema's Javadoc for why this can't be skipped (saving AD_Table/
+     * AD_Column records alone never touches the physical database).
+     */
+    static void finalizeNewTable(MTable table, String trxName, Consumer<String> logger) {
+        String createSql = table.getSQLCreate();
+        if (createSql == null || createSql.trim().isEmpty()) {
+            throw new AdempiereException("MTable.getSQLCreate() returned empty SQL for " + table.getTableName());
+        }
+        executeDdl(createSql, trxName);
+        logger.accept(table.getTableName() + " physically created (" + createSql + ")");
+    }
+
+    /**
+     * Backfills AD_Column metadata (no DDL - every one of these columns is assumed to already
+     * exist physically) for the standard system columns + key + UUID column on an
+     * ALREADY-EXISTING AD_Table whose physical columns were never registered in the
+     * Application Dictionary at all. Confirmed necessary for ZZLearnerQCTOLearnershipAssessments
+     * (2026-07-20): its physical table has 17 columns but zero AD_Column rows - it must have
+     * been created by raw DDL or an external import that bypassed AD_Column entirely, unlike
+     * every table this project has otherwise built. Each underlying create*Column helper is
+     * already idempotent (skips if the column is already registered), so this is safe to call
+     * even if some of these happen to already be registered.
+     */
+    static void backfillStandardColumns(Properties ctx, MTable table, String entityType, String trxName) {
+        createStandardColumn(ctx, table, "AD_Client_ID", entityType, trxName);
+        createStandardColumn(ctx, table, "AD_Org_ID", entityType, trxName);
+        createStandardColumn(ctx, table, "Created", entityType, trxName);
+        createStandardColumn(ctx, table, "CreatedBy", entityType, trxName);
+        createStandardColumn(ctx, table, "Updated", entityType, trxName);
+        createStandardColumn(ctx, table, "UpdatedBy", entityType, trxName);
+        createStandardColumn(ctx, table, "IsActive", entityType, trxName);
+        createKeyColumn(ctx, table, entityType, trxName);
+        createUUIDColumn(ctx, table, entityType, trxName);
     }
 
     /**
