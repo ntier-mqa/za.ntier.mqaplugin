@@ -22,7 +22,7 @@ public class AssessorModeratorExpiryProcess extends SvrProcess
 {
 
 	private static final String	MAIL_TEMPLATE_UU	= "d47f65bc-48ad-4b0c-8042-bd0188a981bd";
-	private static final String	QA_CONFIG_UU		= "d33370ea-b7c2-434e-8ca4-7d7cc9d1e959";
+	private static final String	QA_CONFIG_UU		= "6e226090-2983-4f9a-b5c5-297ef5cad379";
 
 	@Override
 	protected void prepare()

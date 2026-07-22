@@ -20,6 +20,9 @@ import za.co.ntier.api.model.X_ZZ_WPA_App_Qualifications;
 import za.co.ntier.api.model.X_ZZ_WPA_App_QCTOQualifications;
 import za.co.ntier.api.model.X_ZZ_WPA_App_SkillsProgramme;
 import za.co.ntier.api.model.X_ZZ_WPA_App_QCTOSkillsProg;
+import za.co.ntier.api.model.X_ZZSkillsProgrammeUnitStandard;
+
+import za.co.ntier.api.model.X_ZZQctoSkillsProgrammeModule;
 
 @Component(
 
@@ -44,7 +47,9 @@ public class CalloutFactory implements IColumnCalloutFactory {
 			tableName.equals(X_ZZ_WPA_App_Qualifications.Table_Name) ||
 			tableName.equals(X_ZZ_WPA_App_QCTOQualifications.Table_Name) ||
 			tableName.equals(X_ZZ_WPA_App_SkillsProgramme.Table_Name) ||
-			tableName.equals(X_ZZ_WPA_App_QCTOSkillsProg.Table_Name)
+			tableName.equals(X_ZZ_WPA_App_QCTOSkillsProg.Table_Name) ||
+			tableName.equals(X_ZZSkillsProgrammeUnitStandard.Table_Name) ||
+			tableName.equals(X_ZZQctoSkillsProgrammeModule.Table_Name)
 			)
 		{
 			list.add(new CalloutFromFactory());

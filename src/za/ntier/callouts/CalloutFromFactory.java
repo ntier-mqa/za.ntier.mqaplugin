@@ -27,6 +27,10 @@ import za.co.ntier.api.model.X_ZZ_WPA_App_Qualifications;
 import za.co.ntier.api.model.X_ZZ_WPA_App_QCTOQualifications;
 import za.co.ntier.api.model.X_ZZ_WPA_App_SkillsProgramme;
 import za.co.ntier.api.model.X_ZZ_WPA_App_QCTOSkillsProg;
+import za.co.ntier.api.model.X_ZZUnitStandard;
+import za.co.ntier.api.model.X_ZZSkillsProgrammeUnitStandard;
+import za.co.ntier.api.model.X_ZZQctoSkillsProgrammeModule;
+import za.co.ntier.api.model.X_ZZQctoModule;
 import za.ntier.models.MZZOpenApplication;
 import za.ntier.models.OpenAppOverlapInput;
 import za.ntier.models.X_ZZ_Open_Application;
@@ -395,6 +399,59 @@ public class CalloutFromFactory implements IColumnCallout {
 				mTab.setValue(X_ZZ_WPA_App_QCTOSkillsProg.COLUMNNAME_ZZProgrammeName, null);
 				mTab.setValue(X_ZZ_WPA_App_QCTOSkillsProg.COLUMNNAME_ZZNqfLevel, null);
 				mTab.setValue(X_ZZ_WPA_App_QCTOSkillsProg.COLUMNNAME_ZZCredits, null);
+			}
+		}
+
+		if (mTab.getTableName().equals(X_ZZSkillsProgrammeUnitStandard.Table_Name) &&
+			mField.getColumnName().equals(X_ZZSkillsProgrammeUnitStandard.COLUMNNAME_ZZUnitStandard_ID))
+		{
+			if (value != null)
+			{
+				int srcID = (Integer) value;
+				if (srcID > 0)
+				{
+					X_ZZUnitStandard srcUnit = new X_ZZUnitStandard(ctx, srcID, null);
+					mTab.setValue(X_ZZSkillsProgrammeUnitStandard.COLUMNNAME_ZZSaqaUnitStandardCode, srcUnit.getZZSaqaUnitStandardCode());
+					mTab.setValue(X_ZZSkillsProgrammeUnitStandard.COLUMNNAME_ZZNqfLevel, srcUnit.getZZNqfLevel());
+					mTab.setValue(X_ZZSkillsProgrammeUnitStandard.COLUMNNAME_ZZCredits, srcUnit.getZZCredits());
+				}
+			}
+			else
+			{
+				mTab.setValue(X_ZZSkillsProgrammeUnitStandard.COLUMNNAME_ZZSaqaUnitStandardCode, null);
+				mTab.setValue(X_ZZSkillsProgrammeUnitStandard.COLUMNNAME_ZZNqfLevel, null);
+				mTab.setValue(X_ZZSkillsProgrammeUnitStandard.COLUMNNAME_ZZCredits, null);
+			}
+		}
+
+		if (mTab.getTableName().equals(X_ZZQctoSkillsProgrammeModule.Table_Name) &&
+			mField.getColumnName().equals(X_ZZQctoSkillsProgrammeModule.COLUMNNAME_ZZQctoModule_ID))
+		{
+			if (value != null)
+			{
+				int srcID = 0;
+				if (value instanceof Number)
+				{
+					srcID = ((Number) value).intValue();
+				}
+				else
+				{
+					srcID = Integer.parseInt(value.toString());
+				}
+
+				if (srcID > 0)
+				{
+					X_ZZQctoModule srcModule = new X_ZZQctoModule(ctx, srcID, null);
+					mTab.setValue(X_ZZQctoSkillsProgrammeModule.COLUMNNAME_ZZModuleCode, srcModule.getZZModuleCode());
+					mTab.setValue(X_ZZQctoSkillsProgrammeModule.COLUMNNAME_ZZNqfLevel, srcModule.getZZNqfLevel());
+					mTab.setValue(X_ZZQctoSkillsProgrammeModule.COLUMNNAME_ZZCredits, srcModule.getZZCredits());
+				}
+			}
+			else
+			{
+				mTab.setValue(X_ZZQctoSkillsProgrammeModule.COLUMNNAME_ZZModuleCode, null);
+				mTab.setValue(X_ZZQctoSkillsProgrammeModule.COLUMNNAME_ZZNqfLevel, null);
+				mTab.setValue(X_ZZQctoSkillsProgrammeModule.COLUMNNAME_ZZCredits, null);
 			}
 		}
 
