@@ -38,21 +38,24 @@ public class MZZUnitStandard extends X_ZZUnitStandard
 	@Override
 	protected boolean beforeSave(boolean newRecord)
 	{
-		Timestamp regStartDate = getRegistrationstartdate();
-		if (regStartDate != null)
+		if (newRecord)
 		{
-			Timestamp lastEnrolmentDate = getZZLastEnrolmentDate();
-			if (lastEnrolmentDate != null && lastEnrolmentDate.before(regStartDate))
+			Timestamp regStartDate = getRegistrationstartdate();
+			if (regStartDate != null)
 			{
-				log.saveError("Error", "Last enrollment date cannot be before Registration start date");
-				return false;
-			}
+				Timestamp lastEnrolmentDate = getZZLastEnrolmentDate();
+				if (lastEnrolmentDate != null && lastEnrolmentDate.before(regStartDate))
+				{
+					log.saveError("Error", "Last enrollment date cannot be before Registration start date");
+					return false;
+				}
 
-			Timestamp lastAchievementDate = getZZLastAchievementDate();
-			if (lastAchievementDate != null && lastAchievementDate.before(regStartDate))
-			{
-				log.saveError("Error", "Last achievement date cannot be before Registration start date");
-				return false;
+				Timestamp lastAchievementDate = getZZLastAchievementDate();
+				if (lastAchievementDate != null && lastAchievementDate.before(regStartDate))
+				{
+					log.saveError("Error", "Last achievement date cannot be before Registration start date");
+					return false;
+				}
 			}
 		}
 
