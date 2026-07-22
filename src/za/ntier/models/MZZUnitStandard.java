@@ -7,30 +7,30 @@ import java.util.Properties;
 import za.co.ntier.api.model.X_ZZUnitStandard;
 
 @SuppressWarnings("serial")
-public class MMZZUnitStandard extends X_ZZUnitStandard
+public class MZZUnitStandard extends X_ZZUnitStandard
 {
 
-	public MMZZUnitStandard(Properties ctx, String ZZUnitStandard_UU, String trxName, String[] virtualColumns)
+	public MZZUnitStandard(Properties ctx, String ZZUnitStandard_UU, String trxName, String[] virtualColumns)
 	{
 		super(ctx, ZZUnitStandard_UU, trxName, virtualColumns);
 	}
 
-	public MMZZUnitStandard(Properties ctx, String ZZUnitStandard_UU, String trxName)
+	public MZZUnitStandard(Properties ctx, String ZZUnitStandard_UU, String trxName)
 	{
 		super(ctx, ZZUnitStandard_UU, trxName);
 	}
 
-	public MMZZUnitStandard(Properties ctx, ResultSet rs, String trxName)
+	public MZZUnitStandard(Properties ctx, ResultSet rs, String trxName)
 	{
 		super(ctx, rs, trxName);
 	}
 
-	public MMZZUnitStandard(Properties ctx, int ZZUnitStandard_ID, String trxName, String[] virtualColumns)
+	public MZZUnitStandard(Properties ctx, int ZZUnitStandard_ID, String trxName, String[] virtualColumns)
 	{
 		super(ctx, ZZUnitStandard_ID, trxName, virtualColumns);
 	}
 
-	public MMZZUnitStandard(Properties ctx, int ZZUnitStandard_ID, String trxName)
+	public MZZUnitStandard(Properties ctx, int ZZUnitStandard_ID, String trxName)
 	{
 		super(ctx, ZZUnitStandard_ID, trxName);
 	}
@@ -60,4 +60,3 @@ public class MMZZUnitStandard extends X_ZZUnitStandard
 	}
 
 }
-

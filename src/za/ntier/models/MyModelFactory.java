@@ -14,6 +14,7 @@ import org.osgi.service.component.annotations.Component;
 
 import za.co.ntier.api.model.I_ZZAssessorPerson;
 import za.co.ntier.api.model.I_ZZSdfOrganisation;
+import za.co.ntier.api.model.I_ZZSkillsProgramme;
 import za.co.ntier.api.model.I_ZZUnitStandard;
 import za.co.ntier.api.model.I_ZZ_Program_Master_Data;
 import za.co.ntier.api.model.I_ZZ_WSP_ATR_EXTENSION_BATCH;
@@ -103,7 +104,8 @@ public class MyModelFactory implements IModelFactory {
         register(I_ZZ_WSP_ATR_EXTENSION_BATCH.Table_Name,MZZWSPATRExtensionBatch.class);
         register(I_ZZAssessorPerson.Table_Name, X_ZZAssessorPerson.class);
         register(I_ZZ_WF_Next_Node.Table_Name, X_ZZ_WF_Next_Node.class);
-        register(I_ZZUnitStandard.Table_Name, MMZZUnitStandard.class);
+        register(I_ZZUnitStandard.Table_Name, MZZUnitStandard.class);
+        register(I_ZZSkillsProgramme.Table_Name, MZZSkillsProgramme.class);
     }
 
     private static void register(String tableName, Class<? extends PO> modelClass) {
