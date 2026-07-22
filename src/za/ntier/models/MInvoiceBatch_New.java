@@ -65,11 +65,10 @@ public class MInvoiceBatch_New extends MInvoiceBatch implements I_C_InvoiceBatch
 						log.saveError("Error", Msg.getMsg(getCtx(), "FINANCEROLESINVOICEBATCHINPROG")); //"Only Finance Roles can change to In Progress");
 						return false;
 					}
-					if(getZZ_Policy_Procedure_Ck() == null ) {
-						//setZZ_Status(X_C_InvoiceBatch.ZZ_STATUS_Drafted);
-						log.saveError("Error", Msg.getMsg(getCtx(), "PROCEDURECHECKLISTMUSTBETICKED")); //One of the policy procedure checklist must be ticked before the status is changed to ‘in progress’
+				//	if(getZZ_Policy_Procedure_Ck() == null ) {
+				//		log.saveError("Error", Msg.getMsg(getCtx(), "PROCEDURECHECKLISTMUSTBETICKED")); //One of the policy procedure checklist must be ticked before the status is changed to ‘in progress’
 						return false;
-					}
+				//	}
 				}
 				roles = MSysConfig.getValue(MANAGER_OPS_SDL_ROLES);
 				if (!checkRoleSetup(roles,MANAGER_OPS_SDL_ROLES)) {
@@ -88,12 +87,12 @@ public class MInvoiceBatch_New extends MInvoiceBatch implements I_C_InvoiceBatch
 					}
 				}
 			}
-			if (getZZ_Status() != null && getZZ_Status().equals(X_C_InvoiceBatch.ZZ_STATUS_InProgress)) {
-				if (!isZZ_Account_Reconned() || !isZZ_Auth_PO_Order() || !isZZ_Calcs_Checked() || !isZZ_Cred_Bank_Dets_Verified() || !isZZ_GL_Allocation_Checked()) {
-					log.saveError("Error", Msg.getMsg(getCtx(), "FINANCEDEPTCHECKLISTERROR")); 
-					return false;
-				}
-			}
+			//if (getZZ_Status() != null && getZZ_Status().equals(X_C_InvoiceBatch.ZZ_STATUS_InProgress)) {
+			//	if (!isZZ_Account_Reconned() || !isZZ_Auth_PO_Order() || !isZZ_Calcs_Checked() || !isZZ_Cred_Bank_Dets_Verified() || !isZZ_GL_Allocation_Checked()) {
+			//		log.saveError("Error", Msg.getMsg(getCtx(), "FINANCEDEPTCHECKLISTERROR")); 
+			//		return false;
+			//	}
+			//}
 		}
 
 

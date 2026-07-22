@@ -91,7 +91,7 @@ public class NtierModelValidator implements ModelValidator
 		
 		engine.addModelChange(X_ZZ_Allocations.Table_Name, this);
 		engine.addModelChange(X_ZZ_QAAuditAllocations.Table_Name, this);
-		
+
 	}
 
 	@Override

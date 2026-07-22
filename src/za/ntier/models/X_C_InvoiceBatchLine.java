@@ -35,7 +35,7 @@ public class X_C_InvoiceBatchLine extends PO implements I_C_InvoiceBatchLine, I_
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20260617L;
+	private static final long serialVersionUID = 20260722L;
 
     /** Standard Constructor */
     public X_C_InvoiceBatchLine (Properties ctx, int C_InvoiceBatchLine_ID, String trxName)
@@ -69,6 +69,16 @@ public class X_C_InvoiceBatchLine extends PO implements I_C_InvoiceBatchLine, I_
 			setQtyEntered (Env.ZERO);
 // 1
 			setTaxAmt (Env.ZERO);
+			setZZ_Account_Reconned (false);
+// N
+			setZZ_Auth_PO_Order (false);
+// N
+			setZZ_Calcs_Checked (false);
+// N
+			setZZ_Cred_Bank_Dets_Verified (false);
+// N
+			setZZ_GL_Allocation_Checked (false);
+// N
         } */
     }
 
@@ -104,6 +114,16 @@ public class X_C_InvoiceBatchLine extends PO implements I_C_InvoiceBatchLine, I_
 			setQtyEntered (Env.ZERO);
 // 1
 			setTaxAmt (Env.ZERO);
+			setZZ_Account_Reconned (false);
+// N
+			setZZ_Auth_PO_Order (false);
+// N
+			setZZ_Calcs_Checked (false);
+// N
+			setZZ_Cred_Bank_Dets_Verified (false);
+// N
+			setZZ_GL_Allocation_Checked (false);
+// N
         } */
     }
 
@@ -139,6 +159,16 @@ public class X_C_InvoiceBatchLine extends PO implements I_C_InvoiceBatchLine, I_
 			setQtyEntered (Env.ZERO);
 // 1
 			setTaxAmt (Env.ZERO);
+			setZZ_Account_Reconned (false);
+// N
+			setZZ_Auth_PO_Order (false);
+// N
+			setZZ_Calcs_Checked (false);
+// N
+			setZZ_Cred_Bank_Dets_Verified (false);
+// N
+			setZZ_GL_Allocation_Checked (false);
+// N
         } */
     }
 
@@ -174,6 +204,16 @@ public class X_C_InvoiceBatchLine extends PO implements I_C_InvoiceBatchLine, I_
 			setQtyEntered (Env.ZERO);
 // 1
 			setTaxAmt (Env.ZERO);
+			setZZ_Account_Reconned (false);
+// N
+			setZZ_Auth_PO_Order (false);
+// N
+			setZZ_Calcs_Checked (false);
+// N
+			setZZ_Cred_Bank_Dets_Verified (false);
+// N
+			setZZ_GL_Allocation_Checked (false);
+// N
         } */
     }
 
@@ -860,6 +900,116 @@ public class X_C_InvoiceBatchLine extends PO implements I_C_InvoiceBatchLine, I_
 		return ii.intValue();
 	}
 
+	/** Set Account reconciled / O/S invoices verified.
+		@param ZZ_Account_Reconned Account reconciled / O/S invoices verified
+	*/
+	public void setZZ_Account_Reconned (boolean ZZ_Account_Reconned)
+	{
+		set_Value (COLUMNNAME_ZZ_Account_Reconned, Boolean.valueOf(ZZ_Account_Reconned));
+	}
+
+	/** Get Account reconciled / O/S invoices verified.
+		@return Account reconciled / O/S invoices verified	  */
+	public boolean isZZ_Account_Reconned()
+	{
+		Object oo = get_Value(COLUMNNAME_ZZ_Account_Reconned);
+		if (oo != null)
+		{
+			 if (oo instanceof Boolean)
+				 return ((Boolean)oo).booleanValue();
+			return "Y".equals(oo);
+		}
+		return false;
+	}
+
+	/** Set Authorized Purchase Order/SLA Attached.
+		@param ZZ_Auth_PO_Order Authorized Purchase Order/SLA Attached
+	*/
+	public void setZZ_Auth_PO_Order (boolean ZZ_Auth_PO_Order)
+	{
+		set_Value (COLUMNNAME_ZZ_Auth_PO_Order, Boolean.valueOf(ZZ_Auth_PO_Order));
+	}
+
+	/** Get Authorized Purchase Order/SLA Attached.
+		@return Authorized Purchase Order/SLA Attached	  */
+	public boolean isZZ_Auth_PO_Order()
+	{
+		Object oo = get_Value(COLUMNNAME_ZZ_Auth_PO_Order);
+		if (oo != null)
+		{
+			 if (oo instanceof Boolean)
+				 return ((Boolean)oo).booleanValue();
+			return "Y".equals(oo);
+		}
+		return false;
+	}
+
+	/** Set Calculation Checked.
+		@param ZZ_Calcs_Checked Calculation Checked
+	*/
+	public void setZZ_Calcs_Checked (boolean ZZ_Calcs_Checked)
+	{
+		set_Value (COLUMNNAME_ZZ_Calcs_Checked, Boolean.valueOf(ZZ_Calcs_Checked));
+	}
+
+	/** Get Calculation Checked.
+		@return Calculation Checked	  */
+	public boolean isZZ_Calcs_Checked()
+	{
+		Object oo = get_Value(COLUMNNAME_ZZ_Calcs_Checked);
+		if (oo != null)
+		{
+			 if (oo instanceof Boolean)
+				 return ((Boolean)oo).booleanValue();
+			return "Y".equals(oo);
+		}
+		return false;
+	}
+
+	/** Set Creditor ID &amp; Banking Details Verified.
+		@param ZZ_Cred_Bank_Dets_Verified Creditor ID &amp; Banking Details Verified
+	*/
+	public void setZZ_Cred_Bank_Dets_Verified (boolean ZZ_Cred_Bank_Dets_Verified)
+	{
+		set_Value (COLUMNNAME_ZZ_Cred_Bank_Dets_Verified, Boolean.valueOf(ZZ_Cred_Bank_Dets_Verified));
+	}
+
+	/** Get Creditor ID &amp; Banking Details Verified.
+		@return Creditor ID &amp; Banking Details Verified	  */
+	public boolean isZZ_Cred_Bank_Dets_Verified()
+	{
+		Object oo = get_Value(COLUMNNAME_ZZ_Cred_Bank_Dets_Verified);
+		if (oo != null)
+		{
+			 if (oo instanceof Boolean)
+				 return ((Boolean)oo).booleanValue();
+			return "Y".equals(oo);
+		}
+		return false;
+	}
+
+	/** Set GL Allocation Checked.
+		@param ZZ_GL_Allocation_Checked GL Allocation Checked
+	*/
+	public void setZZ_GL_Allocation_Checked (boolean ZZ_GL_Allocation_Checked)
+	{
+		set_Value (COLUMNNAME_ZZ_GL_Allocation_Checked, Boolean.valueOf(ZZ_GL_Allocation_Checked));
+	}
+
+	/** Get GL Allocation Checked.
+		@return GL Allocation Checked	  */
+	public boolean isZZ_GL_Allocation_Checked()
+	{
+		Object oo = get_Value(COLUMNNAME_ZZ_GL_Allocation_Checked);
+		if (oo != null)
+		{
+			 if (oo instanceof Boolean)
+				 return ((Boolean)oo).booleanValue();
+			return "Y".equals(oo);
+		}
+		return false;
+	}
+
 	/** Approved = A */
 	public static final String ZZ_GRANT_STATUS_Approved = "A";
 	/** Rejected = R */
@@ -878,5 +1028,31 @@ public class X_C_InvoiceBatchLine extends PO implements I_C_InvoiceBatchLine, I_
 	public String getZZ_Grant_Status()
 	{
 		return (String)get_Value(COLUMNNAME_ZZ_Grant_Status);
+	}
+
+	/** Payments R2 000 - R10 000: two quotes obtained = 1 */
+	public static final String ZZ_POLICY_PROCEDURE_CK_PaymentsR2000_R10000TwoQuotesObtained = "1";
+	/** Payments R10 000 - R200 000: 3 or more quotes applicable = 2 */
+	public static final String ZZ_POLICY_PROCEDURE_CK_PaymentsR10000_R2000003OrMoreQuotesApplicable = "2";
+	/** Payments above R200 000:competitive bids obtained (attached) = 3 */
+	public static final String ZZ_POLICY_PROCEDURE_CK_PaymentsAboveR200000CompetitiveBidsObtainedAttached = "3";
+	/** Accepted tender approved by procurement committee (Attached) = 4 */
+	public static final String ZZ_POLICY_PROCEDURE_CK_AcceptedTenderApprovedByProcurementCommitteeAttached = "4";
+	/** Capital expenditure budgeted - approved by CFO = 5 */
+	public static final String ZZ_POLICY_PROCEDURE_CK_CapitalExpenditureBudgeted_ApprovedByCFO = "5";
+	/** Set Policy Procedure Checklist.
+		@param ZZ_Policy_Procedure_Ck Policy Procedure Checklist
+	*/
+	public void setZZ_Policy_Procedure_Ck (String ZZ_Policy_Procedure_Ck)
+	{
+
+		set_Value (COLUMNNAME_ZZ_Policy_Procedure_Ck, ZZ_Policy_Procedure_Ck);
+	}
+
+	/** Get Policy Procedure Checklist.
+		@return Policy Procedure Checklist	  */
+	public String getZZ_Policy_Procedure_Ck()
+	{
+		return (String)get_Value(COLUMNNAME_ZZ_Policy_Procedure_Ck);
 	}
 }

@@ -495,6 +495,53 @@ public interface I_C_InvoiceBatchLine
 
 	public org.compiere.model.I_C_ElementValue getUser2() throws RuntimeException;
 
+    /** Column name ZZ_Account_Reconned */
+    public static final String COLUMNNAME_ZZ_Account_Reconned = "ZZ_Account_Reconned";
+
+	/** Set Account reconciled / O/S invoices verified	  */
+	public void setZZ_Account_Reconned (boolean ZZ_Account_Reconned);
+
+	/** Get Account reconciled / O/S invoices verified	  */
+	public boolean isZZ_Account_Reconned();
+
+    /** Column name ZZ_Auth_PO_Order */
+    public static final String COLUMNNAME_ZZ_Auth_PO_Order = "ZZ_Auth_PO_Order";
+
+	/** Set Authorized Purchase Order/SLA Attached	  */
+	public void setZZ_Auth_PO_Order (boolean ZZ_Auth_PO_Order);
+
+	/** Get Authorized Purchase Order/SLA Attached	  */
+	public boolean isZZ_Auth_PO_Order();
+
+    /** Column name ZZ_Calcs_Checked */
+    public static final String COLUMNNAME_ZZ_Calcs_Checked = "ZZ_Calcs_Checked";
+
+	/** Set Calculation Checked	  */
+	public void setZZ_Calcs_Checked (boolean ZZ_Calcs_Checked);
+
+	/** Get Calculation Checked	  */
+	public boolean isZZ_Calcs_Checked();
+
+    /** Column name ZZ_Cred_Bank_Dets_Verified */
+    public static final String COLUMNNAME_ZZ_Cred_Bank_Dets_Verified = "ZZ_Cred_Bank_Dets_Verified";
+
+	/** Set Creditor ID &amp;
+ Banking Details Verified	  */
+	public void setZZ_Cred_Bank_Dets_Verified (boolean ZZ_Cred_Bank_Dets_Verified);
+
+	/** Get Creditor ID &amp;
+ Banking Details Verified	  */
+	public boolean isZZ_Cred_Bank_Dets_Verified();
+
+    /** Column name ZZ_GL_Allocation_Checked */
+    public static final String COLUMNNAME_ZZ_GL_Allocation_Checked = "ZZ_GL_Allocation_Checked";
+
+	/** Set GL Allocation Checked	  */
+	public void setZZ_GL_Allocation_Checked (boolean ZZ_GL_Allocation_Checked);
+
+	/** Get GL Allocation Checked	  */
+	public boolean isZZ_GL_Allocation_Checked();
+
     /** Column name ZZ_Grant_Status */
     public static final String COLUMNNAME_ZZ_Grant_Status = "ZZ_Grant_Status";
 
@@ -503,4 +550,13 @@ public interface I_C_InvoiceBatchLine
 
 	/** Get Grant Status	  */
 	public String getZZ_Grant_Status();
+
+    /** Column name ZZ_Policy_Procedure_Ck */
+    public static final String COLUMNNAME_ZZ_Policy_Procedure_Ck = "ZZ_Policy_Procedure_Ck";
+
+	/** Set Policy Procedure Checklist	  */
+	public void setZZ_Policy_Procedure_Ck (String ZZ_Policy_Procedure_Ck);
+
+	/** Get Policy Procedure Checklist	  */
+	public String getZZ_Policy_Procedure_Ck();
 }

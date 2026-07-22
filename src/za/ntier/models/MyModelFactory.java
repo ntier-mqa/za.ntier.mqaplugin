@@ -92,6 +92,7 @@ public class MyModelFactory implements IModelFactory {
         register(I_ZZ_Petty_Cash_Advance_Hdr.Table_Name,    MZZPettyCashAdvanceHdr.class);
         register(I_ZZ_Petty_Cash_Application.Table_Name,    MZZPettyCashApplication.class);
         register(I_C_InvoiceBatch.Table_Name,           MInvoiceBatch_New.class);
+        register(I_C_InvoiceBatchLine.Table_Name,       MInvoiceBatchLine_New.class);
         register(I_C_BP_BankAccount.Table_Name,         MBPBankAccount_New.class);
         register(I_ZZ_WSP_ATR_Lookup_Mapping.Table_Name,     X_ZZ_WSP_ATR_Lookup_Mapping.class);
         register(I_ZZ_WSP_ATR_Lookup_Mapping_Detail.Table_Name,     X_ZZ_WSP_ATR_Lookup_Mapping_Detail.class);
