@@ -13,6 +13,7 @@ import org.compiere.util.Env;
 import org.osgi.service.component.annotations.Component;
 
 import za.co.ntier.api.model.I_ZZAssessorPerson;
+import za.co.ntier.api.model.I_ZZQctoModule;
 import za.co.ntier.api.model.I_ZZQctoSkillsProgramme;
 import za.co.ntier.api.model.I_ZZSdfOrganisation;
 import za.co.ntier.api.model.I_ZZSkillsProgramme;
@@ -109,6 +110,7 @@ public class MyModelFactory implements IModelFactory {
         register(I_ZZUnitStandard.Table_Name, MZZUnitStandard.class);
         register(I_ZZSkillsProgramme.Table_Name, MZZSkillsProgramme.class);
         register(I_ZZQctoSkillsProgramme.Table_Name, MZZQctoSkillsProgramme.class);
+        register(I_ZZQctoModule.Table_Name, MZZQctoModule.class);
     }
 
     private static void register(String tableName, Class<? extends PO> modelClass) {
