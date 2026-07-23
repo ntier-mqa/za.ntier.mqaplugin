@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.5.final using JasperReports Library version 6.20.5-3efcf2e67f959db3888d79f73dde2dbd7acb4f8e  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Bank_Statement_Report" language="groovy" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="7c3e8a5b-9d4f-4e12-8a90-123456789abc">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="SOR_SkillsProgramme/nTier_20260619_1.jrdax"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<style name="Table_TH" mode="Opaque" backcolor="#F0F4F8">
+		<box>
+			<pen lineWidth="0.5" lineColor="#CBD5E1"/>
+		</box>
+	</style>
+	<style name="Table_CH" mode="Opaque" backcolor="#1E293B">
+		<box>
+			<pen lineWidth="0.5" lineColor="#CBD5E1"/>
+		</box>
+	</style>
+	<style name="Table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+		</box>
+	</style>
+	<subDataset name="StatementLineDataset" uuid="12345678-1234-4321-8765-1234567890ab">
+		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="SOR_SkillsProgramme/nTier_20260619_1.jrdax"/>
+		<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+		<parameter name="RECORD_ID" class="java.lang.Integer"/>
+		<queryString>
+			<![CDATA[SELECT 
+    bsl.Line,
+    bsl.StatementLineDate,
+    bsl.ValutaDate,
+    bsl.Description AS Line_Description,
+    bsl.StmtAmt,
+    ch.Name AS Charge_Name,
+    bsl.TrxAmt,
+    p.DocumentNo AS PaymentNo,
+    curr.ISO_Code AS Currency,
+    COALESCE(bs.BeginningBalance, 0) + SUM(COALESCE(bsl.StmtAmt, 0)) OVER (
+        PARTITION BY bs.C_BankStatement_ID 
+        ORDER BY bsl.Line ASC 
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    ) AS RunningBalance
+FROM C_BankStatement bs
+LEFT JOIN C_BankStatementLine bsl ON bs.C_BankStatement_ID = bsl.C_BankStatement_ID AND bsl.IsActive = 'Y'
+LEFT JOIN C_Charge ch ON bsl.C_Charge_ID = ch.C_Charge_ID
+LEFT JOIN C_Payment p ON bsl.C_Payment_ID = p.C_Payment_ID
+LEFT JOIN C_Currency curr ON bsl.C_Currency_ID = curr.C_Currency_ID
+WHERE bs.C_BankStatement_ID = $P{RECORD_ID}
+ORDER BY bsl.Line ASC]]>
+		</queryString>
+		<field name="line" class="java.math.BigDecimal"/>
+		<field name="statementlinedate" class="java.sql.Timestamp"/>
+		<field name="valutadate" class="java.sql.Timestamp"/>
+		<field name="line_description" class="java.lang.String"/>
+		<field name="stmtamt" class="java.math.BigDecimal"/>
+		<field name="charge_name" class="java.lang.String"/>
+		<field name="trxamt" class="java.math.BigDecimal"/>
+		<field name="paymentno" class="java.lang.String"/>
+		<field name="currency" class="java.lang.String"/>
+		<field name="runningbalance" class="java.math.BigDecimal"/>
+	</subDataset>
+	<parameter name="RECORD_ID" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[1000000]]></defaultValueExpression>
+	</parameter>
+	<parameter name="RESOURCE_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT 
+    bs.C_BankStatement_ID,
+    bs.DocumentNo,
+    bs.Name AS Statement_Name,
+    bs.StatementDate,
+    COALESCE(bs.BeginningBalance, 0) AS BeginningBalance,
+    bs.EndingBalance,
+    bs.StatementDifference,
+    ba.Name AS Bank_Account_Name,
+    ba.AccountNo AS Bank_Account_No,
+    b.Name AS Bank_Name,
+    c.Name AS Client_Name,
+    org.Name AS Org_Name
+FROM C_BankStatement bs
+INNER JOIN C_BankAccount ba ON bs.C_BankAccount_ID = ba.C_BankAccount_ID
+LEFT JOIN C_Bank b ON ba.C_Bank_ID = b.C_Bank_ID
+INNER JOIN AD_Client c ON bs.AD_Client_ID = c.AD_Client_ID
+INNER JOIN AD_Org org ON bs.AD_Org_ID = org.AD_Org_ID
+WHERE bs.C_BankStatement_ID = $P{RECORD_ID}]]>
+	</queryString>
+	<field name="c_bankstatement_id" class="java.lang.Integer"/>
+	<field name="documentno" class="java.lang.String"/>
+	<field name="statement_name" class="java.lang.String"/>
+	<field name="statementdate" class="java.sql.Timestamp"/>
+	<field name="beginningbalance" class="java.math.BigDecimal"/>
+	<field name="endingbalance" class="java.math.BigDecimal"/>
+	<field name="statementdifference" class="java.math.BigDecimal"/>
+	<field name="bank_account_name" class="java.lang.String"/>
+	<field name="bank_account_no" class="java.lang.String"/>
+	<field name="bank_name" class="java.lang.String"/>
+	<field name="client_name" class="java.lang.String"/>
+	<field name="org_name" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="135" splitType="Stretch">
+			<rectangle>
+				<reportElement x="0" y="0" width="555" height="40" backcolor="#1E293B" uuid="11223344-5566-7788-9900-aabbccddeeff"/>
+				<graphicElement>
+					<pen lineWidth="0.0"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="15" y="5" width="300" height="30" forecolor="#FFFFFF" uuid="a1b2c3d4-1111-2222-3333-444455556666"/>
+				<textElement verticalAlignment="Middle">
+					<font size="16" isBold="true"/>
+				</textElement>
+				<text><![CDATA[BANK STATEMENT REPORT]]></text>
+			</staticText>
+			<rectangle radius="4">
+				<reportElement x="0" y="48" width="555" height="80" backcolor="#F8FAFC" uuid="33445566-7788-9900-aabb-ccddeeff0011"/>
+				<graphicElement>
+					<pen lineWidth="0.5" lineColor="#CBD5E1"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="15" y="54" width="95" height="18" forecolor="#475569" uuid="44556677-8899-00aa-bbcc-ddeeff001122"/>
+				<textElement verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Bank:]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement x="110" y="54" width="170" height="18" forecolor="#0F172A" uuid="55667788-9900-aa00-bbcc-ddeeff001122"/>
+				<textElement verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{bank_name} == null ? $F{bank_account_name} : $F{bank_name}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="15" y="76" width="95" height="18" forecolor="#475569" uuid="66778899-00aa-bbcc-dd00-eeff00112233"/>
+				<textElement verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Bank Account:]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement x="110" y="76" width="170" height="18" forecolor="#0F172A" uuid="77889900-aabb-ccdd-eeff-001122334455"/>
+				<textElement verticalAlignment="Middle">
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{bank_account_no} == null ? $F{bank_account_name} : $F{bank_account_no}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="15" y="98" width="95" height="18" forecolor="#475569" uuid="889900aa-bbcc-dd00-eeff-001122334455"/>
+				<textElement verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Statement Date:]]></text>
+			</staticText>
+			<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement x="110" y="98" width="170" height="18" forecolor="#0F172A" uuid="9900aabb-ccdd-eeff-0011-223344556677"/>
+				<textElement verticalAlignment="Middle">
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{statementdate}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="290" y="54" width="120" height="18" forecolor="#475569" uuid="ccddeeff-0011-2233-4455-667788990011"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Beginning Balance:]]></text>
+			</staticText>
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+				<reportElement x="420" y="54" width="120" height="18" forecolor="#0F172A" uuid="ddeeff00-1122-3344-5566-778899001122"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{beginningbalance}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="290" y="76" width="120" height="18" forecolor="#475569" uuid="00112233-4455-6677-8899-001122334455"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[End balance:]]></text>
+			</staticText>
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+				<reportElement x="420" y="76" width="120" height="18" forecolor="#0F172A" uuid="11223344-5566-7788-9900-112233445566"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{endingbalance}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<detail>
+		<band height="60" splitType="Stretch">
+			<componentElement>
+				<reportElement x="0" y="0" width="555" height="50" uuid="b0000011-0000-0000-0000-000000000011"/>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="StatementLineDataset" uuid="23456789-2345-2345-2345-234567890123">
+						<datasetParameter name="RECORD_ID">
+							<datasetParameterExpression><![CDATA[$P{RECORD_ID}]]></datasetParameterExpression>
+						</datasetParameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<jr:column width="25" uuid="c1000001-0000-0000-0000-000000000001">
+						<jr:columnHeader style="Table_CH" height="25">
+							<staticText>
+								<reportElement x="0" y="0" width="25" height="25" forecolor="#FFFFFF" uuid="c2000001-0000-0000-0000-000000000001"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="9" isBold="true"/>
+								</textElement>
+								<text><![CDATA[Line]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="20">
+							<textField isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="25" height="20" uuid="c3000001-0000-0000-0000-000000000001"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="8"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{line}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="185" uuid="c1000002-0000-0000-0000-000000000002">
+						<jr:columnHeader style="Table_CH" height="25">
+							<staticText>
+								<reportElement x="0" y="0" width="185" height="25" forecolor="#FFFFFF" uuid="c2000002-0000-0000-0000-000000000002"/>
+								<textElement textAlignment="Left" verticalAlignment="Middle">
+									<font size="9" isBold="true"/>
+								</textElement>
+								<text><![CDATA[Description]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="20">
+							<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="185" height="20" uuid="c3000002-0000-0000-0000-000000000002"/>
+								<textElement verticalAlignment="Middle">
+									<font size="8"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{line_description}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="50" uuid="c1000003-0000-0000-0000-000000000003">
+						<jr:columnHeader style="Table_CH" height="25">
+							<staticText>
+								<reportElement x="0" y="0" width="50" height="25" forecolor="#FFFFFF" uuid="c2000003-0000-0000-0000-000000000003"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="9" isBold="true"/>
+								</textElement>
+								<text><![CDATA[Date]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="20">
+							<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="50" height="20" uuid="c3000003-0000-0000-0000-000000000003"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="8"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{statementlinedate}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="50" uuid="c1000004-0000-0000-0000-000000000004">
+						<jr:columnHeader style="Table_CH" height="25">
+							<staticText>
+								<reportElement x="0" y="0" width="50" height="25" forecolor="#FFFFFF" uuid="c2000004-0000-0000-0000-000000000004"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="9" isBold="true"/>
+								</textElement>
+								<text><![CDATA[Amount]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="20">
+							<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="50" height="20" uuid="c3000004-0000-0000-0000-000000000004"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="8"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{stmtamt}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="130" uuid="c1000005-0000-0000-0000-000000000005">
+						<jr:columnHeader style="Table_CH" height="25">
+							<staticText>
+								<reportElement x="0" y="0" width="130" height="25" forecolor="#FFFFFF" uuid="c2000005-0000-0000-0000-000000000005"/>
+								<textElement textAlignment="Left" verticalAlignment="Middle">
+									<font size="9" isBold="true"/>
+								</textElement>
+								<text><![CDATA[Charge]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="20">
+							<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="130" height="20" uuid="c3000005-0000-0000-0000-000000000005"/>
+								<textElement textAlignment="Left" verticalAlignment="Middle">
+									<font size="8"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{charge_name}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="50" uuid="c1000006-0000-0000-0000-000000000006">
+						<jr:columnHeader style="Table_CH" height="25">
+							<staticText>
+								<reportElement x="0" y="0" width="50" height="25" forecolor="#FFFFFF" uuid="c2000006-0000-0000-0000-000000000006"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="9" isBold="true"/>
+								</textElement>
+								<text><![CDATA[Payment]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="20">
+							<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="50" height="20" uuid="c3000006-0000-0000-0000-000000000006"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="8"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{paymentno}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="65" uuid="c1000007-0000-0000-0000-000000000007">
+						<jr:columnHeader style="Table_CH" height="25">
+							<staticText>
+								<reportElement x="0" y="0" width="65" height="25" forecolor="#FFFFFF" uuid="c2000007-0000-0000-0000-000000000007"/>
+								<textElement textAlignment="Right" verticalAlignment="Middle">
+									<font size="9" isBold="true"/>
+								</textElement>
+								<text><![CDATA[Balance]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="20">
+							<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="65" height="20" uuid="c3000007-0000-0000-0000-000000000007"/>
+								<textElement textAlignment="Right" verticalAlignment="Middle">
+									<font size="8" isBold="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{runningbalance}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+				</jr:table>
+			</componentElement>
+		</band>
+	</detail>
+	<pageFooter>
+		<band height="20" splitType="Stretch">
+			<textField>
+				<reportElement x="385" y="3" width="120" height="15" forecolor="#64748B" uuid="f2000001-0000-0000-0000-000000000001"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER} + " of "]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="505" y="3" width="50" height="15" forecolor="#64748B" uuid="f3000001-0000-0000-0000-000000000001"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+</jasperReport>
