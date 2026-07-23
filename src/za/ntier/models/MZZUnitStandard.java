@@ -38,24 +38,25 @@ public class MZZUnitStandard extends X_ZZUnitStandard
 	@Override
 	protected boolean beforeSave(boolean newRecord)
 	{
-		if (newRecord)
-		{
-			Timestamp regStartDate = getRegistrationstartdate();
-			if (regStartDate != null)
-			{
-				Timestamp lastEnrolmentDate = getZZLastEnrolmentDate();
-				if (lastEnrolmentDate != null && lastEnrolmentDate.before(regStartDate))
-				{
-					log.saveError("Error", "Last enrollment date cannot be before Registration start date");
-					return false;
-				}
+		Timestamp regStartDate = getRegistrationstartdate();
+		Timestamp lastEnrolmentDate = getZZLastEnrolmentDate();
+		Timestamp lastAchievementDate = getZZLastAchievementDate();
 
-				Timestamp lastAchievementDate = getZZLastAchievementDate();
-				if (lastAchievementDate != null && lastAchievementDate.before(regStartDate))
-				{
-					log.saveError("Error", "Last achievement date cannot be before Registration start date");
-					return false;
-				}
+		if (newRecord || is_ValueChanged(COLUMNNAME_ZZLastEnrolmentDate) || is_ValueChanged(COLUMNNAME_Registrationstartdate))
+		{
+			if (regStartDate != null && lastEnrolmentDate != null && lastEnrolmentDate.before(regStartDate))
+			{
+				log.saveError("Error", "Last enrollment date cannot be before Registration start date");
+				return false;
+			}
+		}
+
+		if (newRecord || is_ValueChanged(COLUMNNAME_ZZLastAchievementDate) || is_ValueChanged(COLUMNNAME_Registrationstartdate))
+		{
+			if (regStartDate != null && lastAchievementDate != null && lastAchievementDate.before(regStartDate))
+			{
+				log.saveError("Error", "Last achievement date cannot be before Registration start date");
+				return false;
 			}
 		}
 

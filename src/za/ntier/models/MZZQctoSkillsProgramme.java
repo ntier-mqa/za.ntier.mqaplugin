@@ -38,28 +38,25 @@ public class MZZQctoSkillsProgramme extends X_ZZQctoSkillsProgramme
 	@Override
 	protected boolean beforeSave(boolean newRecord)
 	{
-		if (newRecord)
+		Timestamp regStartDate = getRegistrationstartdate();
+		Timestamp regEndDate = getRegistrationenddate();
+		Timestamp lastEnrolmentDate = getZZLastEnrolmentDate();
+
+		if (newRecord || is_ValueChanged(COLUMNNAME_Registrationenddate) || is_ValueChanged(COLUMNNAME_Registrationstartdate))
 		{
-			Timestamp regStartDate = getRegistrationstartdate();
-			Timestamp regEndDate = getRegistrationenddate();
-
-			if (regStartDate != null && regEndDate != null)
+			if (regStartDate != null && regEndDate != null && regEndDate.before(regStartDate))
 			{
-				if (regEndDate.before(regStartDate))
-				{
-					log.saveError("Error", "Registration end date cannot be before Registration start date");
-					return false;
-				}
+				log.saveError("Error", "Registration end date cannot be before Registration start date");
+				return false;
 			}
+		}
 
-			Timestamp lastEnrolmentDate = getZZLastEnrolmentDate();
-			if (regStartDate != null && lastEnrolmentDate != null)
+		if (newRecord || is_ValueChanged(COLUMNNAME_ZZLastEnrolmentDate) || is_ValueChanged(COLUMNNAME_Registrationstartdate))
+		{
+			if (regStartDate != null && lastEnrolmentDate != null && lastEnrolmentDate.before(regStartDate))
 			{
-				if (lastEnrolmentDate.before(regStartDate))
-				{
-					log.saveError("Error", "Last enrollment date cannot be before Registration start date");
-					return false;
-				}
+				log.saveError("Error", "Last enrollment date cannot be before Registration start date");
+				return false;
 			}
 		}
 

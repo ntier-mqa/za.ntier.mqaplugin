@@ -38,18 +38,15 @@ public class MZZSkillsProgramme extends X_ZZSkillsProgramme
 	@Override
 	protected boolean beforeSave(boolean newRecord)
 	{
-		if (newRecord)
-		{
-			Timestamp regStartDate = getRegistrationstartdate();
-			Timestamp regEndDate = getRegistrationenddate();
+		Timestamp regStartDate = getRegistrationstartdate();
+		Timestamp regEndDate = getRegistrationenddate();
 
-			if (regStartDate != null && regEndDate != null)
+		if (newRecord || is_ValueChanged(COLUMNNAME_Registrationenddate) || is_ValueChanged(COLUMNNAME_Registrationstartdate))
+		{
+			if (regStartDate != null && regEndDate != null && regEndDate.before(regStartDate))
 			{
-				if (regEndDate.before(regStartDate))
-				{
-					log.saveError("Error", "Registration end date cannot be before Registration start date");
-					return false;
-				}
+				log.saveError("Error", "Registration end date cannot be before Registration start date");
+				return false;
 			}
 		}
 
