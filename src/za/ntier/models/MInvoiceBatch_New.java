@@ -67,7 +67,7 @@ public class MInvoiceBatch_New extends MInvoiceBatch implements I_C_InvoiceBatch
 					}
 				//	if(getZZ_Policy_Procedure_Ck() == null ) {
 				//		log.saveError("Error", Msg.getMsg(getCtx(), "PROCEDURECHECKLISTMUSTBETICKED")); //One of the policy procedure checklist must be ticked before the status is changed to ‘in progress’
-						return false;
+				//		return false;
 				//	}
 				}
 				roles = MSysConfig.getValue(MANAGER_OPS_SDL_ROLES);
