@@ -9,10 +9,13 @@ import java.util.function.Consumer;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.compiere.model.MColumn;
+import org.compiere.model.MReference;
+import org.compiere.model.MRefList;
 import org.compiere.model.MTable;
 import org.compiere.model.M_Element;
 import org.compiere.model.PO;
 import org.compiere.model.Query;
+import org.compiere.model.X_AD_Reference;
 import org.compiere.util.DB;
 import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
@@ -527,6 +530,73 @@ final class AddColumnsSupport {
             DB.close(rs, pst);
         }
         logger.accept(table.getTableName() + ": " + count + " row(s) loaded from " + spec.sourceTable + ".");
+    }
+
+    /** @return the AD_Reference_ID of an existing List reference with this exact Name, or 0 if none. */
+    static int findListReference(Properties ctx, String name, String trxName) {
+        MReference existing = new Query(ctx, MReference.Table_Name, "Name=?", trxName)
+                .setParameters(name)
+                .first();
+        return existing == null ? 0 : existing.getAD_Reference_ID();
+    }
+
+    /**
+     * Find-or-create: creates a brand new List(17) AD_Reference + its AD_Ref_List entries,
+     * sourced from the DISTINCT active (isdeleted=0) values of one description-style column on a
+     * staged MSSQL lookup table - for cases like Phase 2's Levy Yes/No/Not Applicable, where no
+     * existing List reference fits (the project's usual binary Yes/No List+319 can't represent a
+     * genuine 3rd state) and there's no separate short "code" column to use as Value, so
+     * Value=Name=the description text itself (same convention already used by the pre-existing
+     * ZZTerminationReason List, where Value happens to equal Name for every entry).
+     *
+     * <p>Idempotent and shareable across process classes (mirrors the reference-table
+     * find-or-create pattern): if a reference with this exact Name already exists, its
+     * AD_Reference_ID is returned as-is, not re-populated.
+     *
+     * @return the AD_Reference_ID (new or pre-existing)
+     */
+    static int findOrCreateListReferenceFromDescriptions(Properties ctx, String name, String description,
+            String entityType, String trxName, String sourceTable, String sourceDescriptionCol,
+            Consumer<String> logger) {
+        int existingId = findListReference(ctx, name, trxName);
+        if (existingId > 0) {
+            logger.accept("List reference '" + name + "' already exists (AD_Reference_ID=" + existingId
+                    + ") - left as-is (not re-populated).");
+            return existingId;
+        }
+
+        MReference reference = new MReference(ctx, 0, trxName);
+        reference.setName(name);
+        reference.setDescription(description);
+        reference.setEntityType(entityType);
+        reference.setValidationType(X_AD_Reference.VALIDATIONTYPE_ListValidation);
+        reference.saveEx();
+
+        int count = 0;
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+        try {
+            pst = DB.prepareStatement("SELECT DISTINCT " + sourceDescriptionCol + " FROM " + sourceTable
+                    + " WHERE isdeleted = 0 ORDER BY " + sourceDescriptionCol, trxName);
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                String value = rs.getString(1);
+                MRefList refList = new MRefList(ctx, 0, trxName);
+                refList.setAD_Reference_ID(reference.getAD_Reference_ID());
+                refList.setValue(value);
+                refList.setName(value);
+                refList.setEntityType(entityType);
+                refList.saveEx();
+                count++;
+            }
+        } catch (java.sql.SQLException e) {
+            throw new AdempiereException("Failed building AD_Ref_List for '" + name + "' from " + sourceTable, e);
+        } finally {
+            DB.close(rs, pst);
+        }
+        logger.accept("Created List reference '" + name + "' (AD_Reference_ID=" + reference.getAD_Reference_ID()
+                + ") with " + count + " value(s) from " + sourceTable + "." + sourceDescriptionCol);
+        return reference.getAD_Reference_ID();
     }
 
     /** Executes DDL returned by MColumn.getSQLAdd()/MTable.getSQLCreate(), splitting on
