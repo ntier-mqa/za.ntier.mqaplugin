@@ -401,6 +401,26 @@ www.mqa.org.za]]></text>
 				<textElement textAlignment="Left" verticalAlignment="Middle"/>
 				<text><![CDATA[NAME:]]></text>
 			</staticText>
+			<staticText>
+				<reportElement x="0" y="170" width="150" height="20" uuid="e1f2a3b4-c5d6-e7f8-a9b0-c1d2e3f4a5b6"/>
+				<textElement verticalAlignment="Middle"/>
+				<text><![CDATA[MQA/QA/04/053]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="220" y="170" width="120" height="20" uuid="f1e2d3c4-b5a6-9f8e-7d6c-5b4a3c2d1e0f"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Revision: 01]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="420" y="170" width="150" height="20" uuid="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6e"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Approved: ACRMEO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="650" y="170" width="152" height="20" uuid="c3d4e5f6-a7b8-9c0d-1e2f-3a4b5c6d7e8f"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<text><![CDATA[Date 04/10/2024]]></text>
+			</staticText>
 		</band>
 	</lastPageFooter>
 </jasperReport>
