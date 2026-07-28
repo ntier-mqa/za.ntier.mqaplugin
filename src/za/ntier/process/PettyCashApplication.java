@@ -128,6 +128,7 @@ public class PettyCashApplication extends SvrProcess {
 				zzPaycard.setAD_Org_ID(mZZPettyCashApplication.getAD_Org_ID());
 				zzPaycard.setAD_User_ID(mZZPettyCashApplication.getAD_User_ID());
 				zzPaycard.setZZ_PaycardNumber(mZZPettyCashApplication.getZZ_PaycardNumber());
+				zzPaycard.setName(mZZPettyCashApplication.getZZ_PaycardNumber());
 				zzPaycard.saveEx();
 			}
 			mZZPettyCashApplication.setZZ_DocStatus(MZZPettyCashApplication.ZZ_DOCSTATUS_Completed);
