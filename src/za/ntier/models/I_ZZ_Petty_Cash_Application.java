@@ -54,12 +54,12 @@ public interface I_ZZ_Petty_Cash_Application
     /** Column name AD_Org_ID */
     public static final String COLUMNNAME_AD_Org_ID = "AD_Org_ID";
 
-	/** Set Organization.
+	/** Set Unit.
 	  * Organizational entity within tenant
 	  */
 	public void setAD_Org_ID (int AD_Org_ID);
 
-	/** Get Organization.
+	/** Get Unit.
 	  * Organizational entity within tenant
 	  */
 	public int getAD_Org_ID();
@@ -380,6 +380,15 @@ public interface I_ZZ_Petty_Cash_Application
 
 	/** Get ID Copy Uploaded	  */
 	public boolean isZZ_ID_Copy_Uploaded();
+
+    /** Column name ZZ_PaycardNumber */
+    public static final String COLUMNNAME_ZZ_PaycardNumber = "ZZ_PaycardNumber";
+
+	/** Set Paycard Number	  */
+	public void setZZ_PaycardNumber (String ZZ_PaycardNumber);
+
+	/** Get Paycard Number	  */
+	public String getZZ_PaycardNumber();
 
     /** Column name ZZ_Petty_Cash_Application_ID */
     public static final String COLUMNNAME_ZZ_Petty_Cash_Application_ID = "ZZ_Petty_Cash_Application_ID";

@@ -8,12 +8,14 @@ import java.util.logging.Level;
 import org.adempiere.util.ProcessUtil;
 import org.compiere.model.MProcessPara;
 import org.compiere.model.MSysConfig;
+import org.compiere.model.Query;
 import org.compiere.process.ProcessInfoParameter;
 import org.compiere.process.SvrProcess;
 import org.compiere.util.CLogger;
 import org.compiere.util.Env;
 
 import za.ntier.models.MZZPettyCashApplication;
+import za.ntier.models.X_ZZ_Paycard;
 import za.ntier.models.X_ZZ_Petty_Cash_Application;
 import za.ntier.utils.Notifications;
 
@@ -113,6 +115,20 @@ public class PettyCashApplication extends SvrProcess {
 				mZZPettyCashApplication.getZZ_DocStatus().equals(MZZPettyCashApplication.ZZ_DOCSTATUS_Approved)) {
 			if (!mZZPettyCashApplication.isZZ_AOR_Uploaded()) {
 				return PLEASE_UPLOAD_THE_AOR_AND_TICK_THE_CHECKBOX_WHEN_DONE;
+			}
+			if (mZZPettyCashApplication.getZZ_PaycardNumber() == null) {
+				return "Please enter the Paycard Number Before Completing";
+			}
+			boolean paycardExists = new Query(getCtx(), X_ZZ_Paycard.Table_Name, "ZZ_PaycardNumber=?", get_TrxName())
+					.setParameters(mZZPettyCashApplication.getZZ_PaycardNumber())
+					.setOnlyActiveRecords(false)
+					.match();
+			if (!paycardExists) {
+				X_ZZ_Paycard zzPaycard = new X_ZZ_Paycard(getCtx(), 0, get_TrxName());
+				zzPaycard.setAD_Org_ID(mZZPettyCashApplication.getAD_Org_ID());
+				zzPaycard.setAD_User_ID(mZZPettyCashApplication.getAD_User_ID());
+				zzPaycard.setZZ_PaycardNumber(mZZPettyCashApplication.getZZ_PaycardNumber());
+				zzPaycard.saveEx();
 			}
 			mZZPettyCashApplication.setZZ_DocStatus(MZZPettyCashApplication.ZZ_DOCSTATUS_Completed);
 			mZZPettyCashApplication.setZZ_Date_Completed(new Timestamp(System.currentTimeMillis()));
