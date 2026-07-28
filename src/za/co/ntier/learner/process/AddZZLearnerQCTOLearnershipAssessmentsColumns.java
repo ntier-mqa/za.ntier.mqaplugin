@@ -4,6 +4,7 @@ import static org.compiere.model.SystemIDs.REFERENCE_AD_USER;
 
 import org.adempiere.base.annotation.Process;
 import org.adempiere.exceptions.AdempiereException;
+import org.compiere.model.MColumn;
 import org.compiere.model.MProcessPara;
 import org.compiere.model.MTable;
 import org.compiere.process.ProcessInfoParameter;
@@ -40,6 +41,18 @@ import za.co.ntier.learner.process.AddColumnsSupport.ReferenceColumnSpec;
  * <p>The "Assessment_Status" reference table (from ms_lkpassessmentstatus) is SHARED with
  * {@link AddZZLearnerQCTOArtisansAssessmentsTable} and
  * {@link AddZZLearnerQCTOSkillsProgrammeAssessmentsTable}.
+ *
+ * <p>2026-07-21: a prior run of an earlier version of this class had already completed, using
+ * different column names/shapes than the ones above (ZZAssessmentStatus as free text instead of
+ * Assessment_Status_ID as a TableDir FK, ZZDatePartialApproved instead of Date_Partial_Approved,
+ * ZZPreviouslyAchieved instead of Is_Previously_Achieved), and ZZQCTOModule_ID had been
+ * registered as Search(30) instead of TableDir(19). Per user instruction: the 3 differently-NAMED
+ * stale columns are dropped first (metadata + physical, via
+ * {@link AddColumnsSupport#dropColumnIfExists}) so the backfill/new-column steps below recreate
+ * them correctly under the intended names instead of leaving mismatched leftovers.
+ * ZZQCTOModule_ID is the SAME column, just wrong metadata - its AD_Reference_ID is fixed in
+ * place instead (no drop/DDL, since registerColumn() below only re-adds AD_Column metadata, not
+ * DDL, which would have permanently lost the column if it had been physically dropped).
  */
 @Process(name = "za.co.ntier.learner.process.AddZZLearnerQCTOLearnershipAssessmentsColumns")
 public class AddZZLearnerQCTOLearnershipAssessmentsColumns extends SvrProcess {
@@ -60,6 +73,24 @@ public class AddZZLearnerQCTOLearnershipAssessmentsColumns extends SvrProcess {
         MTable table = AddColumnsSupport.findTable(getCtx(), TABLE_NAME, get_TrxName());
         if (table == null) {
             throw new AdempiereException(TABLE_NAME + " not found in AD_Table");
+        }
+
+        // Drop stale columns (different names than what the backfill/new-column steps below
+        // create) left by an earlier, differently-shaped run before rebuilding.
+        AddColumnsSupport.dropColumnIfExists(table, "ZZAssessmentStatus", get_TrxName(), this::addLog);
+        AddColumnsSupport.dropColumnIfExists(table, "ZZDatePartialApproved", get_TrxName(), this::addLog);
+        AddColumnsSupport.dropColumnIfExists(table, "ZZPreviouslyAchieved", get_TrxName(), this::addLog);
+
+        // ZZQCTOModule_ID is the SAME physical column, just registered with the wrong
+        // AD_Reference_ID (Search instead of TableDir) - fix the metadata in place rather than
+        // dropColumnIfExists+recreate, since that would physically drop the real column via DDL
+        // but registerColumn() below only re-adds AD_Column metadata, never DDL, permanently
+        // losing the column.
+        MColumn qctoModuleColumn = table.getColumn("ZZQCTOModule_ID");
+        if (qctoModuleColumn != null && qctoModuleColumn.getAD_Reference_ID() != DisplayType.TableDir) {
+            qctoModuleColumn.setAD_Reference_ID(DisplayType.TableDir);
+            qctoModuleColumn.saveEx();
+            addLog("ZZQCTOModule_ID: fixed AD_Reference_ID from Search to TableDir (metadata only, no DDL needed).");
         }
 
         // Backfill AD_Column metadata for the columns that already physically exist - no DDL.

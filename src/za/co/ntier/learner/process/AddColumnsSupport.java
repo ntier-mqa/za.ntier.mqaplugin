@@ -88,6 +88,12 @@ final class AddColumnsSupport {
      * record does not touch the physical database by itself) and deletes its AD_Column
      * record, if it already exists.
      *
+     * <p>Forces the table's column cache to requery afterwards - MTable.getColumn() is backed by
+     * a cache that is populated once and never auto-invalidated when a sibling MColumn deletes a
+     * row. Without this, a caller's later addColumn()/registerColumn() for the same column name
+     * would still see the stale (already-deleted) cached entry and wrongly skip recreation -
+     * silently defeating the whole point of "drop-and-recreate".
+     *
      * @return true if a column existed and was dropped, false if there was nothing to drop
      */
     static boolean dropColumnIfExists(MTable table, String columnName, String trxName, Consumer<String> logger) {
@@ -97,6 +103,7 @@ final class AddColumnsSupport {
         }
         DB.executeUpdateEx("ALTER TABLE " + table.getTableName() + " DROP COLUMN IF EXISTS " + columnName, trxName);
         existing.deleteEx(true, trxName);
+        table.getColumns(true);
         logger.accept(table.getTableName() + "." + columnName + " dropped (will be recreated).");
         return true;
     }
@@ -122,6 +129,11 @@ final class AddColumnsSupport {
      */
     static void addColumn(Properties ctx, MTable table, String columnName, int referenceId, int referenceValueId,
             int fieldLength, String description, String entityType, String trxName, Consumer<String> logger) {
+        if (table.getColumn(columnName) != null) {
+            logger.accept(table.getTableName() + "." + columnName + " already exists - skipped.");
+            return;
+        }
+
         MColumn column = registerColumn(ctx, table, columnName, referenceId, referenceValueId, fieldLength,
                 description, entityType, trxName);
 
@@ -142,6 +154,11 @@ final class AddColumnsSupport {
      */
     private static MColumn registerColumn(Properties ctx, MTable table, String columnName, int referenceId,
             int referenceValueId, int fieldLength, String description, String entityType, String trxName) {
+        MColumn existingColumn = table.getColumn(columnName);
+        if (existingColumn != null) {
+            return existingColumn;
+        }
+
         M_Element element = M_Element.get(ctx, columnName, trxName);
         if (element == null) {
             element = new M_Element(ctx, columnName, entityType, trxName);
