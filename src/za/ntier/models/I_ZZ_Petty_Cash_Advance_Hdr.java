@@ -54,12 +54,12 @@ public interface I_ZZ_Petty_Cash_Advance_Hdr
     /** Column name AD_Org_ID */
     public static final String COLUMNNAME_AD_Org_ID = "AD_Org_ID";
 
-	/** Set Organization.
+	/** Set Unit.
 	  * Organizational entity within tenant
 	  */
 	public void setAD_Org_ID (int AD_Org_ID);
 
-	/** Get Organization.
+	/** Get Unit.
 	  * Organizational entity within tenant
 	  */
 	public int getAD_Org_ID();
@@ -279,6 +279,15 @@ public interface I_ZZ_Petty_Cash_Advance_Hdr
 
 	/** Get ZZ_Petty_Cash_Advance_Hdr_UU	  */
 	public String getZZ_Petty_Cash_Advance_Hdr_UU();
+
+    /** Column name ZZ_Petty_Cash_Required_By */
+    public static final String COLUMNNAME_ZZ_Petty_Cash_Required_By = "ZZ_Petty_Cash_Required_By";
+
+	/** Set Petty Cash Required By	  */
+	public void setZZ_Petty_Cash_Required_By (Timestamp ZZ_Petty_Cash_Required_By);
+
+	/** Get Petty Cash Required By	  */
+	public Timestamp getZZ_Petty_Cash_Required_By();
 
     /** Column name ZZ_Snr_Admin_Fin_ID */
     public static final String COLUMNNAME_ZZ_Snr_Admin_Fin_ID = "ZZ_Snr_Admin_Fin_ID";
