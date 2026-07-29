@@ -11,6 +11,7 @@ import org.compiere.model.PO;
 import org.compiere.model.Query;
 import org.compiere.process.SvrProcess;
 import org.compiere.util.DB;
+import org.compiere.util.Msg;
 
 import za.co.ntier.api.model.I_ZZ_QAAudit;
 import za.co.ntier.api.model.X_ZZ_Allocations;
@@ -86,7 +87,23 @@ public class EnterAuditResultsProcess extends SvrProcess
 				PO.copyValues(alloc, auditAlloc);
 
 				auditAlloc.setZZ_QAAudit_ID(auditHeader.get_ID());
-				auditAlloc.setZZ_DocStatus(X_ZZ_QAAuditAllocations.ZZ_DOCSTATUS_Draft);
+				auditAlloc.setZZ_DocStatus(X_ZZ_QAAuditAllocations.ZZ_DOCSTATUS_Recommended);
+
+				String tradingName = auditAlloc.getZZTradeName();
+				if (tradingName == null)
+					tradingName = "";
+				else
+					tradingName = tradingName.trim();
+
+				String message = Msg.getMsg(getCtx(), "ZZ_QAAuditAllocation_Observation");
+				if ("ZZ_QAAuditAllocation_Observation".equals(message))
+				{
+					message = "Overall <TradingName> presented all necessary evidence to confirm their ability to present and manage this qualification successfully";
+				}
+
+				String manualNote = message.replace("<TradingName>", tradingName);
+				manualNote = manualNote.replaceAll("\\s+", " ").trim();
+				auditAlloc.setManualNote(manualNote);
 
 				auditAlloc.saveEx();
 				countChild++;
