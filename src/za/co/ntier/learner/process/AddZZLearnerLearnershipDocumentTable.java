@@ -55,11 +55,11 @@ public class AddZZLearnerLearnershipDocumentTable extends SvrProcess {
                 "ms_learnerlearnershipdocument.savedfilename", ENTITY_TYPE, get_TrxName());
         AddColumnsSupport.registerColumn(getCtx(), table, "File_Path", DisplayType.String, 4000,
                 "ms_learnerlearnershipdocument.filepath", ENTITY_TYPE, get_TrxName());
-        AddColumnsSupport.registerColumn(getCtx(), table, "id", DisplayType.Integer, 10,
-                "recon column - source ms_learnerlearnershipdocument row id", ENTITY_TYPE, get_TrxName());
+        // "id" recon column already created by createNewTableSchema() - do NOT re-register it
+        // here (that caused a duplicate-key AD_Column error on a live run, 2026-07-21).
 
         AddColumnsSupport.finalizeNewTable(table, get_TrxName(), this::addLog);
 
-        return TABLE_NAME + " created with 6 business columns.";
+        return TABLE_NAME + " created with 5 business columns.";
     }
 }

@@ -66,11 +66,11 @@ public class AddZZLearnerLearnershipProviderTable extends SvrProcess {
                 + "see class Javadoc)", ENTITY_TYPE, get_TrxName());
         AddColumnsSupport.registerColumnWithValue(getCtx(), table, "ZZLevy", DisplayType.List, yesNoNaReferenceId, 1,
                 "ms_learnerlearnershipprovider.levyyesnoid -> ms_lkpyesnonotapplicable", ENTITY_TYPE, get_TrxName());
-        AddColumnsSupport.registerColumn(getCtx(), table, "id", DisplayType.Integer, 10,
-                "recon column - source ms_learnerlearnershipprovider row id", ENTITY_TYPE, get_TrxName());
+        // "id" recon column already created by createNewTableSchema() - do NOT re-register it
+        // here (that caused a duplicate-key AD_Column error on a live run, 2026-07-21).
 
         AddColumnsSupport.finalizeNewTable(table, get_TrxName(), this::addLog);
 
-        return TABLE_NAME + " created with 5 business columns.";
+        return TABLE_NAME + " created with 4 business columns.";
     }
 }

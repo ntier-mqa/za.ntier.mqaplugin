@@ -104,11 +104,11 @@ public class AddZZLearnerLearnershipAssessmentsTable extends SvrProcess {
                 "ms_learnerlearnershipassessments.ispreviouslyachieved", ENTITY_TYPE, get_TrxName());
         AddColumnsSupport.registerColumn(getCtx(), table, "ZZDateAssessmentCaptured", DisplayType.DateTime, 7,
                 "ms_learnerlearnershipassessments.dateassessmentcaptured", ENTITY_TYPE, get_TrxName());
-        AddColumnsSupport.registerColumn(getCtx(), table, "id", DisplayType.Integer, 10,
-                "recon column - source ms_learnerlearnershipassessments row id", ENTITY_TYPE, get_TrxName());
+        // "id" recon column already created by createNewTableSchema() - do NOT re-register it
+        // here (that caused a duplicate-key AD_Column error on a live run, 2026-07-21).
 
         AddColumnsSupport.finalizeNewTable(table, get_TrxName(), this::addLog);
 
-        return TABLE_NAME + " created with 13 business columns.";
+        return TABLE_NAME + " created with 12 business columns.";
     }
 }

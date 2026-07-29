@@ -66,11 +66,11 @@ public class AddZZLearnerLearnershipHistoryTable extends SvrProcess {
         AddColumnsSupport.registerColumnWithValue(getCtx(), table, "Lead_Employer_New_ID", DisplayType.Search,
                 REFERENCE_C_BPARTNER_ALL, 10, "ms_learnerlearnershiphistory.leademployeridnew -> c_bpartner",
                 ENTITY_TYPE, get_TrxName());
-        AddColumnsSupport.registerColumn(getCtx(), table, "id", DisplayType.Integer, 10,
-                "recon column - source ms_learnerlearnershiphistory row id", ENTITY_TYPE, get_TrxName());
+        // "id" recon column already created by createNewTableSchema() - do NOT re-register it
+        // here (that caused a duplicate-key AD_Column error on a live run, 2026-07-21).
 
         AddColumnsSupport.finalizeNewTable(table, get_TrxName(), this::addLog);
 
-        return TABLE_NAME + " created with 6 business columns.";
+        return TABLE_NAME + " created with 5 business columns.";
     }
 }
