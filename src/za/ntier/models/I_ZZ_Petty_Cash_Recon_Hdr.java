@@ -54,12 +54,12 @@ public interface I_ZZ_Petty_Cash_Recon_Hdr
     /** Column name AD_Org_ID */
     public static final String COLUMNNAME_AD_Org_ID = "AD_Org_ID";
 
-	/** Set Organization.
+	/** Set Unit.
 	  * Organizational entity within tenant
 	  */
 	public void setAD_Org_ID (int AD_Org_ID);
 
-	/** Get Organization.
+	/** Get Unit.
 	  * Organizational entity within tenant
 	  */
 	public int getAD_Org_ID();
@@ -196,6 +196,15 @@ public interface I_ZZ_Petty_Cash_Recon_Hdr
 
 	/** Get Claim Total	  */
 	public BigDecimal getZZ_Claim_Total();
+
+    /** Column name ZZ_Create_Journal_Lines */
+    public static final String COLUMNNAME_ZZ_Create_Journal_Lines = "ZZ_Create_Journal_Lines";
+
+	/** Set Create Journal Lines	  */
+	public void setZZ_Create_Journal_Lines (String ZZ_Create_Journal_Lines);
+
+	/** Get Create Journal Lines	  */
+	public String getZZ_Create_Journal_Lines();
 
     /** Column name ZZ_Create_Lines */
     public static final String COLUMNNAME_ZZ_Create_Lines = "ZZ_Create_Lines";

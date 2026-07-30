@@ -34,7 +34,7 @@ public class X_ZZ_Petty_Cash_Recon_Hdr extends PO implements I_ZZ_Petty_Cash_Rec
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20250404L;
+	private static final long serialVersionUID = 20260730L;
 
     /** Standard Constructor */
     public X_ZZ_Petty_Cash_Recon_Hdr (Properties ctx, int ZZ_Petty_Cash_Recon_Hdr_ID, String trxName)
@@ -238,6 +238,21 @@ public class X_ZZ_Petty_Cash_Recon_Hdr extends PO implements I_ZZ_Petty_Cash_Rec
 		if (bd == null)
 			 return Env.ZERO;
 		return bd;
+	}
+
+	/** Set Create Journal Lines.
+		@param ZZ_Create_Journal_Lines Create Journal Lines
+	*/
+	public void setZZ_Create_Journal_Lines (String ZZ_Create_Journal_Lines)
+	{
+		set_Value (COLUMNNAME_ZZ_Create_Journal_Lines, ZZ_Create_Journal_Lines);
+	}
+
+	/** Get Create Journal Lines.
+		@return Create Journal Lines	  */
+	public String getZZ_Create_Journal_Lines()
+	{
+		return (String)get_Value(COLUMNNAME_ZZ_Create_Journal_Lines);
 	}
 
 	/** Set Create Lines.

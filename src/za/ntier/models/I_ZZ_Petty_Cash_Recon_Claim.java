@@ -54,12 +54,12 @@ public interface I_ZZ_Petty_Cash_Recon_Claim
     /** Column name AD_Org_ID */
     public static final String COLUMNNAME_AD_Org_ID = "AD_Org_ID";
 
-	/** Set Organization.
+	/** Set Unit.
 	  * Organizational entity within tenant
 	  */
 	public void setAD_Org_ID (int AD_Org_ID);
 
-	/** Get Organization.
+	/** Get Unit.
 	  * Organizational entity within tenant
 	  */
 	public int getAD_Org_ID();
@@ -107,6 +107,21 @@ public interface I_ZZ_Petty_Cash_Recon_Claim
 	  * User who created this records
 	  */
 	public int getCreatedBy();
+
+    /** Column name GL_JournalLine_ID */
+    public static final String COLUMNNAME_GL_JournalLine_ID = "GL_JournalLine_ID";
+
+	/** Set Journal Line.
+	  * General Ledger Journal Line
+	  */
+	public void setGL_JournalLine_ID (int GL_JournalLine_ID);
+
+	/** Get Journal Line.
+	  * General Ledger Journal Line
+	  */
+	public int getGL_JournalLine_ID();
+
+	public org.compiere.model.I_GL_JournalLine getGL_JournalLine() throws RuntimeException;
 
     /** Column name IsActive */
     public static final String COLUMNNAME_IsActive = "IsActive";

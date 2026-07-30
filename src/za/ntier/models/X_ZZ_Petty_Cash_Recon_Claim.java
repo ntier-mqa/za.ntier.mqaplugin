@@ -33,7 +33,7 @@ public class X_ZZ_Petty_Cash_Recon_Claim extends PO implements I_ZZ_Petty_Cash_R
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20250404L;
+	private static final long serialVersionUID = 20260730L;
 
     /** Standard Constructor */
     public X_ZZ_Petty_Cash_Recon_Claim (Properties ctx, int ZZ_Petty_Cash_Recon_Claim_ID, String trxName)
@@ -134,9 +134,9 @@ public class X_ZZ_Petty_Cash_Recon_Claim extends PO implements I_ZZ_Petty_Cash_R
 	public void setC_Charge_ID (int C_Charge_ID)
 	{
 		if (C_Charge_ID < 1)
-			set_ValueNoCheck (COLUMNNAME_C_Charge_ID, null);
+			set_Value (COLUMNNAME_C_Charge_ID, null);
 		else
-			set_ValueNoCheck (COLUMNNAME_C_Charge_ID, Integer.valueOf(C_Charge_ID));
+			set_Value (COLUMNNAME_C_Charge_ID, Integer.valueOf(C_Charge_ID));
 	}
 
 	/** Get Charge.
@@ -145,6 +145,34 @@ public class X_ZZ_Petty_Cash_Recon_Claim extends PO implements I_ZZ_Petty_Cash_R
 	public int getC_Charge_ID()
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_C_Charge_ID);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
+	}
+
+	public org.compiere.model.I_GL_JournalLine getGL_JournalLine() throws RuntimeException
+	{
+		return (org.compiere.model.I_GL_JournalLine)MTable.get(getCtx(), org.compiere.model.I_GL_JournalLine.Table_ID)
+			.getPO(getGL_JournalLine_ID(), get_TrxName());
+	}
+
+	/** Set Journal Line.
+		@param GL_JournalLine_ID General Ledger Journal Line
+	*/
+	public void setGL_JournalLine_ID (int GL_JournalLine_ID)
+	{
+		if (GL_JournalLine_ID < 1)
+			set_ValueNoCheck (COLUMNNAME_GL_JournalLine_ID, null);
+		else
+			set_ValueNoCheck (COLUMNNAME_GL_JournalLine_ID, Integer.valueOf(GL_JournalLine_ID));
+	}
+
+	/** Get Journal Line.
+		@return General Ledger Journal Line
+	  */
+	public int getGL_JournalLine_ID()
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_GL_JournalLine_ID);
 		if (ii == null)
 			 return 0;
 		return ii.intValue();
