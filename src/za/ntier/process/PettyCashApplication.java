@@ -62,9 +62,9 @@ public class PettyCashApplication extends SvrProcess {
 			if (mZZPettyCashApplication.getLine_Manager_ID() <= 0) {
 				return "Please select a Line Manager";
 			}
-			if (!mZZPettyCashApplication.isZZ_ID_Copy_Uploaded()) {
-				return "Please upload your ID copy and tick the checkbox when done.";
-			}
+			//if (!mZZPettyCashApplication.isZZ_ID_Copy_Uploaded()) {
+			//	return "Please upload your ID copy and tick the checkbox when done.";
+			//}
 			mZZPettyCashApplication.setZZ_DocStatus(MZZPettyCashApplication.ZZ_DOCSTATUS_Submitted);
 			mZZPettyCashApplication.setZZ_DocAction(MZZPettyCashApplication.DOCACTION_Approve);
 			mZZPettyCashApplication.setZZ_Date_Submitted(new Timestamp(System.currentTimeMillis()));

@@ -25,7 +25,7 @@ import za.ntier.models.X_ZZ_Petty_Cash_Recon_Hdr;
 @Process(name = "za.ntier.process.PettyCashReconCreateJournal")
 public class PettyCashReconCreateJournal extends SvrProcess {
 
-	private static final String OTHER_CASH_CONTROL_CHARGE_NAME = "Other Cash Control";
+	private static final String OTHER_CASH_CONTROL_ACCOUNT_VALUE = "6990";
 
 	@Override
 	protected void prepare() {
@@ -60,14 +60,18 @@ public class PettyCashReconCreateJournal extends SvrProcess {
 		if (glCategoryID <= 0)
 			throw new AdempiereException("Could not find a default GL Category for AD_Client_ID=" + adClientID);
 
-		int otherCashControlChargeID = DB.getSQLValue(get_TrxName(),
-				"SELECT C_Charge_ID FROM C_Charge WHERE UPPER(Name)=UPPER(?) AND IsActive='Y' AND AD_Client_ID=? ORDER BY C_Charge_ID",
-				OTHER_CASH_CONTROL_CHARGE_NAME, adClientID);
-		if (otherCashControlChargeID <= 0)
-			throw new AdempiereException("Could not find Charge named '" + OTHER_CASH_CONTROL_CHARGE_NAME + "' for AD_Client_ID=" + adClientID);
-		MAccount crAccount = MCharge.getAccount(otherCashControlChargeID, as);
+		int otherCashControlNaturalAcctID = DB.getSQLValue(get_TrxName(),
+				"SELECT MAX(ev.C_ElementValue_ID) FROM C_ElementValue ev "
+				+ "JOIN C_AcctSchema_Element ase ON (ase.C_Element_ID = ev.C_Element_ID AND ase.ElementType = 'AC') "
+				+ "WHERE ev.Value = ? AND ev.IsSummary = 'N' AND ev.IsActive = 'Y' "
+				+ "AND ase.C_AcctSchema_ID = ? AND ev.AD_Client_ID = ?",
+				OTHER_CASH_CONTROL_ACCOUNT_VALUE, as.getC_AcctSchema_ID(), adClientID);
+		if (otherCashControlNaturalAcctID <= 0)
+			throw new AdempiereException("Could not find natural account '" + OTHER_CASH_CONTROL_ACCOUNT_VALUE + "' for Accounting Schema " + as.getName());
+		MAccount crAccount = MAccount.get(getCtx(), adClientID, adOrgID, as.getC_AcctSchema_ID(),
+				otherCashControlNaturalAcctID, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, get_TrxName());
 		if (crAccount == null)
-			throw new AdempiereException("Charge '" + OTHER_CASH_CONTROL_CHARGE_NAME + "' has no account configured for Accounting Schema " + as.getName());
+			throw new AdempiereException("Could not build account combination for natural account '" + OTHER_CASH_CONTROL_ACCOUNT_VALUE + "'");
 
 		MJournalBatch batch = new MJournalBatch(getCtx(), 0, get_TrxName());
 		batch.setClientOrg(adClientID, adOrgID);
@@ -99,7 +103,7 @@ public class PettyCashReconCreateJournal extends SvrProcess {
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
 		String sql = "SELECT ZZ_Petty_Cash_Recon_Claim_ID, C_Charge_ID, Amount, AD_Org_ID, ZZ_Petty_Cash_Motivation "
-				+ "FROM ZZ_Petty_Cash_Recon_Claim WHERE ZZ_Petty_Cash_Recon_Hdr_ID = ? ORDER BY Line";
+				+ "FROM ZZ_Petty_Cash_Recon_Claim WHERE ZZ_Petty_Cash_Recon_Hdr_ID = ? AND GL_JournalLine_ID IS NULL ORDER BY Line";
 		try {
 			pstmt = DB.prepareStatement(sql, get_TrxName());
 			pstmt.setInt(1, zz_Petty_Cash_Recon_Hdr_ID);
@@ -144,13 +148,13 @@ public class PettyCashReconCreateJournal extends SvrProcess {
 		}
 
 		if (total.signum() == 0)
-			throw new AdempiereException("No claim lines with an amount found for Petty Cash Recon Header ID=" + zz_Petty_Cash_Recon_Hdr_ID);
+			throw new AdempiereException("No unposted claim lines with an amount found for Petty Cash Recon Header ID=" + zz_Petty_Cash_Recon_Hdr_ID);
 
 		lineNo += 10;
 		MJournalLine crLine = new MJournalLine(journal);
 		crLine.setAD_Org_ID(adOrgID);
 		crLine.setLine(lineNo);
-		crLine.setDescription(OTHER_CASH_CONTROL_CHARGE_NAME);
+		crLine.setDescription("Other Cash Control");
 		crLine.setC_ValidCombination_ID(crAccount);
 		crLine.setAmtSourceDr(BigDecimal.ZERO);
 		crLine.setAmtSourceCr(total);
