@@ -12,7 +12,6 @@ import org.compiere.model.MAccount;
 import org.compiere.model.MAcctSchema;
 import org.compiere.model.MCharge;
 import org.compiere.model.MJournal;
-import org.compiere.model.MJournalBatch;
 import org.compiere.model.MJournalLine;
 import org.compiere.model.X_C_DocType;
 import org.compiere.process.SvrProcess;
@@ -73,20 +72,8 @@ public class PettyCashReconCreateJournal extends SvrProcess {
 		if (crAccount == null)
 			throw new AdempiereException("Could not build account combination for natural account '" + OTHER_CASH_CONTROL_ACCOUNT_VALUE + "'");
 
-		MJournalBatch batch = new MJournalBatch(getCtx(), 0, get_TrxName());
-		batch.setClientOrg(adClientID, adOrgID);
-		batch.setDescription("Petty Cash Recon " + hdr.getDocumentNo());
-		batch.setC_DocType_ID(docTypeID);
-		batch.setPostingType(MJournalBatch.POSTINGTYPE_Actual);
-		batch.setGL_Category_ID(glCategoryID);
-		batch.setC_Currency_ID(as.getC_Currency_ID());
-		batch.setDateAcct(dateAcct);
-		batch.setDateDoc(dateAcct);
-		batch.saveEx();
-
 		MJournal journal = new MJournal(getCtx(), 0, get_TrxName());
 		journal.setClientOrg(adClientID, adOrgID);
-		journal.setGL_JournalBatch_ID(batch.getGL_JournalBatch_ID());
 		journal.setDescription("Petty Cash Recon " + hdr.getDocumentNo());
 		journal.setC_DocType_ID(docTypeID);
 		journal.setGL_Category_ID(glCategoryID);
