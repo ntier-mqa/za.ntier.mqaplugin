@@ -18,6 +18,7 @@ import za.co.ntier.api.model.X_C_BP_SkillsProgramme;
 import za.co.ntier.api.model.X_C_BP_TTC;
 import za.co.ntier.api.model.X_C_BP_Trades;
 import za.co.ntier.api.model.X_ZZQctoQualification;
+import za.co.ntier.api.model.X_ZZLearnership;
 import za.co.ntier.api.model.X_ZZQctoSkillsProgramme;
 import za.co.ntier.api.model.X_ZZQualification;
 import za.co.ntier.api.model.X_ZZSkillsProgramme;
@@ -452,6 +453,33 @@ public class CalloutFromFactory implements IColumnCallout {
 				mTab.setValue(X_ZZQctoSkillsProgrammeModule.COLUMNNAME_ZZModuleCode, null);
 				mTab.setValue(X_ZZQctoSkillsProgrammeModule.COLUMNNAME_ZZNqfLevel, null);
 				mTab.setValue(X_ZZQctoSkillsProgrammeModule.COLUMNNAME_ZZCredits, null);
+			}
+		}
+
+		if (mTab.getTableName().equals(X_ZZLearnership.Table_Name) &&
+			mField.getColumnName().equals(X_ZZLearnership.COLUMNNAME_ZZQualification_ID))
+		{
+			if (value != null)
+			{
+				int srcID = 0;
+				if (value instanceof Number)
+				{
+					srcID = ((Number) value).intValue();
+				}
+				else
+				{
+					srcID = Integer.parseInt(value.toString());
+				}
+
+				if (srcID > 0)
+				{
+					X_ZZQualification srcCert = new X_ZZQualification(ctx, srcID, null);
+					mTab.setValue(X_ZZLearnership.COLUMNNAME_ZZLastEnrolmentDate, srcCert.getZZLastEnrolmentDate());
+				}
+			}
+			else
+			{
+				mTab.setValue(X_ZZLearnership.COLUMNNAME_ZZLastEnrolmentDate, null);
 			}
 		}
 
