@@ -227,8 +227,14 @@ public class MigrateMsLearnerLearnershipAssessmentsToZZLearnerLearnershipAssessm
                     + " (expected 1) - refusing to batch-reserve IDs, this would miscalculate the block.");
         }
 
+        // CORRECTED 2026-07-31: DB.setParameter() has no branch for a boxed Long - only
+        // String/Integer/BigDecimal/Timestamp/Boolean/byte[]/Clob (same pitfall
+        // MigrationSupport.stampCreatedUpdated's own comment already documents) - passing
+        // currentNext+count directly throws "Unknown parameter type" (caught 2026-07-31 while
+        // fixing the same bug in the LearnerUnitStandard migrations - this one hadn't been run
+        // at full scale yet to surface it). Fixed by binding as BigDecimal instead.
         DB.executeUpdateEx("UPDATE AD_Sequence SET CurrentNext = ? WHERE AD_Sequence_ID = ?",
-                new Object[] { currentNext + count, adSequenceId }, trxName);
+                new Object[] { java.math.BigDecimal.valueOf(currentNext + count), adSequenceId }, trxName);
 
         return currentNext;
     }
