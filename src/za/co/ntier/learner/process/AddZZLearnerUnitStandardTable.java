@@ -73,7 +73,7 @@ public class AddZZLearnerUnitStandardTable extends SvrProcess {
         AddColumnsSupport.registerColumn(getCtx(), table, "ZZContractNumber", DisplayType.String, 4000,
                 "ms_learnerunitstandard.contractnumber", ENTITY_TYPE, get_TrxName());
         AddColumnsSupport.registerColumnWithValue(getCtx(), table, "ZZProgrammeStatus", DisplayType.List,
-                REFERENCE_PROGRAMMESTATUS, 4000, "ms_learnerunitstandard.programmestatusid -> ms_lkpprogrammestatus",
+                REFERENCE_PROGRAMMESTATUS, 4000, "ms_learnerunitstandard.programmestatusid -> ms_lkpqctoprogrammestatus",
                 ENTITY_TYPE, get_TrxName());
         AddColumnsSupport.registerColumnWithValue(getCtx(), table, "ZZSocioEconomicStatus", DisplayType.List,
                 REFERENCE_SOCIOECONOMICSTATUS, 4000,

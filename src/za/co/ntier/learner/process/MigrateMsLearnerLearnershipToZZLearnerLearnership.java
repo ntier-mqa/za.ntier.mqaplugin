@@ -138,7 +138,12 @@ public class MigrateMsLearnerLearnershipToZZLearnerLearnership extends SvrProces
         Map<Integer, Integer> grantTypeCrosswalk = MigrationSupport.buildIdCrosswalk("zzgranttype", "zzgranttype_id", get_TrxName());
         Map<Integer, Integer> msUserToAdUser = MigrationSupport.buildMsUserToAdUserCrosswalk(get_TrxName());
 
-        Map<Integer, String> programmeStatusMap = MigrationSupport.buildListValueCrosswalk("ms_lkpprogrammestatus", 1000249, get_TrxName());
+        // CORRECTED 2026-07-31: "ms_lkpprogrammestatus" never existed (unverified assumption at
+        // the time this was written) - confirmed the real, shared source is
+        // ms_lkpqctoprogrammestatus (its 18 status descriptions - Created/Registered/Completed/
+        // Terminated/In Progress/etc - exactly match the 5 distinct programmestatusid values
+        // actually used here), despite the "qcto" in its name.
+        Map<Integer, String> programmeStatusMap = MigrationSupport.buildListValueCrosswalk("ms_lkpqctoprogrammestatus", 1000249, get_TrxName());
         Map<Integer, String> socioEconomicStatusMap = MigrationSupport.buildListValueCrosswalk("ms_lkpsocioeconomicstatus", 1000250, get_TrxName());
         Map<Integer, String> sponsorshipMap = MigrationSupport.buildListValueCrosswalk("ms_lkpsponsorship", 1000251, get_TrxName());
         Map<Integer, String> projectMap = MigrationSupport.buildListValueCrosswalk("ms_lkpproject", 1000252, get_TrxName());

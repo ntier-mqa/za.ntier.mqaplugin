@@ -133,7 +133,11 @@ public class MigrateMsLearnerUnitStandardToZZLearnerUnitStandard extends SvrProc
                 + "  AND bp.zz_sdl_no IS NOT NULL AND trim(bp.zz_sdl_no) <> '' "
                 + "GROUP BY o.id", null, trxName);
 
-        createListValueCrosswalk(trxName, "tmp_lus_programmestatus_xwalk", "ms_lkpprogrammestatus", 1000249);
+        // CORRECTED 2026-07-31: "ms_lkpprogrammestatus" never existed - confirmed the real,
+        // shared source is ms_lkpqctoprogrammestatus (same fix as
+        // MigrateMsLearnerLearnershipToZZLearnerLearnership - see that class's comment for the
+        // verification detail).
+        createListValueCrosswalk(trxName, "tmp_lus_programmestatus_xwalk", "ms_lkpqctoprogrammestatus", 1000249);
         createListValueCrosswalk(trxName, "tmp_lus_socioeconomicstatus_xwalk", "ms_lkpsocioeconomicstatus", 1000250);
         createListValueCrosswalk(trxName, "tmp_lus_reasonforreprint_xwalk", "ms_lkpreasonforreprint", 1000253);
         createListValueCrosswalk(trxName, "tmp_lus_terminationreason_xwalk", "ms_lkpterminationreason", 1000254);
