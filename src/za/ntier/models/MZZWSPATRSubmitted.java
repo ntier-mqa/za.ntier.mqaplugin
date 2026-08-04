@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
@@ -27,9 +28,9 @@ import com.lowagie.text.Document;
 import com.lowagie.text.html.simpleparser.HTMLWorker;
 import com.lowagie.text.pdf.PdfWriter;
 
+import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Submitted;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Approvals;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Checklist_Ref;
-import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Submitted;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
 
 
@@ -709,6 +710,15 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 
 		LocalDateTime ldt = created.toLocalDateTime();
 		return String.valueOf(ldt.getYear());
+	}
+
+	public String getZZ_ApprovedDateStr() {
+		Timestamp approvedDate = getZZ_ApprovedDate();
+		if (approvedDate == null) {
+			return "";
+		}
+		SimpleDateFormat sdf = new SimpleDateFormat("dd MMMM yyyy");
+		return sdf.format(approvedDate);
 	}
 
 
