@@ -65,16 +65,26 @@ public class MZZPettyCashClaimLine extends X_ZZ_Petty_Cash_Claim_Line {
 			.append("WHERE ZZ_Petty_Cash_Claim_Hdr_ID=").append(getZZ_Petty_Cash_Claim_Hdr_ID());
 		DB.executeUpdate(sql.toString(), get_TrxName());
 		MZZPettyCashClaimHdr mZZPettyCashClaimHdr = new MZZPettyCashClaimHdr(getCtx(), getZZ_Petty_Cash_Claim_Hdr_ID(), get_TrxName());
-		if (mZZPettyCashClaimHdr.getZZ_Petty_Cash_Advance_Hdr_ID() > 0) {
-			MZZPettyCashAdvanceHdr mZZPettyCashAdvanceHdr = new MZZPettyCashAdvanceHdr(getCtx(), mZZPettyCashClaimHdr.getZZ_Petty_Cash_Advance_Hdr_ID(), get_TrxName());
+		int advanceID = mZZPettyCashClaimHdr.getZZ_Petty_Cash_Advance_Hdr_ID();
+		if (advanceID > 0) {
+			MZZPettyCashAdvanceHdr mZZPettyCashAdvanceHdr = new MZZPettyCashAdvanceHdr(getCtx(), advanceID, get_TrxName());
 			BigDecimal totalAmtAdvance = (mZZPettyCashAdvanceHdr.getTotalAmt() != null) ? mZZPettyCashAdvanceHdr.getTotalAmt() : BigDecimal.ZERO;
-			BigDecimal totalAmtClaim = (mZZPettyCashClaimHdr.getTotalAmt() != null) ? mZZPettyCashClaimHdr.getTotalAmt() : BigDecimal.ZERO;
+			// other claims already linked to the same advance also count against its balance
+			BigDecimal otherClaimsTotal = DB.getSQLValueBD(get_TrxName(),
+					"Select sum(cl.totalamt) from ZZ_Petty_Cash_Claim_Hdr cl where cl.ZZ_Petty_Cash_Advance_Hdr_ID = ? and cl.ZZ_Petty_Cash_Claim_Hdr_ID <> ?",
+					advanceID, mZZPettyCashClaimHdr.getZZ_Petty_Cash_Claim_Hdr_ID());
+			if (otherClaimsTotal == null) {
+				otherClaimsTotal = BigDecimal.ZERO;
+			}
+			BigDecimal totalAmtClaim = otherClaimsTotal.add((mZZPettyCashClaimHdr.getTotalAmt() != null) ? mZZPettyCashClaimHdr.getTotalAmt() : BigDecimal.ZERO);
 			BigDecimal zz_Advance_Balance = totalAmtAdvance.subtract(totalAmtClaim);
 			if (zz_Advance_Balance.compareTo(BigDecimal.ZERO) < 0) {
 				zz_Advance_Balance = BigDecimal.ZERO;
 			}
 			mZZPettyCashClaimHdr.setZZ_Advance_Balance(zz_Advance_Balance);
 			mZZPettyCashClaimHdr.saveEx();
+			mZZPettyCashAdvanceHdr.setZZ_Advance_Balance(zz_Advance_Balance);
+			mZZPettyCashAdvanceHdr.saveEx();
 		}
 	}
 

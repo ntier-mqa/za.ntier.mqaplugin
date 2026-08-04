@@ -13,12 +13,15 @@ import org.compiere.process.SvrProcess;
 import org.compiere.util.DB;
 
 /**
- * One-off registration process for Phase 4 (see "Additional Tables - Migration Plan.txt" and
- * "Phase 4 - LearnerUnitStandard Family - Mapping.txt"): creates the AD_Process record AND a
- * menu item for each of the 2 LearnerUnitStandard table-creation classes, same mechanism and
- * conventions as {@link RegisterZZPhase1Processes}/{@link RegisterZZPhase2Processes} (see
- * RegisterZZPhase1Processes' Javadoc for the full write-up of the AD_Process convention and the
- * AD_TreeNodeMM re-parenting mechanism - not repeated here).
+ * One-off registration process for Phase 4 (see "Additional Tables - Migration Plan.txt",
+ * "Phase 4 - LearnerUnitStandard Family - Mapping.txt", and "Phase 4 - LearnerDocuments Family -
+ * Mapping.txt"): creates the AD_Process record AND a menu item for each Phase 4 table-creation
+ * class, same mechanism and conventions as {@link RegisterZZPhase1Processes}/
+ * {@link RegisterZZPhase2Processes} (see RegisterZZPhase1Processes' Javadoc for the full
+ * write-up of the AD_Process convention and the AD_TreeNodeMM re-parenting mechanism - not
+ * repeated here). New Phase 4 families' table-creation classes are added to PROCESS_CLASSES here
+ * (rather than a new registration process per family) as they're built - idempotent, so re-runs
+ * only pick up whatever's new.
  *
  * <p>Idempotent: skips any class name that already has an AD_Process row with a matching
  * Classname, and skips menu creation for any process that already has an AD_Menu row pointing at
@@ -38,6 +41,7 @@ public class RegisterZZPhase4Processes extends SvrProcess {
     private static final String[] PROCESS_CLASSES = {
             "AddZZLearnerUnitStandardTable",
             "AddZZLearnerUnitStandardAssessmentsTable",
+            "AddZZLearnerDocumentsTable",
     };
 
     @Override
