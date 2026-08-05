@@ -11,7 +11,6 @@ import org.compiere.model.MMailText;
 import org.compiere.model.MUser;
 import org.compiere.model.Query;
 import org.compiere.process.SvrProcess;
-import org.compiere.util.Env;
 import org.compiere.util.Util;
 
 import za.co.ntier.api.model.X_ZZAssessorPerson_v;
@@ -84,14 +83,14 @@ public class AssessorModeratorExpiryProcess extends SvrProcess
 
 		for (X_ZZAssessorPerson_v record : expiringRecords)
 		{
-			String assessorEmail = record.getEMail();
-
 			String sdpEmail = null;
+			String sdpName = null;
 			int createdById = record.getCreatedBy();
 			if (createdById > 0)
 			{
 				MUser sdpUser = new MUser(getCtx(), createdById, get_TrxName());
 				sdpEmail = sdpUser.getEMail();
+				sdpName = sdpUser.getName();
 			}
 
 			String role = record.getZZAssessorRole() != null ? record.getZZAssessorRole() : "Assessor/Moderator";
@@ -119,30 +118,21 @@ public class AssessorModeratorExpiryProcess extends SvrProcess
 									.replace("@ZZ_Assessor@", assessorNum);
 			}
 
+			String assessorName = (record.getZZFirstName() != null ? record.getZZFirstName() : "") + " " + (record.getZZSurname() != null ? record.getZZSurname() : "");
+			assessorName = assessorName.trim();
+
 			String msg = mailText.getMailText(true);
 			if (msg != null)
 			{
+				msg = msg.replace("@SDPName@", sdpName != null ? sdpName : ",");
+				msg = msg.replace("@AssessorModeratorName@", assessorName);
 				msg = msg.replace("@Role@", role);
 				msg = msg.replace("@ZZ_Assessor@", assessorNum);
 				msg = msg.replace("@EndDate@", endDateStr);
 			}
 
-			// Send to Assessor/Moderator
-			if (!Util.isEmpty(assessorEmail))
-			{
-				if (client.sendEMail(assessorEmail, subject, msg, null, mailText.isHtml()))
-				{
-					addLog(record.get_ID(), null, null, "Notified Assessor/Moderator: " + assessorEmail);
-					emailsSent++;
-				}
-				else
-				{
-					log.log(Level.WARNING, "Failed to send expiry email to: " + assessorEmail);
-				}
-			}
-
 			// Send to Primary SDP Admin (CreatedBy)
-			if (!Util.isEmpty(sdpEmail) && !sdpEmail.equalsIgnoreCase(assessorEmail))
+			if (!Util.isEmpty(sdpEmail))
 			{
 				if (client.sendEMail(sdpEmail, subject, msg, null, mailText.isHtml()))
 				{
