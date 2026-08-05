@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.5.final using JasperReports Library version 6.20.5-3efcf2e67f959db3888d79f73dde2dbd7acb4f8e  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ModeratorScopeExtApprovalLetter" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="515" leftMargin="40" rightMargin="40" topMargin="20" bottomMargin="20" uuid="bf1cb295-827c-47fc-b1f4-34827c5dbf5f">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
+	<subDataset name="AnnexureDataset" uuid="bf345678-1234-1234-1234-123456789012">
+		<queryString>
+			<![CDATA[]]>
+		</queryString>
+		<field name="Code" class="java.lang.String"/>
+		<field name="Title" class="java.lang.String"/>
+	</subDataset>
+	<parameter name="HeaderImagePath" class="java.net.URL"/>
+	<parameter name="FooterImagePath" class="java.net.URL"/>
+	<parameter name="AssessorFullName" class="java.lang.String"/>
+	<parameter name="IDNumber" class="java.lang.String"/>
+	<parameter name="SDPName" class="java.lang.String"/>
+	<parameter name="SDPLinkedBPLocation" class="java.lang.String"/>
+	<parameter name="SDPAdminShortName" class="java.lang.String"/>
+	<parameter name="RegistrationNumber" class="java.lang.String"/>
+	<parameter name="DateOfRegistration" class="java.lang.String"/>
+	<parameter name="EndDate" class="java.lang.String"/>
+	<parameter name="Qualifications" class="java.lang.String"/>
+	<parameter name="SkillsProgrammes" class="java.lang.String"/>
+	<parameter name="AnnexureDataSource" class="net.sf.jasperreports.engine.data.JRMapCollectionDataSource"/>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<pageHeader>
+		<band height="90" splitType="Stretch">
+			<image scaleImage="RetainShape">
+				<reportElement x="0" y="0" width="515" height="70" uuid="bf000001-0000-0000-0000-000000000001"/>
+				<imageExpression><![CDATA[$P{HeaderImagePath}]]></imageExpression>
+			</image>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="620" splitType="Stretch">
+			<textField textAdjust="StretchHeight">
+				<reportElement positionType="Float" x="0" y="30" width="515" height="15" uuid="bf000002-0000-0000-0000-000000000002"/>
+				<textElement>
+					<font fontName="SansSerif" size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($P{AssessorFullName} != null ? $P{AssessorFullName} : "") + ","]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement positionType="Float" x="0" y="55" width="110" height="15" uuid="bf000011-2222-2222-2222-222222222222"/>
+				<textElement>
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[ID Number:]]></text>
+			</staticText>
+			<textField textAdjust="StretchHeight">
+				<reportElement positionType="Float" x="110" y="55" width="405" height="15" uuid="bf000012-2222-2222-2222-222222222222"/>
+				<textElement>
+					<font size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{IDNumber} != null ? $P{IDNumber} : ""]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement positionType="Float" x="0" y="70" width="110" height="15" uuid="bf000013-2222-2222-2222-222222222222"/>
+				<textElement>
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Provider Name:]]></text>
+			</staticText>
+			<textField textAdjust="StretchHeight">
+				<reportElement positionType="Float" x="110" y="70" width="405" height="15" uuid="bf000014-2222-2222-2222-222222222222"/>
+				<textElement>
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{SDPName} != null ? $P{SDPName} : ""]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement positionType="Float" x="0" y="85" width="110" height="15" uuid="bf000015-2222-2222-2222-222222222222"/>
+				<textElement>
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Provider Address:]]></text>
+			</staticText>
+			<textField textAdjust="StretchHeight">
+				<reportElement positionType="Float" x="110" y="85" width="405" height="15" uuid="bf000016-2222-2222-2222-222222222222"/>
+				<textElement>
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{SDPLinkedBPLocation} != null ? $P{SDPLinkedBPLocation} : ""]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement positionType="Float" x="0" y="120" width="515" height="20" uuid="bf000003-0000-0000-0000-000000000003"/>
+				<textElement>
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[MODERATOR SCOPE EXTENSION]]></text>
+			</staticText>
+			<textField textAdjust="StretchHeight">
+				<reportElement positionType="Float" x="0" y="150" width="515" height="50" uuid="bf000004-0000-0000-0000-000000000004"/>
+				<textElement>
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Dear " + ($P{SDPAdminShortName} != null ? $P{SDPAdminShortName} : "") + "\n\n" + "This letter serves to confirm that you have fulfilled the requirements to extend the moderator scope with the Mining Qualifications Authority. Your registration details are as follows:\n"]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement positionType="Float" x="0" y="210" width="150" height="20" uuid="bf000021-1111-1111-1111-111111111111"/>
+				<textElement>
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Registration Number:]]></text>
+			</staticText>
+			<textField textAdjust="StretchHeight">
+				<reportElement positionType="Float" x="150" y="210" width="365" height="20" uuid="bf000022-1111-1111-1111-111111111111"/>
+				<textElement>
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{RegistrationNumber} != null ? $P{RegistrationNumber} : ""]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement positionType="Float" x="0" y="230" width="150" height="20" uuid="bf000023-1111-1111-1111-111111111111"/>
+				<textElement>
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Date of Registration:]]></text>
+			</staticText>
+			<textField textAdjust="StretchHeight">
+				<reportElement positionType="Float" x="150" y="230" width="365" height="20" uuid="bf000024-1111-1111-1111-111111111111"/>
+				<textElement>
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{DateOfRegistration} != null ? $P{DateOfRegistration} : ""]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement positionType="Float" x="0" y="250" width="150" height="20" uuid="bf000027-1111-1111-1111-111111111111"/>
+				<textElement>
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[End Date:]]></text>
+			</staticText>
+			<textField textAdjust="StretchHeight">
+				<reportElement positionType="Float" x="150" y="250" width="365" height="20" uuid="bf000028-1111-1111-1111-111111111111"/>
+				<textElement>
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{EndDate} != null ? $P{EndDate} : ""]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement positionType="Float" x="0" y="270" width="150" height="20" uuid="bf000029-1111-1111-1111-111111111111"/>
+				<textElement>
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Scope registered for:]]></text>
+			</staticText>
+			<textField textAdjust="StretchHeight">
+				<reportElement positionType="Float" x="150" y="270" width="365" height="20" uuid="bf000030-1111-1111-1111-111111111111"/>
+				<textElement>
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA["As per attached Annexure"]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement positionType="Float" x="0" y="325" width="515" height="60" uuid="bf000006-0000-0000-0000-000000000006"/>
+				<textElement>
+					<font size="10"/>
+				</textElement>
+				<text><![CDATA[Should you require any futher information, please feel free to contact Peace Mashishi on:
+Email: Assessor@mqa.org.za
+Tel: (011) 547 2746]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="0" y="400" width="515" height="20" uuid="bf000007-1111-1111-1111-111111111111"/>
+				<textElement>
+					<font size="10"/>
+				</textElement>
+				<text><![CDATA[Kind Regards]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="0" y="450" width="515" height="40" uuid="bf000008-1111-1111-1111-111111111111"/>
+				<textElement>
+					<font size="10"/>
+				</textElement>
+				<text><![CDATA[Robert Mukhari
+SENIOR MANAGER: QA]]></text>
+			</staticText>
+			<break>
+				<reportElement positionType="Float" x="0" y="500" width="515" height="1" uuid="bf000009-0000-0000-0000-000000000009"/>
+			</break>
+			<staticText>
+				<reportElement positionType="Float" x="0" y="520" width="515" height="40" uuid="bf000010-0000-0000-0000-000000000010"/>
+				<textElement textAlignment="Center">
+					<font size="24"/>
+				</textElement>
+				<text><![CDATA[Annexure]]></text>
+			</staticText>
+			<componentElement>
+				<reportElement positionType="Float" x="0" y="570" width="515" height="50" uuid="bf000011-0000-0000-0000-000000000011"/>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="AnnexureDataset" uuid="bf456789-2345-2345-2345-234567890123">
+						<dataSourceExpression><![CDATA[$P{AnnexureDataSource}]]></dataSourceExpression>
+					</datasetRun>
+					<jr:column width="145" uuid="bf567890-3456-3456-3456-345678901234">
+						<jr:columnHeader height="30">
+							<staticText>
+								<reportElement x="0" y="0" width="145" height="30" uuid="bf678901-4567-4567-4567-456789012345"/>
+								<textElement verticalAlignment="Middle">
+									<font fontName="SansSerif" size="11" isBold="true"/>
+								</textElement>
+								<text><![CDATA[Qualification/Skills Programme/Unit Standard Code]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell height="20">
+							<textField textAdjust="StretchHeight">
+								<reportElement x="0" y="0" width="145" height="20" uuid="bf789012-5678-5678-5678-567890123456"/>
+								<textElement verticalAlignment="Middle">
+									<font fontName="SansSerif" size="10"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{Code}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="370" uuid="bf890123-6789-6789-6789-678901234567">
+						<jr:columnHeader height="30">
+							<staticText>
+								<reportElement x="0" y="0" width="370" height="30" uuid="bf901234-7890-7890-7890-789012345678"/>
+								<textElement verticalAlignment="Middle">
+									<font fontName="SansSerif" size="11" isBold="true"/>
+								</textElement>
+								<text><![CDATA[Qualification/Skills Programme/Unit Standard Description]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell height="20">
+							<textField textAdjust="StretchHeight">
+								<reportElement x="0" y="0" width="370" height="20" uuid="bf012345-8901-8901-8901-890123456789"/>
+								<textElement verticalAlignment="Middle">
+									<font fontName="SansSerif" size="10"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{Title}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+				</jr:table>
+			</componentElement>
+		</band>
+		<band height="100" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="52" width="515" height="48" uuid="bf000018-0000-0000-0000-000000000008"/>
+				<textElement>
+					<font fontName="C059" size="10"/>
+				</textElement>
+				<text><![CDATA[Robert Mukhari
+SENIOR MANAGER: QA]]></text>
+			</staticText>
+		</band>
+	</detail>
+	<pageFooter>
+		<band height="90" splitType="Stretch">
+			<image scaleImage="FillFrame">
+				<reportElement x="0" y="20" width="515" height="70" uuid="bf000015-0000-0000-0000-000000000015"/>
+				<imageExpression><![CDATA[$P{FooterImagePath}]]></imageExpression>
+			</image>
+		</band>
+	</pageFooter>
+</jasperReport>

@@ -238,13 +238,25 @@ public class NtierModelValidator implements ModelValidator
 
 							if (approvedMailTemplate != null)
 							{
+								// For scope extensions, dates come from the original (parent) registration record
+								X_ZZAssessorPerson dateSourcePerson = assessorPerson;
+								if (isScopeExt)
+								{
+									X_ZZAssessorPerson parentForDate = new X_ZZAssessorPerson(po.getCtx(), assessorPerson.getParent_ID(), po.get_TrxName());
+									if (parentForDate != null && parentForDate.get_ID() > 0)
+										dateSourcePerson = parentForDate;
+								}
+
 								String startDateStr = "";
-								if (assessorPerson.getStartDate() != null)
-									startDateStr = new SimpleDateFormat("dd MMMM yyyy").format(assessorPerson.getStartDate());
+								if (dateSourcePerson.getStartDate() != null)
+									startDateStr = new SimpleDateFormat("dd MMMM yyyy").format(dateSourcePerson.getStartDate());
 
 								String endDateStr = "";
-								if (assessorPerson.getEndDate() != null)
-									endDateStr = new SimpleDateFormat("dd MMMM yyyy").format(assessorPerson.getEndDate());
+								if (dateSourcePerson.getEndDate() != null)
+									endDateStr = new SimpleDateFormat("dd MMMM yyyy").format(dateSourcePerson.getEndDate());
+
+								// Derive SDP Admin short name (first name of the createdBy user) for scope ext salutation
+								String sdpAdminShortName = createdByUser.getZZFirstName() != null ? createdByUser.getZZFirstName().trim() : createdByUser.getName().trim();
 
 								String qualifications = fetchRecommendedItems(assessorPerson, I_ZZLinkAssessorQualification.Table_Name,
 																			I_ZZQualification.Table_Name, I_ZZQualification.COLUMNNAME_ZZQualification_ID,
@@ -320,8 +332,7 @@ public class NtierModelValidator implements ModelValidator
 										}
 										jasperParams.put("SDPLinkedBPLocation", locationStr);
 										jasperParams.put("AssessorShortName", (fName).trim());
-										jasperParams.put("RegistrationTitle", ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()) ? "MODERATOR REGISTRATION" : "ASSESSOR REGISTRATION");
-										jasperParams.put("RegistrationRole", ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()) ? "a moderator" : "an assessor");
+										jasperParams.put("SDPAdminShortName", sdpAdminShortName);
 										jasperParams.put("RegistrationNumber", Util.isEmpty(zzAssessor) ? zzModerator : zzAssessor);
 										jasperParams.put("DateOfRegistration", startDateStr);
 										jasperParams.put("EndDate", endDateStr);
@@ -329,10 +340,22 @@ public class NtierModelValidator implements ModelValidator
 										jasperParams.put("SkillsProgrammes", skillsProgrammes);
 										jasperParams.put("AnnexureDataSource", buildAnnexureDataSource(assessorPerson, po.get_TrxName()));
 
-										String letterPrefix = ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()) ? "Moderator_Approval_Letter"
-																															: "Assessor_Approval_Letter";
-										String jasperName = ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()) ? "ModeratorApprovalLetter"
-																															: "AssessorApprovalLetter";
+										String letterPrefix;
+										String jasperName;
+										if (isScopeExt)
+										{
+											letterPrefix = ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()) ? "Moderator_ScopeExt_Approval_Letter"
+																																	: "Assessor_ScopeExt_Approval_Letter";
+											jasperName = ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()) ? "ModeratorScopeExtApprovalLetter"
+																																	: "AssessorScopeExtApprovalLetter";
+										}
+										else
+										{
+											letterPrefix = ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()) ? "Moderator_Approval_Letter"
+																																	: "Assessor_Approval_Letter";
+											jasperName = ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()) ? "ModeratorApprovalLetter"
+																																	: "AssessorApprovalLetter";
+										}
 
 										try (InputStream jasperStream = NtierModelValidator.class
 																									.getResourceAsStream("/za/co/ntier/wsp_atr/report/jrxmls/" + jasperName + ".jasper"))
