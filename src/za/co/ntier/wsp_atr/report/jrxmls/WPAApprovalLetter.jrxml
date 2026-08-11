@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.5.final using JasperReports Library version 6.20.5-3efcf2e67f959db3888d79f73dde2dbd7acb4f8e  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="WPAApprovalLetter" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="e3d64c1a-287c-4861-ac19-2179836365a1">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
+	<subDataset name="QualificationsDataSet" uuid="2a842b10-67a3-4b68-b39b-d7db5c5dbb09">
+		<queryString>
+			<![CDATA[]]>
+		</queryString>
+		<field name="ProgrammeTitle" class="java.lang.String"/>
+		<field name="NQFLevel" class="java.lang.String"/>
+		<field name="OfoCode" class="java.lang.String"/>
+		<field name="Credits" class="java.lang.String"/>
+	</subDataset>
+	<parameter name="HeaderImagePath" class="java.net.URL"/>
+	<parameter name="FooterImagePath" class="java.net.URL"/>
+	<parameter name="BPName" class="java.lang.String"/>
+	<parameter name="BPAddress" class="java.lang.String"/>
+	<parameter name="TitleCreation" class="java.lang.String"/>
+	<parameter name="ApplicantName" class="java.lang.String"/>
+	<parameter name="QualificationsDataSource" class="net.sf.jasperreports.engine.data.JRMapCollectionDataSource"/>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<background>
+		<band height="802" splitType="Stretch">
+			<image scaleImage="FillFrame" hAlign="Center" vAlign="Middle">
+				<reportElement x="30" y="640" width="495" height="143" uuid="173bbcd8-0a02-45e3-a6cd-4d37107db7a8"/>
+				<imageExpression><![CDATA[$P{FooterImagePath}]]></imageExpression>
+			</image>
+		</band>
+	</background>
+	<title>
+		<band height="85" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<image scaleImage="RetainShape" hAlign="Center" vAlign="Middle">
+				<reportElement x="30" y="0" width="495" height="80" uuid="07119f07-8e68-45e3-a61b-91d1ea02d538"/>
+				<imageExpression><![CDATA[$P{HeaderImagePath}]]></imageExpression>
+			</image>
+		</band>
+	</title>
+	<detail>
+		<band height="138" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<textField>
+				<reportElement x="30" y="10" width="495" height="20" uuid="bcdd2a90-3a36-4074-b5a8-6f62bcda6423"/>
+				<textElement verticalAlignment="Middle">
+					<font size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{ApplicantName} != null && !$P{ApplicantName}.isEmpty() ? $P{ApplicantName} : ""]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="30" y="30" width="495" height="20" uuid="d6e3cbe0-cfb0-466c-94cd-f89b9d3e8e19"/>
+				<textElement verticalAlignment="Middle">
+					<font size="11" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{BPName}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight">
+				<reportElement x="30" y="50" width="495" height="20" uuid="2a563f84-9842-4b20-9154-1ea79169a9e1"/>
+				<textElement verticalAlignment="Top">
+					<font size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{BPAddress}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement positionType="Float" x="30" y="90" width="495" height="20" uuid="8ea8cd72-7634-406c-8de1-8a9c395c5c11"/>
+				<textElement verticalAlignment="Middle">
+					<font size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Dear " + ($P{ApplicantName} != null && !$P{ApplicantName}.isEmpty() ? $P{ApplicantName} : "")]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight">
+				<reportElement positionType="Float" x="30" y="113" width="495" height="20" uuid="9c8eb25e-4c5f-4a0b-8d00-4b8c9c9b5d38"/>
+				<textElement verticalAlignment="Middle">
+					<font size="11" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["WORKPLACE APPROVAL FOR " + $P{BPName}]]></textFieldExpression>
+			</textField>
+		</band>
+		<band height="20" splitType="Stretch">
+			<textField textAdjust="StretchHeight">
+				<reportElement positionType="Float" x="30" y="0" width="495" height="20" uuid="3d21b452-4753-41c1-8f55-b4618e478546"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top">
+					<font size="11"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<textFieldExpression><![CDATA["The MQA is mandated in terms of section 10 C (i) of the Skills Development Amendment Act (SDA) 37 of 2008 to identify workplaces for practical work experiences.\n\nFurther, the Workplace Based Learning Programme Agreement Regulations for South African Sector Education and Training Authorities (SETAs) aim to formalize the process of registering and managing learning programs that involve work experience.\n\nThis letter serves to confirm a workplace approval for the following site and scope."]]></textFieldExpression>
+			</textField>
+		</band>
+		<band height="30" splitType="Stretch">
+			<textField textAdjust="StretchHeight">
+				<reportElement positionType="Float" x="30" y="10" width="495" height="20" uuid="f271f8b6-3a7a-4c28-9831-7e87000afef2"/>
+				<textElement verticalAlignment="Middle">
+					<font size="11" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{TitleCreation}]]></textFieldExpression>
+			</textField>
+		</band>
+		<band height="70" splitType="Stretch">
+			<componentElement>
+				<reportElement positionType="Float" x="30" y="0" width="495" height="60" uuid="efaf3f5b-1170-4e31-8f3e-4fb65ab2b4e7">
+					<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.VerticalRowLayout"/>
+					<property name="com.jaspersoft.studio.table.style.table_header" value="Table_TH"/>
+					<property name="com.jaspersoft.studio.table.style.column_header" value="Table_CH"/>
+					<property name="com.jaspersoft.studio.table.style.detail" value="Table_TD"/>
+				</reportElement>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="QualificationsDataSet" uuid="88eafb04-f584-4e4b-bb9b-b5cb8845e6d6">
+						<dataSourceExpression><![CDATA[$P{QualificationsDataSource}]]></dataSourceExpression>
+					</datasetRun>
+					<jr:column width="250" uuid="88c886b7-3ef3-4f93-b680-e83696515812">
+						<jr:columnHeader height="30" rowSpan="1">
+							<box>
+								<pen lineWidth="0.5"/>
+							</box>
+							<staticText>
+								<reportElement mode="Opaque" x="0" y="0" width="250" height="30" backcolor="#E6E6E6" uuid="9a1e0b5a-7f62-426d-9b57-e17f8564e9a4"/>
+								<textElement textAlignment="Left" verticalAlignment="Middle">
+									<font isBold="true"/>
+									<paragraph leftIndent="5"/>
+								</textElement>
+								<text><![CDATA[Qualification / Programme Title]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell height="30">
+							<box>
+								<pen lineWidth="0.5"/>
+							</box>
+							<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="250" height="30" uuid="b13e9a7e-4054-4a6c-9a4a-7110ec947df3"/>
+								<textElement verticalAlignment="Middle">
+									<paragraph leftIndent="5"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{ProgrammeTitle}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="80" uuid="09d6f345-0d02-466d-a342-6e2cb69188f5">
+						<jr:columnHeader height="30" rowSpan="1">
+							<box>
+								<pen lineWidth="0.5"/>
+							</box>
+							<staticText>
+								<reportElement mode="Opaque" x="0" y="0" width="80" height="30" backcolor="#E6E6E6" uuid="1d0e88ab-f213-4e48-8e6d-6ff84a3c3dfb"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font isBold="true"/>
+								</textElement>
+								<text><![CDATA[NQF Level]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell height="30">
+							<box>
+								<pen lineWidth="0.5"/>
+							</box>
+							<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="80" height="30" uuid="52a3b024-5d5d-4a1e-8e8e-d983050c95a0"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<textFieldExpression><![CDATA[$F{NQFLevel}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="100" uuid="93427382-77eb-4b2a-89eb-231a478c9bcf">
+						<jr:columnHeader height="30" rowSpan="1">
+							<box>
+								<pen lineWidth="0.5"/>
+							</box>
+							<staticText>
+								<reportElement mode="Opaque" x="0" y="0" width="100" height="30" backcolor="#E6E6E6" uuid="0ff335b1-6a2c-4734-b259-8d7b322f254e"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font isBold="true"/>
+								</textElement>
+								<text><![CDATA[ID or OFO Code]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell height="30">
+							<box>
+								<pen lineWidth="0.5"/>
+							</box>
+							<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="100" height="30" uuid="eb2d12e6-a0f5-4f4d-80bb-692a54394cd1"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<textFieldExpression><![CDATA[$F{OfoCode}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="65" uuid="53463872-97fc-4e6a-a7bc-205b38f8cfb2">
+						<jr:columnHeader height="30" rowSpan="1">
+							<box>
+								<pen lineWidth="0.5"/>
+							</box>
+							<staticText>
+								<reportElement mode="Opaque" x="0" y="0" width="65" height="30" backcolor="#E6E6E6" uuid="e7b25859-99fc-4876-b924-d2c6762fb165"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font isBold="true"/>
+								</textElement>
+								<text><![CDATA[Minimum Credits]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell height="30">
+							<box>
+								<pen lineWidth="0.5"/>
+							</box>
+							<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="65" height="30" uuid="b127e7f1-893f-4e00-bc56-0a06df53b8bc"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<textFieldExpression><![CDATA[$F{Credits}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+				</jr:table>
+			</componentElement>
+		</band>
+		<band height="15" splitType="Stretch">
+			<textField textAdjust="StretchHeight">
+				<reportElement positionType="Float" x="30" y="0" width="495" height="15" uuid="70b92e54-52d3-4813-91db-29e2eb42cf28"/>
+				<textElement textAlignment="Justified" markup="styled">
+					<font size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA["\nThe workplace approval status has been granted as per the above-mentioned scope <style forecolor=\"#FF0000\" isBold=\"true\">including for Candidacy, Internship and Workplace Experiential Learning.</style> Please <style isBold=\"true\" isItalic=\"true\" isUnderline=\"true\">NOTE</style> that the MQA conduct monitoring on the worksite. Furthermore, the workplace approval shall be valid for the duration that is predetermine by MQA or the curriculum registered with the QCTO; and the approval may be revoked on poor delivery or continual non-conformance requirements set by MQA."]]></textFieldExpression>
+			</textField>
+		</band>
+		<band height="150" splitType="Stretch">
+			<staticText>
+				<reportElement positionType="Float" x="30" y="10" width="495" height="20" uuid="a719280d-83b6-455b-b51e-e2dcaf6e2361"/>
+				<textElement>
+					<font size="11"/>
+				</textElement>
+				<text><![CDATA[Regards]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="30" y="60" width="200" height="20" uuid="6a7ab13a-a5f7-4188-bc5a-e8dcdfc2a6d8"/>
+				<textElement>
+					<font size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[_______________]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="30" y="80" width="200" height="20" uuid="c2b18ea0-7a57-4f6c-bb78-750ea9f2a0df"/>
+				<textElement>
+					<font size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Dr Thabo Mashongoane]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="30" y="100" width="200" height="20" uuid="ef0a12e3-6a9c-48c2-a42e-1b8f1d3a4cb2"/>
+				<textElement>
+					<font size="11"/>
+				</textElement>
+				<text><![CDATA[CHIEF EXECUTIVE OFFICER]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="30" y="120" width="30" height="20" uuid="88a55dbb-21a5-422f-ae29-57e0f2f53d10"/>
+				<textElement>
+					<font size="11"/>
+				</textElement>
+				<text><![CDATA[Date:]]></text>
+			</staticText>
+			<textField pattern="dd/MM/yyyy">
+				<reportElement positionType="Float" x="61" y="120" width="150" height="20" uuid="e81e33d0-37b5-4b31-8935-7798317e3f81"/>
+				<textElement>
+					<font size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<pageFooter>
+		<band height="80" splitType="Stretch">
+			<staticText>
+				<reportElement x="30" y="40" width="100" height="20" uuid="7a6d8199-a682-4911-b062-8509c9f02901"/>
+				<textElement verticalAlignment="Middle">
+					<font size="10"/>
+				</textElement>
+				<text><![CDATA[MQA/QA/04/050]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="170" y="40" width="100" height="20" uuid="2a3f7899-b783-4911-c062-8509c9f02902"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="10"/>
+				</textElement>
+				<text><![CDATA[Revision: 02]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="300" y="40" width="100" height="20" uuid="3a4f8999-c784-4911-d062-8509c9f02903"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="10"/>
+				</textElement>
+				<text><![CDATA[Approved: CRMEO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="425" y="40" width="100" height="20" uuid="4b5f9999-e785-4911-e062-8509c9f02904"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="10"/>
+				</textElement>
+				<text><![CDATA[Date: 20/05/2025]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="425" y="60" width="60" height="20" uuid="5c6f0999-f786-4911-f062-8509c9f02905"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER} + " of "]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="485" y="60" width="40" height="20" uuid="6d7f1999-a787-4911-a062-8509c9f02906"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+</jasperReport>

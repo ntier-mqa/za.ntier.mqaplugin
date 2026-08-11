@@ -15,12 +15,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.compiere.model.MBPartner;
+import org.compiere.model.MBPartnerLocation;
 import org.compiere.model.MClient;
 import org.compiere.model.MLocation;
 import org.compiere.model.MMailText;
 import org.compiere.model.MNote;
 import org.compiere.model.MSequence;
 import org.compiere.model.MTable;
+import org.compiere.model.MAttachment;
 import org.compiere.model.MUser;
 import org.compiere.model.ModelValidationEngine;
 import org.compiere.model.ModelValidator;
@@ -129,7 +131,9 @@ public class NtierModelValidator implements ModelValidator
 																	po);
 						if (!Util.isEmpty(nextSeqNo))
 						{
-							po.set_ValueNoCheck(ColWpaNumber, nextSeqNo);
+							var dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("ddMMyy"));
+							var wpaNumber = "16/MQA/WPA/" + nextSeqNo + "/" + dateStr;
+							po.set_ValueNoCheck(ColWpaNumber, wpaNumber);
 							po.saveEx();
 						}
 						else
@@ -137,6 +141,9 @@ public class NtierModelValidator implements ModelValidator
 							log.severe("Failed to fetch sequence for ZZ_WPA_Application. Ensure AD_Sequence is configured.");
 						}
 					}
+					
+					// Generate WPA Approval Letter
+					generateWPAApprovalLetter((X_ZZ_WPA_Application) po);
 				}
 			}
 		}
@@ -185,12 +192,12 @@ public class NtierModelValidator implements ModelValidator
 								var dateStr = now.format(DateTimeFormatter.ofPattern("ddMMyy"));
 								if (ROLE_ASSESSOR.equals(assessorPerson.getZZAssessorRole()))
 								{
-									var assessorNo = "MQA/ASS" + assDocNo + "/" + dateStr;
+									var assessorNo = "16/ASS/" + assDocNo + "/" + dateStr;
 									assessorPerson.setZZ_Assessor(assessorNo);
 								}
 								else if (ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()))
 								{
-									var moderatorNo = "MQA/MOD" + assDocNo + "/" + dateStr;
+									var moderatorNo = "16/MOD/" + assDocNo + "/" + dateStr;
 									assessorPerson.setZZ_Moderator(moderatorNo);
 								}
 							}
@@ -785,6 +792,149 @@ public class NtierModelValidator implements ModelValidator
 				I_ZZQctoSkillsProgramme.COLUMNNAME_ZZSkillsProgrammeTitle, true, trxName));
 
 		return new JRMapCollectionDataSource(list);
+	}
+
+	private void generateWPAApprovalLetter(X_ZZ_WPA_Application po)
+	{
+		try
+		{
+			HashMap<String, Object> jasperParams = new HashMap<>();
+			jasperParams.put("HeaderImagePath", NtierModelValidator.class.getResource("/za/co/ntier/wsp_atr/report/jrxmls/MQA_Address_Logo_Header.png"));
+			jasperParams.put("FooterImagePath", NtierModelValidator.class.getResource("/za/co/ntier/wsp_atr/report/jrxmls/MQA-Footer.png"));
+
+			int bpId = po.get_ValueAsInt(X_ZZ_WPA_Application.COLUMNNAME_C_BPartner_ID);
+			MBPartner bp = null;
+			if (bpId > 0)
+			{
+				bp = new MBPartner(po.getCtx(), bpId, po.get_TrxName());
+			}
+			String bpName = bp != null ? bp.getName() : "";
+
+			MBPartnerLocation[] locs = bp != null ? bp.getLocations(false) : null;
+			String bpAddress = "";
+			if (locs != null && locs.length > 0)
+			{
+				MLocation loc = locs[0].getLocation(false);
+				if (loc != null)
+				{
+					StringBuilder addrBuilder = new StringBuilder();
+					if (!Util.isEmpty(loc.getAddress1()))
+						addrBuilder.append(loc.getAddress1()).append("\n");
+					if (!Util.isEmpty(loc.getAddress2()))
+						addrBuilder.append(loc.getAddress2()).append("\n");
+					if (!Util.isEmpty(loc.getAddress3()))
+						addrBuilder.append(loc.getAddress3()).append("\n");
+					if (!Util.isEmpty(loc.getAddress4()))
+						addrBuilder.append(loc.getAddress4()).append("\n");
+					if (!Util.isEmpty(loc.getCity()))
+						addrBuilder.append(loc.getCity()).append("\n");
+					if (!Util.isEmpty(loc.getPostal()))
+						addrBuilder.append(loc.getPostal()).append("\n");
+					bpAddress = addrBuilder.toString().trim();
+				}
+			}
+
+			String sdlNumber = po.get_ValueAsString(X_ZZ_WPA_Application.COLUMNNAME_Value);
+			if (Util.isEmpty(sdlNumber) && bp != null)
+			{
+				sdlNumber = bp.getValue();
+			}
+
+			String wpaNumber = po.get_ValueAsString(X_ZZ_WPA_Application.COLUMNNAME_ZZ_WPA_Number);
+			String titleCreation = bpName + " - " + (sdlNumber != null ? sdlNumber : "") + " - " + (wpaNumber != null ? wpaNumber : "");
+
+			jasperParams.put("BPName", bpName);
+			jasperParams.put("BPAddress", bpAddress);
+			jasperParams.put("TitleCreation", titleCreation);
+
+			String applicantName = po.getName() != null ? po.getName().trim() : "";
+			String applicantSurname = po.getZZSurname() != null ? po.getZZSurname().trim() : "";
+			String fullApplicantName = (applicantName + " " + applicantSurname).trim();
+			jasperParams.put("ApplicantName", fullApplicantName);
+
+			jasperParams.put("QualificationsDataSource", buildWpaQualificationsDataSource(po.get_ID(), po.get_TrxName()));
+
+			try (InputStream jasperStream = NtierModelValidator.class.getResourceAsStream("/za/co/ntier/wsp_atr/report/jrxmls/WPAApprovalLetter.jasper"))
+			{
+				if (jasperStream == null)
+				{
+					log.severe("WPAApprovalLetter.jasper not found on classpath");
+					return;
+				}
+
+				JasperPrint jasperPrint = JasperFillManager.fillReport(jasperStream, jasperParams, new JREmptyDataSource(1));
+
+				File tempDir = new File(System.getProperty("java.io.tmpdir"), "wpa_approval_" + System.currentTimeMillis());
+				tempDir.mkdirs();
+				File pdfAttachment = new File(tempDir, "WPA_Approval_Letter.pdf");
+				JasperExportManager.exportReportToPdfFile(jasperPrint, pdfAttachment.getAbsolutePath());
+
+				// Attach to the record
+				MAttachment attachment = MAttachment.get(po.getCtx(), po.get_Table_ID(), po.get_ID(), po.get_TrxName());
+				if (attachment == null)
+				{
+					attachment = new MAttachment(po.getCtx(), po.get_Table_ID(), po.get_ID(), po.getZZ_WPA_Application_UU(), po.get_TrxName());
+				}
+				attachment.addEntry(pdfAttachment);
+				attachment.saveEx();
+
+				// Cleanup
+				pdfAttachment.delete();
+				tempDir.delete();
+			}
+		}
+		catch (Exception e)
+		{
+			log.severe("Failed to generate WPA approval letter: " + e.getMessage());
+		}
+	}
+
+	private JRMapCollectionDataSource buildWpaQualificationsDataSource(int wpaAppId, String trxName)
+	{
+		List<Map<String, ?>> list = new ArrayList<>();
+
+		list.addAll(fetchWpaAppTable(wpaAppId, "ZZ_WPA_App_Qualifications", trxName));
+		list.addAll(fetchWpaAppTable(wpaAppId, "ZZ_WPA_App_QCTOQualifications", trxName));
+		list.addAll(fetchWpaAppTable(wpaAppId, "ZZ_WPA_App_SkillsProgramme", trxName));
+		list.addAll(fetchWpaAppTable(wpaAppId, "ZZ_WPA_App_QCTOSkillsProg", trxName));
+
+		return new JRMapCollectionDataSource(list);
+	}
+
+	private List<Map<String, String>> fetchWpaAppTable(int wpaAppId, String tableName, String trxName)
+	{
+		List<Map<String, String>> list = new ArrayList<>();
+		String sql = "SELECT ZZProgrammeName, ZZNqfLevel, ZZ_OCO_Code, ZZCredits FROM " + tableName + " WHERE ZZ_WPA_Application_ID = ? AND IsActive = 'Y'";
+		try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName))
+		{
+			pstmt.setInt(1, wpaAppId);
+			try (ResultSet rs = pstmt.executeQuery())
+			{
+				while (rs.next())
+				{
+					Map<String, String> row = new HashMap<>();
+					row.put("ProgrammeTitle", rs.getString("ZZProgrammeName"));
+
+					String rawLevel = rs.getString("ZZNqfLevel");
+					if (rawLevel != null)
+					{
+						rawLevel = rawLevel.replaceAll("(?i)^level\\s*", "").trim(); // Remove
+																						// "Level "
+						rawLevel = rawLevel.replaceAll("^0+(?!$)", ""); // Remove leading zeros
+					}
+					row.put("NQFLevel", rawLevel);
+
+					row.put("OfoCode", rs.getString("ZZ_OCO_Code"));
+					row.put("Credits", rs.getString("ZZCredits"));
+					list.add(row);
+				}
+			}
+		}
+		catch (Exception e)
+		{
+			log.severe("Error fetching items from " + tableName + ": " + e.getMessage());
+		}
+		return list;
 	}
 
 }
