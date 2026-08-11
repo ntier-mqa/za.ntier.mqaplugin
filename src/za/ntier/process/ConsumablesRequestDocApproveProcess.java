@@ -49,9 +49,9 @@ public class ConsumablesRequestDocApproveProcess extends AbstractDocApproveProce
 				IDocApprove.ZZ_DOCACTION_ApproveDoNotApprove.equals(currentDocAction) && 
 				IDocApprove.ZZ_DOCSTATUS_Submitted.equals(currentDocStatus)) {		
 			doLineManageApprove();
-		}else if(IDocApprove.ZZ_DOCACTION_ApproveDoNotApprove.equals(currentDocAction) &&  // SDL FIn Mgr presses Action Button
-				IDocApprove.ZZ_DOCSTATUS_SubmittedToSDLFinanceMgr.equals(currentDocStatus)) {			
-			doSDLFinManageApprove();
+		}else if(IDocApprove.ZZ_DOCACTION_ApproveDoNotApprove.equals(currentDocAction) &&  // Snr Admin Finance presses Action Button
+				IDocApprove.ZZ_DOCSTATUS_SubmittedToSnrAdminFinance.equals(currentDocStatus)) {
+			doSnrAdminFinanceApprove();
 		}else if(docApprove.isZZ_AllowMgrFinConsumablesApproval() &&
 				IDocApprove.ZZ_DOCACTION_ApproveDoNotApprove.equals(currentDocAction) && 
 				IDocApprove.ZZ_DOCSTATUS_SubmittedToManagerFinanceConsumables.equals(currentDocStatus)) {  // consumables manager presses button
@@ -91,38 +91,38 @@ public class ConsumablesRequestDocApproveProcess extends AbstractDocApproveProce
 		}
 	}
 	
-	protected void doSubmitDocForSDLFinanceManage(boolean isBypassLineManage) {
-		docApprove.setZZ_DocStatus(IDocApprove.ZZ_DOCSTATUS_SubmittedToSDLFinanceMgr);
+	protected void doSubmitDocForSnrAdminFinance(boolean isBypassLineManage) {
+		docApprove.setZZ_DocStatus(IDocApprove.ZZ_DOCSTATUS_SubmittedToSnrAdminFinance);
 		docApprove.setZZ_DocAction(IDocApprove.ZZ_DOCACTION_ApproveDoNotApprove);
 		docApprove.setZZ_Date_LM_Approved(now);
 		if (docApprove.getZZ_Date_Submitted() == null)
 			docApprove.setZZ_Date_Submitted(now);
 
-		AbstractDocApproveProcess.queueNotifyForRole(queueNotifis, IDocApprove.SDL_FIN_MGR_ROLE_ID, getTable_ID(), getRecord_ID(), docApprove.getZZMailRequestSnr());
+		AbstractDocApproveProcess.queueNotifyForRole(queueNotifis, IDocApprove.SNR_ADMIN_FIN_ROLE_ID, getTable_ID(), getRecord_ID(), docApprove.getZZMailRequestSnr());
 	}
 
 	// Line Manager presses Action button
 	@Override
 	protected void doLineManageApprove() {
 		if("Y".equals(pApproveRejLM)){
-			doSubmitDocForSDLFinanceManage(false);
-			
+			doSubmitDocForSnrAdminFinance(false);
+
 		}else{
 			docApprove.setZZ_DocStatus(IDocApprove.ZZ_DOCSTATUS_NotApprovedByLM);
 			docApprove.setZZ_Date_Not_Approved_by_LM(now);
 			AbstractDocApproveProcess.queueNotify(queueNotifis, docApprove.getCreatedBy(), getTable_ID(), getRecord_ID(), docApprove.getZZMailLineReject());
 		}
 	}
-	
-	// SDL FIn Mgr presses Action Button
-	protected void doSDLFinManageApprove() {
-		docApprove.setZZ_SDL_Fin_Mgr_ID(Env.getAD_User_ID(getCtx()));
+
+	// Snr Admin Finance presses Action Button
+	protected void doSnrAdminFinanceApprove() {
+		docApprove.setZZ_Snr_Admin_Fin_ID(Env.getAD_User_ID(getCtx()));
 		if("Y".equals(pApprove_Rej_SDL)){
 			doSubmitDocFinConsumeablesMgr();
-			
+
 		}else{
-			docApprove.setZZ_DocStatus(IDocApprove.ZZ_DOCSTATUS_NotApprovedBySDLFinanceMgr);
-			docApprove.setZZ_Date_SDL_Not_Approved(now);
+			docApprove.setZZ_DocStatus(IDocApprove.ZZ_DOCSTATUS_NotApprovedBySnrAdminFinance);
+			docApprove.setZZ_Date_Not_Approved_by_Snr_Adm_Fin(now);
 			AbstractDocApproveProcess.queueNotify(queueNotifis, docApprove.getCreatedBy(), getTable_ID(), getRecord_ID(), docApprove.getZZMailLineReject());
 		}
 	}
@@ -130,7 +130,7 @@ public class ConsumablesRequestDocApproveProcess extends AbstractDocApproveProce
 	protected void doSubmitDocFinConsumeablesMgr() {
 		docApprove.setZZ_DocStatus(IDocApprove.ZZ_DOCSTATUS_SubmittedToManagerFinanceConsumables);
 		docApprove.setZZ_DocAction(IDocApprove.ZZ_DOCACTION_ApproveDoNotApprove);
-		docApprove.setZZ_Date_SDL_Approved(now);
+		docApprove.setZZ_Date_Approved(now);
 		if (docApprove.getZZ_Date_Submitted() == null)
 			docApprove.setZZ_Date_Submitted(now);
 
