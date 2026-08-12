@@ -185,20 +185,60 @@ public class NtierModelValidator implements ModelValidator
 						}
 						else
 						{
-							// New registration
-							var assDocNo = assessorPerson.getDocumentNo();
-							if (!Util.isEmpty(assDocNo))
+							// New registration or Re-registration
+							var dateStr = now.format(DateTimeFormatter.ofPattern("ddMMyy"));
+							boolean numberGenerated = false;
+
+							if (X_ZZAssessorPerson.ZZREGISTRATIONTYPE_Re_Registration.equals(assessorPerson.getZZRegistrationType()))
 							{
-								var dateStr = now.format(DateTimeFormatter.ofPattern("ddMMyy"));
-								if (ROLE_ASSESSOR.equals(assessorPerson.getZZAssessorRole()))
+								String oldRegNo = null;
+								Query oldAssessorQuery = new Query(	po.getCtx(), X_ZZAssessorPerson.Table_Name,
+																	"AD_User_ID=? AND ZZAssessorRole=? AND ZZ_DocStatus='AP' AND ZZAssessorPerson_ID != ?", po
+																																								.get_TrxName());
+								oldAssessorQuery.setParameters(assessorPerson.getAD_User_ID(), assessorPerson.getZZAssessorRole(), assessorPerson.get_ID());
+								oldAssessorQuery.setOrderBy("Created DESC");
+								X_ZZAssessorPerson oldAssessor = oldAssessorQuery.first();
+								if (oldAssessor != null)
 								{
-									var assessorNo = "16/ASS/" + assDocNo + "/" + dateStr;
-									assessorPerson.setZZ_Assessor(assessorNo);
+									oldRegNo = ROLE_ASSESSOR.equals(assessorPerson.getZZAssessorRole()) ? oldAssessor.getZZ_Assessor()
+																										: oldAssessor.getZZ_Moderator();
 								}
-								else if (ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()))
+
+								if (!Util.isEmpty(oldRegNo))
 								{
-									var moderatorNo = "16/MOD/" + assDocNo + "/" + dateStr;
-									assessorPerson.setZZ_Moderator(moderatorNo);
+									int lastSlash = oldRegNo.lastIndexOf("/");
+									if (lastSlash > 0)
+									{
+										String newRegNo = oldRegNo.substring(0, lastSlash + 1) + dateStr;
+										if (ROLE_ASSESSOR.equals(assessorPerson.getZZAssessorRole()))
+										{
+											assessorPerson.setZZ_Assessor(newRegNo);
+											numberGenerated = true;
+										}
+										else if (ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()))
+										{
+											assessorPerson.setZZ_Moderator(newRegNo);
+											numberGenerated = true;
+										}
+									}
+								}
+							}
+
+							if (!numberGenerated)
+							{
+								var assDocNo = assessorPerson.getDocumentNo();
+								if (!Util.isEmpty(assDocNo))
+								{
+									if (ROLE_ASSESSOR.equals(assessorPerson.getZZAssessorRole()))
+									{
+										var assessorNo = "16/ASS/" + assDocNo + "/" + dateStr;
+										assessorPerson.setZZ_Assessor(assessorNo);
+									}
+									else if (ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()))
+									{
+										var moderatorNo = "16/MOD/" + assDocNo + "/" + dateStr;
+										assessorPerson.setZZ_Moderator(moderatorNo);
+									}
 								}
 							}
 						}
