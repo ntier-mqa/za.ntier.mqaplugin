@@ -163,9 +163,10 @@ public class CalloutFromFactory implements IColumnCallout {
 				{
 					X_ZZQctoSkillsProgramme srcSkill = new X_ZZQctoSkillsProgramme(ctx, srcID, null);
 
-					mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZLkpOfoOccupation_ID, srcSkill.getZZLkpOfoOccupation_ID());
+					mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZLkpOfoOccupation_ID, srcSkill.getZZLkpOfoOccupationTree_ID());
 					mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZNqfLevel, srcSkill.getZZNqfLevel());
 					mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZCredits, srcSkill.getZZCredits());
+					mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZLastEnrolmentDate, srcSkill.getZZLastEnrolmentDate());
 				}
 			}
 			else
@@ -174,6 +175,7 @@ public class CalloutFromFactory implements IColumnCallout {
 				mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZLkpOfoOccupation_ID, null);
 				mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZNqfLevel, null);
 				mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZCredits, null);
+				mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZLastEnrolmentDate, null);
 			}
 		}
 
@@ -200,6 +202,7 @@ public class CalloutFromFactory implements IColumnCallout {
 					mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZLkpOfoOccupation_ID, srcSkill.getZZLkpOfoOccupationTree_ID());
 					mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZNqfLevel, srcSkill.getZZNqfLevel());
 					mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZCredits, srcSkill.getZZCredits());
+					mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZLastEnrolmentDate, srcSkill.get_Value(X_C_BP_SkillsProgramme.COLUMNNAME_ZZLastEnrolmentDate));
 				}
 			}
 			else
@@ -208,6 +211,7 @@ public class CalloutFromFactory implements IColumnCallout {
 				mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZLkpOfoOccupation_ID, null);
 				mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZNqfLevel, null);
 				mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZCredits, null);
+				mTab.setValue(X_C_BP_SkillsProgramme.COLUMNNAME_ZZLastEnrolmentDate, null);
 			}
 		}
 
@@ -266,9 +270,10 @@ public class CalloutFromFactory implements IColumnCallout {
 				{
 					X_ZZQctoQualification srcCert = new X_ZZQctoQualification(ctx, srcID, null);
 
-					mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZLkpOfoOccupation_ID, srcCert.getZZLkpOfoOccupation_ID());
+					mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZLkpOfoOccupation_ID, srcCert.getZZLkpOfoOccupationTree_ID());
 					mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZNqfLevel, srcCert.getZZNqfLevel());
 					mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZCredits, srcCert.getZZCredits());
+					mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZLastAchievementDate, srcCert.getZZLastAchievementDate());
 				}
 			}
 			else
@@ -277,6 +282,7 @@ public class CalloutFromFactory implements IColumnCallout {
 				mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZLkpOfoOccupation_ID, null);
 				mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZNqfLevel, null);
 				mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZCredits, null);
+				mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZLastAchievementDate, null);
 			}
 		}
 
@@ -304,6 +310,7 @@ public class CalloutFromFactory implements IColumnCallout {
 					mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZLkpOfoOccupation_ID, srcCert.getZZLkpOfoOccupationTree_ID());
 					mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZNqfLevel, srcCert.getZZNqfLevel());
 					mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZCredits, srcCert.getZZCredits());
+					mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZLastAchievementDate, srcCert.getZZLastAchievementDate());
 				}
 			}
 			else
@@ -312,6 +319,7 @@ public class CalloutFromFactory implements IColumnCallout {
 				mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZLkpOfoOccupation_ID, null);
 				mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZNqfLevel, null);
 				mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZCredits, null);
+				mTab.setValue(X_C_BP_OC.COLUMNNAME_ZZLastAchievementDate, null);
 			}
 		}
 
