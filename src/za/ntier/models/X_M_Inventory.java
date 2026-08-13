@@ -35,7 +35,7 @@ public class X_M_Inventory extends PO implements I_M_Inventory, I_Persistent
 	/**
 	 *
 	 */
-	private static final long serialVersionUID = 20250829L;
+	private static final long serialVersionUID = 20260813L;
 
     /** Standard Constructor */
     public X_M_Inventory (Properties ctx, int M_Inventory_ID, String trxName)
@@ -65,6 +65,8 @@ public class X_M_Inventory extends PO implements I_M_Inventory, I_Persistent
 // Y
 			setZZ_Consumables_Signed_Uploaded (false);
 // N
+			setZZ_Is_Refreshment_Req (false);
+// @ZZ_IS_REFRESHMENT_REQ@
         } */
     }
 
@@ -96,6 +98,8 @@ public class X_M_Inventory extends PO implements I_M_Inventory, I_Persistent
 // Y
 			setZZ_Consumables_Signed_Uploaded (false);
 // N
+			setZZ_Is_Refreshment_Req (false);
+// @ZZ_IS_REFRESHMENT_REQ@
         } */
     }
 
@@ -127,6 +131,8 @@ public class X_M_Inventory extends PO implements I_M_Inventory, I_Persistent
 // Y
 			setZZ_Consumables_Signed_Uploaded (false);
 // N
+			setZZ_Is_Refreshment_Req (false);
+// @ZZ_IS_REFRESHMENT_REQ@
         } */
     }
 
@@ -158,6 +164,8 @@ public class X_M_Inventory extends PO implements I_M_Inventory, I_Persistent
 // Y
 			setZZ_Consumables_Signed_Uploaded (false);
 // N
+			setZZ_Is_Refreshment_Req (false);
+// @ZZ_IS_REFRESHMENT_REQ@
         } */
     }
 
@@ -1188,20 +1196,50 @@ public class X_M_Inventory extends PO implements I_M_Inventory, I_Persistent
 		return (Timestamp)get_Value(COLUMNNAME_ZZ_Date_Submitted);
 	}
 
+	/** Exec Approve = AE */
+	public static final String ZZ_DOCACTION_ExecApprove = "AE";
 	/** Approve/Do Not Approve = AP */
 	public static final String ZZ_DOCACTION_ApproveDoNotApprove = "AP";
 	/** Complete = CO */
 	public static final String ZZ_DOCACTION_Complete = "CO";
+	/** Evaluate = EV */
+	public static final String ZZ_DOCACTION_Evaluate = "EV";
 	/** Final Approval/Do not Approve = FA */
 	public static final String ZZ_DOCACTION_FinalApprovalDoNotApprove = "FA";
+	/** PrepareCEO = PC */
+	public static final String ZZ_DOCACTION_PrepareCEO = "PC";
+	/** Refer Back = RB */
+	public static final String ZZ_DOCACTION_ReferBack = "RB";
 	/** Recommend = RE */
 	public static final String ZZ_DOCACTION_Recommend = "RE";
+	/** Re-Submit = RS */
+	public static final String ZZ_DOCACTION_Re_Submit = "RS";
+	/** Submit = S1 */
+	public static final String ZZ_DOCACTION_Submit = "S1";
+	/** System Only (No manual action) = S2 */
+	public static final String ZZ_DOCACTION_SystemOnlyNoManualAction = "S2";
 	/** Submit to Manager Finance Consumables = SC */
 	public static final String ZZ_DOCACTION_SubmitToManagerFinanceConsumables = "SC";
 	/** Submit to SDL Finance Mgr = SD */
 	public static final String ZZ_DOCACTION_SubmitToSDLFinanceMgr = "SD";
+	/** Submit to Snr Mgr LP = SL */
+	public static final String ZZ_DOCACTION_SubmitToSnrMgrLP = "SL";
+	/** Submit to Snr Mgr Ops = SO */
+	public static final String ZZ_DOCACTION_SubmitToSnrMgrOps = "SO";
+	/** Submit to Snr Mgr Projects = SP */
+	public static final String ZZ_DOCACTION_SubmitToSnrMgrProjects = "SP";
+	/** Submit to Snr Mgr QA = SQ */
+	public static final String ZZ_DOCACTION_SubmitToSnrMgrQA = "SQ";
+	/** Submit to Recommender = SR */
+	public static final String ZZ_DOCACTION_SubmitToRecommender = "SR";
+	/** Submit to Snr Mgr SRU = SS */
+	public static final String ZZ_DOCACTION_SubmitToSnrMgrSRU = "SS";
 	/** Submit to Line Manager = SU */
 	public static final String ZZ_DOCACTION_SubmitToLineManager = "SU";
+	/** Update = UP */
+	public static final String ZZ_DOCACTION_Update = "UP";
+	/** Verify = VE */
+	public static final String ZZ_DOCACTION_Verify = "VE";
 	/** Set Document Action.
 		@param ZZ_DocAction Document Action
 	*/
@@ -1222,12 +1260,36 @@ public class X_M_Inventory extends PO implements I_M_Inventory, I_Persistent
 	public static final String ZZ_DOCSTATUS_ApprovedByManagerFinanceConsumables = "AC";
 	/** Approved = AP */
 	public static final String ZZ_DOCSTATUS_Approved = "AP";
+	/** Prepared for CEO = CF */
+	public static final String ZZ_DOCSTATUS_PreparedForCEO = "CF";
 	/** Completed = CO */
 	public static final String ZZ_DOCSTATUS_Completed = "CO";
 	/** Draft = DR */
 	public static final String ZZ_DOCSTATUS_Draft = "DR";
+	/** Error Importing = EE */
+	public static final String ZZ_DOCSTATUS_ErrorImporting = "EE";
+	/** Validation Error = ER */
+	public static final String ZZ_DOCSTATUS_ValidationError = "ER";
+	/** Evaluated = EV */
+	public static final String ZZ_DOCSTATUS_Evaluated = "EV";
+	/** Importing = IG */
+	public static final String ZZ_DOCSTATUS_Importing = "IG";
+	/** Imported = IM */
+	public static final String ZZ_DOCSTATUS_Imported = "IM";
 	/** In Progress = IP */
 	public static final String ZZ_DOCSTATUS_InProgress = "IP";
+	/** Not Recommended By Senior Mgr SDR = N1 */
+	public static final String ZZ_DOCSTATUS_NotRecommendedBySeniorMgrSDR = "N1";
+	/** Not Recommended By Senior Mgr Finance = N2 */
+	public static final String ZZ_DOCSTATUS_NotRecommendedBySeniorMgrFinance = "N2";
+	/** Not Recommended By COO = N3 */
+	public static final String ZZ_DOCSTATUS_NotRecommendedByCOO = "N3";
+	/** Not Recommended By CFO = N4 */
+	public static final String ZZ_DOCSTATUS_NotRecommendedByCFO = "N4";
+	/** Not Recommended By CEO = N5 */
+	public static final String ZZ_DOCSTATUS_NotRecommendedByCEO = "N5";
+	/** Not Approved by Snr Manager = NA */
+	public static final String ZZ_DOCSTATUS_NotApprovedBySnrManager = "NA";
 	/** Not Approved By Manager Finance Consumables = NC */
 	public static final String ZZ_DOCSTATUS_NotApprovedByManagerFinanceConsumables = "NC";
 	/** Not Approved By SDL Finance Mgr = ND */
@@ -1236,12 +1298,42 @@ public class X_M_Inventory extends PO implements I_M_Inventory, I_Persistent
 	public static final String ZZ_DOCSTATUS_NotApprovedByITManager = "NI";
 	/** Not Approved by LM = NL */
 	public static final String ZZ_DOCSTATUS_NotApprovedByLM = "NL";
+	/** Not Approved = NP */
+	public static final String ZZ_DOCSTATUS_NotApproved = "NP";
 	/** Not Recommended = NR */
 	public static final String ZZ_DOCSTATUS_NotRecommended = "NR";
 	/** Not Approved by Snr Admin Finance = NS */
 	public static final String ZZ_DOCSTATUS_NotApprovedBySnrAdminFinance = "NS";
+	/** Not Verified = NV */
+	public static final String ZZ_DOCSTATUS_NotVerified = "NV";
+	/** Pending = PE */
+	public static final String ZZ_DOCSTATUS_Pending = "PE";
+	/** Query = QR */
+	public static final String ZZ_DOCSTATUS_Query = "QR";
+	/** Recommended By Senior Mgr Finance = R1 */
+	public static final String ZZ_DOCSTATUS_RecommendedBySeniorMgrFinance = "R1";
+	/** Recommended By COO = R2 */
+	public static final String ZZ_DOCSTATUS_RecommendedByCOO = "R2";
+	/** Recommended By CFO = R3 */
+	public static final String ZZ_DOCSTATUS_RecommendedByCFO = "R3";
+	/** Recommended By CEO = R4 */
+	public static final String ZZ_DOCSTATUS_RecommendedByCEO = "R4";
+	/** Recommended By Officer - QA Accreditation = R5 */
+	public static final String ZZ_DOCSTATUS_RecommendedByOfficer_QAAccreditation = "R5";
+	/** Recommended By Mgr - QA Accreditation = R6 */
+	public static final String ZZ_DOCSTATUS_RecommendedByMgr_QAAccreditation = "R6";
+	/** Recommended By Snr Mgr QA = R7 */
+	public static final String ZZ_DOCSTATUS_RecommendedBySnrMgrQA = "R7";
+	/** Recommended for Approval = RA */
+	public static final String ZZ_DOCSTATUS_RecommendedForApproval = "RA";
 	/** Recommended = RC */
 	public static final String ZZ_DOCSTATUS_Recommended = "RC";
+	/** Recommended By Senior Mgr SDR = RD */
+	public static final String ZZ_DOCSTATUS_RecommendedBySeniorMgrSDR = "RD";
+	/** Recommended for Evaluation = RE */
+	public static final String ZZ_DOCSTATUS_RecommendedForEvaluation = "RE";
+	/** Submitted to Snr Admin Finance = SA */
+	public static final String ZZ_DOCSTATUS_SubmittedToSnrAdminFinance = "SA";
 	/** Submitted to Manager Finance Consumables = SC */
 	public static final String ZZ_DOCSTATUS_SubmittedToManagerFinanceConsumables = "SC";
 	/** Submitted To SDL Finance Mgr = SD */
@@ -1252,6 +1344,18 @@ public class X_M_Inventory extends PO implements I_M_Inventory, I_Persistent
 	public static final String ZZ_DOCSTATUS_SubmittedToITAdmin = "ST";
 	/** Submitted = SU */
 	public static final String ZZ_DOCSTATUS_Submitted = "SU";
+	/** Transfer Out = TO */
+	public static final String ZZ_DOCSTATUS_TransferOut = "TO";
+	/** Updated by SDR Admin = UA */
+	public static final String ZZ_DOCSTATUS_UpdatedBySDRAdmin = "UA";
+	/** Uploaded = UP */
+	public static final String ZZ_DOCSTATUS_Uploaded = "UP";
+	/** Delinked = UnSdfOrg */
+	public static final String ZZ_DOCSTATUS_Delinked = "UnSdfOrg";
+	/** Validating = VA */
+	public static final String ZZ_DOCSTATUS_Validating = "VA";
+	/** Verified = VE */
+	public static final String ZZ_DOCSTATUS_Verified = "VE";
 	/** Set Document Status.
 		@param ZZ_DocStatus Document Status
 	*/
@@ -1272,12 +1376,36 @@ public class X_M_Inventory extends PO implements I_M_Inventory, I_Persistent
 	public static final String ZZ_FINALWORKFLOWSTATEVALUE_ApprovedByManagerFinanceConsumables = "AC";
 	/** Approved = AP */
 	public static final String ZZ_FINALWORKFLOWSTATEVALUE_Approved = "AP";
+	/** Prepared for CEO = CF */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_PreparedForCEO = "CF";
 	/** Completed = CO */
 	public static final String ZZ_FINALWORKFLOWSTATEVALUE_Completed = "CO";
 	/** Draft = DR */
 	public static final String ZZ_FINALWORKFLOWSTATEVALUE_Draft = "DR";
+	/** Error Importing = EE */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_ErrorImporting = "EE";
+	/** Validation Error = ER */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_ValidationError = "ER";
+	/** Evaluated = EV */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_Evaluated = "EV";
+	/** Importing = IG */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_Importing = "IG";
+	/** Imported = IM */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_Imported = "IM";
 	/** In Progress = IP */
 	public static final String ZZ_FINALWORKFLOWSTATEVALUE_InProgress = "IP";
+	/** Not Recommended By Senior Mgr SDR = N1 */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_NotRecommendedBySeniorMgrSDR = "N1";
+	/** Not Recommended By Senior Mgr Finance = N2 */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_NotRecommendedBySeniorMgrFinance = "N2";
+	/** Not Recommended By COO = N3 */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_NotRecommendedByCOO = "N3";
+	/** Not Recommended By CFO = N4 */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_NotRecommendedByCFO = "N4";
+	/** Not Recommended By CEO = N5 */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_NotRecommendedByCEO = "N5";
+	/** Not Approved by Snr Manager = NA */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_NotApprovedBySnrManager = "NA";
 	/** Not Approved By Manager Finance Consumables = NC */
 	public static final String ZZ_FINALWORKFLOWSTATEVALUE_NotApprovedByManagerFinanceConsumables = "NC";
 	/** Not Approved By SDL Finance Mgr = ND */
@@ -1286,12 +1414,42 @@ public class X_M_Inventory extends PO implements I_M_Inventory, I_Persistent
 	public static final String ZZ_FINALWORKFLOWSTATEVALUE_NotApprovedByITManager = "NI";
 	/** Not Approved by LM = NL */
 	public static final String ZZ_FINALWORKFLOWSTATEVALUE_NotApprovedByLM = "NL";
+	/** Not Approved = NP */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_NotApproved = "NP";
 	/** Not Recommended = NR */
 	public static final String ZZ_FINALWORKFLOWSTATEVALUE_NotRecommended = "NR";
 	/** Not Approved by Snr Admin Finance = NS */
 	public static final String ZZ_FINALWORKFLOWSTATEVALUE_NotApprovedBySnrAdminFinance = "NS";
+	/** Not Verified = NV */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_NotVerified = "NV";
+	/** Pending = PE */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_Pending = "PE";
+	/** Query = QR */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_Query = "QR";
+	/** Recommended By Senior Mgr Finance = R1 */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_RecommendedBySeniorMgrFinance = "R1";
+	/** Recommended By COO = R2 */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_RecommendedByCOO = "R2";
+	/** Recommended By CFO = R3 */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_RecommendedByCFO = "R3";
+	/** Recommended By CEO = R4 */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_RecommendedByCEO = "R4";
+	/** Recommended By Officer - QA Accreditation = R5 */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_RecommendedByOfficer_QAAccreditation = "R5";
+	/** Recommended By Mgr - QA Accreditation = R6 */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_RecommendedByMgr_QAAccreditation = "R6";
+	/** Recommended By Snr Mgr QA = R7 */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_RecommendedBySnrMgrQA = "R7";
+	/** Recommended for Approval = RA */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_RecommendedForApproval = "RA";
 	/** Recommended = RC */
 	public static final String ZZ_FINALWORKFLOWSTATEVALUE_Recommended = "RC";
+	/** Recommended By Senior Mgr SDR = RD */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_RecommendedBySeniorMgrSDR = "RD";
+	/** Recommended for Evaluation = RE */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_RecommendedForEvaluation = "RE";
+	/** Submitted to Snr Admin Finance = SA */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_SubmittedToSnrAdminFinance = "SA";
 	/** Submitted to Manager Finance Consumables = SC */
 	public static final String ZZ_FINALWORKFLOWSTATEVALUE_SubmittedToManagerFinanceConsumables = "SC";
 	/** Submitted To SDL Finance Mgr = SD */
@@ -1302,6 +1460,18 @@ public class X_M_Inventory extends PO implements I_M_Inventory, I_Persistent
 	public static final String ZZ_FINALWORKFLOWSTATEVALUE_SubmittedToITAdmin = "ST";
 	/** Submitted = SU */
 	public static final String ZZ_FINALWORKFLOWSTATEVALUE_Submitted = "SU";
+	/** Transfer Out = TO */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_TransferOut = "TO";
+	/** Updated by SDR Admin = UA */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_UpdatedBySDRAdmin = "UA";
+	/** Uploaded = UP */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_Uploaded = "UP";
+	/** Delinked = UnSdfOrg */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_Delinked = "UnSdfOrg";
+	/** Validating = VA */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_Validating = "VA";
+	/** Verified = VE */
+	public static final String ZZ_FINALWORKFLOWSTATEVALUE_Verified = "VE";
 	/** Set Final Workflow State Value.
 		@param ZZ_FinalWorkflowStateValue Value set to ZZ_DocStatus when reach to end of approve workflow
 	*/
@@ -1332,6 +1502,28 @@ public class X_M_Inventory extends PO implements I_M_Inventory, I_Persistent
 	public String getZZ_Internal_Request_Rpt()
 	{
 		return (String)get_Value(COLUMNNAME_ZZ_Internal_Request_Rpt);
+	}
+
+	/** Set Is Refreshment Request.
+		@param ZZ_Is_Refreshment_Req Is Refreshment Request
+	*/
+	public void setZZ_Is_Refreshment_Req (boolean ZZ_Is_Refreshment_Req)
+	{
+		set_Value (COLUMNNAME_ZZ_Is_Refreshment_Req, Boolean.valueOf(ZZ_Is_Refreshment_Req));
+	}
+
+	/** Get Is Refreshment Request.
+		@return Is Refreshment Request	  */
+	public boolean isZZ_Is_Refreshment_Req()
+	{
+		Object oo = get_Value(COLUMNNAME_ZZ_Is_Refreshment_Req);
+		if (oo != null)
+		{
+			 if (oo instanceof Boolean)
+				 return ((Boolean)oo).booleanValue();
+			return "Y".equals(oo);
+		}
+		return false;
 	}
 
 	public org.compiere.model.I_AD_User getZZ_Mgr_Fin_Consumables() throws RuntimeException
@@ -1383,6 +1575,33 @@ public class X_M_Inventory extends PO implements I_M_Inventory, I_Persistent
 	public int getZZ_RequestedBy_ID()
 	{
 		Integer ii = (Integer)get_Value(COLUMNNAME_ZZ_RequestedBy_ID);
+		if (ii == null)
+			 return 0;
+		return ii.intValue();
+	}
+
+	public org.compiere.model.I_AD_User getZZ_Requester() throws RuntimeException
+	{
+		return (org.compiere.model.I_AD_User)MTable.get(getCtx(), org.compiere.model.I_AD_User.Table_ID)
+			.getPO(getZZ_Requester_ID(), get_TrxName());
+	}
+
+	/** Set Requester.
+		@param ZZ_Requester_ID Requester
+	*/
+	public void setZZ_Requester_ID (int ZZ_Requester_ID)
+	{
+		if (ZZ_Requester_ID < 1)
+			set_Value (COLUMNNAME_ZZ_Requester_ID, null);
+		else
+			set_Value (COLUMNNAME_ZZ_Requester_ID, Integer.valueOf(ZZ_Requester_ID));
+	}
+
+	/** Get Requester.
+		@return Requester	  */
+	public int getZZ_Requester_ID()
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_ZZ_Requester_ID);
 		if (ii == null)
 			 return 0;
 		return ii.intValue();

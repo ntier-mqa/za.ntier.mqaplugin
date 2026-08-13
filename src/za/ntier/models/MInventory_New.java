@@ -552,13 +552,13 @@ public class MInventory_New extends MInventory implements I_M_Inventory,IDocAppr
 	public org.compiere.model.I_AD_User getZZ_RequestedBy() throws RuntimeException
 	{
 		return (org.compiere.model.I_AD_User)MTable.get(getCtx(), org.compiere.model.I_AD_User.Table_ID)
-			.getPO(getZZ_RequestedBy_ID(), get_TrxName());
+				.getPO(getZZ_RequestedBy_ID(), get_TrxName());
 	}
 
 	@Override
 	public void setZZ_Date_Account_Created(Timestamp ZZ_Date_Account_Created) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -570,7 +570,7 @@ public class MInventory_New extends MInventory implements I_M_Inventory,IDocAppr
 	@Override
 	public void setZZ_Date_IT_Manager_Approved(Timestamp ZZ_Date_IT_Manager_Approved) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -582,7 +582,7 @@ public class MInventory_New extends MInventory implements I_M_Inventory,IDocAppr
 	@Override
 	public void setZZ_Date_IT_Manager_Rejected(Timestamp ZZ_Date_IT_Manager_Rejected) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -594,7 +594,7 @@ public class MInventory_New extends MInventory implements I_M_Inventory,IDocAppr
 	@Override
 	public void setZZ_Date_Manager_Approved(Timestamp ZZ_Date_Manager_Approved) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -606,7 +606,7 @@ public class MInventory_New extends MInventory implements I_M_Inventory,IDocAppr
 	@Override
 	public void setZZ_Date_Manager_Rejected(Timestamp ZZ_Date_Manager_Rejected) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -618,7 +618,7 @@ public class MInventory_New extends MInventory implements I_M_Inventory,IDocAppr
 	@Override
 	public void setZZ_IT_Admin_ID(int ZZ_IT_Admin_ID) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -636,7 +636,7 @@ public class MInventory_New extends MInventory implements I_M_Inventory,IDocAppr
 	@Override
 	public void setZZ_IT_Manager_ID(int ZZ_IT_Manager_ID) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -654,7 +654,7 @@ public class MInventory_New extends MInventory implements I_M_Inventory,IDocAppr
 	@Override
 	public void setZZ_Manager_ID(int ZZ_Manager_ID) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -666,7 +666,7 @@ public class MInventory_New extends MInventory implements I_M_Inventory,IDocAppr
 	@Override
 	public void setZZ_Recommender_ID(int ZZ_Recommender_ID) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -678,7 +678,7 @@ public class MInventory_New extends MInventory implements I_M_Inventory,IDocAppr
 	@Override
 	public void setZZ_Exec_Approver_ID(int ZZ_Exec_Approver_ID) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -690,7 +690,7 @@ public class MInventory_New extends MInventory implements I_M_Inventory,IDocAppr
 	@Override
 	public void setStartDate(Timestamp StartDate) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -702,7 +702,7 @@ public class MInventory_New extends MInventory implements I_M_Inventory,IDocAppr
 	@Override
 	public void setEndDate(Timestamp EndDate) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -714,7 +714,7 @@ public class MInventory_New extends MInventory implements I_M_Inventory,IDocAppr
 	@Override
 	public void setZZ_Date_Recommended(Timestamp ZZ_Date_Recommended) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -726,7 +726,7 @@ public class MInventory_New extends MInventory implements I_M_Inventory,IDocAppr
 	@Override
 	public void setZZ_Date_Not_Approved(Timestamp ZZ_Date_Not_Approved) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -738,7 +738,7 @@ public class MInventory_New extends MInventory implements I_M_Inventory,IDocAppr
 	@Override
 	public void setZZ_Date_Not_Recommended(Timestamp ZZ_Date_Not_Recommended) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -750,7 +750,7 @@ public class MInventory_New extends MInventory implements I_M_Inventory,IDocAppr
 	@Override
 	public void setZZ_Internal_Request_Rpt(String ZZ_Internal_Request_Rpt) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -762,7 +762,7 @@ public class MInventory_New extends MInventory implements I_M_Inventory,IDocAppr
 	@Override
 	public void setZZ_Snr_Mgr_LP_ID(int ZZ_Snr_Mgr_LP_ID) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -774,13 +774,55 @@ public class MInventory_New extends MInventory implements I_M_Inventory,IDocAppr
 	@Override
 	public void setZZ_Submitter_ID(int ZZ_Submitter_ID) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public int getZZ_Submitter_ID() {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+
+	/** Set Is Refreshment Request.
+	@param ZZ_Is_Refreshment_Req Is Refreshment Request
+	 */
+	@Override
+	public void setZZ_Is_Refreshment_Req (boolean ZZ_Is_Refreshment_Req)
+	{
+		set_Value (COLUMNNAME_ZZ_Is_Refreshment_Req, Boolean.valueOf(ZZ_Is_Refreshment_Req));
+	}
+
+	/** Get Is Refreshment Request.
+	@return Is Refreshment Request	  */
+	@Override
+	public boolean isZZ_Is_Refreshment_Req()
+	{
+		Object oo = get_Value(COLUMNNAME_ZZ_Is_Refreshment_Req);
+		if (oo != null)
+		{
+			if (oo instanceof Boolean)
+				return ((Boolean)oo).booleanValue();
+			return "Y".equals(oo);
+		}
+		return false;
+	}
+
+	@Override
+	public void setZZ_Requester_ID(int ZZ_Requester_ID) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public int getZZ_Requester_ID() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public I_AD_User getZZ_Requester() throws RuntimeException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 

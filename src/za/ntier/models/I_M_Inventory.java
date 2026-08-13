@@ -677,6 +677,15 @@ public interface I_M_Inventory
 	/** Get Internal Request Report	  */
 	public String getZZ_Internal_Request_Rpt();
 
+    /** Column name ZZ_Is_Refreshment_Req */
+    public static final String COLUMNNAME_ZZ_Is_Refreshment_Req = "ZZ_Is_Refreshment_Req";
+
+	/** Set Is Refreshment Request	  */
+	public void setZZ_Is_Refreshment_Req (boolean ZZ_Is_Refreshment_Req);
+
+	/** Get Is Refreshment Request	  */
+	public boolean isZZ_Is_Refreshment_Req();
+
     /** Column name ZZ_Mgr_Fin_Consumables_ID */
     public static final String COLUMNNAME_ZZ_Mgr_Fin_Consumables_ID = "ZZ_Mgr_Fin_Consumables_ID";
 
@@ -698,6 +707,17 @@ public interface I_M_Inventory
 	public int getZZ_RequestedBy_ID();
 
 	public org.compiere.model.I_AD_User getZZ_RequestedBy() throws RuntimeException;
+
+    /** Column name ZZ_Requester_ID */
+    public static final String COLUMNNAME_ZZ_Requester_ID = "ZZ_Requester_ID";
+
+	/** Set Requester	  */
+	public void setZZ_Requester_ID (int ZZ_Requester_ID);
+
+	/** Get Requester	  */
+	public int getZZ_Requester_ID();
+
+	public org.compiere.model.I_AD_User getZZ_Requester() throws RuntimeException;
 
     /** Column name ZZ_SDL_Fin_Mgr_ID */
     public static final String COLUMNNAME_ZZ_SDL_Fin_Mgr_ID = "ZZ_SDL_Fin_Mgr_ID";

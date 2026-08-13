@@ -42,10 +42,14 @@ public class ConsumablesRequestDocApproveProcess extends AbstractDocApproveProce
 		validateData();
 		String currentDocAction = docApprove.getZZ_DocAction();
 		String currentDocStatus = docApprove.getZZ_DocStatus();
-		if(docApprove.isZZ_AllowLineManageApproved() && 
+		if(docApprove.isZZ_AllowLineManageApproved() &&
 				IDocApprove.ZZ_DOCACTION_SubmitToLineManager.equals(currentDocAction)) {  // User presses Action button
-			doSubmitDocForLineManage();			
-		}else if(docApprove.isZZ_AllowLineManageApproved() &&     // Line Manager presses Action button	
+			if (mInventory_New.isZZ_Is_Refreshment_Req()) {
+				doSubmitDocForSnrAdminFinance(true);   // Refreshments request - skip Line Manager, go straight to Snr Admin Finance
+			} else {
+				doSubmitDocForLineManage();
+			}
+		}else if(docApprove.isZZ_AllowLineManageApproved() &&     // Line Manager presses Action button
 				IDocApprove.ZZ_DOCACTION_ApproveDoNotApprove.equals(currentDocAction) && 
 				IDocApprove.ZZ_DOCSTATUS_Submitted.equals(currentDocStatus)) {		
 			doLineManageApprove();
@@ -94,7 +98,8 @@ public class ConsumablesRequestDocApproveProcess extends AbstractDocApproveProce
 	protected void doSubmitDocForSnrAdminFinance(boolean isBypassLineManage) {
 		docApprove.setZZ_DocStatus(IDocApprove.ZZ_DOCSTATUS_SubmittedToSnrAdminFinance);
 		docApprove.setZZ_DocAction(IDocApprove.ZZ_DOCACTION_ApproveDoNotApprove);
-		docApprove.setZZ_Date_LM_Approved(now);
+		if (!isBypassLineManage)
+			docApprove.setZZ_Date_LM_Approved(now);
 		if (docApprove.getZZ_Date_Submitted() == null)
 			docApprove.setZZ_Date_Submitted(now);
 
