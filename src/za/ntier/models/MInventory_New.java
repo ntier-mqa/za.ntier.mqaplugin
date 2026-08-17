@@ -808,22 +808,28 @@ public class MInventory_New extends MInventory implements I_M_Inventory,IDocAppr
 	}
 
 	@Override
-	public void setZZ_Requester_ID(int ZZ_Requester_ID) {
-		// TODO Auto-generated method stub
-
+	public void setZZ_Requester_ID(int ZZ_Requester_ID)
+	{
+		if (ZZ_Requester_ID < 1)
+			set_Value(COLUMNNAME_ZZ_Requester_ID, null);
+		else
+			set_Value(COLUMNNAME_ZZ_Requester_ID, Integer.valueOf(ZZ_Requester_ID));
 	}
 
 	@Override
-	public int getZZ_Requester_ID() {
-		// TODO Auto-generated method stub
-		return 0;
+	public int getZZ_Requester_ID()
+	{
+		Integer ii = (Integer)get_Value(COLUMNNAME_ZZ_Requester_ID);
+		if (ii == null)
+			return 0;
+		return ii.intValue();
 	}
 
 	@Override
-	public I_AD_User getZZ_Requester() throws RuntimeException {
-		// TODO Auto-generated method stub
-		return null;
+	public I_AD_User getZZ_Requester() throws RuntimeException
+	{
+		return (I_AD_User)MTable.get(getCtx(), I_AD_User.Table_ID)
+				.getPO(getZZ_Requester_ID(), get_TrxName());
 	}
-
 
 }
