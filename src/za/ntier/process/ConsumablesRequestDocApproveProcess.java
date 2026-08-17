@@ -86,7 +86,7 @@ public class ConsumablesRequestDocApproveProcess extends AbstractDocApproveProce
 		if("Y".equals(pApprove_Rej_MFC)){
 			docApprove.setZZ_DocStatus(IDocApprove.ZZ_DOCSTATUS_Completed);
 			docApprove.setZZ_Date_MFC_Approved(now);
-			AbstractDocApproveProcess.queueNotify(queueNotifis, 
+			AbstractDocApproveProcess.queueNotify(queueNotifis,
 					docApprove.getCreatedBy(), getTable_ID(), getRecord_ID(), docApprove.getZZMailLineApproved());
 		}else{
 			docApprove.setZZ_DocStatus(IDocApprove.ZZ_DOCSTATUS_NotApprovedByManagerFinanceConsumables);
@@ -122,7 +122,7 @@ public class ConsumablesRequestDocApproveProcess extends AbstractDocApproveProce
 	// Snr Admin Finance presses Action Button
 	protected void doSnrAdminFinanceApprove() {
 		docApprove.setZZ_Snr_Admin_Fin_ID(Env.getAD_User_ID(getCtx()));
-		if("Y".equals(pApprove_Rej_SDL)){
+		if("Y".equals(pApproveRejSAF)){
 			doSubmitDocFinConsumeablesMgr();
 
 		}else{
