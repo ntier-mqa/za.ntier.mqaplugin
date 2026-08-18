@@ -2,7 +2,6 @@ package za.ntier.process;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.compiere.model.MInventoryLine;
-import org.compiere.model.MMailText;
 import org.compiere.process.DocAction;
 import org.compiere.process.ProcessInfo;
 import org.compiere.util.Env;
@@ -56,10 +55,9 @@ public class ConsumablesRequestDocApproveProcess extends AbstractDocApproveProce
 		}else if(IDocApprove.ZZ_DOCACTION_ApproveDoNotApprove.equals(currentDocAction) &&  // Snr Admin Finance presses Action Button
 				IDocApprove.ZZ_DOCSTATUS_SubmittedToSnrAdminFinance.equals(currentDocStatus)) {
 			doSnrAdminFinanceApprove();
-		}else if(docApprove.isZZ_AllowMgrFinConsumablesApproval() &&
-				IDocApprove.ZZ_DOCACTION_ApproveDoNotApprove.equals(currentDocAction) && 
-				IDocApprove.ZZ_DOCSTATUS_SubmittedToManagerFinanceConsumables.equals(currentDocStatus)) {  // consumables manager presses button
-			doManagerFinConsumablesApprove();
+		}else if(IDocApprove.ZZ_DOCACTION_Complete.equals(currentDocAction) &&  // Snr Admin Finance presses Complete Action Button
+				IDocApprove.ZZ_DOCSTATUS_Approved.equals(currentDocStatus)) {
+			doSnrAdminFinanceComplete();
 		}
 		else {
 			throw new AdempiereException(Msg.getMsg(getCtx(), "ZZ_WrongWorkflowState", 
@@ -79,22 +77,15 @@ public class ConsumablesRequestDocApproveProcess extends AbstractDocApproveProce
 		return null;
 	}
 
-	
-	//consumables manager presses button
-	protected void doManagerFinConsumablesApprove() {
-		docApprove.setZZ_Mgr_Fin_Consumables_ID(Env.getAD_User_ID(getCtx()));
-		if("Y".equals(pApprove_Rej_MFC)){
-			docApprove.setZZ_DocStatus(IDocApprove.ZZ_DOCSTATUS_Completed);
-			docApprove.setZZ_Date_MFC_Approved(now);
-			AbstractDocApproveProcess.queueNotify(queueNotifis,
-					docApprove.getCreatedBy(), getTable_ID(), getRecord_ID(), docApprove.getZZMailLineApproved());
-		}else{
-			docApprove.setZZ_DocStatus(IDocApprove.ZZ_DOCSTATUS_NotApprovedByManagerFinanceConsumables);
-			docApprove.setZZ_Date_MFC_Not_Approved(now);
-			AbstractDocApproveProcess.queueNotify(queueNotifis, docApprove.getCreatedBy(), getTable_ID(), getRecord_ID(), docApprove.getZZMailLineReject());
-		}
+
+	// Snr Admin Finance presses Complete Action Button (final step)
+	protected void doSnrAdminFinanceComplete() {
+		docApprove.setZZ_DocStatus(IDocApprove.ZZ_DOCSTATUS_Completed);
+		docApprove.setZZ_Date_Completed(now);
+		AbstractDocApproveProcess.queueNotify(queueNotifis,
+				docApprove.getCreatedBy(), getTable_ID(), getRecord_ID(), docApprove.getZZMailLineApproved());
 	}
-	
+
 	protected void doSubmitDocForSnrAdminFinance(boolean isBypassLineManage) {
 		docApprove.setZZ_DocStatus(IDocApprove.ZZ_DOCSTATUS_SubmittedToSnrAdminFinance);
 		docApprove.setZZ_DocAction(IDocApprove.ZZ_DOCACTION_ApproveDoNotApprove);
@@ -123,23 +114,17 @@ public class ConsumablesRequestDocApproveProcess extends AbstractDocApproveProce
 	protected void doSnrAdminFinanceApprove() {
 		docApprove.setZZ_Snr_Admin_Fin_ID(Env.getAD_User_ID(getCtx()));
 		if("Y".equals(pApproveRejSAF)){
-			doSubmitDocFinConsumeablesMgr();
+			docApprove.setZZ_DocStatus(IDocApprove.ZZ_DOCSTATUS_Approved);
+			docApprove.setZZ_DocAction(IDocApprove.ZZ_DOCACTION_Complete);
+			docApprove.setZZ_Date_Approved(now);
+			if (docApprove.getZZ_Date_Submitted() == null)
+				docApprove.setZZ_Date_Submitted(now);
 
 		}else{
 			docApprove.setZZ_DocStatus(IDocApprove.ZZ_DOCSTATUS_NotApprovedBySnrAdminFinance);
 			docApprove.setZZ_Date_Not_Approved_by_Snr_Adm_Fin(now);
 			AbstractDocApproveProcess.queueNotify(queueNotifis, docApprove.getCreatedBy(), getTable_ID(), getRecord_ID(), docApprove.getZZMailLineReject());
 		}
-	}
-
-	protected void doSubmitDocFinConsumeablesMgr() {
-		docApprove.setZZ_DocStatus(IDocApprove.ZZ_DOCSTATUS_SubmittedToManagerFinanceConsumables);
-		docApprove.setZZ_DocAction(IDocApprove.ZZ_DOCACTION_ApproveDoNotApprove);
-		docApprove.setZZ_Date_Approved(now);
-		if (docApprove.getZZ_Date_Submitted() == null)
-			docApprove.setZZ_Date_Submitted(now);
-
-		AbstractDocApproveProcess.queueNotifyForRole(queueNotifis, IDocApprove.MANAGER_FIN_CONSUMABLES_ROLE_ID, getTable_ID(), getRecord_ID(), new MMailText(getCtx(), 1000003, get_TrxName()));
 	}
 
 	protected void validateData() {
