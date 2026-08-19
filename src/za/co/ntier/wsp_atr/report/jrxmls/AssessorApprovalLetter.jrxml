@@ -16,6 +16,7 @@
 	<parameter name="SDPName" class="java.lang.String"/>
 	<parameter name="SDPLinkedBPLocation" class="java.lang.String"/>
 	<parameter name="AssessorShortName" class="java.lang.String"/>
+	<parameter name="RegistrationType" class="java.lang.String"/>
 	<parameter name="RegistrationNumber" class="java.lang.String"/>
 	<parameter name="DateOfRegistration" class="java.lang.String"/>
 	<parameter name="EndDate" class="java.lang.String"/>
@@ -84,27 +85,27 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$P{SDPLinkedBPLocation} != null ? $P{SDPLinkedBPLocation} : ""]]></textFieldExpression>
 			</textField>
-			<staticText>
+			<textField textAdjust="StretchHeight">
 				<reportElement positionType="Float" x="0" y="120" width="515" height="20" uuid="30000003-0000-0000-0000-000000000003"/>
 				<textElement>
 					<font size="12" isBold="true"/>
 				</textElement>
-				<text><![CDATA[ASSESSOR REGISTRATION]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA["ASSESSOR " + ($P{RegistrationType} != null ? $P{RegistrationType}.toUpperCase() : "REGISTRATION")]]></textFieldExpression>
+			</textField>
 			<textField textAdjust="StretchHeight">
 				<reportElement positionType="Float" x="0" y="150" width="515" height="50" uuid="40000004-0000-0000-0000-000000000004"/>
 				<textElement>
 					<font size="10"/>
 				</textElement>
-				<textFieldExpression><![CDATA["Dear " + ($P{AssessorShortName} != null ? $P{AssessorShortName} : "") + "\n\n" + "This letter serves to confirm that you have fulfilled the requirements to be registered as an assessor with the Mining Qualifications Authority. Your registration details are as follows:\n"]]></textFieldExpression>
+				<textFieldExpression><![CDATA["Dear " + ($P{AssessorShortName} != null ? $P{AssessorShortName} : "") + "\n\n" + "This letter serves to confirm that you have fulfilled the requirements for " + ($P{RegistrationType} != null ? $P{RegistrationType}.toLowerCase() : "registration") + " as an assessor with the Mining Qualifications Authority. Your " + ($P{RegistrationType} != null ? $P{RegistrationType}.toLowerCase() : "registration") + " details are as follows:\n"]]></textFieldExpression>
 			</textField>
-			<staticText>
+			<textField textAdjust="StretchHeight">
 				<reportElement positionType="Float" x="0" y="210" width="150" height="20" uuid="c0000001-1111-1111-1111-111111111111"/>
 				<textElement>
 					<font size="10" isBold="true"/>
 				</textElement>
-				<text><![CDATA[Registration Number:]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA[($P{RegistrationType} != null ? $P{RegistrationType} : "Registration") + " Number:"]]></textFieldExpression>
+			</textField>
 			<textField textAdjust="StretchHeight">
 				<reportElement positionType="Float" x="150" y="210" width="365" height="20" uuid="c0000002-1111-1111-1111-111111111111"/>
 				<textElement>
@@ -112,13 +113,13 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$P{RegistrationNumber} != null ? $P{RegistrationNumber} : ""]]></textFieldExpression>
 			</textField>
-			<staticText>
+			<textField textAdjust="StretchHeight">
 				<reportElement positionType="Float" x="0" y="230" width="150" height="20" uuid="c0000003-1111-1111-1111-111111111111"/>
 				<textElement>
 					<font size="10" isBold="true"/>
 				</textElement>
-				<text><![CDATA[Date of Registration:]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA["Date of " + ($P{RegistrationType} != null ? $P{RegistrationType} : "Registration") + ":"]]></textFieldExpression>
+			</textField>
 			<textField textAdjust="StretchHeight">
 				<reportElement positionType="Float" x="150" y="230" width="365" height="20" uuid="c0000004-1111-1111-1111-111111111111"/>
 				<textElement>
@@ -140,13 +141,13 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$P{EndDate} != null ? $P{EndDate} : ""]]></textFieldExpression>
 			</textField>
-			<staticText>
+			<textField textAdjust="StretchHeight">
 				<reportElement positionType="Float" x="0" y="270" width="150" height="20" uuid="c0000009-1111-1111-1111-111111111111"/>
 				<textElement>
 					<font size="10" isBold="true"/>
 				</textElement>
-				<text><![CDATA[Scope registered for:]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA["Scope " + ($P{RegistrationType} != null && $P{RegistrationType}.toLowerCase().contains("re-reg") ? "re-registered" : "registered") + " for:"]]></textFieldExpression>
+			</textField>
 			<textField textAdjust="StretchHeight">
 				<reportElement positionType="Float" x="150" y="270" width="365" height="20" uuid="c0000010-1111-1111-1111-111111111111"/>
 				<textElement>

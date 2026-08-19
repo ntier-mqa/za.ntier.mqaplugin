@@ -156,6 +156,10 @@ public class NtierModelValidator implements ModelValidator
 			{
 				var newStatus = po.get_ValueAsString(ColStatus);
 				var assessorPerson = new X_ZZAssessorPerson(po.getCtx(), po.get_ID(), po.get_TrxName());
+				
+				String regTypeStr = assessorPerson.getZZRegistrationType() != null ? assessorPerson.getZZRegistrationType() : X_ZZAssessorPerson.ZZREGISTRATIONTYPE_Registration;
+				String regTypeLowerStr = regTypeStr.toLowerCase();
+				
 				if (X_ZZAssessorPerson.ZZ_DOCSTATUS_Approved.equals(newStatus))
 				{
 					var now = LocalDateTime.now();
@@ -332,6 +336,12 @@ public class NtierModelValidator implements ModelValidator
 								String subject = approvedMailTemplate.getMailHeader();
 								String msgBody = approvedMailTemplate.getMailText(true);
 
+								if (subject != null)
+								{
+									subject = subject.replace("@RegistrationType@", regTypeStr);
+									subject = subject.replace("@registrationType@", regTypeLowerStr);
+								}
+
 								if (msgBody != null)
 								{
 									msgBody = msgBody.replace("@AssessorName@", assessorNameStr);
@@ -342,6 +352,8 @@ public class NtierModelValidator implements ModelValidator
 									msgBody = msgBody.replace("@EndDate@", endDateStr);
 									msgBody = msgBody.replace("@Qualifications@", qualifications);
 									msgBody = msgBody.replace("@SkillsProgrammes@", skillsProgrammes);
+									msgBody = msgBody.replace("@RegistrationType@", regTypeStr);
+									msgBody = msgBody.replace("@registrationType@", regTypeLowerStr);
 								}
 
 								MClient client = MClient.get(po.getCtx(), po.getAD_Client_ID());
@@ -352,6 +364,7 @@ public class NtierModelValidator implements ModelValidator
 									try
 									{
 										HashMap<String, Object> jasperParams = new HashMap<>();
+										jasperParams.put("RegistrationType", regTypeStr);
 										jasperParams.put("HeaderImagePath", NtierModelValidator.class.getResource(
 																													"/za/co/ntier/wsp_atr/report/jrxmls/MQA_Address_Logo_Header.png"));
 										jasperParams.put("FooterImagePath", NtierModelValidator.class.getResource(
@@ -389,6 +402,7 @@ public class NtierModelValidator implements ModelValidator
 
 										String letterPrefix;
 										String jasperName;
+										String fileRegType = X_ZZAssessorPerson.ZZREGISTRATIONTYPE_Re_Registration.equals(regTypeStr) ? "Re_Registration_" : "";
 										if (isScopeExt)
 										{
 											letterPrefix = ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()) ? "Moderator_ScopeExt_Approval_Letter"
@@ -398,8 +412,8 @@ public class NtierModelValidator implements ModelValidator
 										}
 										else
 										{
-											letterPrefix = ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()) ? "Moderator_Approval_Letter"
-																																	: "Assessor_Approval_Letter";
+											letterPrefix = ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()) ? "Moderator_" + fileRegType + "Approval_Letter"
+																																	: "Assessor_" + fileRegType + "Approval_Letter";
 											jasperName = ROLE_MODERATOR.equals(assessorPerson.getZZAssessorRole()) ? "ModeratorApprovalLetter"
 																																	: "AssessorApprovalLetter";
 										}
@@ -524,6 +538,12 @@ public class NtierModelValidator implements ModelValidator
 									String subject = notRecMailTemplate.getMailHeader();
 									String msgBody = notRecMailTemplate.getMailText(true);
 
+									if (subject != null)
+									{
+										subject = subject.replace("@RegistrationType@", regTypeStr);
+										subject = subject.replace("@registrationType@", regTypeLowerStr);
+									}
+
 									if (msgBody != null)
 									{
 										msgBody = msgBody.replace("@AssessorName@", assessorNameStr);
@@ -532,6 +552,8 @@ public class NtierModelValidator implements ModelValidator
 										msgBody = msgBody.replace("@ZZ_Moderator@", zzModerator);
 										msgBody = msgBody.replace("@NotRecommendedQualifications@", notRecQuals);
 										msgBody = msgBody.replace("@NotRecommendedSkillsProgrammes@", notRecSkills);
+										msgBody = msgBody.replace("@RegistrationType@", regTypeStr);
+										msgBody = msgBody.replace("@registrationType@", regTypeLowerStr);
 									}
 
 									MClient client = MClient.get(po.getCtx(), po.getAD_Client_ID());
@@ -594,11 +616,20 @@ public class NtierModelValidator implements ModelValidator
 									{
 										String subject = mailTemplate.getMailHeader();
 										String msgBody = mailTemplate.getMailText(true);
+										
+										if (subject != null)
+										{
+											subject = subject.replace("@RegistrationType@", regTypeStr);
+											subject = subject.replace("@registrationType@", regTypeLowerStr);
+										}
+
 										if (msgBody != null)
 										{
 											msgBody = msgBody.replace("@Name@", user.getName() != null ? user.getName() : "");
 											msgBody = msgBody.replace("@AssessorName@", assessorNameStr);
 											msgBody = msgBody.replace("@ModeratorName@", assessorNameStr);
+											msgBody = msgBody.replace("@RegistrationType@", regTypeStr);
+											msgBody = msgBody.replace("@registrationType@", regTypeLowerStr);
 										}
 
 										client.sendEMail(user.getEMail(), subject, msgBody, null, mailTemplate.isHtml());
