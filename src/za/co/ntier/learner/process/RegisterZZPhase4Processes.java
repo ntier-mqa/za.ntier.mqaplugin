@@ -42,6 +42,7 @@ public class RegisterZZPhase4Processes extends SvrProcess {
             "AddZZLearnerUnitStandardTable",
             "AddZZLearnerUnitStandardAssessmentsTable",
             "AddZZLearnerDocumentsTable",
+            "AddZZLearnerPostSchoolDetailsTable",
     };
 
     @Override
