@@ -316,7 +316,7 @@ www.mqa.org.za]]></text>
 				</reportElement>
 			</rectangle>
 			<staticText>
-				<reportElement x="305" y="7" width="120" height="18" uuid="e5f7f521-a417-43ba-9ef9-505d8092da69">
+				<reportElement x="305" y="7" width="135" height="18" uuid="e5f7f521-a417-43ba-9ef9-505d8092da69">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textElement textAlignment="Left" verticalAlignment="Top">
