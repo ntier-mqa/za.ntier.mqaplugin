@@ -316,13 +316,13 @@ www.mqa.org.za]]></text>
 				</reportElement>
 			</rectangle>
 			<staticText>
-				<reportElement x="305" y="7" width="120" height="18" uuid="e5f7f521-a417-43ba-9ef9-505d8092da69">
+				<reportElement x="305" y="7" width="135" height="18" uuid="e5f7f521-a417-43ba-9ef9-505d8092da69">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textElement textAlignment="Left" verticalAlignment="Top">
 					<font size="12" isBold="true"/>
 				</textElement>
-				<text><![CDATA[CONTROLLED BY:]]></text>
+				<text><![CDATA[RECOMMENDED BY:]]></text>
 			</staticText>
 			<staticText>
 				<reportElement x="305" y="79" width="60" height="18" uuid="d29e749b-1cb1-45b3-9af7-b6da9668cc25">
