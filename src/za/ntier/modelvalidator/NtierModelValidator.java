@@ -80,6 +80,7 @@ public class NtierModelValidator implements ModelValidator
 	private static final String ROLE_MGR_QA_AI = "635702d2-8ffb-4a31-a585-d2960d86383c";
 	private static final String ROLE_ASSESSOR = "Assessor";
 	private static final String ROLE_MODERATOR = "Moderator";
+	private static final String LOC_BUSINESS_ADDRESS = "Business Address";
 
 	@Override
 	public void initialize(ModelValidationEngine engine, MClient client)
@@ -143,7 +144,7 @@ public class NtierModelValidator implements ModelValidator
 					}
 					
 					// Generate WPA Approval Letter
-					generateWPAApprovalLetter((X_ZZ_WPA_Application) po);
+					generateAndSendWPAApprovalLetter((X_ZZ_WPA_Application) po);
 				}
 			}
 		}
@@ -865,7 +866,7 @@ public class NtierModelValidator implements ModelValidator
 		return new JRMapCollectionDataSource(list);
 	}
 
-	private void generateWPAApprovalLetter(X_ZZ_WPA_Application po)
+	private void generateAndSendWPAApprovalLetter(X_ZZ_WPA_Application po)
 	{
 		try
 		{
@@ -885,7 +886,16 @@ public class NtierModelValidator implements ModelValidator
 			String bpAddress = "";
 			if (locs != null && locs.length > 0)
 			{
-				MLocation loc = locs[0].getLocation(false);
+				MBPartnerLocation selectedLoc = locs[0];
+				for (MBPartnerLocation bpLoc : locs)
+				{
+					if (LOC_BUSINESS_ADDRESS.equalsIgnoreCase(bpLoc.getName()))
+					{
+						selectedLoc = bpLoc;
+						break;
+					}
+				}
+				MLocation loc = selectedLoc.getLocation(false);
 				if (loc != null)
 				{
 					StringBuilder addrBuilder = new StringBuilder();
@@ -918,7 +928,7 @@ public class NtierModelValidator implements ModelValidator
 			jasperParams.put("BPAddress", bpAddress);
 			jasperParams.put("TitleCreation", titleCreation);
 
-			String applicantName = po.getName() != null ? po.getName().trim() : "";
+			String applicantName = po.getZZ_ApplicantName() != null ? po.getZZ_ApplicantName().trim() : "";
 			String applicantSurname = po.getZZSurname() != null ? po.getZZSurname().trim() : "";
 			String fullApplicantName = (applicantName + " " + applicantSurname).trim();
 			jasperParams.put("ApplicantName", fullApplicantName);
@@ -948,6 +958,18 @@ public class NtierModelValidator implements ModelValidator
 				}
 				attachment.addEntry(pdfAttachment);
 				attachment.saveEx();
+
+				// Send email to applicant
+				String applicantEmail = po.getEMail();
+				if (!Util.isEmpty(applicantEmail))
+				{
+					MClient client = MClient.get(po.getCtx(), po.getAD_Client_ID());
+					String subject = "WPA Approval Letter - " + (wpaNumber != null ? wpaNumber : "");
+					String message = "Dear " + fullApplicantName + ",<br><br>"
+							+ "Please find attached your WPA Approval Letter.<br><br>"
+							+ "Regards<br>";
+					client.sendEMail(applicantEmail, subject, message, pdfAttachment, true);
+				}
 
 				// Cleanup
 				pdfAttachment.delete();
