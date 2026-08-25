@@ -15,7 +15,8 @@ public final class MQAConstants {
     public static final String[] CUSTOM_ZOOM_TABLES = {
         "ZZ_QCTO_APPLICATION_INFO_V",
         "ZZ_AuditSchedule_v",
-        "zz_Qualification_InfoWindow_v"
+        "zz_Qualification_InfoWindow_v",
+        "ZZCompletedAssessments_v"
     };
 
     /**
