@@ -44,23 +44,26 @@ public class LevyFilesRepository {
     /**
      * Returns all unlinked levy lines for the given SDL number whose header's
      * year+month (C_Year_ID → FiscalYear, ZZ_Month) is strictly before
-     * the current header's year+month boundary.
+     * the current header's year+month boundary, restricted to the same
+     * Scheme Year (ZZ_Scheme_Year_Adjust) as the current line.
      *
      * @param sdlNo             SDL number of the BP
      * @param currentHdrYearNum fiscal year number of the current header (e.g. 2025)
      * @param currentHdrMonthOrd month order of the current header (1=Jan … 12=Dec)
+     * @param schemeYear        Scheme Year of the current line; only prior lines with
+     *                          the same Scheme Year are eligible to be combined
      */
     public List<X_ZZ_Monthly_Levy_Files> getPriorUnlinkedLinesForBP(
-            String sdlNo, int currentHdrYearNum, int currentHdrMonthOrd) {
+            String sdlNo, int currentHdrYearNum, int currentHdrMonthOrd, String schemeYear) {
 
         // Step 1: collect all header IDs whose year+month is strictly before the boundary
         Set<Integer> priorHdrIds = resolvePriorHeaderIds(currentHdrYearNum, currentHdrMonthOrd);
         if (priorHdrIds.isEmpty()) return Collections.emptyList();
 
-        // Step 2: load all unlinked lines for this BP across all headers
+        // Step 2: load all unlinked lines for this BP, same Scheme Year, across all headers
         List<X_ZZ_Monthly_Levy_Files> all = new Query(ctx, X_ZZ_Monthly_Levy_Files.Table_Name,
-                "ZZ_SDL_No=? AND IsActive='Y' AND C_InvoiceBatchLine_ID IS NULL", trx)
-                .setParameters(sdlNo).setOnlyActiveRecords(true).list();
+                "ZZ_SDL_No=? AND IsActive='Y' AND C_InvoiceBatchLine_ID IS NULL AND TRIM(ZZ_Scheme_Year_Adjust)=TRIM(?)", trx)
+                .setParameters(sdlNo, schemeYear).setOnlyActiveRecords(true).list();
 
         // Step 3: keep only those belonging to a prior header
         List<X_ZZ_Monthly_Levy_Files> result = new ArrayList<>();
