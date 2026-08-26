@@ -117,11 +117,12 @@ public class LevyBatchCreationService {
 
             // --- Year & month from the current line ---
             // ZZ_Month is stored as a numeric code ("12") by iDempiere; convert to name.
-            String lineYear  = safe(currentLine.getZZ_Year());
-            String lineMonth = MonthUtil.toName(safe(currentLine.getZZ_Month()));
+            String lineYear   = safe(currentLine.getZZ_Year());
+            String lineMonth  = MonthUtil.toName(safe(currentLine.getZZ_Month()));
+            String schemeYear = safe(currentLine.getZZ_Scheme_Year_Adjust());
 
-            // --- Skip if this BP+year+month was already processed in this run ---
-            String processKey = bpId + "-" + lineYear + "-" + lineMonth;
+            // --- Skip if this BP+year+month+schemeYear was already processed in this run ---
+            String processKey = bpId + "-" + lineYear + "-" + lineMonth + "-" + schemeYear;
             if (processedKeys.contains(processKey)) continue;
 
             // --- Approval check for the current line's year ---
@@ -138,9 +139,10 @@ public class LevyBatchCreationService {
 
             // Add prior unlinked lines for this BP from headers strictly before
             // the current header's year+month (uses header C_Year_ID / ZZ_Month,
-            // NOT the levy line's own ZZ_Year / ZZ_Month).
+            // NOT the levy line's own ZZ_Year / ZZ_Month), restricted to the same
+            // Scheme Year as the current line.
             List<X_ZZ_Monthly_Levy_Files> priorLines =
-                    levyRepo.getPriorUnlinkedLinesForBP(sdlNo, hdrYearNum, hdrMonthOrd);
+                    levyRepo.getPriorUnlinkedLinesForBP(sdlNo, hdrYearNum, hdrMonthOrd, schemeYear);
 
             for (X_ZZ_Monthly_Levy_Files prior : priorLines) {
                 String priorYear = safe(prior.getZZ_Year());
@@ -170,7 +172,7 @@ public class LevyBatchCreationService {
 
             // --- Build line description ---
             String desc = DescriptionBuilder.buildLineDescription(
-                    "MG", lineYear, lineMonth, sdlNo, contributing.size(), lineAmt);
+                    "MG", lineYear, lineMonth, schemeYear, sdlNo, contributing.size(), lineAmt);
 
             // --- Resolve BP location ---
             int bpLocId = partnerRepo.getBillToOrAnyLocation(bp);
