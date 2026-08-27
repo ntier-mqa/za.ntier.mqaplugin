@@ -5,28 +5,28 @@
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
 	<parameter name="ZZLEARNERSHIP_ID" class="java.lang.Integer" isForPrompting="false"/>
 	<parameter name="RECORD_ID" class="java.lang.Integer"/>
+	<parameter name="AD_PINSTANCE_ID" class="java.lang.Integer"/>
 	<parameter name="RESOURCE_DIR" class="java.lang.String" isForPrompting="false">
 		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
 	</parameter>
 	<queryString language="plsql">
 		<![CDATA[SELECT
-	TRIM(COALESCE(P.ZZFIRSTNAME, '') || ' ' || COALESCE(P.Surname, '')) AS LEARNERNAME, --(LEARNERNAME)
-	COALESCE(P.ZZ_ID_PASSPORT_NO, P.ZZOTHERIDNO) AS LEARNERID, --(LEARNERID)
-	QCTOLS.ZZLEARNERSHIPTITLE, --(LEARNERSHIPTITLE)
-	Q.ZZSAQAQUALIFICATIONCODE, --(SAQA ID OF THE LINKED QUALS OF LEARNERSHIP),
-	QCTOLS.ZZNQFLEVEL, --(LEVEL ON LEARNERSHIP)
-	NULL AS CREDITACHIEVED,
+	TRIM(COALESCE(ca.ZZFIRSTNAME, '') || ' ' || COALESCE(ca.Surname, '')) AS LEARNERNAME,
+	COALESCE(ca.ZZ_ID_PASSPORT_NO, ca.ZZOTHERIDNO) AS LEARNERID,
+	LS.ZZLEARNERSHIPTITLE,
+	Q.ZZSAQAQUALIFICATIONCODE,
+	LS.ZZNQFLEVEL,
+	ca.total_achieved_credits AS CREDITACHIEVED,
 	TO_CHAR(CURRENT_DATE, 'DD MON YYYY') AS DATEISSUED,
 	NULL AS CERTIFICATENO,
 	NULL AS SIGNATURECHIEF,
 	NULL AS SIGNATURESMQA
 FROM
-	ZZLEARNER L
-	JOIN ZZLEARNERQCTOLEARNERSHIP QCTO ON L.ZZLEARNER_ID = QCTO.ZZLEARNER_ID
-	JOIN ZZQCTOLEARNERSHIP QCTOLS ON QCTO.ZZQCTOLEARNERSHIP_ID = QCTOLS.ZZQCTOLEARNERSHIP_ID
-	JOIN ZZQUALIFICATION Q ON Q.ZZQUALIFICATION_ID = QCTOLS.ZZQUALIFICATION_ID
-	JOIN ZZPERSON P ON L.ZZPERSON_ID = P.ZZPERSON_ID
-WHERE L.ZZLEARNER_ID = $P{RECORD_ID}]]>
+	ZZCompletedAssessments_v ca
+	JOIN ZZLearnerLearnership LL ON ca.ZZLearnerLearnership_ID = LL.ZZLearnerLearnership_ID
+	JOIN ZZLearnership LS ON LL.ZZLearnership_ID = LS.ZZLearnership_ID
+	JOIN ZZQUALIFICATION Q ON Q.ZZQUALIFICATION_ID = LS.ZZQUALIFICATION_ID
+WHERE ca.ZZCompletedAssessments_v_ID = $P{RECORD_ID}]]>
 	</queryString>
 	<field name="learnername" class="java.lang.String">
 		<property name="com.jaspersoft.studio.field.name" value="learnername"/>
@@ -76,13 +76,6 @@ WHERE L.ZZLEARNER_ID = $P{RECORD_ID}]]>
 		<band height="822" splitType="Stretch">
 			<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.FreeLayout"/>
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
-			<image scaleImage="FillFrame" onErrorType="Blank">
-				<reportElement x="-20" y="-20" width="595" height="842" uuid="ac994fe8-5e3d-4bc5-9ffa-cb6bacc2e930"/>
-				<box>
-					<pen lineWidth="1.0"/>
-				</box>
-				<imageExpression><![CDATA[$P{RESOURCE_DIR} + "Learnership_Certi_BG.png"]]></imageExpression>
-			</image>
 			<staticText>
 				<reportElement x="161" y="180" width="228" height="20" uuid="06e19516-ac11-4274-b660-5ce56cbe7281">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>

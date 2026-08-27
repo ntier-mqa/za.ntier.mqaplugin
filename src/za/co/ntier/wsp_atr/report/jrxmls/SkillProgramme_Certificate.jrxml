@@ -4,27 +4,27 @@
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="nTier_20260616.jrdax"/>
 	<parameter name="RECORD_ID" class="java.lang.Integer"/>
+	<parameter name="AD_PINSTANCE_ID" class="java.lang.Integer"/>
 	<parameter name="RESOURCE_DIR" class="java.lang.String" isForPrompting="false">
 		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
 	</parameter>
 	<queryString language="plsql">
 		<![CDATA[SELECT
 	TRIM(
-		COALESCE(P.ZZFIRSTNAME, '') || ' ' || COALESCE(P.SURNAME, '')
-	) AS SPNAME, --NAME
-	P.ZZ_ID_PASSPORT_NO AS PASSPORTNO, --PASSPORT NUMBER
-	QCTOSP.ZZSKILLSPROGRAMMETITLE, --TITLE
-	QCTOSP.ZZSKILLSPROGRAMMECODE, --REFERENCE
+		COALESCE(ca.ZZFirstName, '') || ' ' || COALESCE(ca.Surname, '')
+	) AS SPNAME,
+	COALESCE(ca.ZZ_ID_Passport_No, ca.ZZOtherIDNo) AS PASSPORTNO,
+	SPG.ZZSKILLSPROGRAMMETITLE,
+	SPG.ZZSKILLSPROGRAMMECODE,
 	TO_CHAR(CURRENT_DATE, 'DD MON YYYY') AS DATEISSUED,
-	NULL AS CERTIFICATENO, --SEQUENCIAL NUMBER
-	NULL AS SIGNATURECHIEF, --ELECTRONIC
-	NULL AS SIGNATURESMQA --ELECTRONIC
+	NULL AS CERTIFICATENO,
+	NULL AS SIGNATURECHIEF,
+	NULL AS SIGNATURESMQA
 FROM
-	ZZLEARNER SP
-	JOIN ZZLEARNERQCTOSKILLSPROGRAMME QCTO ON QCTO.ZZLEARNER_ID = SP.ZZLEARNER_ID
-	JOIN ZZQCTOSKILLSPROGRAMME QCTOSP ON QCTOSP.ZZQCTOSKILLSPROGRAMME_ID = QCTO.ZZQCTOSKILLSPROGRAMME_ID
-	LEFT JOIN ZZQUALIFICATION Q ON Q.ZZQUALIFICATION_ID = QCTOSP.ZZQUALIFICATION_ID
-	JOIN ZZPERSON P ON P.ZZPERSON_ID = SP.ZZPERSON_ID;]]>
+	ZZCompletedAssessments_v ca
+	JOIN ZZLearnerSkillsProgramme LSP ON ca.ZZLearnerSkillsProgramme_ID = LSP.ZZLearnerSkillsProgramme_ID
+	JOIN ZZSkillsProgramme SPG ON LSP.ZZSkillsProgramme_ID = SPG.ZZSkillsProgramme_ID
+WHERE ca.ZZCompletedAssessments_v_ID = $P{RECORD_ID}]]>
 	</queryString>
 	<field name="spname" class="java.lang.String">
 		<property name="com.jaspersoft.studio.field.name" value="spname"/>
@@ -65,13 +65,7 @@ FROM
 		<band height="822" splitType="Stretch">
 			<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.FreeLayout"/>
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
-			<image scaleImage="FillFrame" onErrorType="Blank">
-				<reportElement x="-20" y="-20" width="595" height="842" uuid="b2b2b2b2-3c3c-4d4d-5e5e-6f6f6f6f6f6f"/>
-				<box>
-					<pen lineWidth="1.0"/>
-				</box>
-				<imageExpression><![CDATA[$P{RESOURCE_DIR} + "SkillProgramme_Certi_BG.png"]]></imageExpression>
-			</image>
+
 			<staticText>
 				<reportElement x="152" y="148" width="280" height="26" uuid="dbf37fc5-2f39-4e8d-be01-38333b66d023">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
