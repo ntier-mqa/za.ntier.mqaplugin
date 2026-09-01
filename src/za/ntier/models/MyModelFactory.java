@@ -41,6 +41,7 @@ import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Col_Check;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping_Detail;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_Employees;
+import za.co.ntier.api.model.I_C_BP_OC;
 
 @Component(
 
@@ -111,6 +112,7 @@ public class MyModelFactory implements IModelFactory {
         register(I_ZZSkillsProgramme.Table_Name, MZZSkillsProgramme.class);
         register(I_ZZQctoSkillsProgramme.Table_Name, MZZQctoSkillsProgramme.class);
         register(I_ZZQctoModule.Table_Name, MZZQctoModule.class);
+        register(I_C_BP_OC.Table_Name, MBPOC.class);
     }
 
     private static void register(String tableName, Class<? extends PO> modelClass) {
