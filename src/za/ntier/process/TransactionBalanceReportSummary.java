@@ -37,10 +37,10 @@ public class TransactionBalanceReportSummary extends SvrProcess {
                 SELECT
                     t.m_product_id,
                     t.ad_client_id,
-                    SUM(CASE WHEN t.movementdate < ? THEN t.movementqty ELSE 0 END) AS opening_balance,
+                    SUM(CASE WHEN t.movementdate < ? AND t.movementtype IN ('V+', 'V-', 'I+', 'I-') THEN t.movementqty ELSE 0 END) AS opening_balance,
                     SUM(CASE WHEN t.movementdate BETWEEN ? AND ? AND t.movementtype IN ('V+', 'V-') THEN t.movementqty ELSE 0 END) AS receipts,
                     SUM(CASE WHEN t.movementdate BETWEEN ? AND ? AND t.movementtype IN ('I+', 'I-') THEN (t.movementqty * -1) ELSE 0 END) AS issues,
-                    SUM(CASE WHEN t.movementdate < ? THEN t.movementqty ELSE 0 END) +
+                    SUM(CASE WHEN t.movementdate < ? AND t.movementtype IN ('V+', 'V-', 'I+', 'I-') THEN t.movementqty ELSE 0 END) +
                     SUM(CASE WHEN t.movementdate BETWEEN ? AND ? AND t.movementtype IN ('V+', 'V-') THEN t.movementqty ELSE 0 END) +
                     SUM(CASE WHEN t.movementdate BETWEEN ? AND ? AND t.movementtype IN ('I+', 'I-') THEN t.movementqty ELSE 0 END) AS closing_balance
                 FROM adempiere.m_transaction t
@@ -52,7 +52,9 @@ public class TransactionBalanceReportSummary extends SvrProcess {
                 SELECT
                     t.m_product_id,
                     t.ad_client_id,
-                    SUM(COALESCE(fa.amtacctdr, 0)) AS total_cost
+                    SUM(CASE WHEN t.movementdate < ? AND t.movementtype IN ('V+', 'V-', 'I+', 'I-') THEN fa.amtacctdr ELSE 0 END) AS opening_cost,
+                    SUM(CASE WHEN t.movementdate BETWEEN ? AND ? AND t.movementtype IN ('V+', 'V-') THEN fa.amtacctdr ELSE 0 END) AS receipt_cost,
+                    SUM(CASE WHEN t.movementdate BETWEEN ? AND ? AND t.movementtype IN ('I+', 'I-') THEN fa.amtacctdr ELSE 0 END) AS issue_cost
                 FROM adempiere.m_transaction t
                 JOIN adempiere.fact_acct fa
                   ON fa.ad_client_id = t.ad_client_id
@@ -63,8 +65,6 @@ public class TransactionBalanceReportSummary extends SvrProcess {
                      )
                 WHERE t.ad_client_id = ?
                   AND (? = 0 OR t.m_product_id = ?)
-                  AND t.movementdate BETWEEN ? AND ?
-                  AND t.movementtype IN ('V+', 'V-', 'I+', 'I-')
                 GROUP BY t.m_product_id, t.ad_client_id
             )
             SELECT
@@ -74,7 +74,7 @@ public class TransactionBalanceReportSummary extends SvrProcess {
                 ts.receipts,
                 ts.issues,
                 ts.closing_balance,
-                COALESCE(cs.total_cost, 0) AS total_cost
+                COALESCE(cs.opening_cost, 0) + COALESCE(cs.receipt_cost, 0) - COALESCE(cs.issue_cost, 0) AS total_cost
             FROM txn_summary ts
             LEFT JOIN cost_summary cs
                    ON cs.m_product_id = ts.m_product_id AND cs.ad_client_id = ts.ad_client_id
@@ -96,11 +96,14 @@ public class TransactionBalanceReportSummary extends SvrProcess {
             pstmt.setInt(i++, getAD_Client_ID()); // client
             pstmt.setInt(i++, mProductId);        // product param check
             pstmt.setInt(i++, mProductId);        // actual product value
+            pstmt.setTimestamp(i++, startDate);   // cost_summary opening cost cutoff
+            pstmt.setTimestamp(i++, startDate);   // cost_summary receipt cost start
+            pstmt.setTimestamp(i++, endDate);     // cost_summary receipt cost end
+            pstmt.setTimestamp(i++, startDate);   // cost_summary issue cost start
+            pstmt.setTimestamp(i++, endDate);     // cost_summary issue cost end
             pstmt.setInt(i++, getAD_Client_ID()); // cost_summary client
             pstmt.setInt(i++, mProductId);        // cost_summary product param check
             pstmt.setInt(i++, mProductId);        // cost_summary actual product value
-            pstmt.setTimestamp(i++, startDate);   // cost_summary period start
-            pstmt.setTimestamp(i++, endDate);     // cost_summary period end
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {

@@ -5,3 +5,6 @@
 
 ALTER TABLE adempiere.t_transactions_report_summary
     ADD COLUMN IF NOT EXISTS total_cost NUMERIC DEFAULT NULL;
+
+
+select * from t_transactions_report_summary
