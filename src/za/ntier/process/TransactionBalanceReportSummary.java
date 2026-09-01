@@ -33,20 +33,52 @@ public class TransactionBalanceReportSummary extends SvrProcess {
         int lineNo = 0;
 
         String sql = """
-            SELECT 
-                t.m_product_id,
-                t.ad_client_id,
-                SUM(CASE WHEN t.movementdate < ? THEN t.movementqty ELSE 0 END) AS opening_balance,
-                SUM(CASE WHEN t.movementdate BETWEEN ? AND ? AND t.movementtype IN ('V+', 'V-') THEN t.movementqty ELSE 0 END) AS receipts,
-                SUM(CASE WHEN t.movementdate BETWEEN ? AND ? AND t.movementtype IN ('I+', 'I-') THEN (t.movementqty * -1) ELSE 0 END) AS issues,
-                SUM(CASE WHEN t.movementdate < ? THEN t.movementqty ELSE 0 END) +
-                SUM(CASE WHEN t.movementdate BETWEEN ? AND ? AND t.movementtype IN ('V+', 'V-') THEN t.movementqty ELSE 0 END) +                      
-                SUM(CASE WHEN t.movementdate BETWEEN ? AND ? AND t.movementtype IN ('I+', 'I-') THEN t.movementqty ELSE 0 END) AS closing_balance
-            FROM adempiere.m_transaction t
-            WHERE t.ad_client_id = ?
-              AND (? = 0 OR t.m_product_id = ?)
-            GROUP BY t.m_product_id, t.ad_client_id
-            ORDER BY t.m_product_id
+            WITH txn_summary AS (
+                SELECT
+                    t.m_product_id,
+                    t.ad_client_id,
+                    SUM(CASE WHEN t.movementdate < ? THEN t.movementqty ELSE 0 END) AS opening_balance,
+                    SUM(CASE WHEN t.movementdate BETWEEN ? AND ? AND t.movementtype IN ('V+', 'V-') THEN t.movementqty ELSE 0 END) AS receipts,
+                    SUM(CASE WHEN t.movementdate BETWEEN ? AND ? AND t.movementtype IN ('I+', 'I-') THEN (t.movementqty * -1) ELSE 0 END) AS issues,
+                    SUM(CASE WHEN t.movementdate < ? THEN t.movementqty ELSE 0 END) +
+                    SUM(CASE WHEN t.movementdate BETWEEN ? AND ? AND t.movementtype IN ('V+', 'V-') THEN t.movementqty ELSE 0 END) +
+                    SUM(CASE WHEN t.movementdate BETWEEN ? AND ? AND t.movementtype IN ('I+', 'I-') THEN t.movementqty ELSE 0 END) AS closing_balance
+                FROM adempiere.m_transaction t
+                WHERE t.ad_client_id = ?
+                  AND (? = 0 OR t.m_product_id = ?)
+                GROUP BY t.m_product_id, t.ad_client_id
+            ),
+            cost_summary AS (
+                SELECT
+                    t.m_product_id,
+                    t.ad_client_id,
+                    SUM(COALESCE(fa.amtacctdr, 0)) AS total_cost
+                FROM adempiere.m_transaction t
+                JOIN adempiere.fact_acct fa
+                  ON fa.ad_client_id = t.ad_client_id
+                 AND (
+                        (t.m_inoutline_id IS NOT NULL AND fa.ad_table_id = 319 AND fa.line_id = t.m_inoutline_id)
+                     OR (t.m_movementline_id IS NOT NULL AND fa.ad_table_id = 323 AND fa.line_id = t.m_movementline_id)
+                     OR (t.m_inventoryline_id IS NOT NULL AND fa.ad_table_id = 321 AND fa.line_id = t.m_inventoryline_id)
+                     )
+                WHERE t.ad_client_id = ?
+                  AND (? = 0 OR t.m_product_id = ?)
+                  AND t.movementdate BETWEEN ? AND ?
+                  AND t.movementtype IN ('V+', 'V-', 'I+', 'I-')
+                GROUP BY t.m_product_id, t.ad_client_id
+            )
+            SELECT
+                ts.m_product_id,
+                ts.ad_client_id,
+                ts.opening_balance,
+                ts.receipts,
+                ts.issues,
+                ts.closing_balance,
+                COALESCE(cs.total_cost, 0) AS total_cost
+            FROM txn_summary ts
+            LEFT JOIN cost_summary cs
+                   ON cs.m_product_id = ts.m_product_id AND cs.ad_client_id = ts.ad_client_id
+            ORDER BY ts.m_product_id
         """;
 
         try (PreparedStatement pstmt = DB.prepareStatement(sql, get_TrxName())) {
@@ -64,6 +96,11 @@ public class TransactionBalanceReportSummary extends SvrProcess {
             pstmt.setInt(i++, getAD_Client_ID()); // client
             pstmt.setInt(i++, mProductId);        // product param check
             pstmt.setInt(i++, mProductId);        // actual product value
+            pstmt.setInt(i++, getAD_Client_ID()); // cost_summary client
+            pstmt.setInt(i++, mProductId);        // cost_summary product param check
+            pstmt.setInt(i++, mProductId);        // cost_summary actual product value
+            pstmt.setTimestamp(i++, startDate);   // cost_summary period start
+            pstmt.setTimestamp(i++, endDate);     // cost_summary period end
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
@@ -72,9 +109,9 @@ public class TransactionBalanceReportSummary extends SvrProcess {
                           ad_pinstance_id, row_type, m_transaction_id, ad_client_id, ad_org_id, isactive,
                           created, createdby, updated, updatedby, movementtype, m_locator_id, m_product_id,
                           movementdate, movementqty, m_inventoryline_id, m_movementline_id, m_inoutline_id,
-                          opening_balance, receipts, issues, closing_balance,
+                          opening_balance, receipts, issues, closing_balance, total_cost,
                           t_transactions_report_summary_uu, lineno
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """;
 
                     try (PreparedStatement insertStmt = DB.prepareStatement(insertSql, get_TrxName())) {
@@ -105,9 +142,10 @@ public class TransactionBalanceReportSummary extends SvrProcess {
                         insertStmt.setBigDecimal(20, rs.getBigDecimal("receipts"));
                         insertStmt.setBigDecimal(21, rs.getBigDecimal("issues"));
                         insertStmt.setBigDecimal(22, rs.getBigDecimal("closing_balance"));
+                        insertStmt.setBigDecimal(23, rs.getBigDecimal("total_cost"));
 
-                        insertStmt.setString(23, DB.getSQLValueStringEx(null, "SELECT Generate_UUID() FROM Dual"));
-                        insertStmt.setInt(24, ++lineNo);
+                        insertStmt.setString(24, DB.getSQLValueStringEx(null, "SELECT Generate_UUID() FROM Dual"));
+                        insertStmt.setInt(25, ++lineNo);
 
                         insertStmt.executeUpdate();
                     }
