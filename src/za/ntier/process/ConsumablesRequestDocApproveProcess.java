@@ -135,7 +135,7 @@ public class ConsumablesRequestDocApproveProcess extends AbstractDocApproveProce
 		if (docApprove.getZZ_Date_Submitted() == null)
 			docApprove.setZZ_Date_Submitted(now);
 
-		AbstractDocApproveProcess.queueNotifyForRole(queueNotifis, IDocApprove.MANAGER_FIN_CONSUMABLES_ROLE_ID, getTable_ID(), getRecord_ID(), docApprove.getZZMailRequestFCM());
+		AbstractDocApproveProcess.queueNotifyForRole(queueNotifis, IDocApprove.MGR_ADMIN_FINANCE_ROLE_ID, getTable_ID(), getRecord_ID(), docApprove.getZZMailRequestFCM());
 	}
 
 	protected void validateData() {
