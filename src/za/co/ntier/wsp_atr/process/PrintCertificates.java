@@ -5,30 +5,29 @@ import java.io.InputStream;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Arrays;
 import java.util.logging.Level;
-import java.util.Base64;
-import java.nio.file.Files;
-
-import za.co.ntier.api.model.I_ZZCompletedAssessments_v;
 
 import org.adempiere.base.annotation.Process;
+import org.compiere.model.MSysConfig;
 import org.compiere.process.ProcessInfoParameter;
 import org.compiere.process.SvrProcess;
 import org.compiere.util.DB;
+import org.compiere.util.Env;
 import org.compiere.util.Trx;
 import org.compiere.util.Util;
-import org.zkoss.zul.Filedownload;
 
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
+import za.co.ntier.api.model.I_ZZCompletedAssessments_v;
 
 @Process(name = "za.co.ntier.wsp_atr.process.PrintCertificates")
 public class PrintCertificates extends SvrProcess
 {
+	private static final String MQA_REPORT_JRXML_PATH = "MQA_REPORT_JRXML_PATH";
 
 	@Override
 	protected void prepare()
@@ -83,10 +82,13 @@ public class PrintCertificates extends SvrProcess
 
 				JasperPrint print = null;
 
+				String reportPath = MSysConfig.getValue(MQA_REPORT_JRXML_PATH, "/za/co/ntier/wsp_atr/report/jrxmls/", Env.getAD_Client_ID(getCtx()));
+				if (!reportPath.endsWith("/")) reportPath += "/";
+
 				if (learnershipId > 0)
 				{
 					// It's a Learnership
-					try (InputStream jasperStream = PrintCertificates.class.getResourceAsStream("/za/co/ntier/wsp_atr/report/jrxmls/Learnership_Certificate.jasper"))
+					try (InputStream jasperStream = PrintCertificates.class.getResourceAsStream(reportPath + "Learnership_Certificate.jasper"))
 					{
 						if (jasperStream != null)
 						{
@@ -101,7 +103,7 @@ public class PrintCertificates extends SvrProcess
 				else if (skillsId > 0)
 				{
 					// It's a Skills Programme
-					try (InputStream jasperStream = PrintCertificates.class.getResourceAsStream("/za/co/ntier/wsp_atr/report/jrxmls/SkillProgramme_Certificate.jasper"))
+					try (InputStream jasperStream = PrintCertificates.class.getResourceAsStream(reportPath + "SkillProgramme_Certificate.jasper"))
 					{
 						if (jasperStream != null)
 						{
@@ -153,6 +155,6 @@ public class PrintCertificates extends SvrProcess
 
 		processUI.showReports(Arrays.asList(finalPdf));
 
-		return generatedPdfs.size() + " Certificate(s) generated successfully.";
+		return generatedPdfs.size() + " Certificate(s) generated.";
 	}
 }

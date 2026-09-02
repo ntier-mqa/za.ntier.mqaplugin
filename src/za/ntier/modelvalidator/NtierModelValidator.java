@@ -21,6 +21,7 @@ import org.compiere.model.MLocation;
 import org.compiere.model.MMailText;
 import org.compiere.model.MNote;
 import org.compiere.model.MSequence;
+import org.compiere.model.MSysConfig;
 import org.compiere.model.MTable;
 import org.compiere.model.MAttachment;
 import org.compiere.model.MUser;
@@ -81,6 +82,7 @@ public class NtierModelValidator implements ModelValidator
 	private static final String ROLE_ASSESSOR = "Assessor";
 	private static final String ROLE_MODERATOR = "Moderator";
 	private static final String LOC_BUSINESS_ADDRESS = "Business Address";
+	private static final String MQA_REPORT_JRXML_PATH = "MQA_REPORT_JRXML_PATH";
 
 	@Override
 	public void initialize(ModelValidationEngine engine, MClient client)
@@ -365,11 +367,11 @@ public class NtierModelValidator implements ModelValidator
 									try
 									{
 										HashMap<String, Object> jasperParams = new HashMap<>();
+										String reportPath = MSysConfig.getValue(MQA_REPORT_JRXML_PATH, "/za/co/ntier/wsp_atr/report/jrxmls/", po.getAD_Client_ID());
+										if (!reportPath.endsWith("/")) reportPath += "/";
 										jasperParams.put("RegistrationType", regTypeStr);
-										jasperParams.put("HeaderImagePath", NtierModelValidator.class.getResource(
-																													"/za/co/ntier/wsp_atr/report/jrxmls/MQA_Address_Logo_Header.png"));
-										jasperParams.put("FooterImagePath", NtierModelValidator.class.getResource(
-																													"/za/co/ntier/wsp_atr/report/jrxmls/MQA-Footer-Asse-Mod-Approval.png"));
+										jasperParams.put("HeaderImagePath", NtierModelValidator.class.getResource(reportPath + "MQA_Address_Logo_Header.png"));
+										jasperParams.put("FooterImagePath", NtierModelValidator.class.getResource(reportPath + "MQA-Footer-Asse-Mod-Approval.png"));
 										jasperParams.put("AssessorFullName", (assessorNameStr).trim());
 										jasperParams.put("IDNumber", assessorUser.getZZ_ID_Passport_No() != null	? assessorUser.getZZ_ID_Passport_No()
 																													: assessorUser.getZZOtherIDNo());
@@ -420,7 +422,7 @@ public class NtierModelValidator implements ModelValidator
 										}
 
 										try (InputStream jasperStream = NtierModelValidator.class
-																									.getResourceAsStream("/za/co/ntier/wsp_atr/report/jrxmls/" + jasperName + ".jasper"))
+																									.getResourceAsStream(reportPath + jasperName + ".jasper"))
 										{
 											if (jasperStream == null)
 												throw new IOException(jasperName + ".jasper not found on classpath");
@@ -871,8 +873,10 @@ public class NtierModelValidator implements ModelValidator
 		try
 		{
 			HashMap<String, Object> jasperParams = new HashMap<>();
-			jasperParams.put("HeaderImagePath", NtierModelValidator.class.getResource("/za/co/ntier/wsp_atr/report/jrxmls/MQA_Address_Logo_Header.png"));
-			jasperParams.put("FooterImagePath", NtierModelValidator.class.getResource("/za/co/ntier/wsp_atr/report/jrxmls/MQA-Footer.png"));
+			String reportPath = MSysConfig.getValue(MQA_REPORT_JRXML_PATH, "/za/co/ntier/wsp_atr/report/jrxmls/", po.getAD_Client_ID());
+			if (!reportPath.endsWith("/")) reportPath += "/";
+			jasperParams.put("HeaderImagePath", NtierModelValidator.class.getResource(reportPath + "MQA_Address_Logo_Header.png"));
+			jasperParams.put("FooterImagePath", NtierModelValidator.class.getResource(reportPath + "MQA-Footer.png"));
 
 			int bpId = po.get_ValueAsInt(X_ZZ_WPA_Application.COLUMNNAME_C_BPartner_ID);
 			MBPartner bp = null;
@@ -935,7 +939,7 @@ public class NtierModelValidator implements ModelValidator
 
 			jasperParams.put("QualificationsDataSource", buildWpaQualificationsDataSource(po.get_ID(), po.get_TrxName()));
 
-			try (InputStream jasperStream = NtierModelValidator.class.getResourceAsStream("/za/co/ntier/wsp_atr/report/jrxmls/WPAApprovalLetter.jasper"))
+			try (InputStream jasperStream = NtierModelValidator.class.getResourceAsStream(reportPath + "WPAApprovalLetter.jasper"))
 			{
 				if (jasperStream == null)
 				{
