@@ -48,24 +48,18 @@ public class TransactionBalanceReportSummary extends SvrProcess {
                   AND (? = 0 OR t.m_product_id = ?)
                 GROUP BY t.m_product_id, t.ad_client_id
             ),
-            cost_summary AS (
-                SELECT
-                    t.m_product_id,
-                    t.ad_client_id,
-                    SUM(CASE WHEN t.movementdate < ? AND t.movementtype IN ('V+', 'V-', 'I+', 'I-') THEN fa.amtacctdr ELSE 0 END) AS opening_cost,
-                    SUM(CASE WHEN t.movementdate BETWEEN ? AND ? AND t.movementtype IN ('V+', 'V-') THEN fa.amtacctdr ELSE 0 END) AS receipt_cost,
-                    SUM(CASE WHEN t.movementdate BETWEEN ? AND ? AND t.movementtype IN ('I+', 'I-') THEN fa.amtacctdr ELSE 0 END) AS issue_cost
-                FROM adempiere.m_transaction t
-                JOIN adempiere.fact_acct fa
-                  ON fa.ad_client_id = t.ad_client_id
-                 AND (
-                        (t.m_inoutline_id IS NOT NULL AND fa.ad_table_id = 319 AND fa.line_id = t.m_inoutline_id)
-                     OR (t.m_movementline_id IS NOT NULL AND fa.ad_table_id = 323 AND fa.line_id = t.m_movementline_id)
-                     OR (t.m_inventoryline_id IS NOT NULL AND fa.ad_table_id = 321 AND fa.line_id = t.m_inventoryline_id)
-                     )
-                WHERE t.ad_client_id = ?
-                  AND (? = 0 OR t.m_product_id = ?)
-                GROUP BY t.m_product_id, t.ad_client_id
+            cost_lookup AS (
+                SELECT DISTINCT ON (mc.ad_client_id, mc.m_product_id)
+                    mc.ad_client_id,
+                    mc.m_product_id,
+                    mc.currentcostprice
+                FROM adempiere.m_cost mc
+                JOIN adempiere.m_costelement ce ON ce.m_costelement_id = mc.m_costelement_id
+                WHERE ce.costingmethod = 'F'
+                  AND mc.isactive = 'Y'
+                  AND mc.ad_client_id = ?
+                  AND (? = 0 OR mc.m_product_id = ?)
+                ORDER BY mc.ad_client_id, mc.m_product_id, mc.updated DESC
             )
             SELECT
                 ts.m_product_id,
@@ -74,10 +68,10 @@ public class TransactionBalanceReportSummary extends SvrProcess {
                 ts.receipts,
                 ts.issues,
                 ts.closing_balance,
-                COALESCE(cs.opening_cost, 0) + COALESCE(cs.receipt_cost, 0) - COALESCE(cs.issue_cost, 0) AS total_cost
+                ts.closing_balance * cl.currentcostprice AS total_cost
             FROM txn_summary ts
-            LEFT JOIN cost_summary cs
-                   ON cs.m_product_id = ts.m_product_id AND cs.ad_client_id = ts.ad_client_id
+            LEFT JOIN cost_lookup cl
+                   ON cl.m_product_id = ts.m_product_id AND cl.ad_client_id = ts.ad_client_id
             ORDER BY ts.m_product_id
         """;
 
@@ -96,14 +90,9 @@ public class TransactionBalanceReportSummary extends SvrProcess {
             pstmt.setInt(i++, getAD_Client_ID()); // client
             pstmt.setInt(i++, mProductId);        // product param check
             pstmt.setInt(i++, mProductId);        // actual product value
-            pstmt.setTimestamp(i++, startDate);   // cost_summary opening cost cutoff
-            pstmt.setTimestamp(i++, startDate);   // cost_summary receipt cost start
-            pstmt.setTimestamp(i++, endDate);     // cost_summary receipt cost end
-            pstmt.setTimestamp(i++, startDate);   // cost_summary issue cost start
-            pstmt.setTimestamp(i++, endDate);     // cost_summary issue cost end
-            pstmt.setInt(i++, getAD_Client_ID()); // cost_summary client
-            pstmt.setInt(i++, mProductId);        // cost_summary product param check
-            pstmt.setInt(i++, mProductId);        // cost_summary actual product value
+            pstmt.setInt(i++, getAD_Client_ID()); // cost_lookup client
+            pstmt.setInt(i++, mProductId);        // cost_lookup product param check
+            pstmt.setInt(i++, mProductId);        // cost_lookup actual product value
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {

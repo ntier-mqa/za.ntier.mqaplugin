@@ -34,7 +34,7 @@ import org.compiere.util.Env;
  * explicitly (same convention as {@link MigrationSupport}) rather than relying on SvrProcess,
  * and logging goes through a {@code Consumer<String>} (each caller passes {@code this::addLog}).
  */
-final class AddColumnsSupport {
+public final class AddColumnsSupport {
 
     private AddColumnsSupport() {
     }
@@ -55,14 +55,14 @@ final class AddColumnsSupport {
     }
 
     /** A Table Direct reference column, plus the staged MSSQL lookup table it's populated from. */
-    static final class ReferenceColumnSpec {
+    public static final class ReferenceColumnSpec {
         final String columnName;
         final String sourceTable;
         final String sourceValueCol;
         final String sourceNameCol;
         final String description;
 
-        ReferenceColumnSpec(String columnName, String sourceTable, String sourceValueCol,
+        public ReferenceColumnSpec(String columnName, String sourceTable, String sourceValueCol,
                 String sourceNameCol, String description) {
             this.columnName = columnName;
             this.sourceTable = sourceTable;
@@ -79,7 +79,7 @@ final class AddColumnsSupport {
         }
     }
 
-    static MTable findTable(Properties ctx, String tableName, String trxName) {
+    public static MTable findTable(Properties ctx, String tableName, String trxName) {
         return new Query(ctx, MTable.Table_Name, "UPPER(TableName)=UPPER(?)", trxName)
                 .setParameters(tableName)
                 .first();
@@ -219,7 +219,7 @@ final class AddColumnsSupport {
      * narrower in scope than CreateTable: no workflow columns, no translation table, no UUID
      * unique index/constraint - this is a small lookup table, not a document table.
      */
-    static MTable createReferenceTableSchema(Properties ctx, String tableName, String description,
+    public static MTable createReferenceTableSchema(Properties ctx, String tableName, String description,
             String entityType, String accessLevel, String trxName, Consumer<String> logger) {
         MTable table = new MTable(ctx, 0, trxName);
         table.setTableName(tableName);
@@ -503,7 +503,7 @@ final class AddColumnsSupport {
      * MTable.getPO(0, trxName)) - there's no generated model class for these brand new tables
      * to use typed setters with.
      */
-    static void populateReferenceTable(Properties ctx, MTable table, ReferenceColumnSpec spec, String trxName,
+    public static void populateReferenceTable(Properties ctx, MTable table, ReferenceColumnSpec spec, String trxName,
             Consumer<String> logger) throws Exception {
         int adClientId = Env.getAD_Client_ID(ctx);
         PreparedStatement pst = null;
