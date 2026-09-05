@@ -14,19 +14,16 @@ import org.compiere.util.DB;
 
 /**
  * Registration process for this package's SvrProcess classes - same shape as the Learner
- * project's RegisterZZPhase1Processes, adapted for a brand new domain that has no existing
- * menu container yet (the Learner project's equivalent, "Learnerships Migration"
- * AD_Menu_ID=1000280, already existed under "Learnerships" AD_Menu_ID=1000279 before that
- * class was written - confirmed via the live AD_Menu/AD_TreeNodeMM tables 2026-09-04, there
- * is no "SDR"-domain equivalent).
+ * project's RegisterZZPhase1Processes.
  *
- * <p>Per user decision 2026-09-04: creates a brand new TOP-LEVEL "SDR Migration" summary menu
- * (Parent_ID=0, same root level as "Learnerships" itself - confirmed via
- * AD_TreeNodeMM.Parent_ID=0 for node_id=1000279) rather than nesting under any existing menu,
- * since none of the existing "SDR"-named menus (SDR Configuration/Temporary Branch/Temporary
- * Organisation) are related to this migration. All current and future SDR migration
- * processes get their menu item created as a child of this one new container, the same way
- * every Learner migration process is a child of "Learnerships Migration".
+ * <p>CORRECTED 2026-09-05: this class originally created its own top-level "SDR Migration"
+ * summary menu (Parent_ID=0). That never actually ran - RegisterSDRProcesses can't register
+ * itself (see below), so the user manually created its own AD_Process record AND its own
+ * menu placement first, choosing to nest it under a hand-built "Legacy SDR data" (AD_Menu_ID
+ * 1000336) &gt; "System Utils" (AD_Menu_ID 1000337) hierarchy instead. Per user instruction
+ * 2026-09-05: target that existing "System Utils" menu directly (found by name, verified to
+ * be the child of "Legacy SDR data" to avoid latching onto an unrelated same-named menu) -
+ * this class no longer creates any menu of its own.
  *
  * <p>AD_Process convention (mirrors RegisterZZPhase1Processes exactly):
  * <ul>
@@ -38,13 +35,14 @@ import org.compiere.util.DB;
  * </ul>
  *
  * <p>Idempotent: skips any class name that already has an AD_Process row with a matching
- * Classname, skips menu creation for any process that already has an AD_Menu row pointing at
- * it, and skips creating "SDR Migration" itself if a menu with that exact name already
- * exists - safe to run more than once, and safe to extend {@link #PROCESS_CLASSES} with
- * future SDR process classes and re-run.
+ * Classname, and skips menu creation for any process that already has an AD_Menu row
+ * pointing at it - safe to run more than once, and safe to extend {@link #PROCESS_CLASSES}
+ * with future SDR process classes and re-run.
  *
  * <p>This process itself must still be registered manually as an AD_Process, the usual way,
- * since it cannot register itself.
+ * since it cannot register itself - already done for this class (2026-09-05, under "System
+ * Utils"); any brand new SDR process class added later still needs the same manual
+ * first-registration if it's meant to run before RegisterSDRProcesses can pick it up.
  */
 @Process(name = "za.co.ntier.sdr.process.RegisterSDRProcesses")
 public class RegisterSDRProcesses extends SvrProcess {
@@ -52,10 +50,15 @@ public class RegisterSDRProcesses extends SvrProcess {
     private static final String PACKAGE = "za.co.ntier.sdr.process.";
     private static final String ENTITY_TYPE = "U";
     private static final String ACCESS_LEVEL = "6";
-    private static final String PARENT_MENU_NAME = "SDR Migration";
+    private static final String PARENT_MENU_NAME = "System Utils";
+    private static final String PARENT_MENU_EXPECTED_PARENT_NAME = "Legacy SDR data";
 
     private static final String[] PROCESS_CLASSES = {
             "AddSDRReferenceTables",
+            "AddSDRPersonTable",
+            "AddSDRPersonAddressTable",
+            "AddSDRPersonDocumentUploadTable",
+            "AddSDRPersonHealthFunctioningStatusRatingTable",
     };
 
     @Override
@@ -67,7 +70,7 @@ public class RegisterSDRProcesses extends SvrProcess {
 
     @Override
     protected String doIt() throws Exception {
-        int parentMenuId = findOrCreateParentMenu();
+        int parentMenuId = findExistingParentMenu();
 
         int processesCreated = 0;
         int processesSkipped = 0;
@@ -142,43 +145,33 @@ public class RegisterSDRProcesses extends SvrProcess {
     }
 
     /**
-     * Find-or-create the top-level "SDR Migration" summary menu (Parent_ID=0) that every SDR
-     * process's own menu item gets created under - see class Javadoc for why this is a new
-     * top-level container rather than nesting under an existing menu.
+     * Finds the existing "System Utils" menu (user-created 2026-09-05, under "Legacy SDR
+     * data") that every SDR process's own menu item gets created under - does NOT create
+     * anything, fails fast if it's missing or not where expected, rather than silently
+     * building a new menu in the wrong place.
      */
-    private int findOrCreateParentMenu() throws Exception {
-        int existingId = DB.getSQLValueEx(get_TrxName(),
+    private int findExistingParentMenu() {
+        int parentMenuId = DB.getSQLValueEx(get_TrxName(),
                 "SELECT AD_Menu_ID FROM AD_Menu WHERE Name=?", PARENT_MENU_NAME);
-        if (existingId > 0) {
-            addLog("'" + PARENT_MENU_NAME + "' menu already exists (AD_Menu_ID=" + existingId + ") - reused.");
-            return existingId;
+        if (parentMenuId <= 0) {
+            throw new AdempiereException("Expected menu '" + PARENT_MENU_NAME + "' not found - "
+                    + "it must already exist (create it manually first, the usual way).");
         }
 
-        MMenu menu = new MMenu(getCtx(), 0, get_TrxName());
-        menu.set_ValueOfColumn("AD_Client_ID", 0);
-        menu.setAD_Org_ID(0);
-        menu.setName(PARENT_MENU_NAME);
-        menu.setDescription("SDR (MQA_0626) migration processes - staged mssdr_* tables to SDR_ Application Dictionary tables");
-        menu.setIsSummary(true);
-        menu.setEntityType(ENTITY_TYPE);
-        menu.setIsSOTrx(true);
-        menu.setIsCentrallyMaintained(true);
-        menu.saveEx();
-
-        MTree_Base menuTree = new MTree_Base(getCtx(), SystemIDs.TREE_MENUPRIMARY, get_TrxName());
-        MTree_NodeMM node = MTree_NodeMM.get(menuTree, menu.getAD_Menu_ID());
-        if (node == null) {
-            throw new AdempiereException(
-                    "AD_TreeNodeMM not auto-created by MMenu.afterSave() for AD_Menu_ID=" + menu.getAD_Menu_ID());
+        int actualParentId = DB.getSQLValueEx(get_TrxName(),
+                "SELECT Parent_ID FROM AD_TreeNodeMM WHERE AD_Tree_ID=? AND Node_ID=?",
+                SystemIDs.TREE_MENUPRIMARY, parentMenuId);
+        String actualParentName = actualParentId > 0
+                ? DB.getSQLValueStringEx(get_TrxName(), "SELECT Name FROM AD_Menu WHERE AD_Menu_ID=?", actualParentId)
+                : null;
+        if (!PARENT_MENU_EXPECTED_PARENT_NAME.equals(actualParentName)) {
+            throw new AdempiereException("Menu '" + PARENT_MENU_NAME + "' (AD_Menu_ID=" + parentMenuId
+                    + ") was expected to be a child of '" + PARENT_MENU_EXPECTED_PARENT_NAME
+                    + "' but its parent is '" + actualParentName + "' - not the menu this process expects to use, "
+                    + "refusing to guess.");
         }
-        int rootSeqNo = DB.getSQLValueEx(get_TrxName(),
-                "SELECT COALESCE(MAX(SeqNo),-1)+1 FROM AD_TreeNodeMM WHERE AD_Tree_ID=? AND Parent_ID=0",
-                SystemIDs.TREE_MENUPRIMARY);
-        node.setParent_ID(0);
-        node.setSeqNo(rootSeqNo);
-        node.saveEx();
 
-        addLog("Created top-level menu '" + PARENT_MENU_NAME + "' (AD_Menu_ID=" + menu.getAD_Menu_ID() + ")");
-        return menu.getAD_Menu_ID();
+        addLog("Using existing '" + PARENT_MENU_NAME + "' menu (AD_Menu_ID=" + parentMenuId + ").");
+        return parentMenuId;
     }
 }

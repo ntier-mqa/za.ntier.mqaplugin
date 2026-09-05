@@ -9,8 +9,10 @@ import java.util.function.Consumer;
 
 import org.adempiere.exceptions.AdempiereException;
 import org.compiere.model.MColumn;
+import org.compiere.model.MEntityType;
 import org.compiere.model.MReference;
 import org.compiere.model.MRefList;
+import org.compiere.model.MRefTable;
 import org.compiere.model.MTable;
 import org.compiere.model.M_Element;
 import org.compiere.model.PO;
@@ -21,599 +23,752 @@ import org.compiere.util.DisplayType;
 import org.compiere.util.Env;
 
 /**
- * Shared "add missing columns to an already-existing table, creating any missing small
- * Value/Name reference table along the way" engine. Factored out of AddZZProviderColumns
- * (2026-07-16) once AddZZWorkplaceApprovalColumns needed the identical machinery - see
- * either process class for the full write-up of the three real iDempiere framework classes
- * this mirrors (org.idempiere.process.CreateTable / org.compiere.process.TableCreateColumns /
- * org.compiere.process.ColumnSync) and why the physical DDL step below is needed at all
- * (MColumn.afterSave()/MTable.afterSave() do not touch the physical database by themselves).
+ * Shared "add missing columns to an already-existing table, creating any
+ * missing small Value/Name reference table along the way" engine. Factored out
+ * of AddZZProviderColumns (2026-07-16) once AddZZWorkplaceApprovalColumns
+ * needed the identical machinery - see either process class for the full
+ * write-up of the three real iDempiere framework classes this mirrors
+ * (org.idempiere.process.CreateTable / org.compiere.process.TableCreateColumns
+ * / org.compiere.process.ColumnSync) and why the physical DDL step below is
+ * needed at all (MColumn.afterSave()/MTable.afterSave() do not touch the
+ * physical database by themselves).
  *
- * <p>Every method here is a direct, parameterised port of what started as instance methods on
- * AddZZProviderColumns - {@code Properties ctx}/{@code trxName}/{@code entityType} are passed
- * explicitly (same convention as {@link MigrationSupport}) rather than relying on SvrProcess,
- * and logging goes through a {@code Consumer<String>} (each caller passes {@code this::addLog}).
+ * <p>
+ * Every method here is a direct, parameterised port of what started as instance
+ * methods on AddZZProviderColumns -
+ * {@code Properties ctx}/{@code trxName}/{@code entityType} are passed
+ * explicitly (same convention as {@link MigrationSupport}) rather than relying
+ * on SvrProcess, and logging goes through a {@code Consumer<String>} (each
+ * caller passes {@code this::addLog}).
  */
 public final class AddColumnsSupport {
 
-    private AddColumnsSupport() {
-    }
+	private AddColumnsSupport() {
+	}
 
-    /** A plain (non-reference) column to add: name, DisplayType, field length, description. */
-    static final class ColumnSpec {
-        final String columnName;
-        final int referenceId;
-        final int fieldLength;
-        final String description;
+	/**
+	 * A plain (non-reference) column to add: name, DisplayType, field length,
+	 * description.
+	 */
+	static final class ColumnSpec {
+		final String columnName;
+		final int referenceId;
+		final int fieldLength;
+		final String description;
 
-        ColumnSpec(String columnName, int referenceId, int fieldLength, String description) {
-            this.columnName = columnName;
-            this.referenceId = referenceId;
-            this.fieldLength = fieldLength;
-            this.description = description;
-        }
-    }
+		ColumnSpec(String columnName, int referenceId, int fieldLength, String description) {
+			this.columnName = columnName;
+			this.referenceId = referenceId;
+			this.fieldLength = fieldLength;
+			this.description = description;
+		}
+	}
 
-    /** A Table Direct reference column, plus the staged MSSQL lookup table it's populated from. */
-    public static final class ReferenceColumnSpec {
-        final String columnName;
-        final String sourceTable;
-        final String sourceValueCol;
-        final String sourceNameCol;
-        final String description;
+	/**
+	 * A Table Direct reference column, plus the staged MSSQL lookup table it's
+	 * populated from.
+	 */
+	public static final class ReferenceColumnSpec {
+		final String columnName;
+		final String sourceTable;
+		final String sourceValueCol;
+		final String sourceNameCol;
+		final String description;
 
-        public ReferenceColumnSpec(String columnName, String sourceTable, String sourceValueCol,
-                String sourceNameCol, String description) {
-            this.columnName = columnName;
-            this.sourceTable = sourceTable;
-            this.sourceValueCol = sourceValueCol;
-            this.sourceNameCol = sourceNameCol;
-            this.description = description;
-        }
+		public ReferenceColumnSpec(String columnName, String sourceTable, String sourceValueCol, String sourceNameCol,
+				String description) {
+			this.columnName = columnName;
+			this.sourceTable = sourceTable;
+			this.sourceValueCol = sourceValueCol;
+			this.sourceNameCol = sourceNameCol;
+			this.description = description;
+		}
 
-        /** "Provider_Type_ID" -&gt; "Provider_Type" - the new reference table's name, derived
-         * (not hardcoded separately) so the Table Direct naming convention can never drift
-         * out of sync with the column name. */
-        String targetTableName() {
-            return columnName.endsWith("_ID") ? columnName.substring(0, columnName.length() - 3) : columnName;
-        }
-    }
+		/**
+		 * "Provider_Type_ID" -&gt; "Provider_Type" - the new reference table's name,
+		 * derived (not hardcoded separately) so the Table Direct naming convention can
+		 * never drift out of sync with the column name.
+		 */
+		String targetTableName() {
+			return columnName.endsWith("_ID") ? columnName.substring(0, columnName.length() - 3) : columnName;
+		}
+	}
 
-    public static MTable findTable(Properties ctx, String tableName, String trxName) {
-        return new Query(ctx, MTable.Table_Name, "UPPER(TableName)=UPPER(?)", trxName)
-                .setParameters(tableName)
-                .first();
-    }
+	public static MTable findTable(Properties ctx, String tableName, String trxName) {
+		return new Query(ctx, MTable.Table_Name, "UPPER(TableName)=UPPER(?)", trxName).setParameters(tableName).first();
+	}
 
-    /**
-     * Drop-and-recreate helper (see AddZZProviderColumns' class Javadoc for why this is
-     * deliberately destructive): physically drops the column (saving/deleting an AD_Column
-     * record does not touch the physical database by itself) and deletes its AD_Column
-     * record, if it already exists.
-     *
-     * <p>Forces the table's column cache to requery afterwards - MTable.getColumn() is backed by
-     * a cache that is populated once and never auto-invalidated when a sibling MColumn deletes a
-     * row. Without this, a caller's later addColumn()/registerColumn() for the same column name
-     * would still see the stale (already-deleted) cached entry and wrongly skip recreation -
-     * silently defeating the whole point of "drop-and-recreate".
-     *
-     * @return true if a column existed and was dropped, false if there was nothing to drop
-     */
-    static boolean dropColumnIfExists(MTable table, String columnName, String trxName, Consumer<String> logger) {
-        MColumn existing = table.getColumn(columnName);
-        if (existing == null) {
-            return false;
-        }
-        DB.executeUpdateEx("ALTER TABLE " + table.getTableName() + " DROP COLUMN IF EXISTS " + columnName, trxName);
-        existing.deleteEx(true, trxName);
-        table.getColumns(true);
-        logger.accept(table.getTableName() + "." + columnName + " dropped (will be recreated).");
-        return true;
-    }
+	/**
+	 * Drop-and-recreate helper (see AddZZProviderColumns' class Javadoc for why
+	 * this is deliberately destructive): physically drops the column
+	 * (saving/deleting an AD_Column record does not touch the physical database by
+	 * itself) and deletes its AD_Column record, if it already exists.
+	 *
+	 * <p>
+	 * Forces the table's column cache to requery afterwards - MTable.getColumn() is
+	 * backed by a cache that is populated once and never auto-invalidated when a
+	 * sibling MColumn deletes a row. Without this, a caller's later
+	 * addColumn()/registerColumn() for the same column name would still see the
+	 * stale (already-deleted) cached entry and wrongly skip recreation - silently
+	 * defeating the whole point of "drop-and-recreate".
+	 *
+	 * @return true if a column existed and was dropped, false if there was nothing
+	 *         to drop
+	 */
+	static boolean dropColumnIfExists(MTable table, String columnName, String trxName, Consumer<String> logger) {
+		MColumn existing = table.getColumn(columnName);
+		if (existing == null) {
+			return false;
+		}
+		DB.executeUpdateEx("ALTER TABLE " + table.getTableName() + " DROP COLUMN IF EXISTS " + columnName, trxName);
+		existing.deleteEx(true, trxName);
+		table.getColumns(true);
+		logger.accept(table.getTableName() + "." + columnName + " dropped (will be recreated).");
+		return true;
+	}
 
-    /**
-     * Adds one column to an EXISTING, already-physical table: Element/MColumn registration
-     * (mirrors org.compiere.process.TableCreateColumns) then MColumn.getSQLAdd() + execute
-     * (mirrors org.compiere.process.ColumnSync). Convenience overload for the common case with
-     * no AD_Reference_Value_ID (Table Direct columns resolved purely by name, plain columns).
-     */
-    static void addColumn(Properties ctx, MTable table, String columnName, int referenceId, int fieldLength,
-            String description, String entityType, String trxName, Consumer<String> logger) {
-        addColumn(ctx, table, columnName, referenceId, 0, fieldLength, description, entityType, trxName, logger);
-    }
+	/**
+	 * Adds one column to an EXISTING, already-physical table: Element/MColumn
+	 * registration (mirrors org.compiere.process.TableCreateColumns) then
+	 * MColumn.getSQLAdd() + execute (mirrors org.compiere.process.ColumnSync).
+	 * Convenience overload for the common case with no AD_Reference_Value_ID (Table
+	 * Direct columns resolved purely by name, plain columns).
+	 */
+	static void addColumn(Properties ctx, MTable table, String columnName, int referenceId, int fieldLength,
+			String description, String entityType, String trxName, Consumer<String> logger) {
+		addColumn(ctx, table, columnName, referenceId, 0, fieldLength, description, entityType, trxName, logger);
+	}
 
-    /**
-     * Same as {@link #addColumn(Properties, MTable, String, int, int, String, String, String,
-     * Consumer)} but also sets AD_Reference_Value_ID (referenceValueId &gt; 0) - needed for
-     * Search/Table columns whose column name does NOT match the target table's name (so Table
-     * Direct's naming convention can't resolve it), e.g. an actor column pointing at AD_User
-     * (SystemIDs.REFERENCE_AD_USER=110) or a business-meaning column pointing at C_BPartner via
-     * an explicit reference like "C_BPartner (all)".
-     */
-    static void addColumn(Properties ctx, MTable table, String columnName, int referenceId, int referenceValueId,
-            int fieldLength, String description, String entityType, String trxName, Consumer<String> logger) {
-        if (table.getColumn(columnName) != null) {
-            logger.accept(table.getTableName() + "." + columnName + " already exists - skipped.");
-            return;
-        }
+	/**
+	 * Same as
+	 * {@link #addColumn(Properties, MTable, String, int, int, String, String, String, Consumer)}
+	 * but also sets AD_Reference_Value_ID (referenceValueId &gt; 0) - needed for
+	 * Search/Table columns whose column name does NOT match the target table's name
+	 * (so Table Direct's naming convention can't resolve it), e.g. an actor column
+	 * pointing at AD_User (SystemIDs.REFERENCE_AD_USER=110) or a business-meaning
+	 * column pointing at C_BPartner via an explicit reference like "C_BPartner
+	 * (all)".
+	 */
+	static void addColumn(Properties ctx, MTable table, String columnName, int referenceId, int referenceValueId,
+			int fieldLength, String description, String entityType, String trxName, Consumer<String> logger) {
+		if (table.getColumn(columnName) != null) {
+			logger.accept(table.getTableName() + "." + columnName + " already exists - skipped.");
+			return;
+		}
 
-        MColumn column = registerColumn(ctx, table, columnName, referenceId, referenceValueId, fieldLength,
-                description, entityType, trxName);
+		MColumn column = registerColumn(ctx, table, columnName, referenceId, referenceValueId, fieldLength, description,
+				entityType, trxName);
 
-        String sql = column.getSQLAdd(table);
-        if (sql == null || sql.trim().isEmpty()) {
-            throw new AdempiereException("MColumn.getSQLAdd() returned empty SQL for " + table.getTableName() + "." + columnName);
-        }
-        executeDdl(sql, trxName);
-        logger.accept(table.getTableName() + "." + columnName + " added (" + sql + ")");
-    }
+		String sql = column.getSQLAdd(table);
+		if (sql == null || sql.trim().isEmpty()) {
+			throw new AdempiereException(
+					"MColumn.getSQLAdd() returned empty SQL for " + table.getTableName() + "." + columnName);
+		}
+		executeDdl(sql, trxName);
+		logger.accept(table.getTableName() + "." + columnName + " added (" + sql + ")");
+	}
 
-    /**
-     * Registers a business column's AD_Column metadata WITHOUT touching the physical database -
-     * shared by {@link #addColumn} (existing table: registers then immediately runs
-     * MColumn.getSQLAdd()) and {@link #registerColumn(Properties, MTable, String, int, int, int,
-     * String, String, String)} (brand new table: registers only, physical creation deferred
-     * until every column is registered - see {@link #finalizeNewTable}).
-     */
-    private static MColumn registerColumn(Properties ctx, MTable table, String columnName, int referenceId,
-            int referenceValueId, int fieldLength, String description, String entityType, String trxName) {
-        MColumn existingColumn = table.getColumn(columnName);
-        if (existingColumn != null) {
-            return existingColumn;
-        }
+	/**
+	 * Registers a business column's AD_Column metadata WITHOUT touching the
+	 * physical database - shared by {@link #addColumn} (existing table: registers
+	 * then immediately runs MColumn.getSQLAdd()) and
+	 * {@link #registerColumn(Properties, MTable, String, int, int, int, String, String, String)}
+	 * (brand new table: registers only, physical creation deferred until every
+	 * column is registered - see {@link #finalizeNewTable}).
+	 */
+	private static MColumn registerColumn(Properties ctx, MTable table, String columnName, int referenceId,
+			int referenceValueId, int fieldLength, String description, String entityType, String trxName) {
+		MColumn existingColumn = table.getColumn(columnName);
+		if (existingColumn != null) {
+			return existingColumn;
+		}
 
-        M_Element element = M_Element.get(ctx, columnName, trxName);
-        if (element == null) {
-            element = new M_Element(ctx, columnName, entityType, trxName);
-            element.setName(columnName.replace('_', ' ').trim());
-            element.setDescription(description);
-            element.saveEx();
-        }
+		M_Element element = M_Element.get(ctx, columnName, trxName);
+		if (element == null) {
+			element = new M_Element(ctx, columnName, entityType, trxName);
+			element.setName(columnName.replace('_', ' ').trim());
+			element.setDescription(description);
+			element.saveEx();
+		}
 
-        MColumn column = new MColumn(table);
-        column.set_TrxName(trxName);
-        column.setEntityType(entityType);
-        column.setColumnName(element.getColumnName());
-        column.setName(element.getName());
-        column.setDescription(element.getDescription());
-        column.setAD_Element_ID(element.getAD_Element_ID());
-        column.setIsMandatory(false);
-        column.setAD_Reference_ID(referenceId);
-        if (referenceValueId > 0) {
-            column.setAD_Reference_Value_ID(referenceValueId);
-        }
-        column.setFieldLength(fieldLength);
-        column.setIsUpdateable(true);
-        column.saveEx();
-        return column;
-    }
+		MColumn column = new MColumn(table);
+		column.set_TrxName(trxName);
+		column.setEntityType(entityType);
+		column.setColumnName(element.getColumnName());
+		column.setName(element.getName());
+		column.setDescription(element.getDescription());
+		column.setAD_Element_ID(element.getAD_Element_ID());
+		column.setIsMandatory(false);
+		column.setAD_Reference_ID(referenceId);
+		if (referenceValueId > 0) {
+			column.setAD_Reference_Value_ID(referenceValueId);
+		}
+		column.setFieldLength(fieldLength);
+		column.setIsUpdateable(true);
+		column.saveEx();
+		return column;
+	}
 
-    /**
-     * Registers a business column's AD_Column metadata on a table that does NOT physically
-     * exist yet (no typed-value overload, no physical DDL) - for use while building a brand new
-     * main table with {@link #createNewTableSchema}: register every column first (this method,
-     * called once per column), then call {@link #finalizeNewTable} once at the very end to
-     * physically create the table via MTable.getSQLCreate() with every registered column
-     * included - same ordering org.idempiere.process.CreateTable's own column-then-table-DDL
-     * approach requires (getSQLCreate() only picks up columns already saved at the time it's
-     * called).
-     */
-    static void registerColumn(Properties ctx, MTable table, String columnName, int referenceId, int fieldLength,
-            String description, String entityType, String trxName) {
-        registerColumn(ctx, table, columnName, referenceId, 0, fieldLength, description, entityType, trxName);
-    }
+	/**
+	 * Registers a business column's AD_Column metadata on a table that does NOT
+	 * physically exist yet (no typed-value overload, no physical DDL) - for use
+	 * while building a brand new main table with {@link #createNewTableSchema}:
+	 * register every column first (this method, called once per column), then call
+	 * {@link #finalizeNewTable} once at the very end to physically create the table
+	 * via MTable.getSQLCreate() with every registered column included - same
+	 * ordering org.idempiere.process.CreateTable's own column-then-table-DDL
+	 * approach requires (getSQLCreate() only picks up columns already saved at the
+	 * time it's called).
+	 */
+	public static void registerColumn(Properties ctx, MTable table, String columnName, int referenceId, int fieldLength,
+			String description, String entityType, String trxName) {
+		registerColumn(ctx, table, columnName, referenceId, 0, fieldLength, description, entityType, trxName);
+	}
 
-    /** Same as {@link #registerColumn(Properties, MTable, String, int, int, String, String,
-     * String)} but also sets AD_Reference_Value_ID - see {@link #addColumn(Properties, MTable,
-     * String, int, int, int, String, String, String, Consumer)} for when this is needed. */
-    static void registerColumnWithValue(Properties ctx, MTable table, String columnName, int referenceId,
-            int referenceValueId, int fieldLength, String description, String entityType, String trxName) {
-        registerColumn(ctx, table, columnName, referenceId, referenceValueId, fieldLength, description, entityType, trxName);
-    }
+	/**
+	 * Same as
+	 * {@link #registerColumn(Properties, MTable, String, int, int, String, String, String)}
+	 * but also sets AD_Reference_Value_ID - see
+	 * {@link #addColumn(Properties, MTable, String, int, int, int, String, String, String, Consumer)}
+	 * for when this is needed.
+	 */
+	public static void registerColumnWithValue(Properties ctx, MTable table, String columnName, int referenceId,
+			int referenceValueId, int fieldLength, String description, String entityType, String trxName) {
+		registerColumn(ctx, table, columnName, referenceId, referenceValueId, fieldLength, description, entityType,
+				trxName);
+	}
 
-    /**
-     * Registers a brand new reference table (AD_Table + its standard system columns + key +
-     * UUID + Value + Name + an "id" recon column) and then physically creates it in one shot
-     * via MTable.getSQLCreate() - mirrors org.idempiere.process.CreateTable's Element/MColumn
-     * pattern for the standard columns, plus the DDL step that class is missing. Deliberately
-     * narrower in scope than CreateTable: no workflow columns, no translation table, no UUID
-     * unique index/constraint - this is a small lookup table, not a document table.
-     */
-    public static MTable createReferenceTableSchema(Properties ctx, String tableName, String description,
-            String entityType, String accessLevel, String trxName, Consumer<String> logger) {
-        MTable table = new MTable(ctx, 0, trxName);
-        table.setTableName(tableName);
-        table.setName(tableName.replace('_', ' ').trim());
-        table.setDescription(description);
-        table.setEntityType(entityType);
-        table.setAccessLevel(accessLevel);
-        table.setIsDeleteable(true);
-        table.setIsChangeLog(true);
-        table.saveEx();
+	/**
+	 * Registers a brand new reference table (AD_Table + its standard system columns
+	 * + key + UUID + Value + Name + an "id" recon column) and then physically
+	 * creates it in one shot via MTable.getSQLCreate() - mirrors
+	 * org.idempiere.process.CreateTable's Element/MColumn pattern for the standard
+	 * columns, plus the DDL step that class is missing. Deliberately narrower in
+	 * scope than CreateTable: no workflow columns, no translation table, no UUID
+	 * unique index/constraint - this is a small lookup table, not a document table.
+	 */
+	public static MTable createReferenceTableSchema(Properties ctx, String tableName, String description,
+			String entityType, String accessLevel, String trxName, Consumer<String> logger) {
+		MTable table = new MTable(ctx, 0, trxName);
+		table.setTableName(tableName);
+		table.setName(tableName.replace('_', ' ').trim());
+		table.setDescription(description);
+		table.setEntityType(entityType);
+		table.setAccessLevel(accessLevel);
+		table.setIsDeleteable(true);
+		table.setIsChangeLog(true);
+		table.saveEx();
 
-        createStandardColumn(ctx, table, "AD_Client_ID", entityType, trxName);
-        createStandardColumn(ctx, table, "AD_Org_ID", entityType, trxName);
-        createStandardColumn(ctx, table, "Created", entityType, trxName);
-        createStandardColumn(ctx, table, "CreatedBy", entityType, trxName);
-        createStandardColumn(ctx, table, "Updated", entityType, trxName);
-        createStandardColumn(ctx, table, "UpdatedBy", entityType, trxName);
-        createStandardColumn(ctx, table, "IsActive", entityType, trxName);
-        createKeyColumn(ctx, table, entityType, trxName);
-        createUUIDColumn(ctx, table, entityType, trxName);
-        createStandardColumn(ctx, table, "Value", entityType, trxName);
-        createStandardColumn(ctx, table, "Name", entityType, trxName);
-        createReconIdColumn(ctx, table, entityType, trxName);
+		createStandardColumn(ctx, table, "AD_Client_ID", entityType, trxName);
+		createStandardColumn(ctx, table, "AD_Org_ID", entityType, trxName);
+		createStandardColumn(ctx, table, "Created", entityType, trxName);
+		createStandardColumn(ctx, table, "CreatedBy", entityType, trxName);
+		createStandardColumn(ctx, table, "Updated", entityType, trxName);
+		createStandardColumn(ctx, table, "UpdatedBy", entityType, trxName);
+		createStandardColumn(ctx, table, "IsActive", entityType, trxName);
+		createKeyColumn(ctx, table, entityType, trxName);
+		createUUIDColumn(ctx, table, entityType, trxName);
+		createStandardColumn(ctx, table, "Value", entityType, trxName);
+		createStandardColumn(ctx, table, "Name", entityType, trxName);
+		createReconIdColumn(ctx, table, entityType, trxName);
 
-        String createSql = table.getSQLCreate();
-        if (createSql == null || createSql.trim().isEmpty()) {
-            throw new AdempiereException("MTable.getSQLCreate() returned empty SQL for " + tableName);
-        }
-        executeDdl(createSql, trxName);
-        logger.accept(tableName + " physically created (" + createSql + ")");
-        return table;
-    }
+		String createSql = table.getSQLCreate();
+		if (createSql == null || createSql.trim().isEmpty()) {
+			throw new AdempiereException("MTable.getSQLCreate() returned empty SQL for " + tableName);
+		}
+		executeDdl(createSql, trxName);
+		logger.accept(tableName + " physically created (" + createSql + ")");
+		return table;
+	}
 
-    /**
-     * Registers a brand new MAIN table (AD_Table + standard system columns + key + UUID + an
-     * "id" recon column) but, unlike {@link #createReferenceTableSchema}, does NOT create the
-     * physical table yet and does NOT add Value/Name (a main table's business columns are
-     * whatever the caller needs, not a fixed Value/Name shape). Caller must register every
-     * business column with {@link #registerColumn(Properties, MTable, String, int, int, String,
-     * String, String)} / {@link #registerColumnWithValue} in between this call and
-     * {@link #finalizeNewTable} - MTable.getSQLCreate() (called by finalizeNewTable) only
-     * includes columns already saved at the time it runs, so the order matters: register ALL
-     * columns first, create the physical table last. Same three-building-blocks reasoning as
-     * createReferenceTableSchema - see AddZZProviderColumns' class Javadoc for the full
-     * write-up of why the physical DDL step is needed at all.
-     */
-    static MTable createNewTableSchema(Properties ctx, String tableName, String description, String entityType,
-            String accessLevel, String trxName) {
-        MTable table = new MTable(ctx, 0, trxName);
-        table.setTableName(tableName);
-        table.setName(tableName.replace('_', ' ').trim());
-        table.setDescription(description);
-        table.setEntityType(entityType);
-        table.setAccessLevel(accessLevel);
-        table.setIsDeleteable(true);
-        table.setIsChangeLog(true);
-        table.saveEx();
+	/**
+	 * Registers a brand new MAIN table (AD_Table + standard system columns + key +
+	 * UUID + an "id" recon column) but, unlike {@link #createReferenceTableSchema},
+	 * does NOT create the physical table yet and does NOT add Value/Name (a main
+	 * table's business columns are whatever the caller needs, not a fixed
+	 * Value/Name shape). Caller must register every business column with
+	 * {@link #registerColumn(Properties, MTable, String, int, int, String, String, String)}
+	 * / {@link #registerColumnWithValue} in between this call and
+	 * {@link #finalizeNewTable} - MTable.getSQLCreate() (called by
+	 * finalizeNewTable) only includes columns already saved at the time it runs, so
+	 * the order matters: register ALL columns first, create the physical table
+	 * last. Same three-building-blocks reasoning as createReferenceTableSchema -
+	 * see AddZZProviderColumns' class Javadoc for the full write-up of why the
+	 * physical DDL step is needed at all.
+	 */
+	public static MTable createNewTableSchema(Properties ctx, String tableName, String description, String entityType,
+			String accessLevel, String trxName) {
+		MTable table = new MTable(ctx, 0, trxName);
+		table.setTableName(tableName);
+		table.setName(tableName.replace('_', ' ').trim());
+		table.setDescription(description);
+		table.setEntityType(entityType);
+		table.setAccessLevel(accessLevel);
+		table.setIsDeleteable(true);
+		table.setIsChangeLog(true);
+		table.saveEx();
 
-        createStandardColumn(ctx, table, "AD_Client_ID", entityType, trxName);
-        createStandardColumn(ctx, table, "AD_Org_ID", entityType, trxName);
-        createStandardColumn(ctx, table, "Created", entityType, trxName);
-        createStandardColumn(ctx, table, "CreatedBy", entityType, trxName);
-        createStandardColumn(ctx, table, "Updated", entityType, trxName);
-        createStandardColumn(ctx, table, "UpdatedBy", entityType, trxName);
-        createStandardColumn(ctx, table, "IsActive", entityType, trxName);
-        createKeyColumn(ctx, table, entityType, trxName);
-        createUUIDColumn(ctx, table, entityType, trxName);
-        createReconIdColumn(ctx, table, entityType, trxName);
-        return table;
-    }
+		createStandardColumn(ctx, table, "AD_Client_ID", entityType, trxName);
+		createStandardColumn(ctx, table, "AD_Org_ID", entityType, trxName);
+		createStandardColumn(ctx, table, "Created", entityType, trxName);
+		createStandardColumn(ctx, table, "CreatedBy", entityType, trxName);
+		createStandardColumn(ctx, table, "Updated", entityType, trxName);
+		createStandardColumn(ctx, table, "UpdatedBy", entityType, trxName);
+		createStandardColumn(ctx, table, "IsActive", entityType, trxName);
+		createKeyColumn(ctx, table, entityType, trxName);
+		createUUIDColumn(ctx, table, entityType, trxName);
+		createReconIdColumn(ctx, table, entityType, trxName);
+		return table;
+	}
 
-    /**
-     * Physically creates the table {@link #createNewTableSchema} registered, once every
-     * business column has been registered via {@link #registerColumn(Properties, MTable,
-     * String, int, int, String, String, String)} / {@link #registerColumnWithValue}. Mirrors
-     * org.compiere.process.ColumnSync's MTable.getSQLCreate() + execute step - see
-     * createReferenceTableSchema's Javadoc for why this can't be skipped (saving AD_Table/
-     * AD_Column records alone never touches the physical database).
-     */
-    static void finalizeNewTable(MTable table, String trxName, Consumer<String> logger) {
-        String createSql = table.getSQLCreate();
-        if (createSql == null || createSql.trim().isEmpty()) {
-            throw new AdempiereException("MTable.getSQLCreate() returned empty SQL for " + table.getTableName());
-        }
-        executeDdl(createSql, trxName);
-        logger.accept(table.getTableName() + " physically created (" + createSql + ")");
-    }
+	/**
+	 * Physically creates the table {@link #createNewTableSchema} registered, once
+	 * every business column has been registered via
+	 * {@link #registerColumn(Properties, MTable, String, int, int, String, String, String)}
+	 * / {@link #registerColumnWithValue}. Mirrors org.compiere.process.ColumnSync's
+	 * MTable.getSQLCreate() + execute step - see createReferenceTableSchema's
+	 * Javadoc for why this can't be skipped (saving AD_Table/ AD_Column records
+	 * alone never touches the physical database).
+	 */
+	public static void finalizeNewTable(MTable table, String trxName, Consumer<String> logger) {
+		String createSql = table.getSQLCreate();
+		if (createSql == null || createSql.trim().isEmpty()) {
+			throw new AdempiereException("MTable.getSQLCreate() returned empty SQL for " + table.getTableName());
+		}
+		executeDdl(createSql, trxName);
+		logger.accept(table.getTableName() + " physically created (" + createSql + ")");
+	}
 
-    /**
-     * Backfills AD_Column metadata (no DDL - every one of these columns is assumed to already
-     * exist physically) for the standard system columns + key + UUID column on an
-     * ALREADY-EXISTING AD_Table whose physical columns were never registered in the
-     * Application Dictionary at all. Confirmed necessary for ZZLearnerQCTOLearnershipAssessments
-     * (2026-07-20): its physical table has 17 columns but zero AD_Column rows - it must have
-     * been created by raw DDL or an external import that bypassed AD_Column entirely, unlike
-     * every table this project has otherwise built. Each underlying create*Column helper is
-     * already idempotent (skips if the column is already registered), so this is safe to call
-     * even if some of these happen to already be registered.
-     */
-    static void backfillStandardColumns(Properties ctx, MTable table, String entityType, String trxName) {
-        createStandardColumn(ctx, table, "AD_Client_ID", entityType, trxName);
-        createStandardColumn(ctx, table, "AD_Org_ID", entityType, trxName);
-        createStandardColumn(ctx, table, "Created", entityType, trxName);
-        createStandardColumn(ctx, table, "CreatedBy", entityType, trxName);
-        createStandardColumn(ctx, table, "Updated", entityType, trxName);
-        createStandardColumn(ctx, table, "UpdatedBy", entityType, trxName);
-        createStandardColumn(ctx, table, "IsActive", entityType, trxName);
-        createKeyColumn(ctx, table, entityType, trxName);
-        createUUIDColumn(ctx, table, entityType, trxName);
-    }
+	/**
+	 * Backfills AD_Column metadata (no DDL - every one of these columns is assumed
+	 * to already exist physically) for the standard system columns + key + UUID
+	 * column on an ALREADY-EXISTING AD_Table whose physical columns were never
+	 * registered in the Application Dictionary at all. Confirmed necessary for
+	 * ZZLearnerQCTOLearnershipAssessments (2026-07-20): its physical table has 17
+	 * columns but zero AD_Column rows - it must have been created by raw DDL or an
+	 * external import that bypassed AD_Column entirely, unlike every table this
+	 * project has otherwise built. Each underlying create*Column helper is already
+	 * idempotent (skips if the column is already registered), so this is safe to
+	 * call even if some of these happen to already be registered.
+	 */
+	static void backfillStandardColumns(Properties ctx, MTable table, String entityType, String trxName) {
+		createStandardColumn(ctx, table, "AD_Client_ID", entityType, trxName);
+		createStandardColumn(ctx, table, "AD_Org_ID", entityType, trxName);
+		createStandardColumn(ctx, table, "Created", entityType, trxName);
+		createStandardColumn(ctx, table, "CreatedBy", entityType, trxName);
+		createStandardColumn(ctx, table, "Updated", entityType, trxName);
+		createStandardColumn(ctx, table, "UpdatedBy", entityType, trxName);
+		createStandardColumn(ctx, table, "IsActive", entityType, trxName);
+		createKeyColumn(ctx, table, entityType, trxName);
+		createUUIDColumn(ctx, table, entityType, trxName);
+	}
 
-    /**
-     * Mirrors org.idempiere.process.CreateTable.createColumn()'s per-standard-column switch
-     * (reference type, length, mandatory-ness) - only for the subset of standard columns a
-     * small lookup table needs. AD_Client_ID/AD_Org_ID/Created/CreatedBy/Updated/UpdatedBy
-     * elements are expected to already exist (every table in this instance uses them); this
-     * throws rather than silently creating a divergent element if one is somehow missing.
-     */
-    private static void createStandardColumn(Properties ctx, MTable table, String columnName, String entityType,
-            String trxName) {
-        if (table.getColumn(columnName) != null) {
-            return;
-        }
-        M_Element element = M_Element.get(ctx, columnName, trxName);
-        if (element == null) {
-            throw new AdempiereException("No system M_Element found for '" + columnName
-                    + "' - expected a pre-seeded standard element");
-        }
+	/**
+	 * Mirrors org.idempiere.process.CreateTable.createColumn()'s
+	 * per-standard-column switch (reference type, length, mandatory-ness) - only
+	 * for the subset of standard columns a small lookup table needs.
+	 * AD_Client_ID/AD_Org_ID/Created/CreatedBy/Updated/UpdatedBy elements are
+	 * expected to already exist (every table in this instance uses them); this
+	 * throws rather than silently creating a divergent element if one is somehow
+	 * missing.
+	 */
+	private static void createStandardColumn(Properties ctx, MTable table, String columnName, String entityType,
+			String trxName) {
+		if (table.getColumn(columnName) != null) {
+			return;
+		}
+		M_Element element = M_Element.get(ctx, columnName, trxName);
+		if (element == null) {
+			throw new AdempiereException(
+					"No system M_Element found for '" + columnName + "' - expected a pre-seeded standard element");
+		}
 
-        MColumn column = new MColumn(table);
-        column.set_TrxName(trxName);
-        column.setEntityType(entityType);
-        column.setColumnName(element.getColumnName());
-        column.setName(element.getName());
-        column.setDescription(element.getDescription());
-        column.setHelp(element.getHelp());
-        column.setAD_Element_ID(element.getAD_Element_ID());
+		MColumn column = new MColumn(table);
+		column.set_TrxName(trxName);
+		column.setEntityType(entityType);
+		column.setColumnName(element.getColumnName());
+		column.setName(element.getName());
+		column.setDescription(element.getDescription());
+		column.setHelp(element.getHelp());
+		column.setAD_Element_ID(element.getAD_Element_ID());
 
-        switch (columnName) {
-        case "AD_Client_ID":
-            column.setAD_Reference_ID(DisplayType.Search);
-            column.setDefaultValue("@#AD_Client_ID@");
-            column.setIsMandatory(true);
-            column.setIsUpdateable(false);
-            column.setReadOnlyLogic("1=1");
-            break;
-        case "AD_Org_ID":
-            column.setAD_Reference_ID(DisplayType.TableDir);
-            column.setDefaultValue("@AD_Org_ID@");
-            column.setIsMandatory(true);
-            column.setIsUpdateable(false);
-            break;
-        case "Created":
-        case "Updated":
-            column.setAD_Reference_ID(DisplayType.DateTime);
-            column.setIsMandatory(true);
-            column.setIsUpdateable(false);
-            break;
-        case "CreatedBy":
-        case "UpdatedBy":
-            column.setAD_Reference_ID(DisplayType.Search);
-            column.setAD_Reference_Value_ID(REFERENCE_AD_USER);
-            column.setIsMandatory(true);
-            column.setIsUpdateable(false);
-            break;
-        case "IsActive":
-            column.setAD_Reference_ID(DisplayType.YesNo);
-            column.setIsMandatory(true);
-            column.setIsUpdateable(true);
-            column.setFieldLength(1);
-            column.setDefaultValue("Y");
-            break;
-        case "Value":
-            column.setAD_Reference_ID(DisplayType.String);
-            column.setIsUpdateable(true);
-            column.setFieldLength(40);
-            break;
-        case "Name":
-            column.setAD_Reference_ID(DisplayType.String);
-            column.setIsUpdateable(true);
-            column.setIsMandatory(true);
-            column.setIsIdentifier(true);
-            // Longer than iDempiere's usual 60 for a Name column - some source
-            // descriptions (e.g. SAQA Data Supplier names) run well past 60 characters.
-            column.setFieldLength(255);
-            break;
-        default:
-            throw new AdempiereException("createStandardColumn: unhandled column '" + columnName + "'");
-        }
+		switch (columnName) {
+		case "AD_Client_ID":
+			column.setAD_Reference_ID(DisplayType.Search);
+			column.setDefaultValue("@#AD_Client_ID@");
+			column.setIsMandatory(true);
+			column.setIsUpdateable(false);
+			column.setReadOnlyLogic("1=1");
+			break;
+		case "AD_Org_ID":
+			column.setAD_Reference_ID(DisplayType.TableDir);
+			column.setDefaultValue("@AD_Org_ID@");
+			column.setIsMandatory(true);
+			column.setIsUpdateable(false);
+			break;
+		case "Created":
+		case "Updated":
+			column.setAD_Reference_ID(DisplayType.DateTime);
+			column.setIsMandatory(true);
+			column.setIsUpdateable(false);
+			break;
+		case "CreatedBy":
+		case "UpdatedBy":
+			column.setAD_Reference_ID(DisplayType.Search);
+			column.setAD_Reference_Value_ID(REFERENCE_AD_USER);
+			column.setIsMandatory(true);
+			column.setIsUpdateable(false);
+			break;
+		case "IsActive":
+			column.setAD_Reference_ID(DisplayType.YesNo);
+			column.setIsMandatory(true);
+			column.setIsUpdateable(true);
+			column.setFieldLength(1);
+			column.setDefaultValue("Y");
+			break;
+		case "Value":
+			column.setAD_Reference_ID(DisplayType.String);
+			column.setIsUpdateable(true);
+			column.setFieldLength(40);
+			break;
+		case "Name":
+			column.setAD_Reference_ID(DisplayType.String);
+			column.setIsUpdateable(true);
+			column.setIsMandatory(true);
+			column.setIsIdentifier(true);
+			// Longer than iDempiere's usual 60 for a Name column - some source
+			// descriptions (e.g. SAQA Data Supplier names) run well past 60 characters.
+			column.setFieldLength(255);
+			break;
+		default:
+			throw new AdempiereException("createStandardColumn: unhandled column '" + columnName + "'");
+		}
 
-        column.saveEx();
-    }
+		column.saveEx();
+	}
 
-    private static void createKeyColumn(Properties ctx, MTable table, String entityType, String trxName) {
-        String columnName = table.getTableName() + "_ID";
-        if (table.getColumn(columnName) != null) {
-            return;
-        }
-        M_Element element = M_Element.get(ctx, columnName, trxName);
-        if (element == null) {
-            element = new M_Element(ctx, columnName, entityType, trxName);
-            element.setName(table.getName());
-            element.setPrintName(table.getName());
-            element.saveEx();
-        }
-        MColumn column = new MColumn(table);
-        column.set_TrxName(trxName);
-        column.setEntityType(entityType);
-        column.setColumnName(element.getColumnName());
-        column.setName(element.getName());
-        column.setAD_Element_ID(element.getAD_Element_ID());
-        column.setIsKey(true);
-        column.setAD_Reference_ID(DisplayType.ID);
-        column.setIsMandatory(true);
-        column.setFieldLength(22);
-        column.saveEx();
-    }
+	private static void createKeyColumn(Properties ctx, MTable table, String entityType, String trxName) {
+		String columnName = table.getTableName() + "_ID";
+		if (table.getColumn(columnName) != null) {
+			return;
+		}
+		M_Element element = M_Element.get(ctx, columnName, trxName);
+		if (element == null) {
+			element = new M_Element(ctx, columnName, entityType, trxName);
+			element.setName(table.getName());
+			element.setPrintName(table.getName());
+			element.saveEx();
+		}
+		MColumn column = new MColumn(table);
+		column.set_TrxName(trxName);
+		column.setEntityType(entityType);
+		column.setColumnName(element.getColumnName());
+		column.setName(element.getName());
+		column.setAD_Element_ID(element.getAD_Element_ID());
+		column.setIsKey(true);
+		column.setAD_Reference_ID(DisplayType.ID);
+		column.setIsMandatory(true);
+		column.setFieldLength(22);
+		column.saveEx();
+	}
 
-    /**
-     * Deliberately does NOT create the unique index/constraint
-     * org.idempiere.process.CreateTable also builds for the UUID column (MTableIndex +
-     * MIndexColumn) - not required for basic PO save/read, only for uniqueness enforcement.
-     * Can be added later via the standard Table &amp; Column window if wanted.
-     */
-    private static void createUUIDColumn(Properties ctx, MTable table, String entityType, String trxName) {
-        String columnName = PO.getUUIDColumnName(table.getTableName());
-        if (table.getColumn(columnName) != null) {
-            return;
-        }
-        M_Element element = M_Element.get(ctx, columnName, trxName);
-        if (element == null) {
-            element = new M_Element(ctx, columnName, entityType, trxName);
-            element.saveEx();
-        }
-        MColumn column = new MColumn(table);
-        column.set_TrxName(trxName);
-        column.setEntityType(entityType);
-        column.setColumnName(element.getColumnName());
-        column.setName(element.getName());
-        column.setAD_Element_ID(element.getAD_Element_ID());
-        column.setAD_Reference_ID(DisplayType.UUID);
-        column.setFieldLength(36);
-        column.saveEx();
-    }
+	/**
+	 * Deliberately does NOT create the unique index/constraint
+	 * org.idempiere.process.CreateTable also builds for the UUID column
+	 * (MTableIndex + MIndexColumn) - not required for basic PO save/read, only for
+	 * uniqueness enforcement. Can be added later via the standard Table &amp;
+	 * Column window if wanted.
+	 */
+	private static void createUUIDColumn(Properties ctx, MTable table, String entityType, String trxName) {
+		String columnName = PO.getUUIDColumnName(table.getTableName());
+		if (table.getColumn(columnName) != null) {
+			return;
+		}
+		M_Element element = M_Element.get(ctx, columnName, trxName);
+		if (element == null) {
+			element = new M_Element(ctx, columnName, entityType, trxName);
+			element.saveEx();
+		}
+		MColumn column = new MColumn(table);
+		column.set_TrxName(trxName);
+		column.setEntityType(entityType);
+		column.setColumnName(element.getColumnName());
+		column.setName(element.getName());
+		column.setAD_Element_ID(element.getAD_Element_ID());
+		column.setAD_Reference_ID(DisplayType.UUID);
+		column.setFieldLength(36);
+		column.saveEx();
+	}
 
-    /**
-     * "id" recon column - same name-and-purpose convention used everywhere else in this
-     * migration project (see MigrationSupport.stampCreatedUpdated): traces a row on this new
-     * reference table back to its ms_lkpXXX source row without needing a separate crosswalk
-     * table. Plain Integer (not a dedicated "bigint" DisplayType - none exists in iDempiere,
-     * and every source lookup table here has well under 50 rows, so NUMBER(10) is fine).
-     */
-    private static void createReconIdColumn(Properties ctx, MTable table, String entityType, String trxName) {
-        if (table.getColumn("id") != null) {
-            return;
-        }
-        M_Element element = M_Element.get(ctx, "id", trxName);
-        if (element == null) {
-            element = new M_Element(ctx, "id", entityType, trxName);
-            element.setName("Source Id");
-            element.setDescription("Source system row id (recon column)");
-            element.saveEx();
-        }
-        MColumn column = new MColumn(table);
-        column.set_TrxName(trxName);
-        column.setEntityType(entityType);
-        column.setColumnName(element.getColumnName());
-        column.setName(element.getName());
-        column.setDescription(element.getDescription());
-        column.setAD_Element_ID(element.getAD_Element_ID());
-        column.setIsMandatory(false);
-        column.setAD_Reference_ID(DisplayType.Integer);
-        column.setFieldLength(10);
-        column.setIsUpdateable(true);
-        column.saveEx();
-    }
+	/**
+	 * "id" recon column - same name-and-purpose convention used everywhere else in
+	 * this migration project (see MigrationSupport.stampCreatedUpdated): traces a
+	 * row on this new reference table back to its ms_lkpXXX source row without
+	 * needing a separate crosswalk table. Plain Integer (not a dedicated "bigint"
+	 * DisplayType - none exists in iDempiere, and every source lookup table here
+	 * has well under 50 rows, so NUMBER(10) is fine).
+	 */
+	private static void createReconIdColumn(Properties ctx, MTable table, String entityType, String trxName) {
+		if (table.getColumn("id") != null) {
+			return;
+		}
+		M_Element element = M_Element.get(ctx, "id", trxName);
+		if (element == null) {
+			element = new M_Element(ctx, "id", entityType, trxName);
+			element.setName("Source Id");
+			element.setDescription("Source system row id (recon column)");
+			element.saveEx();
+		}
+		MColumn column = new MColumn(table);
+		column.set_TrxName(trxName);
+		column.setEntityType(entityType);
+		column.setColumnName(element.getColumnName());
+		column.setName(element.getName());
+		column.setDescription(element.getDescription());
+		column.setAD_Element_ID(element.getAD_Element_ID());
+		column.setIsMandatory(false);
+		column.setAD_Reference_ID(DisplayType.Integer);
+		column.setFieldLength(10);
+		column.setIsUpdateable(true);
+		column.saveEx();
+	}
 
-    /**
-     * Copies every row from the staged MSSQL lookup table into the freshly-created reference
-     * table via the generic PO API (org.adempiere.model.GenericPO, obtained through
-     * MTable.getPO(0, trxName)) - there's no generated model class for these brand new tables
-     * to use typed setters with.
-     */
-    public static void populateReferenceTable(Properties ctx, MTable table, ReferenceColumnSpec spec, String trxName,
-            Consumer<String> logger) throws Exception {
-        int adClientId = Env.getAD_Client_ID(ctx);
-        PreparedStatement pst = null;
-        ResultSet rs = null;
-        int count = 0;
-        try {
-            pst = DB.prepareStatement(
-                    "SELECT " + spec.sourceValueCol + " AS value_col, " + spec.sourceNameCol + " AS name_col, id "
-                    + "FROM " + spec.sourceTable, trxName);
-            rs = pst.executeQuery();
-            while (rs.next()) {
-                PO po = table.getPO(0, trxName);
-                po.set_ValueOfColumn("AD_Client_ID", adClientId);
-                po.set_ValueOfColumn("AD_Org_ID", 0);
-                po.set_ValueOfColumn("IsActive", "Y");
-                Object valueObj = rs.getObject("value_col");
-                po.set_ValueOfColumn("Value", valueObj == null ? null : String.valueOf(valueObj));
-                po.set_ValueOfColumn("Name", rs.getString("name_col"));
-                po.set_ValueOfColumn("id", rs.getInt("id"));
-                po.saveEx();
-                count++;
-            }
-        } finally {
-            DB.close(rs, pst);
-        }
-        logger.accept(table.getTableName() + ": " + count + " row(s) loaded from " + spec.sourceTable + ".");
-    }
+	/**
+	 * Find-or-create an AD_EntityType row for the given entity type string.
+	 * REQUIRED before any table using that EntityType can actually have rows saved
+	 * into it - MTable.getPO()/GenericPO resolution looks up EntityType -&gt;
+	 * MEntityType internally and NPEs (MEntityType.getModelPackage() on a null
+	 * MEntityType) if no matching row exists. Confirmed the hard way 2026-09-05:
+	 * "MQA SDR" was used as a brand new EntityType value for the first time without
+	 * registering it here, and populateReferenceTable's table.getPO() call blew up
+	 * on the very first row - "MQA Learner" only ever worked because that
+	 * AD_EntityType row already existed (created manually before this project's
+	 * table-creation processes were first run, same one-off manual setup as the
+	 * AD_Process rows RegisterZZPhase1Processes' Javadoc mentions).
+	 *
+	 * <p>
+	 * Mirrors the existing "MQA Learner" row's shape exactly: blank
+	 * ModelPackage/Classpath (no generated model classes for these tables - they're
+	 * read via GenericPO), Processing left false.
+	 */
+	public static void ensureEntityType(Properties ctx, String entityType, String trxName, Consumer<String> logger) {
+		if (MEntityType.get(ctx, entityType) != null) {
+			return;
+		}
+		MEntityType et = new MEntityType(ctx, 0, trxName);
+		et.set_ValueOfColumn("AD_Client_ID", 0);
+		et.setAD_Org_ID(0);
+		et.setEntityType(entityType);
+		et.setName(entityType);
+		et.setProcessing(false);
+		et.saveEx();
+		logger.accept("Created AD_EntityType '" + entityType + "' (AD_EntityType_ID=" + et.get_ID() + ")");
+	}
 
-    /** @return the AD_Reference_ID of an existing List reference with this exact Name, or 0 if none. */
-    static int findListReference(Properties ctx, String name, String trxName) {
-        MReference existing = new Query(ctx, MReference.Table_Name, "Name=?", trxName)
-                .setParameters(name)
-                .first();
-        return existing == null ? 0 : existing.getAD_Reference_ID();
-    }
+	/**
+	 * Find-or-create a "Table" (DisplayType.Table=18, NOT TableDir=19) AD_Reference
+	 * + AD_Ref_Table pair pointing at an already-existing table - for a column
+	 * whose own name doesn't match its target table closely enough for iDempiere's
+	 * Table Direct naming convention to auto-resolve (e.g. PhysicalSuburb_ID -&gt;
+	 * SDR_Suburb, or a self-referencing column like ParentPerson_ID -&gt; the
+	 * table's own SDR_Person). Confirmed 2026-09-05: this situation is common
+	 * enough across SDR_ (address-geography columns recur in Person, Organisation,
+	 * WSPATR) that it needed a shared helper rather than one-off code per column.
+	 *
+	 * <p>
+	 * Naming/creation sequence mirrors a proven precedent already used in this
+	 * project's WSP_ATR domain
+	 * (GenerateWspAtrTablesFromTemplate.ensureTableReferenceForLookup, found in
+	 * Eclipse local history 2026-09-05): AD_Reference.Name =
+	 * "&lt;targetTableName&gt;_ID", ValidationType='T' (Table), AD_Ref_Table keyed
+	 * 1:1 by AD_Reference_ID (found via
+	 * {@link MRefTable#get(Properties, int, String)}, NOT the raw int constructor -
+	 * that constructor's own Javadoc warns it's ambiguous for exactly this case),
+	 * with AD_Key/ AD_Display resolved from the target table's own key column
+	 * (IsKey='Y') and its "Name" column.
+	 *
+	 * <p>
+	 * Idempotent: reuses an existing AD_Reference/AD_Ref_Table pair by name if one
+	 * already exists, safe to call once per target table per calling process (or
+	 * every time - it's a cheap find-first).
+	 *
+	 * @return the AD_Reference_ID to pass as {@code referenceValueId} into
+	 *         {@link #registerColumn(Properties, MTable, String, int, int, int, String, String, String)}
+	 *         / {@link #registerColumnWithValue}, together with
+	 *         {@code referenceId}= {@link DisplayType#Table} (NOT TableDir)
+	 */
+	public static int findOrCreateTableReference(Properties ctx, String targetTableName, String entityType,
+			String trxName, Consumer<String> logger) {
+		String refName = targetTableName + "_ID";
 
-    /**
-     * Find-or-create: creates a brand new List(17) AD_Reference + its AD_Ref_List entries,
-     * sourced from the DISTINCT active (isdeleted=0) values of one description-style column on a
-     * staged MSSQL lookup table - for cases like Phase 2's Levy Yes/No/Not Applicable, where no
-     * existing List reference fits (the project's usual binary Yes/No List+319 can't represent a
-     * genuine 3rd state) and there's no separate short "code" column to use as Value, so
-     * Value=Name=the description text itself (same convention already used by the pre-existing
-     * ZZTerminationReason List, where Value happens to equal Name for every entry).
-     *
-     * <p>Idempotent and shareable across process classes (mirrors the reference-table
-     * find-or-create pattern): if a reference with this exact Name already exists, its
-     * AD_Reference_ID is returned as-is, not re-populated.
-     *
-     * @return the AD_Reference_ID (new or pre-existing)
-     */
-    static int findOrCreateListReferenceFromDescriptions(Properties ctx, String name, String description,
-            String entityType, String trxName, String sourceTable, String sourceDescriptionCol,
-            Consumer<String> logger) {
-        int existingId = findListReference(ctx, name, trxName);
-        if (existingId > 0) {
-            logger.accept("List reference '" + name + "' already exists (AD_Reference_ID=" + existingId
-                    + ") - left as-is (not re-populated).");
-            return existingId;
-        }
+		MReference ref = new Query(ctx, MReference.Table_Name, "Name=? AND ValidationType=?", trxName)
+				.setParameters(refName, MReference.VALIDATIONTYPE_TableValidation).first();
+		int refId = (ref != null) ? ref.getAD_Reference_ID() : 0;
 
-        MReference reference = new MReference(ctx, 0, trxName);
-        reference.setName(name);
-        reference.setDescription(description);
-        reference.setEntityType(entityType);
-        reference.setValidationType(X_AD_Reference.VALIDATIONTYPE_ListValidation);
-        reference.saveEx();
+		if (refId <= 0) {
+			ref = new MReference(ctx, 0, trxName);
+			ref.setName(refName);
+			ref.setValidationType(MReference.VALIDATIONTYPE_TableValidation);
+			ref.setEntityType(entityType);
+			ref.saveEx();
+			refId = ref.getAD_Reference_ID();
+			logger.accept("Created AD_Reference '" + refName + "' (AD_Reference_ID=" + refId + ")");
+		}
 
-        int count = 0;
-        PreparedStatement pst = null;
-        ResultSet rs = null;
-        try {
-            pst = DB.prepareStatement("SELECT DISTINCT " + sourceDescriptionCol + " FROM " + sourceTable
-                    + " WHERE isdeleted = 0 ORDER BY " + sourceDescriptionCol, trxName);
-            rs = pst.executeQuery();
-            while (rs.next()) {
-                String value = rs.getString(1);
-                MRefList refList = new MRefList(ctx, 0, trxName);
-                refList.setAD_Reference_ID(reference.getAD_Reference_ID());
-                refList.setValue(value);
-                refList.setName(value);
-                refList.setEntityType(entityType);
-                refList.saveEx();
-                count++;
-            }
-        } catch (java.sql.SQLException e) {
-            throw new AdempiereException("Failed building AD_Ref_List for '" + name + "' from " + sourceTable, e);
-        } finally {
-            DB.close(rs, pst);
-        }
-        logger.accept("Created List reference '" + name + "' (AD_Reference_ID=" + reference.getAD_Reference_ID()
-                + ") with " + count + " value(s) from " + sourceTable + "." + sourceDescriptionCol);
-        return reference.getAD_Reference_ID();
-    }
+		MTable targetTable = findTable(ctx, targetTableName, trxName);
+		if (targetTable == null) {
+			throw new AdempiereException("findOrCreateTableReference: target table '" + targetTableName
+					+ "' does not exist yet - create it before wiring a reference to it");
+		}
 
-    /** Executes DDL returned by MColumn.getSQLAdd()/MTable.getSQLCreate(), splitting on
-     * DB.SQLSTATEMENT_SEPARATOR if the driver needed more than one statement - same handling
-     * as org.compiere.process.ColumnSync. */
-    static void executeDdl(String sql, String trxName) {
-        int result;
-        if (sql.indexOf(DB.SQLSTATEMENT_SEPARATOR) == -1) {
-            result = DB.executeUpdateEx(sql, trxName);
-        } else {
-            result = 0;
-            for (String statement : sql.split(DB.SQLSTATEMENT_SEPARATOR)) {
-                result += DB.executeUpdateEx(statement, trxName);
-            }
-        }
-        if (result == -1) {
-            throw new AdempiereException("DDL failed: " + sql);
-        }
-    }
+		MRefTable refTableCfg = MRefTable.get(ctx, refId, trxName);
+		if (refTableCfg != null) {
+			refTableCfg = new MRefTable(ctx, refTableCfg, trxName);
+		} else {
+			refTableCfg = new MRefTable(ctx, 0, trxName);
+			refTableCfg.setAD_Reference_ID(refId);
+		}
+		refTableCfg.setAD_Table_ID(targetTable.getAD_Table_ID());
+
+		int keyColId = new Query(ctx, MColumn.Table_Name, "AD_Table_ID=? AND IsKey='Y'", trxName)
+				.setParameters(targetTable.getAD_Table_ID()).firstId();
+		int displayColId = new Query(ctx, MColumn.Table_Name, "AD_Table_ID=? AND ColumnName='Name'", trxName)
+				.setParameters(targetTable.getAD_Table_ID()).firstId();
+		if (keyColId > 0) {
+			refTableCfg.setAD_Key(keyColId);
+		}
+		if (displayColId > 0) {
+			refTableCfg.setAD_Display(displayColId);
+		}
+		refTableCfg.setEntityType(entityType);
+		refTableCfg.saveEx();
+
+		logger.accept("AD_Ref_Table ensured for '" + refName + "' -> " + targetTableName);
+		return refId;
+	}
+
+	/**
+	 * Copies every row from the staged MSSQL lookup table into the freshly-created
+	 * reference table via the generic PO API (org.adempiere.model.GenericPO,
+	 * obtained through MTable.getPO(0, trxName)) - there's no generated model class
+	 * for these brand new tables to use typed setters with.
+	 */
+	public static void populateReferenceTable(Properties ctx, MTable table, ReferenceColumnSpec spec, String trxName,
+			Consumer<String> logger) throws Exception {
+		int adClientId = Env.getAD_Client_ID(ctx);
+		PreparedStatement pst = null;
+		ResultSet rs = null;
+		int count = 0;
+		try {
+			pst = DB.prepareStatement("SELECT " + spec.sourceValueCol + " AS value_col, " + spec.sourceNameCol
+					+ " AS name_col, id " + "FROM " + spec.sourceTable, trxName);
+			rs = pst.executeQuery();
+			while (rs.next()) {
+				PO po = table.getPO(0, trxName);
+				po.set_ValueOfColumn("AD_Client_ID", adClientId);
+				po.set_ValueOfColumn("AD_Org_ID", 0);
+				po.set_ValueOfColumn("IsActive", "Y");
+				Object valueObj = rs.getObject("value_col");
+				po.set_ValueOfColumn("Value", valueObj == null ? null : String.valueOf(valueObj));
+				po.set_ValueOfColumn("Name", rs.getString("name_col"));
+				po.set_ValueOfColumn("id", rs.getInt("id"));
+				po.saveEx();
+				count++;
+			}
+		} finally {
+			DB.close(rs, pst);
+		}
+		logger.accept(table.getTableName() + ": " + count + " row(s) loaded from " + spec.sourceTable + ".");
+	}
+
+	/**
+	 * @return the AD_Reference_ID of an existing List reference with this exact
+	 *         Name, or 0 if none.
+	 */
+	static int findListReference(Properties ctx, String name, String trxName) {
+		MReference existing = new Query(ctx, MReference.Table_Name, "Name=?", trxName).setParameters(name).first();
+		return existing == null ? 0 : existing.getAD_Reference_ID();
+	}
+
+	/**
+	 * Find-or-create: creates a brand new List(17) AD_Reference + its AD_Ref_List
+	 * entries, sourced from the DISTINCT active (isdeleted=0) values of one
+	 * description-style column on a staged MSSQL lookup table - for cases like
+	 * Phase 2's Levy Yes/No/Not Applicable, where no existing List reference fits
+	 * (the project's usual binary Yes/No List+319 can't represent a genuine 3rd
+	 * state) and there's no separate short "code" column to use as Value, so
+	 * Value=Name=the description text itself (same convention already used by the
+	 * pre-existing ZZTerminationReason List, where Value happens to equal Name for
+	 * every entry).
+	 *
+	 * <p>
+	 * Idempotent and shareable across process classes (mirrors the reference-table
+	 * find-or-create pattern): if a reference with this exact Name already exists,
+	 * its AD_Reference_ID is returned as-is, not re-populated.
+	 *
+	 * @return the AD_Reference_ID (new or pre-existing)
+	 */
+	static int findOrCreateListReferenceFromDescriptions(Properties ctx, String name, String description,
+			String entityType, String trxName, String sourceTable, String sourceDescriptionCol,
+			Consumer<String> logger) {
+		int existingId = findListReference(ctx, name, trxName);
+		if (existingId > 0) {
+			logger.accept("List reference '" + name + "' already exists (AD_Reference_ID=" + existingId
+					+ ") - left as-is (not re-populated).");
+			return existingId;
+		}
+
+		MReference reference = new MReference(ctx, 0, trxName);
+		reference.setName(name);
+		reference.setDescription(description);
+		reference.setEntityType(entityType);
+		reference.setValidationType(X_AD_Reference.VALIDATIONTYPE_ListValidation);
+		reference.saveEx();
+
+		int count = 0;
+		PreparedStatement pst = null;
+		ResultSet rs = null;
+		try {
+			pst = DB.prepareStatement("SELECT DISTINCT " + sourceDescriptionCol + " FROM " + sourceTable
+					+ " WHERE isdeleted = 0 ORDER BY " + sourceDescriptionCol, trxName);
+			rs = pst.executeQuery();
+			while (rs.next()) {
+				String value = rs.getString(1);
+				MRefList refList = new MRefList(ctx, 0, trxName);
+				refList.setAD_Reference_ID(reference.getAD_Reference_ID());
+				refList.setValue(value);
+				refList.setName(value);
+				refList.setEntityType(entityType);
+				refList.saveEx();
+				count++;
+			}
+		} catch (java.sql.SQLException e) {
+			throw new AdempiereException("Failed building AD_Ref_List for '" + name + "' from " + sourceTable, e);
+		} finally {
+			DB.close(rs, pst);
+		}
+		logger.accept("Created List reference '" + name + "' (AD_Reference_ID=" + reference.getAD_Reference_ID()
+				+ ") with " + count + " value(s) from " + sourceTable + "." + sourceDescriptionCol);
+		return reference.getAD_Reference_ID();
+	}
+
+	/**
+	 * Executes DDL returned by MColumn.getSQLAdd()/MTable.getSQLCreate(), splitting
+	 * on DB.SQLSTATEMENT_SEPARATOR if the driver needed more than one statement -
+	 * same handling as org.compiere.process.ColumnSync.
+	 */
+	static void executeDdl(String sql, String trxName) {
+		int result;
+		if (sql.indexOf(DB.SQLSTATEMENT_SEPARATOR) == -1) {
+			result = DB.executeUpdateEx(sql, trxName);
+		} else {
+			result = 0;
+			for (String statement : sql.split(DB.SQLSTATEMENT_SEPARATOR)) {
+				result += DB.executeUpdateEx(statement, trxName);
+			}
+		}
+		if (result == -1) {
+			throw new AdempiereException("DDL failed: " + sql);
+		}
+	}
 }

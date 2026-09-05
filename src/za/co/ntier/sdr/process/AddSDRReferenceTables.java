@@ -45,11 +45,17 @@ import za.co.ntier.learner.process.AddColumnsSupport.ReferenceColumnSpec;
  * schema creation AND population are skipped together as one unit. If a table exists but
  * was only partially populated by an earlier failed run, truncate it manually before
  * re-running; this process does not attempt to reconcile partial data.
+ *
+ * <p>ENTITY_TYPE is "U" (User Maintained, AD_EntityType_ID=100) - per user instruction
+ * 2026-09-05, reusing this pre-existing core system entity type rather than inventing a new
+ * "MQA SDR" one (which needed its own AD_EntityType row registered before MTable.getPO()
+ * could resolve it - see AddColumnsSupport#ensureEntityType's Javadoc for how that surfaced;
+ * that helper stays available for future use but isn't needed here now).
  */
 @Process(name = "za.co.ntier.sdr.process.AddSDRReferenceTables")
 public class AddSDRReferenceTables extends SvrProcess {
 
-    private static final String ENTITY_TYPE = "MQA SDR";
+    private static final String ENTITY_TYPE = "U";
     private static final String ACCESS_LEVEL = "3";
 
     /** {target table name, source table, source Value column, source Name column, description}. */
