@@ -125,8 +125,11 @@ public class AddSDRPersonTable extends SvrProcess {
         // (SDR_Person itself) already exists as an AD_Table record at this point (saveEx() ran
         // inside createNewTableSchema above), even though its physical table isn't created until
         // finalizeNewTable below - findOrCreateTableReference only needs the AD_Table row.
-        int parentPersonRefId = AddColumnsSupport.findOrCreateTableReference(getCtx(), TABLE_NAME, ENTITY_TYPE,
-                get_TrxName(), this::addLog);
+        // SDR_Person has no generic "Name" column (it uses Surname/SDR_FirstName instead), so the
+        // display column must be passed explicitly - "Surname" (registered above) is used as the
+        // parent-person lookup's display value.
+        int parentPersonRefId = AddColumnsSupport.findOrCreateTableReference(getCtx(), TABLE_NAME, "Surname",
+                ENTITY_TYPE, get_TrxName(), this::addLog);
         AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_ParentPerson_ID", DisplayType.Table,
                 parentPersonRefId, 10,
                 "mssdr_person.parentpersonid -> SDR_Person (self-referencing, only 40/923,166 rows "

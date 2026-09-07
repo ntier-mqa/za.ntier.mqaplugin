@@ -584,8 +584,10 @@ public final class AddColumnsSupport {
 	 * 1:1 by AD_Reference_ID (found via
 	 * {@link MRefTable#get(Properties, int, String)}, NOT the raw int constructor -
 	 * that constructor's own Javadoc warns it's ambiguous for exactly this case),
-	 * with AD_Key/ AD_Display resolved from the target table's own key column
-	 * (IsKey='Y') and its "Name" column.
+	 * with AD_Key resolved from the target table's own key column (IsKey='Y') and
+	 * AD_Display resolved from its "Name" column - see the
+	 * {@link #findOrCreateTableReference(Properties, String, String, String, String, Consumer)}
+	 * overload for targets that don't have one.
 	 *
 	 * <p>
 	 * Idempotent: reuses an existing AD_Reference/AD_Ref_Table pair by name if one
@@ -599,6 +601,28 @@ public final class AddColumnsSupport {
 	 */
 	public static int findOrCreateTableReference(Properties ctx, String targetTableName, String entityType,
 			String trxName, Consumer<String> logger) {
+		return findOrCreateTableReference(ctx, targetTableName, "Name", entityType, trxName, logger);
+	}
+
+	/**
+	 * Same as
+	 * {@link #findOrCreateTableReference(Properties, String, String, String, Consumer)}
+	 * but lets the caller specify which column of the target table to use as
+	 * AD_Ref_Table.AD_Display, for target tables that don't follow the Value/Name
+	 * reference-table convention - e.g. a self-referencing FK on a main business
+	 * table like SDR_Person (SDR_ParentPerson_ID -&gt; SDR_Person), which has
+	 * FirstName/Surname instead of a generic "Name" column.
+	 *
+	 * <p>
+	 * Confirmed necessary 2026-09-05: AddSDRPersonTable's self-reference hit a
+	 * "null value in column ad_display violates not-null constraint" - SDR_Person
+	 * has no "Name" column, and the previous single-overload version silently left
+	 * AD_Display unset instead of failing loudly, so the bad row only surfaced as a
+	 * raw DB error. Both AD_Key and AD_Display now fail loudly (not silently skip)
+	 * if the expected column isn't found, for the same reason.
+	 */
+	public static int findOrCreateTableReference(Properties ctx, String targetTableName, String displayColumnName,
+			String entityType, String trxName, Consumer<String> logger) {
 		String refName = targetTableName + "_ID";
 
 		MReference ref = new Query(ctx, MReference.Table_Name, "Name=? AND ValidationType=?", trxName)
@@ -632,18 +656,24 @@ public final class AddColumnsSupport {
 
 		int keyColId = new Query(ctx, MColumn.Table_Name, "AD_Table_ID=? AND IsKey='Y'", trxName)
 				.setParameters(targetTable.getAD_Table_ID()).firstId();
-		int displayColId = new Query(ctx, MColumn.Table_Name, "AD_Table_ID=? AND ColumnName='Name'", trxName)
-				.setParameters(targetTable.getAD_Table_ID()).firstId();
-		if (keyColId > 0) {
-			refTableCfg.setAD_Key(keyColId);
+		if (keyColId <= 0) {
+			throw new AdempiereException("findOrCreateTableReference: target table '" + targetTableName
+					+ "' has no IsKey='Y' column - cannot set AD_Ref_Table.AD_Key");
 		}
-		if (displayColId > 0) {
-			refTableCfg.setAD_Display(displayColId);
+		int displayColId = new Query(ctx, MColumn.Table_Name, "AD_Table_ID=? AND ColumnName=?", trxName)
+				.setParameters(targetTable.getAD_Table_ID(), displayColumnName).firstId();
+		if (displayColId <= 0) {
+			throw new AdempiereException("findOrCreateTableReference: target table '" + targetTableName
+					+ "' has no '" + displayColumnName + "' column - cannot set AD_Ref_Table.AD_Display "
+					+ "(pass the correct display column name explicitly)");
 		}
+		refTableCfg.setAD_Key(keyColId);
+		refTableCfg.setAD_Display(displayColId);
 		refTableCfg.setEntityType(entityType);
 		refTableCfg.saveEx();
 
-		logger.accept("AD_Ref_Table ensured for '" + refName + "' -> " + targetTableName);
+		logger.accept(
+				"AD_Ref_Table ensured for '" + refName + "' -> " + targetTableName + " (display=" + displayColumnName + ")");
 		return refId;
 	}
 
