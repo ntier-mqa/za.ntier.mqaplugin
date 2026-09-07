@@ -2,10 +2,12 @@ package za.ntier.process;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.util.logging.Level;
 
 import org.adempiere.base.annotation.Process;
 import za.co.ntier.api.model.X_ZZLearnerLearnership;
+import org.compiere.model.MSequence;
 import org.compiere.model.MTable;
 import org.compiere.model.PO;
 import org.compiere.process.SvrProcess;
@@ -66,8 +68,22 @@ public class ApproveLearnerQualificationProcess extends SvrProcess
 									PO record = MTable.get(getCtx(), ad_table_id).getPO(record_id, get_TrxName());
 									if (record != null)
 									{
+										// Check if a certificate number already exists so we don't overwrite it on reprint/re-approval
+										String existingCertNo = (String) record.get_Value(X_ZZLearnerLearnership.COLUMNNAME_ZZCertificateNumber);
+										if (existingCertNo == null || existingCertNo.trim().isEmpty())
+										{
+											// Get the full formatted sequence (including Prefix) directly from the Sequence window
+											int seqId = DB.getSQLValue(get_TrxName(), "SELECT AD_Sequence_ID FROM AD_Sequence WHERE Name='ZZCertificateNumber' AND AD_Client_ID IN (0,?)", getAD_Client_ID());
+											if (seqId > 0) {
+												MSequence seq = new MSequence(getCtx(), seqId, get_TrxName());
+												String certNo = MSequence.getDocumentNoFromSeq(seq, get_TrxName(), record);
+												record.set_ValueOfColumn(X_ZZLearnerLearnership.COLUMNNAME_ZZCertificateNumber, certNo);
+											}
+										}
+
 										// The status of the qual will change to ‘Completed’
 										record.set_ValueOfColumn(X_ZZLearnerLearnership.COLUMNNAME_ZZ_DocStatus, X_ZZLearnerLearnership.ZZ_DOCSTATUS_Completed);
+										record.set_ValueOfColumn(X_ZZLearnerLearnership.COLUMNNAME_ZZCompletionDate, new Timestamp(System.currentTimeMillis()));
 										record.saveEx();
 										count++;
 									}
