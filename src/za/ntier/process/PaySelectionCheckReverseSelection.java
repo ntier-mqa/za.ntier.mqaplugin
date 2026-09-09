@@ -27,7 +27,7 @@ public class PaySelectionCheckReverseSelection extends SvrProcess {
 				p_C_PaySelectionCheck_IDs.add(id);
 		}
 		if (p_C_PaySelectionCheck_IDs.isEmpty())
-			throw new AdempiereUserError("@NoSelection@");
+			throw new AdempiereUserError("Please select at least one Prepared Payment row to reverse.");
 	}
 
 	@Override
