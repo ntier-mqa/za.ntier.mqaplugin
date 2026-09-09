@@ -40,7 +40,8 @@ public class ApproveLearnerQualificationProcess extends SvrProcess
 							+ "  SELECT T_Selection_ID FROM T_Selection WHERE AD_PInstance_ID=?"
 							+ ") x";
 
-		int count = 0;
+		int verifiedCount = 0;
+		int completedCount = 0;
 		try (PreparedStatement pstmt = DB.prepareStatement(sqlSelect, get_TrxName()))
 		{
 			pstmt.setInt(1, pInstanceId);
@@ -68,24 +69,43 @@ public class ApproveLearnerQualificationProcess extends SvrProcess
 									PO record = MTable.get(getCtx(), ad_table_id).getPO(record_id, get_TrxName());
 									if (record != null)
 									{
-										// Check if a certificate number already exists so we don't overwrite it on reprint/re-approval
-										String existingCertNo = (String) record.get_Value(X_ZZLearnerLearnership.COLUMNNAME_ZZCertificateNumber);
-										if (existingCertNo == null || existingCertNo.trim().isEmpty())
-										{
-											// Get the full formatted sequence (including Prefix) directly from the Sequence window
-											int seqId = DB.getSQLValue(get_TrxName(), "SELECT AD_Sequence_ID FROM AD_Sequence WHERE Name='ZZCertificateNumber' AND AD_Client_ID IN (0,?)", getAD_Client_ID());
-											if (seqId > 0) {
-												MSequence seq = new MSequence(getCtx(), seqId, get_TrxName());
-												String certNo = MSequence.getDocumentNoFromSeq(seq, get_TrxName(), record);
-												record.set_ValueOfColumn(X_ZZLearnerLearnership.COLUMNNAME_ZZCertificateNumber, certNo);
-											}
-										}
+										String currentStatus = (String) record.get_Value(X_ZZLearnerLearnership.COLUMNNAME_ZZ_DocStatus);
 
-										// The status of the qual will change to ‘Completed’
-										record.set_ValueOfColumn(X_ZZLearnerLearnership.COLUMNNAME_ZZ_DocStatus, X_ZZLearnerLearnership.ZZ_DOCSTATUS_Completed);
-										record.set_ValueOfColumn(X_ZZLearnerLearnership.COLUMNNAME_ZZCompletionDate, new Timestamp(System.currentTimeMillis()));
-										record.saveEx();
-										count++;
+										if (X_ZZLearnerLearnership.ZZ_DOCSTATUS_Draft.equals(currentStatus))
+										{
+											record.set_ValueOfColumn(	X_ZZLearnerLearnership.COLUMNNAME_ZZ_DocStatus,
+																		X_ZZLearnerLearnership.ZZ_DOCSTATUS_Verified);
+											record.saveEx();
+											verifiedCount++;
+										}
+										else if (X_ZZLearnerLearnership.ZZ_DOCSTATUS_Verified.equals(currentStatus))
+										{
+											// Check if a certificate number already exists so we
+											// don't overwrite it on reprint/re-approval
+											String existingCertNo = (String) record.get_Value(X_ZZLearnerLearnership.COLUMNNAME_ZZCertificateNumber);
+											if (existingCertNo == null || existingCertNo.trim().isEmpty())
+											{
+												// Get the full formatted sequence (including
+												// Prefix) directly from the Sequence window
+												int seqId = DB.getSQLValue(	get_TrxName(),
+																			"SELECT AD_Sequence_ID FROM AD_Sequence WHERE Name='ZZCertificateNumber' AND AD_Client_ID IN (0,?)",
+																			getAD_Client_ID());
+												if (seqId > 0)
+												{
+													MSequence seq = new MSequence(getCtx(), seqId, get_TrxName());
+													String certNo = MSequence.getDocumentNoFromSeq(seq, get_TrxName(), record);
+													record.set_ValueOfColumn(X_ZZLearnerLearnership.COLUMNNAME_ZZCertificateNumber, certNo);
+												}
+											}
+
+											// The status of the qual will change to ‘Completed’
+											record.set_ValueOfColumn(	X_ZZLearnerLearnership.COLUMNNAME_ZZ_DocStatus,
+																		X_ZZLearnerLearnership.ZZ_DOCSTATUS_Completed);
+											record.set_ValueOfColumn(X_ZZLearnerLearnership.COLUMNNAME_ZZCompletionDate, new Timestamp(System
+																																				.currentTimeMillis()));
+											record.saveEx();
+											completedCount++;
+										}
 									}
 								}
 							}
@@ -100,11 +120,21 @@ public class ApproveLearnerQualificationProcess extends SvrProcess
 			return "Error: " + e.getMessage();
 		}
 
-		if (count == 0)
+		if (verifiedCount == 0 && completedCount == 0)
 		{
 			return "No records were selected or updated.";
 		}
 
-		return "Successfully Approved " + count + " Learner Qualification(s)!";
+		StringBuilder msg = new StringBuilder();
+		if (verifiedCount > 0)
+		{
+			msg.append(verifiedCount).append(" record(s) changed to Verified. ");
+		}
+		if (completedCount > 0)
+		{
+			msg.append(completedCount).append(" record(s) changed to Completed.");
+		}
+
+		return msg.toString().trim();
 	}
 }
