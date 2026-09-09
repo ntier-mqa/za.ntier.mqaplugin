@@ -652,7 +652,7 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 		item.appendChild(actions);
 
 		list.appendChild(item);
-	}	
+	}
 
 	private byte[] extractCurrentSubmissionFileBytes(int submittedId) {
 		MAttachment att = MAttachment.get(Env.getCtx(), X_ZZ_WSP_ATR_Submitted.Table_ID, submittedId);

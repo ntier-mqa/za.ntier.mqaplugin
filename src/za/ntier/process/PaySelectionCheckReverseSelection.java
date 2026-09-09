@@ -19,17 +19,12 @@ public class PaySelectionCheckReverseSelection extends SvrProcess {
 	protected void prepare() {
 		p_C_PaySelectionCheck_IDs = getRecord_IDs();
 		if (p_C_PaySelectionCheck_IDs == null || p_C_PaySelectionCheck_IDs.isEmpty()) {
-			if (getRecord_ID() == 0) {
-				int[] ids = DB.getIDsEx(get_TrxName(),
-						"SELECT T_Selection_ID FROM T_Selection WHERE AD_PInstance_ID=?",
-						getAD_PInstance_ID());
-				p_C_PaySelectionCheck_IDs = new ArrayList<>();
-				for (int id : ids)
-					p_C_PaySelectionCheck_IDs.add(id);
-			} else {
-				p_C_PaySelectionCheck_IDs = new ArrayList<>();
-				p_C_PaySelectionCheck_IDs.add(getRecord_ID());
-			}
+			int[] ids = DB.getIDsEx(get_TrxName(),
+					"SELECT T_Selection_ID FROM T_Selection WHERE AD_PInstance_ID=?",
+					getAD_PInstance_ID());
+			p_C_PaySelectionCheck_IDs = new ArrayList<>();
+			for (int id : ids)
+				p_C_PaySelectionCheck_IDs.add(id);
 		}
 		if (p_C_PaySelectionCheck_IDs.isEmpty())
 			throw new AdempiereUserError("@NoSelection@");

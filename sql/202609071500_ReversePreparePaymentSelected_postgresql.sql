@@ -7,12 +7,34 @@
 -- Requires za.ntier.mqaplugin class org.compiere.process -> za.ntier.process.PaySelectionCheckReverseSelection
 -- to be deployed before this button is used.
 --
--- IDs for AD_Element / AD_Process / AD_Column / AD_Field are allocated at runtime (max+1, floored to
--- 1,000,000 to stay in the customization range, clear of core dictionary IDs). AD_Table_ID / AD_Tab_ID
--- are resolved by name. Review the RAISE NOTICE output after running to confirm what was created.
+-- IDs for AD_Element / AD_Process / AD_Column / AD_Field come from nextval() on this system's native
+-- id sequences (ad_element_sq / ad_process_sq / ad_column_sq / ad_field_sq) — the same mechanism
+-- MSequence.getNextID()/DB_PostgreSQL.getNextID() use when SYSTEM_NATIVE_SEQUENCE=Y, so these IDs are
+-- generated exactly as if the records had been created through the client. AD_Table_ID / AD_Tab_ID are
+-- resolved by name. Review the RAISE NOTICE output after running to confirm what was created.
+-- If a nextval() call fails with "relation ... does not exist", that sequence hasn't been created yet
+-- for this table — create it once (e.g. via the Application Dictionary UI) and re-run.
 --
 -- EntityType is set to 'U' (User maintained) below as a safe default — change it to your project's
 -- own EntityType value first if MQA customizations are tagged with one elsewhere in this system.
+--
+-- The field has no DisplayLogic — the button is always shown. IsToolbarButton is 'Y' (Toolbar only,
+-- not 'B'/Both), so this field never appears in the single-record Detail/Form view anyway; it only
+-- ever renders as the grid toolbar button, whose DisplayLogic (if set) would evaluate against a single
+-- current/focused row, not every row in a multi-selection — an unreliable signal for a multi-select
+-- action, since a mix of already-confirmed (Processed=Y, C_Payment_ID set — see
+-- MPaySelectionCheck.confirmPrint()) and still-reversible (Processed=N) rows under one header is
+-- normal, not an edge case. The real guard is server-side: za.ntier.process.PaySelectionCheckReverseSelection
+-- independently skips (and logs) any selected row with C_Payment_ID<>0 rather than reversing it.
+--
+-- Also inserts AD_Element_Trl / AD_Column_Trl / AD_Process_Trl / AD_Field_Trl rows for every
+-- AD_Language flagged IsSystemLanguage='Y'. Without these, the Column/Process/Element/Field name
+-- lookups render BLANK in the client for any such language — inserting AD_* dictionary rows directly
+-- via SQL bypasses the model-layer hook that normally creates these translation rows automatically
+-- when a record is created through the client UI. UUIDs for these rows are generated inline via
+-- md5(random())::uuid rather than uuid_generate_v4(), since on at least one environment this script
+-- has run against, the application DB role's search_path excludes the public schema where uuid-ossp
+-- lives, causing uuid_generate_v4() to fail for that role.
 
 DO $$
 DECLARE
@@ -23,6 +45,7 @@ DECLARE
   v_table_id    INTEGER;
   v_tab_id      INTEGER;
   v_seqno       INTEGER;
+  v_lang        RECORD;
 BEGIN
   SELECT AD_Table_ID INTO v_table_id
   FROM AD_Table
@@ -42,10 +65,16 @@ BEGIN
     RAISE EXCEPTION 'Tab "Prepared Payment" on window "Payment Selection" not found';
   END IF;
 
-  SELECT GREATEST(COALESCE(MAX(AD_Element_ID), 0) + 1, 1000000) INTO v_element_id FROM AD_Element;
-  SELECT GREATEST(COALESCE(MAX(AD_Process_ID), 0) + 1, 1000000) INTO v_process_id FROM AD_Process;
-  SELECT GREATEST(COALESCE(MAX(AD_Column_ID), 0) + 1, 1000000) INTO v_column_id FROM AD_Column;
-  SELECT GREATEST(COALESCE(MAX(AD_Field_ID), 0) + 1, 1000000) INTO v_field_id FROM AD_Field;
+  v_element_id := nextval('ad_element_sq');
+  v_process_id := nextval('ad_process_sq');
+  v_column_id  := nextval('ad_column_sq');
+  v_field_id   := nextval('ad_field_sq');
+
+  IF v_element_id < 1000000 OR v_process_id < 1000000 OR v_column_id < 1000000 OR v_field_id < 1000000 THEN
+    RAISE WARNING 'One or more generated IDs are below 1,000,000 (element=%, process=%, column=%, field=%) — this system''s native sequences may not be positioned past the core dictionary range.',
+        v_element_id, v_process_id, v_column_id, v_field_id;
+  END IF;
+
   SELECT COALESCE(MAX(SeqNo), 0) + 10 INTO v_seqno FROM AD_Field WHERE AD_Tab_ID = v_tab_id;
 
   INSERT INTO AD_Element (AD_Element_ID, AD_Client_ID, AD_Org_ID, IsActive, Created, CreatedBy, Updated, UpdatedBy,
@@ -82,10 +111,32 @@ BEGIN
       CreatedBy, Updated, UpdatedBy, IsReadOnly, IsCentrallyMaintained, EntityType, AD_Field_UU,
       IsDisplayedGrid, SeqNoGrid, XPosition, ColumnSpan)
   VALUES (v_field_id, 'Reverse Selected Payment(s)', v_tab_id, v_column_id, 'Y',
-      '@Processed@=Y & @C_Payment_ID@=0', 1,
+      '', 1,
       v_seqno, 'N', 'N', 'N', 'N', 0, 0, 'Y', now(),
       0, now(), 0, 'N', 'Y', 'U', 'a5ae2c7d-56ac-4033-963b-5470534aabc2',
       'Y', v_seqno, 1, 1);
+
+  FOR v_lang IN SELECT AD_Language FROM AD_Language WHERE IsSystemLanguage='Y' LOOP
+    INSERT INTO AD_Element_Trl (AD_Element_ID, AD_Language, AD_Client_ID, AD_Org_ID, IsActive, Created, CreatedBy, Updated, UpdatedBy,
+        Name, PrintName, IsTranslated, AD_Element_Trl_UU)
+    VALUES (v_element_id, v_lang.AD_Language, 0, 0, 'Y', now(), 0, now(), 0,
+        'Reverse Selected Payment(s)', 'Reverse Selected Payment(s)', 'Y', md5(random()::text || clock_timestamp()::text)::uuid);
+
+    INSERT INTO AD_Column_Trl (AD_Column_ID, AD_Language, AD_Client_ID, AD_Org_ID, IsActive, Created, CreatedBy, Updated, UpdatedBy,
+        Name, IsTranslated, AD_Column_Trl_UU)
+    VALUES (v_column_id, v_lang.AD_Language, 0, 0, 'Y', now(), 0, now(), 0,
+        'Reverse Selected Payment(s)', 'Y', md5(random()::text || clock_timestamp()::text)::uuid);
+
+    INSERT INTO AD_Process_Trl (AD_Process_ID, AD_Language, AD_Client_ID, AD_Org_ID, IsActive, Created, CreatedBy, Updated, UpdatedBy,
+        Name, IsTranslated, AD_Process_Trl_UU)
+    VALUES (v_process_id, v_lang.AD_Language, 0, 0, 'Y', now(), 0, now(), 0,
+        'Reverse Prepare Payment (Selected)', 'Y', md5(random()::text || clock_timestamp()::text)::uuid);
+
+    INSERT INTO AD_Field_Trl (AD_Field_ID, AD_Language, AD_Client_ID, AD_Org_ID, IsActive, Created, CreatedBy, Updated, UpdatedBy,
+        Name, IsTranslated, AD_Field_Trl_UU)
+    VALUES (v_field_id, v_lang.AD_Language, 0, 0, 'Y', now(), 0, now(), 0,
+        'Reverse Selected Payment(s)', 'Y', md5(random()::text || clock_timestamp()::text)::uuid);
+  END LOOP;
 
   RAISE NOTICE 'Created AD_Element %, AD_Process %, AD_Column % (table %), AD_Field % (tab %)',
       v_element_id, v_process_id, v_column_id, v_table_id, v_field_id, v_tab_id;
