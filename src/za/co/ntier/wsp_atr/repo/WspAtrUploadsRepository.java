@@ -228,6 +228,12 @@ public class WspAtrUploadsRepository {
      * “Uploaded” status check — YOU must map this to your real status values/column.
      * If you already have a ZZ_WSP_ATR_Submission_Status column, use that instead.
      */
+    public String getDocStatus(int submittedId) {
+        return DB.getSQLValueStringEx(null,
+            "SELECT ZZ_DocStatus FROM zz_wsp_atr_submitted WHERE zz_wsp_atr_submitted_id=?",
+            submittedId);
+    }
+
     public boolean isSubmissionStatusUploaded(int submittedId) {
         String status = DB.getSQLValueStringEx(null,
             "SELECT ZZ_DocStatus FROM zz_wsp_atr_submitted WHERE zz_wsp_atr_submitted_id=?",

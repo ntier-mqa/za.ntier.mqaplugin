@@ -16,6 +16,7 @@ import org.zkoss.zul.Window;
 
 import za.co.ntier.wsp_atr.domain.UploadTypeDef;
 import za.co.ntier.wsp_atr.form.WspAtrUploadsADForm;
+import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Uploads;
 import za.co.ntier.wsp_atr.repo.WspAtrUploadsRepository;
 import za.co.ntier.wsp_atr.service.WspAtrUploadsService;
@@ -107,11 +108,19 @@ public class WspAtrRowUiBuilder {
 
         boolean eligible = service.isEligibleToSubmit(submittedId);
         boolean parentOrg = form.isParentOrganisation(zzSdfOrganisationId, null);
-        if (!parentOrg && !status.equalsIgnoreCase("Imported")) {
+        String docStatus = repo.getDocStatus(submittedId);
+
+        if (!parentOrg && !X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported.equals(docStatus)) {
             eligible = false;
         }
-        if (status.equalsIgnoreCase("Query")) {
+        if (X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Query.equals(docStatus)) {
         	eligible = false;
+        }
+        if (parentOrg
+                && !X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Draft.equals(docStatus)
+                && !X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported.equals(docStatus)) {
+            // Parent already Submitted/Uploaded/Recommended/Approved etc. - don't allow re-submission.
+            eligible = false;
         }
 
         Button btn = new Button("Submit WSP-ATR");
