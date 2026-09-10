@@ -1,5 +1,6 @@
 package za.co.ntier.sdr.process;
 
+import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
@@ -73,6 +74,31 @@ final class SDRMigrationSupport {
             return null;
         }
         return flag != 0 ? "Y" : "N";
+    }
+
+    /**
+     * Wraps a plain int as BigDecimal - REQUIRED for any column whose AD_Reference_ID is one of
+     * Integer/Number/Amount/Quantity/CostPrice. Confirmed the hard way on the first live
+     * MigrateSDRPersonTable run: PO.set_ValueOfColumn() threw "WrongDataType ... Class invalid:
+     * class java.lang.Integer, Should be class java.math.BigDecimal" on every single row for
+     * SDR_YearsInOccupation (DisplayType.Number) - despite DisplayType.getClass() misleadingly
+     * returning Integer.class for DisplayType.Integer specifically, DisplayType.isNumeric()'s own
+     * doc comment is explicit: "Amount, Number, Quantity, Integer ... stored as BigDecimal". Only
+     * Table/TableDir/Search/List/ID-shaped columns (real FK/id columns) stay plain Integer -
+     * lookups resolved via {@link #resolveLookup} for those should NOT be routed through this.
+     */
+    static BigDecimal toBD(int value) {
+        return BigDecimal.valueOf(value);
+    }
+
+    /**
+     * Same as {@link #toBD(int)} but null-safe - for a plain Integer/Number-shaped column whose
+     * value is itself optional (e.g. a still-deferred cross-family FK like SDR_WSPATR_ID/SDR_SDF_ID
+     * built as DisplayType.Integer rather than a real Table reference, resolved via
+     * {@link #resolveLookup} and possibly absent).
+     */
+    static BigDecimal toBD(Integer value) {
+        return value == null ? null : BigDecimal.valueOf(value);
     }
 
     /**

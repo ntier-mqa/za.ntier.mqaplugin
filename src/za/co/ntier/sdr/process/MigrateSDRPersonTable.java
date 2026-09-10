@@ -213,8 +213,9 @@ public class MigrateSDRPersonTable extends SvrProcess {
             setIfPresent(po, "SDR_CurrentOccupation", rs.getString("currentoccupation"));
             // Not routed through setIfPresent: 0 is a plain, potentially-genuine value for this
             // column (unlike the FK/lookup columns above, where 0 is the "not set" sentinel) - no
-            // zero-skipping wanted here.
-            po.set_ValueOfColumn("SDR_YearsInOccupation", rs.getInt("yearsinoccupation"));
+            // zero-skipping wanted here. DisplayType.Number is BigDecimal-backed at the PO layer -
+            // see SDRMigrationSupport.toBD().
+            po.set_ValueOfColumn("SDR_YearsInOccupation", SDRMigrationSupport.toBD(rs.getInt("yearsinoccupation")));
             setIfPresent(po, "SDR_Experience", rs.getString("experience"));
             setIfPresent(po, "SDR_ImmigrantStatus_ID", SDRMigrationSupport.resolveLookup(
                     xw.get("immigrantstatus"), rs.getInt("immigrantstatusid")));

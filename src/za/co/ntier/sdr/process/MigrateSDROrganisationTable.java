@@ -157,7 +157,7 @@ public class MigrateSDROrganisationTable extends SvrProcess {
             setIfPresent(po, "SDR_FaxNumber", rs.getString("faxnumber"));
             setIfPresent(po, "SDR_SICCode_ID", SDRMigrationSupport.resolveLookup(xw.get("siccode"),
                     rs.getInt("siccodeid")));
-            po.set_ValueOfColumn("SDR_NumberOfEmployees", rs.getInt("numberofemployees"));
+            po.set_ValueOfColumn("SDR_NumberOfEmployees", SDRMigrationSupport.toBD(rs.getInt("numberofemployees")));
             setIfPresent(po, "SDR_TotalAnnualPayroll", rs.getBigDecimal("totalannualpayroll"));
             setIfPresent(po, "SDR_SARSNumber", rs.getString("sarsnumber"));
             setIfPresent(po, "SDR_CIPRONumber", rs.getString("cipronumber"));
@@ -165,22 +165,27 @@ public class MigrateSDROrganisationTable extends SvrProcess {
             setIfPresent(po, "SDR_UIFNumber", rs.getString("uifnumber"));
             setIfPresent(po, "SDR_OrganisationSize_ID", SDRMigrationSupport.resolveLookup(xw.get("orgsize"),
                     rs.getInt("organisationsizeid")));
-            po.set_ValueOfColumn("SDR_CurrentVsNonCurrent", rs.getInt("currentvsnoncurrent"));
-            po.set_ValueOfColumn("SDR_CurrentSetaRegion_ID", rs.getInt("currentsetaregionid"));
+            po.set_ValueOfColumn("SDR_CurrentVsNonCurrent",
+                    SDRMigrationSupport.toBD(rs.getInt("currentvsnoncurrent")));
+            po.set_ValueOfColumn("SDR_CurrentSetaRegion_ID",
+                    SDRMigrationSupport.toBD(rs.getInt("currentsetaregionid")));
             setIfPresent(po, "SDR_BEEStatus_ID", SDRMigrationSupport.resolveLookup(xw.get("beestatus"),
                     rs.getInt("beestatusid")));
             setIfPresent(po, "SDR_LevyNumberType_ID", SDRMigrationSupport.resolveLookup(xw.get("levynumbertype"),
                     rs.getInt("levynumbertypeid")));
-            po.set_ValueOfColumn("SDR_Communication", rs.getInt("communication"));
-            po.set_ValueOfColumn("SDR_ConfirmDetails", rs.getInt("confirmdetails"));
+            po.set_ValueOfColumn("SDR_Communication", SDRMigrationSupport.toBD(rs.getInt("communication")));
+            po.set_ValueOfColumn("SDR_ConfirmDetails", SDRMigrationSupport.toBD(rs.getInt("confirmdetails")));
             setIfPresent(po, "SDR_ChamberCode_ID", SDRMigrationSupport.resolveLookup(xw.get("chambercode"),
                     rs.getInt("chambercodeid")));
             setIfPresent(po, "SDR_Email", rs.getString("email"));
-            po.set_ValueOfColumn("SDR_NumberOfEmployeesProfile", rs.getInt("numberofemployeesprofile"));
-            po.set_ValueOfColumn("SDR_RegisterAs_ID", rs.getInt("registerasid"));
+            po.set_ValueOfColumn("SDR_NumberOfEmployeesProfile",
+                    SDRMigrationSupport.toBD(rs.getInt("numberofemployeesprofile")));
+            po.set_ValueOfColumn("SDR_RegisterAs_ID", SDRMigrationSupport.toBD(rs.getInt("registerasid")));
             setIfPresent(po, "SDR_LegalStatusOther", rs.getString("legalstatusother"));
-            po.set_ValueOfColumn("SDR_OrganisationRegNumberCode", rs.getInt("organisationregnumbercode"));
-            po.set_ValueOfColumn("SDR_TerminatedEmployees", rs.getInt("terminatedemployees"));
+            po.set_ValueOfColumn("SDR_OrganisationRegNumberCode",
+                    SDRMigrationSupport.toBD(rs.getInt("organisationregnumbercode")));
+            po.set_ValueOfColumn("SDR_TerminatedEmployees",
+                    SDRMigrationSupport.toBD(rs.getInt("terminatedemployees")));
             setIfPresent(po, "SDR_SubSector_ID", SDRMigrationSupport.resolveLookup(xw.get("subsector"),
                     rs.getInt("subsectorid")));
             setIfPresent(po, "SDR_OrganisationType_ID", SDRMigrationSupport.resolveLookup(xw.get("orgtype"),
