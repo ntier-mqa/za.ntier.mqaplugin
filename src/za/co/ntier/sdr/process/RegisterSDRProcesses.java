@@ -71,6 +71,11 @@ public class RegisterSDRProcesses extends SvrProcess {
             "AddSDROrganisationBankingDetailsDocumentUploadTable",
             "AddSDROrganisationDocumentsTable",
             "AddSDROrganisationEmailsTable",
+            "AddSDRSDFTable",
+            "AddSDRSDFCertificateDocumentTable",
+            "AddSDRSDFOrganisationTable",
+            "AddSDRSDFOrganisationDocumentUploadTable",
+            "UpgradeOrganisationSDFLinks",
     };
 
     @Override

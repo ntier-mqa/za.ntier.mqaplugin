@@ -678,6 +678,44 @@ public final class AddColumnsSupport {
 	}
 
 	/**
+	 * Upgrades an EXISTING column on an EXISTING physical table from a plain value (e.g. Integer) to a
+	 * proper Table(18) reference, once its target table has been built - for FK-shaped columns that had
+	 * to be deferred as plain integers because their target table didn't exist yet at the time the
+	 * owning table was created (e.g. SDR_OrganisationBankingDetails.SDR_SDF_ID, deferred until
+	 * SDR_SDF/Phase 4 existed). Metadata-only (AD_Reference_ID/AD_Reference_Value_ID on the existing
+	 * AD_Column row) - no physical DDL, since the underlying database column type doesn't change.
+	 *
+	 * <p>
+	 * Idempotent: does nothing (just logs) if the column is already a Table(18) reference pointing at
+	 * this same AD_Reference.
+	 */
+	public static void upgradeColumnToTableReference(Properties ctx, String tableName, String columnName,
+			String targetTableName, String entityType, String trxName, Consumer<String> logger) {
+		MTable table = findTable(ctx, tableName, trxName);
+		if (table == null) {
+			throw new AdempiereException(
+					"upgradeColumnToTableReference: table '" + tableName + "' does not exist");
+		}
+		MColumn column = table.getColumn(columnName);
+		if (column == null) {
+			throw new AdempiereException(
+					"upgradeColumnToTableReference: " + tableName + "." + columnName + " does not exist");
+		}
+
+		int refId = findOrCreateTableReference(ctx, targetTableName, entityType, trxName, logger);
+		if (column.getAD_Reference_ID() == DisplayType.Table && column.getAD_Reference_Value_ID() == refId) {
+			logger.accept(tableName + "." + columnName + " already upgraded to a Table reference -> "
+					+ targetTableName + " - skipped.");
+			return;
+		}
+
+		column.setAD_Reference_ID(DisplayType.Table);
+		column.setAD_Reference_Value_ID(refId);
+		column.saveEx();
+		logger.accept(tableName + "." + columnName + " upgraded to a Table reference -> " + targetTableName);
+	}
+
+	/**
 	 * Copies every row from the staged MSSQL lookup table into the freshly-created
 	 * reference table via the generic PO API (org.adempiere.model.GenericPO,
 	 * obtained through MTable.getPO(0, trxName)) - there's no generated model class
