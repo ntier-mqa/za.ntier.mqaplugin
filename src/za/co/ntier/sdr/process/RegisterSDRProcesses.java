@@ -91,6 +91,14 @@ public class RegisterSDRProcesses extends SvrProcess {
             "AddSDRWSPATRTopUpSkillsTable",
             "AddSDRWSPATRWorkplaceSkillsPlanTable",
             "UpgradeOrganisationWSPATRLinks",
+            "AddSDRLevyAccountTable",
+            "AddSDRLevyTransactionTable",
+            "AddSDRLevyTransactionDetailTable",
+            "AddSDRLevyTransactionStatusTable",
+            "AddSDRLevyImportTable",
+            "AddSDRLevyProcessTable",
+            "AddSDRLevyGPProcessDataTable",
+            "AddSDRLevyFileTable",
     };
 
     @Override
