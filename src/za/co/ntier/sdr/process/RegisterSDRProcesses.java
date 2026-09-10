@@ -59,6 +59,18 @@ public class RegisterSDRProcesses extends SvrProcess {
             "AddSDRPersonAddressTable",
             "AddSDRPersonDocumentUploadTable",
             "AddSDRPersonHealthFunctioningStatusRatingTable",
+            "AddSDROrganisationTable",
+            "AddSDROrganisationAddressTable",
+            "AddSDROrganisationCFODetailsTable",
+            "AddSDROrganisationCommentsTable",
+            "AddSDROrganisationContactsTable",
+            "AddSDROrganisationTrainingCommitteeTable",
+            "AddSDROrganisationLinkagesTable",
+            "AddSDROrganisationISTTable",
+            "AddSDROrganisationBankingDetailsTable",
+            "AddSDROrganisationBankingDetailsDocumentUploadTable",
+            "AddSDROrganisationDocumentsTable",
+            "AddSDROrganisationEmailsTable",
     };
 
     @Override

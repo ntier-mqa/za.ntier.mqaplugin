@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created for za.ntier.mqaplugin using JasperReports Library version 6.20.5 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Mandatory_Grant_Statement_Report" language="groovy" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="8f1a2b3c-4d5e-4f60-9a1b-2c3d4e5f6071">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<style name="TitleBar" mode="Opaque" backcolor="#E67E22"/>
+	<style name="TableHeader" mode="Opaque" backcolor="#F5A85B">
+		<box leftPadding="4" rightPadding="4" topPadding="2" bottomPadding="2">
+			<pen lineWidth="0.5" lineColor="#1B3A6B"/>
+		</box>
+	</style>
+	<style name="TableCell" mode="Transparent">
+		<box leftPadding="4" rightPadding="4"/>
+	</style>
+	<parameter name="P_C_BPartner_ID" class="java.lang.Integer">
+		<parameterDescription><![CDATA[Company (Business Partner) to report on]]></parameterDescription>
+	</parameter>
+	<parameter name="P_DateFrom" class="java.util.Date">
+		<parameterDescription><![CDATA[Start of the levy period range]]></parameterDescription>
+	</parameter>
+	<parameter name="P_DateTo" class="java.util.Date">
+		<parameterDescription><![CDATA[End of the levy period range]]></parameterDescription>
+	</parameter>
+	<parameter name="RESOURCE_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT
+    bp.Name AS company_name,
+    bp.Value AS sdl_number,
+    lf.ZZ_Year || lf.ZZ_Month AS month_label,
+    cy.FiscalYear AS levy_year,
+    ABS(lf.zz_Total) AS levy_amount_received,
+    ABS(lf.ZZ_MG) AS levy_amount,
+    ibl.LineNetAmt AS grant_amount
+FROM C_BPartner bp
+JOIN ZZ_Monthly_Levy_Files lf ON lf.ZZ_SDL_No = bp.Value
+LEFT JOIN C_InvoiceBatchLine ibl ON ibl.C_InvoiceBatchLine_ID = lf.C_InvoiceBatchLine_ID
+LEFT JOIN C_Year cy ON cy.C_Year_ID = lf.C_Year_ID
+WHERE bp.C_BPartner_ID = $P{P_C_BPartner_ID}
+  AND to_date(lf.ZZ_Year || lf.ZZ_Month, 'YYYYMM') BETWEEN $P{P_DateFrom} AND $P{P_DateTo}
+ORDER BY lf.ZZ_Year, lf.ZZ_Month]]>
+	</queryString>
+	<field name="company_name" class="java.lang.String"/>
+	<field name="sdl_number" class="java.lang.String"/>
+	<field name="month_label" class="java.lang.String"/>
+	<field name="levy_year" class="java.lang.String"/>
+	<field name="levy_amount_received" class="java.math.BigDecimal"/>
+	<field name="levy_amount" class="java.math.BigDecimal"/>
+	<field name="grant_amount" class="java.math.BigDecimal"/>
+	<variable name="V_TotalReceived" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{levy_amount_received}]]></variableExpression>
+	</variable>
+	<variable name="V_TotalLevy" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{levy_amount}]]></variableExpression>
+	</variable>
+	<variable name="V_TotalGrant" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{grant_amount}]]></variableExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="165" splitType="Stretch">
+			<image>
+				<reportElement x="0" y="0" width="80" height="45" uuid="1a1b1c1d-0000-0000-0000-000000000001"/>
+				<imageExpression><![CDATA[$P{RESOURCE_DIR} + "login-logo.png"]]></imageExpression>
+			</image>
+			<textField pattern="yyyy/MM/dd">
+				<reportElement x="460" y="0" width="95" height="16" forecolor="#475569" uuid="1a1b1c1d-0000-0000-0000-000000000002"/>
+				<textElement textAlignment="Right">
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<rectangle>
+				<reportElement x="0" y="50" width="555" height="30" backcolor="#E67E22" uuid="1a1b1c1d-0000-0000-0000-000000000003"/>
+				<graphicElement>
+					<pen lineWidth="0.0"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="0" y="50" width="555" height="30" forecolor="#FFFFFF" uuid="1a1b1c1d-0000-0000-0000-000000000004"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="16" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Mandatory Grant Statement]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="90" width="90" height="16" uuid="1a1b1c1d-0000-0000-0000-000000000005"/>
+				<textElement>
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Company:]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement x="90" y="90" width="300" height="16" uuid="1a1b1c1d-0000-0000-0000-000000000006"/>
+				<textElement>
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{company_name}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="108" width="90" height="16" uuid="1a1b1c1d-0000-0000-0000-000000000007"/>
+				<textElement>
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[SDL Number:]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement x="90" y="108" width="300" height="16" uuid="1a1b1c1d-0000-0000-0000-000000000008"/>
+				<textElement>
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{sdl_number}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="132" width="555" height="16" uuid="1a1b1c1d-0000-0000-0000-000000000009"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Thank you for submitting your WSP. The mandatory grant based on the levies received in the period has been approved.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="148" width="555" height="16" uuid="1a1b1c1d-000-0000-0000-00000000000a"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[The table below shows the levies we have received from your company and the calculated grant amounts.]]></text>
+			</staticText>
+		</band>
+	</title>
+	<columnHeader>
+		<band height="24" splitType="Stretch">
+			<staticText>
+				<reportElement style="TableHeader" x="0" y="0" width="90" height="24" forecolor="#1B3A6B" uuid="2a2b2c2d-0000-0000-0000-000000000001"/>
+				<textElement verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Month]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TableHeader" x="90" y="0" width="80" height="24" forecolor="#1B3A6B" uuid="2a2b2c2d-0000-0000-0000-000000000002"/>
+				<textElement verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Levy Year]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TableHeader" x="170" y="0" width="130" height="24" forecolor="#1B3A6B" uuid="2a2b2c2d-0000-0000-0000-000000000003"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Levy Amount Received]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TableHeader" x="300" y="0" width="120" height="24" forecolor="#1B3A6B" uuid="2a2b2c2d-0000-0000-0000-000000000004"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Levy Amount]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TableHeader" x="420" y="0" width="135" height="24" forecolor="#1B3A6B" uuid="2a2b2c2d-0000-0000-0000-000000000005"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Grant Amount]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="18" splitType="Stretch">
+			<textField isBlankWhenNull="true">
+				<reportElement style="TableCell" x="0" y="0" width="90" height="18" uuid="3a3b3c3d-0000-0000-0000-000000000001"/>
+				<textElement verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{month_label}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement style="TableCell" x="90" y="0" width="80" height="18" uuid="3a3b3c3d-0000-0000-0000-000000000002"/>
+				<textElement verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{levy_year}]]></textFieldExpression>
+			</textField>
+			<textField pattern="'R' #,##0.00" isBlankWhenNull="true">
+				<reportElement style="TableCell" x="170" y="0" width="130" height="18" uuid="3a3b3c3d-0000-0000-0000-000000000003"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{levy_amount_received}]]></textFieldExpression>
+			</textField>
+			<textField pattern="'R' #,##0.00" isBlankWhenNull="true">
+				<reportElement style="TableCell" x="300" y="0" width="120" height="18" uuid="3a3b3c3d-0000-0000-0000-000000000004"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{levy_amount}]]></textFieldExpression>
+			</textField>
+			<textField pattern="'R' #,##0.00" isBlankWhenNull="true">
+				<reportElement style="TableCell" x="420" y="0" width="135" height="18" uuid="3a3b3c3d-0000-0000-0000-000000000005"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{grant_amount}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<pageFooter>
+		<band height="20" splitType="Stretch">
+			<textField>
+				<reportElement x="385" y="3" width="120" height="15" forecolor="#64748B" uuid="6a6b6c6d-0000-0000-0000-000000000001"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER} + " of "]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="505" y="3" width="50" height="15" forecolor="#64748B" uuid="6a6b6c6d-0000-0000-0000-000000000002"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="220" splitType="Stretch">
+			<line>
+				<reportElement x="0" y="0" width="555" height="1" uuid="4a4b4c4d-0000-0000-0000-000000000001"/>
+				<graphicElement>
+					<pen lineWidth="1.0" lineColor="#1B3A6B"/>
+				</graphicElement>
+			</line>
+			<staticText>
+				<reportElement x="90" y="4" width="80" height="18" uuid="4a4b4c4d-0000-0000-0000-000000000002"/>
+				<textElement>
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Totals]]></text>
+			</staticText>
+			<textField pattern="'R' #,##0.00" isBlankWhenNull="true">
+				<reportElement x="170" y="4" width="130" height="18" uuid="4a4b4c4d-0000-0000-0000-000000000003"/>
+				<textElement textAlignment="Right">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{V_TotalReceived}]]></textFieldExpression>
+			</textField>
+			<textField pattern="'R' #,##0.00" isBlankWhenNull="true">
+				<reportElement x="300" y="4" width="120" height="18" uuid="4a4b4c4d-0000-0000-0000-000000000004"/>
+				<textElement textAlignment="Right">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{V_TotalLevy}]]></textFieldExpression>
+			</textField>
+			<textField pattern="'R' #,##0.00" isBlankWhenNull="true">
+				<reportElement x="420" y="4" width="135" height="18" uuid="4a4b4c4d-0000-0000-0000-000000000005"/>
+				<textElement textAlignment="Right">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{V_TotalGrant}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="0" y="24" width="555" height="1" uuid="4a4b4c4d-0000-0000-0000-000000000006"/>
+				<graphicElement>
+					<pen lineWidth="1.0" lineColor="#1B3A6B"/>
+				</graphicElement>
+			</line>
+			<staticText>
+				<reportElement x="300" y="28" width="120" height="18" uuid="4a4b4c4d-0000-0000-0000-000000000007"/>
+				<textElement textAlignment="Right">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Grant Paid]]></text>
+			</staticText>
+			<textField pattern="'R' #,##0.00" isBlankWhenNull="true">
+				<reportElement x="420" y="28" width="135" height="18" uuid="4a4b4c4d-0000-0000-0000-000000000008"/>
+				<textElement textAlignment="Right">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{V_TotalGrant}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="60" width="555" height="16" uuid="4a4b4c4d-0000-0000-0000-000000000009"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[All grants are paid directly into the company's approved bank account.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="78" width="555" height="16" uuid="4a4b4c4d-000-0000-0000-00000000000a"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Please contact Ryan Matumba at rmatumba@mqa.org.za should you have any Payment queries.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="96" width="555" height="16" uuid="4a4b4c4d-000-0000-0000-00000000000b"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[Please contact Slindile Luthuli at slindilel@mqa.org.za should you have any Technical queries.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="130" width="200" height="16" uuid="4a4b4c4d-000-0000-0000-00000000000c"/>
+				<textElement>
+					<font size="9"/>
+				</textElement>
+				<text><![CDATA[Yours sincerely.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="148" width="300" height="16" uuid="4a4b4c4d-000-0000-0000-00000000000d"/>
+				<textElement>
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[SKILLS DEVELOPMENT LEVY OFFICER]]></text>
+			</staticText>
+		</band>
+	</summary>
+	<noData>
+		<band height="40">
+			<staticText>
+				<reportElement x="0" y="0" width="555" height="30" uuid="5a5b5c5d-0000-0000-0000-000000000001"/>
+				<textElement textAlignment="Center">
+					<font size="10" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[No levy or grant records were found for the selected company and date range.]]></text>
+			</staticText>
+		</band>
+	</noData>
+</jasperReport>
