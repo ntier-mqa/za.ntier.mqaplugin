@@ -76,6 +76,21 @@ public class RegisterSDRProcesses extends SvrProcess {
             "AddSDRSDFOrganisationTable",
             "AddSDRSDFOrganisationDocumentUploadTable",
             "UpgradeOrganisationSDFLinks",
+            "AddSDRWSPATRTable",
+            "AddSDRWSPATRFormsTable",
+            "AddSDRWSPATRAnnualTrainingReportTable",
+            "AddSDRWSPATRBioDataTable",
+            "AddSDRWSPATRBulkApprovalDocumentUploadTable",
+            "AddSDRWSPATRContractorsTable",
+            "AddSDRWSPATRDocumentUploadsTable",
+            "AddSDRWSPATREvaluationVerificationTable",
+            "AddSDRWSPATREvaluationVerificationChecklistTable",
+            "AddSDRWSPATRFinanceTable",
+            "AddSDRWSPATRHTFVTable",
+            "AddSDRWSPATRNonEmployeesTable",
+            "AddSDRWSPATRTopUpSkillsTable",
+            "AddSDRWSPATRWorkplaceSkillsPlanTable",
+            "UpgradeOrganisationWSPATRLinks",
     };
 
     @Override
