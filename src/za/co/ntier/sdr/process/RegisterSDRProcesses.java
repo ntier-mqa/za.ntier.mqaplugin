@@ -109,6 +109,12 @@ public class RegisterSDRProcesses extends SvrProcess {
             "AddSDRGrantGPProcessDataTable",
             "AddSDRGrantTypeAccountTable",
             "AddSDRGrantAccountTable",
+            "AddSDRUserTable",
+            "AddSDRUserLoginTable",
+            "AddSDRUserLoginAttemptTable",
+            "AddSDRUserPasswordHistoryTable",
+            "AddSDRUserRoleTable",
+            "AddSDRLoginViolationsTable",
     };
 
     @Override
