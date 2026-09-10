@@ -115,6 +115,9 @@ public class RegisterSDRProcesses extends SvrProcess {
             "AddSDRUserPasswordHistoryTable",
             "AddSDRUserRoleTable",
             "AddSDRLoginViolationsTable",
+            "AddSDRQueryReasonsTable",
+            "AddSDRRejectionReasonsTable",
+            "AddSDRTrancheTypeTable",
     };
 
     @Override
