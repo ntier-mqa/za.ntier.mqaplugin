@@ -253,15 +253,16 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
                 org.zzSdfOrganisationId);
 
         boolean parentOrganisation = isParentOrganisation(org.zzSdfOrganisationId, trxName);
+        boolean showAsParent = parentOrganisation && hasImportedStatus(org.zzSdfOrganisationId, trxName);
         MZZWSPATRSubmitted submitted;
         int clientID = Env.getAD_Client_ID(Env.getCtx());
         if (submittedId > 0) {
             submitted = new MZZWSPATRSubmitted(ctx, submittedId, trxName);
-            if (!parentOrganisation && !isDisplayableExistingStatus(submitted.getZZ_DocStatus())) {
+            if (!showAsParent && !isDisplayableExistingStatus(submitted.getZZ_DocStatus())) {
                 return null;
             }
         } else {
-            if (!parentOrganisation) {
+            if (!showAsParent) {
                 return null;
             }
             submitted = new MZZWSPATRSubmitted(ctx, 0, trxName);
@@ -307,5 +308,50 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
                 + "LIMIT 1";
 
         return DB.getSQLValueEx(trxName, sql, zzSdfOrganisationId) > 0;
+    }
+
+    private boolean hasImportedStatus(int zzSdfOrganisationId, String trxName) {
+        return orgHasImportedStatus(zzSdfOrganisationId, trxName)
+                || anyChildHasImportedStatus(zzSdfOrganisationId, trxName);
+    }
+
+    private boolean orgHasImportedStatus(int zzSdfOrganisationId, String trxName) {
+        String status = DB.getSQLValueStringEx(trxName,
+                "SELECT zz_docstatus " +
+                "FROM zz_wsp_atr_submitted " +
+                "WHERE zzsdforganisation_id = ? " +
+                "ORDER BY created DESC " +
+                "LIMIT 1",
+                zzSdfOrganisationId);
+        return X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported.equals(status);
+    }
+
+    private boolean anyChildHasImportedStatus(int zzSdfOrganisationId, String trxName) {
+        final String sql =
+                "SELECT child_so.zzsdforganisation_id "
+                + "FROM adempiere.zzsdforganisation parent_so "
+                + "JOIN adempiere.zzorganisationlinkage l "
+                + "  ON l.bpartner_parent_id = parent_so.c_bpartner_id "
+                + "JOIN adempiere.zzsdforganisation child_so "
+                + "  ON child_so.c_bpartner_id = l.c_bpartner_id "
+                + "WHERE parent_so.zzsdforganisation_id = ? "
+                + "  AND parent_so.isactive = 'Y' "
+                + "  AND child_so.isactive = 'Y' "
+                + "  AND l.isactive = 'Y' "
+                + "  AND COALESCE(parent_so.zz_docstatus, '') = 'AP' "
+                + "  AND COALESCE(child_so.zz_docstatus, '') = 'AP'";
+
+        List<List<Object>> rows = DB.getSQLArrayObjectsEx(trxName, sql, zzSdfOrganisationId);
+        if (rows == null || rows.isEmpty()) {
+            return false;
+        }
+
+        for (List<Object> row : rows) {
+            int childOrgId = ((Number) row.get(0)).intValue();
+            if (orgHasImportedStatus(childOrgId, trxName)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -687,10 +687,26 @@ public final class AddColumnsSupport {
 	 *
 	 * <p>
 	 * Idempotent: does nothing (just logs) if the column is already a Table(18) reference pointing at
-	 * this same AD_Reference.
+	 * this same AD_Reference. Uses the target table's "Name" column as the display column - see the
+	 * {@link #upgradeColumnToTableReference(Properties, String, String, String, String, String, String, Consumer)}
+	 * overload for targets that don't have one.
 	 */
 	public static void upgradeColumnToTableReference(Properties ctx, String tableName, String columnName,
 			String targetTableName, String entityType, String trxName, Consumer<String> logger) {
+		upgradeColumnToTableReference(ctx, tableName, columnName, targetTableName, "Name", entityType, trxName,
+				logger);
+	}
+
+	/**
+	 * Same as
+	 * {@link #upgradeColumnToTableReference(Properties, String, String, String, String, String, Consumer)}
+	 * but lets the caller specify which column of the target table to use as AD_Ref_Table.AD_Display,
+	 * for target tables that don't follow the Value/Name reference-table convention - e.g. SDR_SDF
+	 * (same shape as SDR_Person/SDR_Organisation, no generic "Name" column).
+	 */
+	public static void upgradeColumnToTableReference(Properties ctx, String tableName, String columnName,
+			String targetTableName, String displayColumnName, String entityType, String trxName,
+			Consumer<String> logger) {
 		MTable table = findTable(ctx, tableName, trxName);
 		if (table == null) {
 			throw new AdempiereException(
@@ -702,7 +718,7 @@ public final class AddColumnsSupport {
 					"upgradeColumnToTableReference: " + tableName + "." + columnName + " does not exist");
 		}
 
-		int refId = findOrCreateTableReference(ctx, targetTableName, entityType, trxName, logger);
+		int refId = findOrCreateTableReference(ctx, targetTableName, displayColumnName, entityType, trxName, logger);
 		if (column.getAD_Reference_ID() == DisplayType.Table && column.getAD_Reference_Value_ID() == refId) {
 			logger.accept(tableName + "." + columnName + " already upgraded to a Table reference -> "
 					+ targetTableName + " - skipped.");
