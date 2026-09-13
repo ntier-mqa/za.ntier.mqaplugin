@@ -30,6 +30,14 @@ import za.co.ntier.learner.process.AddColumnsSupport;
  *
  * <p>Given the row count, this uses a larger fetch size and logs progress every 100,000 rows rather
  * than the usual 5,000/50,000 used elsewhere.
+ *
+ * <p>CORRECTED 2026-09-13: a first run of this process (as a background job) failed after ~2 hours
+ * with "This ResultSet is closed" - the single read connection/cursor originally used to stream all
+ * 7.6M rows was held open for the entire run and got reclaimed (pool max-lifetime / idle timeout)
+ * partway through. Fixed by processing in bounded batches: each batch opens its own short-lived read
+ * connection against the same idempotent "WHERE NOT EXISTS" query with a LIMIT, so no single
+ * connection needs to survive more than a few minutes. Already-migrated rows are naturally excluded
+ * by the NOT EXISTS check, so no offset/keyset bookkeeping is needed between batches.
  */
 @Process(name = "za.co.ntier.sdr.process.MigrateSDRWSPATRAnnualTrainingReportTable")
 public class MigrateSDRWSPATRAnnualTrainingReportTable extends SvrProcess {
@@ -74,46 +82,67 @@ public class MigrateSDRWSPATRAnnualTrainingReportTable extends SvrProcess {
                 get_TrxName());
         addLog("Crosswalks ready: " + wspatrCrosswalk.size() + " WSPATRs.");
 
-        String sql = "SELECT a.* FROM mssdr_wspatrannualtrainingreport a "
-                + "WHERE NOT EXISTS (SELECT 1 FROM sdr_wspatrannualtrainingreport s WHERE s.id = a.id) "
-                + "ORDER BY a.id" + (maxRows > 0 ? " LIMIT " + maxRows : "");
+        final int BATCH_SIZE = 25000;
 
         int processed = 0;
         int created = 0;
         int skippedNoWspatr = 0;
-        String readTrxName = Trx.createTrxName("SDRWSPATRAnnualTrainingRead");
-        Trx readTrx = Trx.get(readTrxName, true);
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        try {
-            pstmt = DB.prepareStatement(sql, readTrxName);
-            pstmt.setFetchSize(2000);
-            rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                processed++;
-                Integer wspatrId = wspatrCrosswalk.get(rs.getInt("wspatrid"));
-                if (wspatrId == null) {
-                    skippedNoWspatr++;
-                    continue;
+        boolean more = true;
+        while (more) {
+            int batchLimit = BATCH_SIZE;
+            if (maxRows > 0) {
+                long remaining = maxRows - processed;
+                if (remaining <= 0) {
+                    break;
                 }
-                try {
-                    processOneRow(table, rs, wspatrId, learningProgrammeTypeCrosswalk, learningProgrammeCrosswalk,
-                            trainingStatusCrosswalk, trainingStatusReasonCrosswalk, yearCrosswalk);
-                    created++;
-                } catch (Exception e) {
-                    logError(rs.getInt("id"), e);
-                }
-
-                if (processed % 100000 == 0) {
-                    addLog("Processed " + processed + " mssdr_wspatrannualtrainingreport rows (" + created
-                            + " created, " + errors.size() + " error(s))...");
-                }
+                batchLimit = (int) Math.min(BATCH_SIZE, remaining);
             }
-        } finally {
-            DB.close(rs, pstmt);
-            readTrx.rollback();
-            readTrx.close();
+
+            String sql = "SELECT a.* FROM mssdr_wspatrannualtrainingreport a "
+                    + "WHERE NOT EXISTS (SELECT 1 FROM sdr_wspatrannualtrainingreport s WHERE s.id = a.id) "
+                    + "ORDER BY a.id LIMIT " + batchLimit;
+
+            int rowsInBatch = 0;
+            String readTrxName = Trx.createTrxName("SDRWSPATRAnnualTrainingRead");
+            Trx readTrx = Trx.get(readTrxName, true);
+            PreparedStatement pstmt = null;
+            ResultSet rs = null;
+            try {
+                pstmt = DB.prepareStatement(sql, readTrxName);
+                pstmt.setFetchSize(2000);
+                rs = pstmt.executeQuery();
+
+                while (rs.next()) {
+                    rowsInBatch++;
+                    processed++;
+                    Integer wspatrId = wspatrCrosswalk.get(rs.getInt("wspatrid"));
+                    if (wspatrId == null) {
+                        skippedNoWspatr++;
+                        continue;
+                    }
+                    try {
+                        processOneRow(table, rs, wspatrId, learningProgrammeTypeCrosswalk,
+                                learningProgrammeCrosswalk, trainingStatusCrosswalk, trainingStatusReasonCrosswalk,
+                                yearCrosswalk);
+                        created++;
+                    } catch (Exception e) {
+                        logError(rs.getInt("id"), e);
+                    }
+
+                    if (processed % 100000 == 0) {
+                        addLog("Processed " + processed + " mssdr_wspatrannualtrainingreport rows (" + created
+                                + " created, " + errors.size() + " error(s))...");
+                    }
+                }
+            } finally {
+                DB.close(rs, pstmt);
+                readTrx.rollback();
+                readTrx.close();
+            }
+
+            if (rowsInBatch < batchLimit) {
+                more = false;
+            }
         }
 
         writeErrorLogIfAny("migrate-sdr-wspatrannualtrainingreport-errors");
