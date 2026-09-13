@@ -17,7 +17,7 @@ import za.co.ntier.learner.process.AddColumnsSupport;
  * largest family in the migration by row count (its children include a 7.6M-row table).
  *
  * <p>All 5 FK columns match their target tables by name - plain DisplayType.TableDir.
- * SDR_SubmittedBy/SDR_ApprovedBy/SDR_RejectedBy/SDR_ManualSubmissionBy/SDR_EvaluatedBy all follow the
+ * SDR_SubmittedBy_ID/SDR_ApprovedBy_ID/SDR_RejectedBy_ID/SDR_ManualSubmissionBy_ID/SDR_EvaluatedBy_ID all follow the
  * audit-trail pattern (Search + REFERENCE_AD_USER against iDempiere's own AD_User, no separate
  * "SDR_User" table) - each is a workflow-stage column with its own population rate (SubmittedBy 28.3%,
  * ApprovedBy 21.0%, RejectedBy 0.2%, ManualSubmissionBy 0.2%, EvaluatedBy always 0/null currently) but
@@ -74,30 +74,30 @@ public class AddSDRWSPATRTable extends SvrProcess {
                 + "Created column - kept as its own column, not collapsed)", ENTITY_TYPE, get_TrxName());
         AddColumnsSupport.registerColumn(getCtx(), table, "SDR_SubmittedDate", DisplayType.DateTime, 7,
                 "mssdr_wspatr.submitteddate", ENTITY_TYPE, get_TrxName());
-        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_SubmittedBy", DisplayType.Search,
+        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_SubmittedBy_ID", DisplayType.Search,
                 REFERENCE_AD_USER, 10,
                 "mssdr_wspatr.submittedby -> AD_User (audit-trail pattern). CONFIRMED 28.3% (3,607/12,737) - "
                 + "a workflow-stage column, low match rate expected", ENTITY_TYPE, get_TrxName());
         AddColumnsSupport.registerColumn(getCtx(), table, "SDR_ApprovedDate", DisplayType.DateTime, 7,
                 "mssdr_wspatr.approveddate", ENTITY_TYPE, get_TrxName());
-        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_ApprovedBy", DisplayType.Search,
+        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_ApprovedBy_ID", DisplayType.Search,
                 REFERENCE_AD_USER, 10,
                 "mssdr_wspatr.approvedby -> AD_User. CONFIRMED 21.0% (2,677/12,737)", ENTITY_TYPE, get_TrxName());
         AddColumnsSupport.registerColumn(getCtx(), table, "SDR_RejectedDate", DisplayType.DateTime, 7,
                 "mssdr_wspatr.rejecteddate", ENTITY_TYPE, get_TrxName());
-        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_RejectedBy", DisplayType.Search,
+        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_RejectedBy_ID", DisplayType.Search,
                 REFERENCE_AD_USER, 10,
                 "mssdr_wspatr.rejectedby -> AD_User. CONFIRMED 0.2% (24/12,737) - rejections are rare",
                 ENTITY_TYPE, get_TrxName());
         AddColumnsSupport.registerColumn(getCtx(), table, "SDR_ManualSubmissionDate", DisplayType.DateTime, 7,
                 "mssdr_wspatr.manualsubmissiondate", ENTITY_TYPE, get_TrxName());
-        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_ManualSubmissionBy", DisplayType.Search,
+        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_ManualSubmissionBy_ID", DisplayType.Search,
                 REFERENCE_AD_USER, 10,
                 "mssdr_wspatr.manualsubmissionby -> AD_User. CONFIRMED 0.2% (21/12,737)", ENTITY_TYPE,
                 get_TrxName());
         AddColumnsSupport.registerColumn(getCtx(), table, "SDR_DateEvaluated", DisplayType.DateTime, 7,
                 "mssdr_wspatr.dateevaluated", ENTITY_TYPE, get_TrxName());
-        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_EvaluatedBy", DisplayType.Search,
+        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_EvaluatedBy_ID", DisplayType.Search,
                 REFERENCE_AD_USER, 10,
                 "mssdr_wspatr.evaluatedby -> AD_User. CHECKED: always 0/null (0/12,737) - same shape as the "
                 + "effectively-dead VerifiedBy/EvaluatedBy columns on OrganisationBankingDetails - carried "

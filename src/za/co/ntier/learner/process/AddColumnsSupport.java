@@ -115,7 +115,7 @@ public final class AddColumnsSupport {
 	 * @return true if a column existed and was dropped, false if there was nothing
 	 *         to drop
 	 */
-	static boolean dropColumnIfExists(MTable table, String columnName, String trxName, Consumer<String> logger) {
+	public static boolean dropColumnIfExists(MTable table, String columnName, String trxName, Consumer<String> logger) {
 		MColumn existing = table.getColumn(columnName);
 		if (existing == null) {
 			return false;
@@ -134,7 +134,7 @@ public final class AddColumnsSupport {
 	 * Convenience overload for the common case with no AD_Reference_Value_ID (Table
 	 * Direct columns resolved purely by name, plain columns).
 	 */
-	static void addColumn(Properties ctx, MTable table, String columnName, int referenceId, int fieldLength,
+	public static void addColumn(Properties ctx, MTable table, String columnName, int referenceId, int fieldLength,
 			String description, String entityType, String trxName, Consumer<String> logger) {
 		addColumn(ctx, table, columnName, referenceId, 0, fieldLength, description, entityType, trxName, logger);
 	}
@@ -149,7 +149,7 @@ public final class AddColumnsSupport {
 	 * column pointing at C_BPartner via an explicit reference like "C_BPartner
 	 * (all)".
 	 */
-	static void addColumn(Properties ctx, MTable table, String columnName, int referenceId, int referenceValueId,
+	public static void addColumn(Properties ctx, MTable table, String columnName, int referenceId, int referenceValueId,
 			int fieldLength, String description, String entityType, String trxName, Consumer<String> logger) {
 		if (table.getColumn(columnName) != null) {
 			logger.accept(table.getTableName() + "." + columnName + " already exists - skipped.");

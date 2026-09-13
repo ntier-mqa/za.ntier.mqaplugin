@@ -64,7 +64,7 @@ public class AddSDRGrantTransactionApprovalTable extends SvrProcess {
                 yesNoRefId, 10,
                 "mssdr_granttransactionapproval.coorecommendedid -> SDR_YesNo. CONFIRMED 100% match "
                 + "(371/371)", ENTITY_TYPE, get_TrxName());
-        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_COORecommendedBy", DisplayType.Search,
+        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_COORecommendedBy_ID", DisplayType.Search,
                 REFERENCE_AD_USER, 10,
                 "mssdr_granttransactionapproval.coorecommendedby -> AD_User. CONFIRMED 100% match (371/371)",
                 ENTITY_TYPE, get_TrxName());
@@ -74,7 +74,7 @@ public class AddSDRGrantTransactionApprovalTable extends SvrProcess {
                 yesNoRefId, 10,
                 "mssdr_granttransactionapproval.cforecommendedid -> SDR_YesNo. CONFIRMED 100% match "
                 + "(371/371)", ENTITY_TYPE, get_TrxName());
-        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_CFORecommendedBy", DisplayType.Search,
+        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_CFORecommendedBy_ID", DisplayType.Search,
                 REFERENCE_AD_USER, 10,
                 "mssdr_granttransactionapproval.cforecommendedby -> AD_User. CONFIRMED 100% match (371/371)",
                 ENTITY_TYPE, get_TrxName());
@@ -84,7 +84,7 @@ public class AddSDRGrantTransactionApprovalTable extends SvrProcess {
                 yesNoRefId, 10,
                 "mssdr_granttransactionapproval.ceoapprovedid -> SDR_YesNo. CONFIRMED 99.7% match (370/371)",
                 ENTITY_TYPE, get_TrxName());
-        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_CEOApprovedBy", DisplayType.Search,
+        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_CEOApprovedBy_ID", DisplayType.Search,
                 REFERENCE_AD_USER, 10,
                 "mssdr_granttransactionapproval.ceoapprovedby -> AD_User. CONFIRMED 99.7% match (370/371)",
                 ENTITY_TYPE, get_TrxName());

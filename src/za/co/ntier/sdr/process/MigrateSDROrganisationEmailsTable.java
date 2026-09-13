@@ -147,11 +147,10 @@ public class MigrateSDROrganisationEmailsTable extends SvrProcess {
                     SDRMigrationSupport.toBD(rs.getInt("grantpaidletterid")));
             setIfPresent(po, "SDR_EmailSentError", rs.getString("emailsenterror"));
             po.set_ValueOfColumn("SDR_DGApplication_ID", SDRMigrationSupport.toBD(rs.getInt("dgapplicationid")));
-            // SDR_WSPATR_ID is DisplayType.Integer at the schema level (deferred until SDR_WSPATR
-            // exists as a Table reference) - BigDecimal-backed regardless, same as every other
-            // plain Integer column here.
-            setIfPresent(po, "SDR_WSPATR_ID", SDRMigrationSupport.toBD(
-                    SDRMigrationSupport.resolveLookup(wspatrCrosswalk, rs.getInt("wspatrid"))));
+            // SDR_WSPATR_ID was upgraded to a Table(18) reference by UpgradeOrganisationWSPATRLinks -
+            // CONFIRMED via AD_Column 2026-09-11 - Integer-backed, NOT routed through toBD().
+            setIfPresent(po, "SDR_WSPATR_ID", SDRMigrationSupport.resolveLookup(wspatrCrosswalk,
+                    rs.getInt("wspatrid")));
 
             po.saveEx();
             int newId = po.get_ID();

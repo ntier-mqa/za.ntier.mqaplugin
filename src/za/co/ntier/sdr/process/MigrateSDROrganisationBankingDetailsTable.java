@@ -166,10 +166,10 @@ public class MigrateSDROrganisationBankingDetailsTable extends SvrProcess {
             setIfPresent(po, "SDR_RegistrationDate", rs.getTimestamp("registrationdate"));
             po.set_ValueOfColumn("SDR_ConfirmDetails", SDRMigrationSupport.toBD(rs.getInt("confirmdetails")));
             setIfPresent(po, "SDR_AccountNumber", rs.getString("accountnumber"));
-            // SDR_SDF_ID is DisplayType.Integer at the schema level (deferred until SDR_SDF exists
-            // as a Table reference) - BigDecimal-backed regardless.
-            setIfPresent(po, "SDR_SDF_ID", SDRMigrationSupport.toBD(
-                    SDRMigrationSupport.resolveLookup(sdfCrosswalk, rs.getInt("sdfid"))));
+            // SDR_SDF_ID was upgraded to a Table(18) reference by UpgradeOrganisationSDFLinks -
+            // CONFIRMED via AD_Column 2026-09-11 - Table/TableDir/Search are Integer-backed, not
+            // BigDecimal, so this is a plain Integer, NOT routed through toBD().
+            setIfPresent(po, "SDR_SDF_ID", SDRMigrationSupport.resolveLookup(sdfCrosswalk, rs.getInt("sdfid")));
 
             po.saveEx();
             int newId = po.get_ID();

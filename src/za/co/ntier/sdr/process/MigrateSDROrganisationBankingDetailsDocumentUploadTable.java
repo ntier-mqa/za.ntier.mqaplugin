@@ -132,10 +132,9 @@ public class MigrateSDROrganisationBankingDetailsDocumentUploadTable extends Svr
             po.set_ValueOfColumn("SDR_OrganisationBankingDetails_ID", bankingDetailsId);
             po.set_ValueOfColumn("SDR_Organisation_ID", orgId);
 
-            // SDR_SDF_ID is DisplayType.Integer at the schema level (deferred until SDR_SDF exists
-            // as a Table reference) - BigDecimal-backed regardless.
-            setIfPresent(po, "SDR_SDF_ID", SDRMigrationSupport.toBD(
-                    SDRMigrationSupport.resolveLookup(sdfCrosswalk, rs.getInt("sdfid"))));
+            // SDR_SDF_ID was upgraded to a Table(18) reference by UpgradeOrganisationSDFLinks -
+            // CONFIRMED via AD_Column 2026-09-11 - Integer-backed, NOT routed through toBD().
+            setIfPresent(po, "SDR_SDF_ID", SDRMigrationSupport.resolveLookup(sdfCrosswalk, rs.getInt("sdfid")));
             setIfPresent(po, "SDR_OriginalFileName", rs.getString("originalfilename"));
             setIfPresent(po, "SDR_SavedFileName", rs.getString("savedfilename"));
             setIfPresent(po, "SDR_FilePath", rs.getString("filepath"));

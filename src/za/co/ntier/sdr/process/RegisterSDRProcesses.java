@@ -133,6 +133,11 @@ public class RegisterSDRProcesses extends SvrProcess {
             "MigrateSDROrganisationBankingDetailsDocumentUploadTable",
             "MigrateSDROrganisationDocumentsTable",
             "MigrateSDROrganisationEmailsTable",
+            "MigrateSDRSDFTable",
+            "MigrateSDRSDFCertificateDocumentTable",
+            "MigrateSDRSDFOrganisationTable",
+            "MigrateSDRSDFOrganisationDocumentUploadTable",
+            "FixSDRAuditColumnNames",
     };
 
     @Override

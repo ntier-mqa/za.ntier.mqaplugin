@@ -14,8 +14,8 @@ import za.co.ntier.learner.process.AddColumnsSupport;
 /**
  * Phase 5 (see "Phase 5 - WSPATR Family - Mapping.txt"): creates the brand new
  * SDR_WSPATREvaluationVerification child table (3,195 source rows). The 3 status-type FK columns all
- * match their target tables by name - plain DisplayType.TableDir. SDR_VerifiedBy/SDR_EvaluatedBy/
- * SDR_BoardApprovalBy follow the platform's audit-trail pattern (Search + REFERENCE_AD_USER).
+ * match their target tables by name - plain DisplayType.TableDir. SDR_VerifiedBy_ID/SDR_EvaluatedBy_ID/
+ * SDR_BoardApprovalBy_ID follow the platform's audit-trail pattern (Search + REFERENCE_AD_USER).
  *
  * <p>Schema only - no data population.
  */
@@ -65,19 +65,19 @@ public class AddSDRWSPATREvaluationVerificationTable extends SvrProcess {
                 "mssdr_wspatrevaluationverification.evaluationcomment (free text)", ENTITY_TYPE, get_TrxName());
         AddColumnsSupport.registerColumn(getCtx(), table, "SDR_ApprovalComment", DisplayType.String, 2000,
                 "mssdr_wspatrevaluationverification.approvalcomment (free text)", ENTITY_TYPE, get_TrxName());
-        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_VerifiedBy", DisplayType.Search,
+        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_VerifiedBy_ID", DisplayType.Search,
                 REFERENCE_AD_USER, 10,
                 "mssdr_wspatrevaluationverification.verifiedby -> AD_User. CONFIRMED 99.9% (3,192/3,195)",
                 ENTITY_TYPE, get_TrxName());
         AddColumnsSupport.registerColumn(getCtx(), table, "SDR_DateVerified", DisplayType.DateTime, 7,
                 "mssdr_wspatrevaluationverification.dateverified", ENTITY_TYPE, get_TrxName());
-        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_EvaluatedBy", DisplayType.Search,
+        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_EvaluatedBy_ID", DisplayType.Search,
                 REFERENCE_AD_USER, 10,
                 "mssdr_wspatrevaluationverification.evaluatedby -> AD_User. CONFIRMED 88.5% (2,827/3,195)",
                 ENTITY_TYPE, get_TrxName());
         AddColumnsSupport.registerColumn(getCtx(), table, "SDR_DateEvaluated", DisplayType.DateTime, 7,
                 "mssdr_wspatrevaluationverification.dateevaluated", ENTITY_TYPE, get_TrxName());
-        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_BoardApprovalBy", DisplayType.Search,
+        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_BoardApprovalBy_ID", DisplayType.Search,
                 REFERENCE_AD_USER, 10,
                 "mssdr_wspatrevaluationverification.boardapprovalby -> AD_User. CONFIRMED 83.3% (2,662/3,195)",
                 ENTITY_TYPE, get_TrxName());

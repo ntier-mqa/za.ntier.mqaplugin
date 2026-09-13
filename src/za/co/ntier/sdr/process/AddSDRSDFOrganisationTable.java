@@ -15,7 +15,7 @@ import za.co.ntier.learner.process.AddColumnsSupport;
  * Phase 4 (see "Phase 4 - SDF Family - Mapping.txt"): creates the brand new SDR_SDFOrganisation child
  * table (4,808 source rows) - the link between an SDF and the organisation(s) they're appointed at.
  *
- * <p>SDR_ApprovedBy/SDR_RejectedBy follow the same audit-trail pattern as CreatedBy/UpdatedBy elsewhere
+ * <p>SDR_ApprovedBy_ID/SDR_RejectedBy_ID follow the same audit-trail pattern as CreatedBy/UpdatedBy elsewhere
  * in this migration (DisplayType.Search + AD_Reference_Value_ID=REFERENCE_AD_USER, resolving against
  * iDempiere's own AD_User table - there is no separate "SDR_User" table). RejectedBy is CHECKED 0%
  * resolved to a real user in the mapping doc's sample, but kept as the same lookup shape regardless -
@@ -71,14 +71,14 @@ public class AddSDRSDFOrganisationTable extends SvrProcess {
                 ENTITY_TYPE, get_TrxName());
         AddColumnsSupport.registerColumn(getCtx(), table, "SDR_DateApproved", DisplayType.DateTime, 7,
                 "mssdr_sdforganisation.dateapproved", ENTITY_TYPE, get_TrxName());
-        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_ApprovedBy", DisplayType.Search,
+        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_ApprovedBy_ID", DisplayType.Search,
                 REFERENCE_AD_USER, 10,
                 "mssdr_sdforganisation.approvedby -> AD_User (audit-trail pattern, same as CreatedBy/"
                 + "UpdatedBy). CONFIRMED 77.0% of rows with either ApprovedBy or RejectedBy populated "
                 + "resolve to a real user", ENTITY_TYPE, get_TrxName());
         AddColumnsSupport.registerColumn(getCtx(), table, "SDR_DateRejected", DisplayType.DateTime, 7,
                 "mssdr_sdforganisation.daterejected", ENTITY_TYPE, get_TrxName());
-        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_RejectedBy", DisplayType.Search,
+        AddColumnsSupport.registerColumnWithValue(getCtx(), table, "SDR_RejectedBy_ID", DisplayType.Search,
                 REFERENCE_AD_USER, 10,
                 "mssdr_sdforganisation.rejectedby -> AD_User. CHECKED 0% resolved in the sample - almost "
                 + "certainly just rarely populated (rejections are a small minority of this workflow), "

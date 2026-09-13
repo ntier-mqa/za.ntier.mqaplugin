@@ -24,23 +24,17 @@ import org.compiere.util.Trx;
 import za.co.ntier.learner.process.AddColumnsSupport;
 
 /**
- * Phase 3 (see "Phase 3 - Organisation Family - Mapping.txt"): migrates mssdr_organisationdocuments
- * into SDR_OrganisationDocuments (15,927 source rows). Requires {@link MigrateSDROrganisationTable}
- * to have already run. SDR_DocumentRelates_ID stays a plain integer (per the mapping doc, no working
- * lookup target was found).
- *
- * <p>SDR_WSPATR_ID will resolve to null for every row until {@code MigrateSDRWSPATRTable} (Phase 5,
- * not yet written at the time this class was written) has actually loaded data into SDR_WSPATR - same
- * migration-ordering caveat as {@code MigrateSDROrganisationBankingDetailsTable}.SDR_SDF_ID. Recommend
- * running {@code MigrateSDRWSPATRTable} before this process for the cleanest result.
+ * Phase 4 (see "Phase 4 - SDF Family - Mapping.txt"): migrates mssdr_sdfcertificatedocument into
+ * SDR_SDFCertificateDocument (5,045 source rows). Requires {@link MigrateSDRSDFTable} to have already
+ * run.
  */
-@Process(name = "za.co.ntier.sdr.process.MigrateSDROrganisationDocumentsTable")
-public class MigrateSDROrganisationDocumentsTable extends SvrProcess {
+@Process(name = "za.co.ntier.sdr.process.MigrateSDRSDFCertificateDocumentTable")
+public class MigrateSDRSDFCertificateDocumentTable extends SvrProcess {
 
     @Parameter(name = "MaxRows")
     private BigDecimal p_MaxRows;
 
-    private static final String TABLE_NAME = "SDR_OrganisationDocuments";
+    private static final String TABLE_NAME = "SDR_SDFCertificateDocument";
     private static final int MAX_LOGGED_ERRORS = 1000;
 
     private final List<String> errors = new ArrayList<>();
@@ -59,26 +53,20 @@ public class MigrateSDROrganisationDocumentsTable extends SvrProcess {
         MTable table = AddColumnsSupport.findTable(getCtx(), TABLE_NAME, get_TrxName());
         if (table == null) {
             throw new IllegalStateException(
-                    TABLE_NAME + " does not exist - run AddSDROrganisationDocumentsTable first");
+                    TABLE_NAME + " does not exist - run AddSDRSDFCertificateDocumentTable first");
         }
 
-        Map<Integer, Integer> orgCrosswalk = SDRMigrationSupport.buildIdCrosswalk("sdr_organisation",
-                "sdr_organisation_id", get_TrxName());
-        Map<Integer, Integer> wspatrCrosswalk = SDRMigrationSupport.buildIdCrosswalk("sdr_wspatr",
-                "sdr_wspatr_id", get_TrxName());
-        if (wspatrCrosswalk.isEmpty()) {
-            addLog("NOTE: SDR_WSPATR has no migrated rows yet - SDR_WSPATR_ID will be left unset for "
-                    + "every row in this run.");
-        }
+        Map<Integer, Integer> sdfCrosswalk = SDRMigrationSupport.buildIdCrosswalk("sdr_sdf", "sdr_sdf_id",
+                get_TrxName());
 
-        String sql = "SELECT d.* FROM mssdr_organisationdocuments d "
-                + "WHERE NOT EXISTS (SELECT 1 FROM sdr_organisationdocuments s WHERE s.id = d.id) "
-                + "ORDER BY d.id" + (maxRows > 0 ? " LIMIT " + maxRows : "");
+        String sql = "SELECT c.* FROM mssdr_sdfcertificatedocument c "
+                + "WHERE NOT EXISTS (SELECT 1 FROM sdr_sdfcertificatedocument s WHERE s.id = c.id) "
+                + "ORDER BY c.id" + (maxRows > 0 ? " LIMIT " + maxRows : "");
 
         int processed = 0;
         int created = 0;
-        int skippedNoOrg = 0;
-        String readTrxName = Trx.createTrxName("SDROrgDocumentsRead");
+        int skippedNoSdf = 0;
+        String readTrxName = Trx.createTrxName("SDRSDFCertDocRead");
         Trx readTrx = Trx.get(readTrxName, true);
         PreparedStatement pstmt = null;
         ResultSet rs = null;
@@ -89,21 +77,16 @@ public class MigrateSDROrganisationDocumentsTable extends SvrProcess {
 
             while (rs.next()) {
                 processed++;
-                Integer orgId = orgCrosswalk.get(rs.getInt("organisationid"));
-                if (orgId == null) {
-                    skippedNoOrg++;
+                Integer sdfId = sdfCrosswalk.get(rs.getInt("sdfid"));
+                if (sdfId == null) {
+                    skippedNoSdf++;
                     continue;
                 }
                 try {
-                    processOneRow(table, rs, orgId, wspatrCrosswalk);
+                    processOneRow(table, rs, sdfId);
                     created++;
                 } catch (Exception e) {
                     logError(rs.getInt("id"), e);
-                }
-
-                if (processed % 5000 == 0) {
-                    addLog("Processed " + processed + " mssdr_organisationdocuments rows (" + created
-                            + " created, " + errors.size() + " error(s))...");
                 }
             }
         } finally {
@@ -112,21 +95,20 @@ public class MigrateSDROrganisationDocumentsTable extends SvrProcess {
             readTrx.close();
         }
 
-        writeErrorLogIfAny("migrate-sdr-organisationdocuments-errors");
+        writeErrorLogIfAny("migrate-sdr-sdfcertificatedocument-errors");
 
-        return "Processed " + processed + " mssdr_organisationdocuments row(s): " + created + " "
-                + "SDR_OrganisationDocuments created, " + skippedNoOrg + " skipped (no matching "
-                + "SDR_Organisation), " + errors.size() + " error(s).";
+        return "Processed " + processed + " mssdr_sdfcertificatedocument row(s): " + created + " "
+                + "SDR_SDFCertificateDocument created, " + skippedNoSdf + " skipped (no matching SDR_SDF), "
+                + errors.size() + " error(s).";
     }
 
-    private void processOneRow(MTable table, ResultSet rs, int orgId, Map<Integer, Integer> wspatrCrosswalk)
-            throws Exception {
+    private void processOneRow(MTable table, ResultSet rs, int sdfId) throws Exception {
         int sourceId = rs.getInt("id");
         Timestamp created = rs.getTimestamp("created");
         Timestamp updated = rs.getTimestamp("updated");
         int isDeleted = rs.getInt("isdeleted");
 
-        String trxName = Trx.createTrxName("SDROrgDocumentsMigrate");
+        String trxName = Trx.createTrxName("SDRSDFCertDocMigrate");
         Trx trx = Trx.get(trxName, true);
         try {
             PO po = table.getPO(0, trxName);
@@ -134,25 +116,18 @@ public class MigrateSDROrganisationDocumentsTable extends SvrProcess {
             po.set_ValueOfColumn("AD_Org_ID", 0);
             po.setIsActive(isDeleted == 0);
             po.set_ValueOfColumn("id", sourceId);
-            po.set_ValueOfColumn("SDR_Organisation_ID", orgId);
+            po.set_ValueOfColumn("SDR_SDF_ID", sdfId);
 
-            po.set_ValueOfColumn("SDR_DocumentRelates_ID",
-                    SDRMigrationSupport.toBD(rs.getInt("documentrelatesid")));
-            setIfPresent(po, "SDR_Comment", rs.getString("comment"));
             setIfPresent(po, "SDR_OriginalFileName", rs.getString("originalfilename"));
             setIfPresent(po, "SDR_SavedFileName", rs.getString("savedfilename"));
             setIfPresent(po, "SDR_FilePath", rs.getString("filepath"));
-            // SDR_WSPATR_ID was upgraded to a Table(18) reference by UpgradeOrganisationWSPATRLinks -
-            // CONFIRMED via AD_Column 2026-09-11 - Integer-backed, NOT routed through toBD().
-            setIfPresent(po, "SDR_WSPATR_ID", SDRMigrationSupport.resolveLookup(wspatrCrosswalk,
-                    rs.getInt("wspatrid")));
 
             po.saveEx();
             int newId = po.get_ID();
 
             if (created != null || updated != null) {
-                SDRMigrationSupport.stampCreatedUpdated("sdr_organisationdocuments",
-                        "sdr_organisationdocuments_id", newId, created, updated, trxName);
+                SDRMigrationSupport.stampCreatedUpdated("sdr_sdfcertificatedocument",
+                        "sdr_sdfcertificatedocument_id", newId, created, updated, trxName);
             }
 
             trx.commit(true);
@@ -164,11 +139,8 @@ public class MigrateSDROrganisationDocumentsTable extends SvrProcess {
         }
     }
 
-    private static void setIfPresent(PO po, String columnName, Object value) {
-        if (value == null) {
-            return;
-        }
-        if (value instanceof String && ((String) value).trim().isEmpty()) {
+    private static void setIfPresent(PO po, String columnName, String value) {
+        if (value == null || value.trim().isEmpty()) {
             return;
         }
         po.set_ValueOfColumn(columnName, value);
@@ -176,7 +148,7 @@ public class MigrateSDROrganisationDocumentsTable extends SvrProcess {
 
     private void logError(int sourceId, Exception e) {
         if (errors.size() < MAX_LOGGED_ERRORS) {
-            errors.add("mssdr_organisationdocuments.id=" + sourceId + ": " + e.getMessage());
+            errors.add("mssdr_sdfcertificatedocument.id=" + sourceId + ": " + e.getMessage());
         }
     }
 
