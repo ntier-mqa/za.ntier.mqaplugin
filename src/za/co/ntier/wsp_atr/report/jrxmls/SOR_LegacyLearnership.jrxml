@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.5.final using JasperReports Library version 6.20.5-3efcf2e67f959db3888d79f73dde2dbd7acb4f8e  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SOR_LegacyLearnership" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="a1b2c3d4-5678-90ab-cdef-1234567890ab">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="SOR_Learnership/nTier_20260619_1.jrdax"/>
+	<parameter name="RECORD_ID" class="java.lang.Integer"/>
+	<parameter name="RESOURCE_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<queryString language="plsql">
+		<![CDATA[SELECT DISTINCT
+    TRIM(COALESCE(ca.ZZFIRSTNAME, '') || ' ' || COALESCE(ca.Surname, '')) AS LEARNER_NAME,
+    COALESCE(ca.ZZ_ID_PASSPORT_NO, ca.ZZOTHERIDNO) AS ID_NO,
+    emp.Name AS EMPLOYER,
+    sdp.Name AS PROVIDER,
+    LSHIP.ZZAGREEMENTREFERENCENUMBER AS REFERENCE_NO,
+    LS.ZZLEARNERSHIPTITLE AS QUALIFICATION,
+    LS.ZZLEARNERSHIP_ID AS QUALIFICATION_ID,
+    ca.ZZLearnerLearnership_ID AS ENROLLMENT_ID,
+    NULL AS SIGNATURECHIEF,
+    NULL AS SIGNATURESMQA
+FROM
+    ZZCompletedAssessments_v ca
+    LEFT JOIN c_bpartner emp ON ca.ZZ_Employer_ID = emp.c_bpartner_id
+    LEFT JOIN c_bpartner sdp ON ca.ZZ_SDP_ID = sdp.c_bpartner_id
+    JOIN ZZLearnerLearnership LSHIP ON LSHIP.ZZLearnerLearnership_ID = ca.ZZLearnerLearnership_ID
+    JOIN ZZLEARNERSHIP LS ON LS.ZZLEARNERSHIP_ID = LSHIP.ZZLEARNERSHIP_ID
+WHERE 
+    ca.ZZCompletedAssessments_v_ID = $P{RECORD_ID}]]>
+	</queryString>
+	<field name="learner_name" class="java.lang.String"/>
+	<field name="id_no" class="java.lang.String"/>
+	<field name="employer" class="java.lang.String"/>
+	<field name="provider" class="java.lang.String"/>
+	<field name="reference_no" class="java.lang.String"/>
+	<field name="qualification" class="java.lang.String"/>
+	<field name="qualification_id" class="java.lang.Integer"/>
+	<field name="enrollment_id" class="java.lang.Integer"/>
+	<field name="signaturechief" class="java.lang.String"/>
+	<field name="signaturesmqa" class="java.lang.String"/>
+	<title>
+		<band height="310" splitType="Stretch">
+			<image scaleImage="RetainShape" onErrorType="Blank">
+				<reportElement x="0" y="0" width="555" height="100" uuid="b1c2d3e4-f567-890a-bcde-f1234567890a"/>
+				<imageExpression><![CDATA[$P{RESOURCE_DIR} + "MQA_Address_Logo_Header.png"]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement x="0" y="110" width="555" height="30" uuid="c1d2e3f4-5678-90ab-cdef-1234567890ab"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="16" isBold="true"/>
+				</textElement>
+				<text><![CDATA[STATEMENT OF RESULTS]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="168" width="120" height="20" uuid="d1e2f3a4-5678-90ab-cdef-1234567890ab"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Learner Name:]]></text>
+			</staticText>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement x="130" y="168" width="400" height="20" uuid="e1f2a3b4-5678-90ab-cdef-1234567890ab"/>
+				<textFieldExpression><![CDATA[$F{learner_name}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="188" width="120" height="20" uuid="f1a2b3c4-5678-90ab-cdef-1234567890ab"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[ID Number:]]></text>
+			</staticText>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement x="130" y="188" width="400" height="20" uuid="a2b3c4d5-6789-0abc-def1-234567890abc"/>
+				<textFieldExpression><![CDATA[$F{id_no}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="208" width="120" height="20" uuid="b2c3d4e5-6789-0abc-def1-234567890abc"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Employer:]]></text>
+			</staticText>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement x="130" y="208" width="400" height="20" uuid="c2d3e4f5-6789-0abc-def1-234567890abc"/>
+				<textFieldExpression><![CDATA[$F{employer}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="228" width="120" height="20" uuid="d2e3f4a5-6789-0abc-def1-234567890abc"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Provider:]]></text>
+			</staticText>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement x="130" y="228" width="400" height="20" uuid="e2f3a4b5-6789-0abc-def1-234567890abc"/>
+				<textFieldExpression><![CDATA[$F{provider}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="249" width="120" height="20" uuid="f2a3b4c5-6789-0abc-def1-234567890abc"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Reference No:]]></text>
+			</staticText>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement x="130" y="249" width="400" height="20" uuid="a3b4c5d6-7890-abcd-ef12-34567890abcd"/>
+				<textFieldExpression><![CDATA[$F{reference_no}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="273" width="555" height="36" uuid="b3c4d5e6-7890-abcd-ef12-34567890abcd">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center">
+					<font size="12" isBold="true" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[was enrolled in the below Qualifications and was assessed and found competent in the following modules]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="148" width="120" height="20" uuid="105d6ce8-790e-4c7f-a5ee-019d06230b95"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[This is to confirm that :]]></text>
+			</staticText>
+		</band>
+	</title>
+	<detail>
+		<band height="80" splitType="Stretch">
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement x="0" y="9" width="555" height="30" uuid="c3d4e5f6-7890-abcd-ef12-34567890abcd"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{qualification}]]></textFieldExpression>
+			</textField>
+			<subreport>
+				<reportElement x="0" y="43" width="555" height="30" uuid="d3e4f5a6-7890-abcd-ef12-34567890abcd"/>
+				<subreportParameter name="ENROLLMENT_ID">
+					<subreportParameterExpression><![CDATA[$F{enrollment_id}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="RESOURCE_DIR">
+					<subreportParameterExpression><![CDATA[$P{RESOURCE_DIR}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA[$P{RESOURCE_DIR} + "SOR_LegacyLearnership_Sub.jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+	</detail>
+	<summary>
+		<band height="150" splitType="Stretch">
+			<line>
+				<reportElement positionType="Float" x="20" y="90" width="160" height="1" uuid="f4e5d6c7-b890-1f23-4567-00890abcdef0"/>
+				<graphicElement>
+					<pen lineWidth="0.5"/>
+				</graphicElement>
+			</line>
+			<staticText>
+				<reportElement positionType="Float" x="20" y="95" width="200" height="50" uuid="e3d4c5b6-a789-0f12-3456-007890abcdef"/>
+				<textElement textAlignment="Left">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Thabo Mashongoane
+
+Chief Executive Officer]]></text>
+			</staticText>
+		</band>
+	</summary>
+</jasperReport>

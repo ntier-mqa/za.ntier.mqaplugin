@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.5.final using JasperReports Library version 6.20.5-3efcf2e67f959db3888d79f73dde2dbd7acb4f8e  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SOR_SkillsProgramme_Sub" pageWidth="555" pageHeight="842" columnWidth="555" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="2a56efca-1234-4567-89ab-cdef01234567">
+	<parameter name="ENROLLMENT_ID" class="java.lang.Integer"/>
+	<parameter name="RESOURCE_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<queryString language="plsql">
+		<![CDATA[SELECT
+    US.ZZSaqaUnitStandardCode AS MODULE_CODE,
+    US.ZZSaqaUnitStandardTitle AS MODULE_TITLE,
+    US.ZZCREDITS AS CREDIT_VALUE
+FROM
+    ZZLearnerSkillsProgrammeAssessments ass
+    JOIN ZZUNITSTANDARD US ON US.ZZUNITSTANDARD_ID = ass.ZZUNITSTANDARD_ID
+WHERE 
+    ass.ZZLearnerSkillsProgramme_ID = $P{ENROLLMENT_ID}
+    AND ass.ZZAssessmentStatus = 'CO']]>
+	</queryString>
+	<field name="module_code" class="java.lang.String"/>
+	<field name="module_title" class="java.lang.String"/>
+	<field name="credit_value" class="java.lang.String"/>
+	<columnHeader>
+		<band height="30" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="150" height="30" uuid="b4c5d6e7-890a-bcde-f123-4567890abcde"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Module Code]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="150" y="0" width="300" height="30" uuid="c4d5e6f7-890a-bcde-f123-4567890abcde"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Module Title]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="450" y="0" width="105" height="30" uuid="d4e5f6a7-890a-bcde-f123-4567890abcde"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Credit Value]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="30" splitType="Stretch">
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement x="0" y="0" width="150" height="30" uuid="e4f5a6b7-890a-bcde-f123-4567890abcde"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{module_code}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement x="150" y="0" width="300" height="30" uuid="f4a5b6c7-890a-bcde-f123-4567890abcde"/>
+				<box leftPadding="5">
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{module_title}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement x="450" y="0" width="105" height="30" uuid="a5b6c7d8-90ab-cdef-1234-567890abcdef"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{credit_value}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>
