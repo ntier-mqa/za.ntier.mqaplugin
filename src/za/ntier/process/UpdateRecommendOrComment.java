@@ -17,6 +17,7 @@ public class UpdateRecommendOrComment extends SvrProcess
 
 	private String	p_Recommended	= null;
 	private String	p_Comments		= null;
+	private String	p_Reason		= null;
 
 	@Override
 	protected void prepare()
@@ -24,20 +25,20 @@ public class UpdateRecommendOrComment extends SvrProcess
 		for (ProcessInfoParameter para : getParameter())
 		{
 			String name = para.getParameterName();
-			if (para.getParameter() == null)
-			{
-				continue;
-			}
 
-			if (name.equalsIgnoreCase("Recommended") || name.equalsIgnoreCase("ZZ_IsRecommended"))
+			if (name.equalsIgnoreCase("ZZ_IsRecommend"))
 			{
 				p_Recommended = para.getParameterAsString();
 			}
-			else if (name.equalsIgnoreCase("Comments") || name.equalsIgnoreCase("ZZ_Comments"))
+			else if (name.equalsIgnoreCase("Comments"))
 			{
 				p_Comments = para.getParameterAsString();
 			}
-			else
+			else if (name.equalsIgnoreCase("Reason"))
+			{
+				p_Reason = para.getParameterAsString();
+			}
+			else if (para.getParameter() != null)
 			{
 				log.log(Level.SEVERE, "Unknown Parameter: " + name);
 			}
@@ -92,7 +93,7 @@ public class UpdateRecommendOrComment extends SvrProcess
 
 		if (p_Recommended != null)
 		{
-			int colIndex = po.get_ColumnIndex("ZZ_IsRecommended");
+			int colIndex = po.get_ColumnIndex(I_ZZLinkAssessorQualification.COLUMNNAME_ZZ_isRecommended);
 			if (colIndex >= 0)
 			{
 				po.set_ValueNoCheck(po.get_ColumnName(colIndex), p_Recommended);
@@ -103,20 +104,44 @@ public class UpdateRecommendOrComment extends SvrProcess
 				log.warning("Could not find column for ZZ_IsRecommended.");
 			}
 		}
-
-		if (p_Comments != null)
+		else
 		{
-			int colIndex = po.get_ColumnIndex("Comments");
+			// Clear Recommended if it's left empty
+			int colIndex = po.get_ColumnIndex(I_ZZLinkAssessorQualification.COLUMNNAME_ZZ_isRecommended);
 			if (colIndex >= 0)
 			{
-				po.set_ValueNoCheck(po.get_ColumnName(colIndex), p_Comments);
+				po.set_ValueNoCheck(po.get_ColumnName(colIndex), null);
+				updated = true;
+			}
+		}
+
+		// Always update Comments, clearing if both fields are empty
+		int colIndex = po.get_ColumnIndex(I_ZZLinkAssessorQualification.COLUMNNAME_Comments);
+		if (colIndex >= 0)
+		{
+				StringBuilder finalComment = new StringBuilder();
+				
+				if (p_Reason != null && !p_Reason.trim().isEmpty())
+				{
+					finalComment.append(p_Reason.trim());
+				}
+				
+				if (p_Comments != null && !p_Comments.trim().isEmpty())
+				{
+					if (finalComment.length() > 0)
+					{
+						finalComment.append("\n");
+					}
+					finalComment.append(p_Comments.trim());
+				}
+				
+				po.set_ValueNoCheck(po.get_ColumnName(colIndex), finalComment.length() > 0 ? finalComment.toString() : null);
 				updated = true;
 			}
 			else
 			{
 				log.warning("Could not find column for Comments.");
 			}
-		}
 
 		if (updated)
 		{
