@@ -29,6 +29,12 @@ import za.co.ntier.learner.process.AddColumnsSupport;
  * SDR_UnlockedByUser_ID resolves against the SAME SDR_User crosswalk as SDR_User_ID (a second,
  * admin-side FK to the same target table) - CONFIRMED only 0.2% populated (130/64,395), expected since
  * admin-unlock is a rare event.
+ *
+ * <p>CORRECTED 2026-09-14: this table, like UserLogin and LoginViolations, turns out to have NO
+ * generic created/updated/isdeleted columns at all (confirmed the hard way: "The column name created
+ * was not found in this ResultSet" on every row) - not called out explicitly in the mapping doc for
+ * this table. IsActive is left at its standard 'Y' default and Created/Updated are left as whatever
+ * PO.saveEx() naturally stamps (the migration run time).
  */
 @Process(name = "za.co.ntier.sdr.process.MigrateSDRUserLoginAttemptTable")
 public class MigrateSDRUserLoginAttemptTable extends SvrProcess {
@@ -107,9 +113,6 @@ public class MigrateSDRUserLoginAttemptTable extends SvrProcess {
     private void processOneRow(MTable table, ResultSet rs, int userId, Map<Integer, Integer> userCrosswalk)
             throws Exception {
         int sourceId = rs.getInt("id");
-        Timestamp created = rs.getTimestamp("created");
-        Timestamp updated = rs.getTimestamp("updated");
-        int isDeleted = rs.getInt("isdeleted");
 
         String trxName = Trx.createTrxName("SDRUserLoginAttemptMigrate");
         Trx trx = Trx.get(trxName, true);
@@ -117,7 +120,6 @@ public class MigrateSDRUserLoginAttemptTable extends SvrProcess {
             PO po = table.getPO(0, trxName);
             po.set_ValueOfColumn("AD_Client_ID", Env.getAD_Client_ID(getCtx()));
             po.set_ValueOfColumn("AD_Org_ID", 0);
-            po.setIsActive(isDeleted == 0);
             po.set_ValueOfColumn("id", sourceId);
             po.set_ValueOfColumn("SDR_User_ID", userId);
 
@@ -129,12 +131,6 @@ public class MigrateSDRUserLoginAttemptTable extends SvrProcess {
                     rs.getInt("unlockedbyuserid")));
 
             po.saveEx();
-            int newId = po.get_ID();
-
-            if (created != null || updated != null) {
-                SDRMigrationSupport.stampCreatedUpdated("sdr_userloginattempt", "sdr_userloginattempt_id", newId,
-                        created, updated, trxName);
-            }
 
             trx.commit(true);
         } catch (Exception e) {

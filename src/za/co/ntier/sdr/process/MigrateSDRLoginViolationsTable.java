@@ -33,6 +33,12 @@ import za.co.ntier.learner.process.AddColumnsSupport;
  * UserPasswordHistory's properly-hashed equivalent. The SELECT below names every column explicitly
  * (not "SELECT *") specifically so the password column can never be touched, even indirectly. See the
  * mapping doc's SECURITY FLAG section and AddSDRLoginViolationsTable's Javadoc.
+ *
+ * <p>CORRECTED 2026-09-14: mssdr_loginviolations, like mssdr_userlogin, turns out to have NO generic
+ * created/updated/isdeleted columns at all (confirmed via a hard SQL failure: "column v.created does
+ * not exist") - the mapping doc didn't call this out explicitly for this table the way it did for
+ * UserLogin, but the source table shape is the same. IsActive is left at its standard 'Y' default and
+ * Created/Updated are left as whatever PO.saveEx() naturally stamps (the migration run time).
  */
 @Process(name = "za.co.ntier.sdr.process.MigrateSDRLoginViolationsTable")
 public class MigrateSDRLoginViolationsTable extends SvrProcess {
@@ -61,8 +67,8 @@ public class MigrateSDRLoginViolationsTable extends SvrProcess {
             throw new IllegalStateException(TABLE_NAME + " does not exist - run AddSDRLoginViolationsTable first");
         }
 
-        String sql = "SELECT v.id, v.created, v.updated, v.isdeleted, v.username, v.ipaddress, "
-                + "v.dateloggedin, v.issuccessfullogin, v.isaduser FROM mssdr_loginviolations v "
+        String sql = "SELECT v.id, v.username, v.ipaddress, v.dateloggedin, v.issuccessfullogin, "
+                + "v.isaduser FROM mssdr_loginviolations v "
                 + "WHERE NOT EXISTS (SELECT 1 FROM sdr_loginviolations s WHERE s.id = v.id) "
                 + "ORDER BY v.id" + (maxRows > 0 ? " LIMIT " + maxRows : "");
 
@@ -100,9 +106,6 @@ public class MigrateSDRLoginViolationsTable extends SvrProcess {
 
     private void processOneRow(MTable table, ResultSet rs) throws Exception {
         int sourceId = rs.getInt("id");
-        Timestamp created = rs.getTimestamp("created");
-        Timestamp updated = rs.getTimestamp("updated");
-        int isDeleted = rs.getInt("isdeleted");
 
         String trxName = Trx.createTrxName("SDRLoginViolationsMigrate");
         Trx trx = Trx.get(trxName, true);
@@ -110,7 +113,6 @@ public class MigrateSDRLoginViolationsTable extends SvrProcess {
             PO po = table.getPO(0, trxName);
             po.set_ValueOfColumn("AD_Client_ID", Env.getAD_Client_ID(getCtx()));
             po.set_ValueOfColumn("AD_Org_ID", 0);
-            po.setIsActive(isDeleted == 0);
             po.set_ValueOfColumn("id", sourceId);
 
             setIfPresent(po, "SDR_UserName", rs.getString("username"));
@@ -120,12 +122,6 @@ public class MigrateSDRLoginViolationsTable extends SvrProcess {
             po.set_ValueOfColumn("SDR_IsADUser", SDRMigrationSupport.toBD(rs.getInt("isaduser")));
 
             po.saveEx();
-            int newId = po.get_ID();
-
-            if (created != null || updated != null) {
-                SDRMigrationSupport.stampCreatedUpdated("sdr_loginviolations", "sdr_loginviolations_id", newId,
-                        created, updated, trxName);
-            }
 
             trx.commit(true);
         } catch (Exception e) {
