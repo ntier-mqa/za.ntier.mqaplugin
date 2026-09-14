@@ -36,13 +36,19 @@ import za.co.ntier.learner.process.AddColumnsSupport;
  * viewing legacy migrated reference data, not data entry. {@code IsSOTrx=false} throughout (not
  * sales/purchase transaction data).
  *
- * <p>CLIENT SCOPING: unlike this package's Add-, Migrate-, and Register-style processes (which all hardcode
- * AD_Client_ID=0/System for their own AD_Process registration, since those are admin utilities meant
- * to run regardless of client), this process creates its Window/Tab/Menu/Field records using
- * {@link #getCtx()}'s NATURAL running-context client - per user instruction, this process must be run
- * under the MQA client (not System) so every artifact it creates lands on MQA, matching the SDR_ data
- * itself. See {@link RegisterSDRProcesses}'s own client-context Javadoc for why this distinction
- * matters (AD_Client_ID is picked up from context, not hardcoded).
+ * <p>CLIENT SCOPING: CORRECTED 2026-09-14 - Window/Tab/Menu/Field records are Application Dictionary
+ * METADATA, not business data, and are hardcoded to AD_Client_ID=0/System here, matching this
+ * package's Add/Migrate/Register-style processes' own established convention for exactly this kind of
+ * infrastructure record. This is NOT optional/stylistic: {@code MMenu.afterSave()} auto-inserts each
+ * new menu's tree node into whichever {@code AD_Tree} row matches THAT RECORD's own client (see
+ * {@code PO.insert_Tree}) - since the pre-existing "Legacy SDR data" folder this process nests under
+ * lives in the SYSTEM client's own menu tree (the only reason {@link RegisterSDRProcesses}'s own
+ * client-0 menu entries successfully nest under it), creating these records under any other client
+ * would auto-insert their tree nodes into a DIFFERENT tree entirely - no amount of correctly setting
+ * Parent_ID afterward can bridge two separate trees. The underlying SDR_ reference-table DATA these
+ * windows display is unaffected by this and remains scoped to whichever client it was migrated under
+ * (MQA) - a window/tab/menu definition's own client has no bearing on which client's data rows a user
+ * sees when they open it.
  *
  * <p>Idempotent: skips any table whose window already exists (by Window Name, same duplicate check
  * core uses), and skips creating the "Reference" folder menu if it already exists as a child of
@@ -56,7 +62,7 @@ public class CreateSDRReferenceWindows extends SvrProcess {
     private static final String REFERENCE_MENU_NAME = "Reference";
 
     /** Every SDR_ reference/catalog table built by {@link AddSDRReferenceTables}, in the same order. */
-    private static final String[] TABLE_NAMES = {
+    static final String[] TABLE_NAMES = {
             // --- Person family (23) ---
             "SDR_Title", "SDR_Gender", "SDR_Equity", "SDR_Disability", "SDR_HomeLanguage",
             "SDR_Nationality", "SDR_CitizenResidentialStatus", "SDR_SocioEconomicStatus",
@@ -133,6 +139,8 @@ public class CreateSDRReferenceWindows extends SvrProcess {
             }
 
             MWindow window = new MWindow(getCtx(), 0, get_TrxName());
+            window.set_ValueOfColumn("AD_Client_ID", 0);
+            window.setAD_Org_ID(0);
             window.setName(table.getName());
             window.setIsSOTrx(false);
             window.setWindowType(MWindow.WINDOWTYPE_QueryOnly);
@@ -140,6 +148,8 @@ public class CreateSDRReferenceWindows extends SvrProcess {
             window.saveEx();
 
             MTab tab = new MTab(window);
+            tab.set_ValueOfColumn("AD_Client_ID", 0);
+            tab.setAD_Org_ID(0);
             tab.setEntityType(table.getEntityType());
             tab.setSeqNo(10);
             tab.setName(table.getName());
@@ -152,6 +162,8 @@ public class CreateSDRReferenceWindows extends SvrProcess {
             createFields(tab);
 
             MMenu menu = new MMenu(getCtx(), 0, get_TrxName());
+            menu.set_ValueOfColumn("AD_Client_ID", 0);
+            menu.setAD_Org_ID(0);
             menu.setName(window.getName());
             menu.setEntityType(table.getEntityType());
             menu.setIsSOTrx(false);
@@ -229,6 +241,8 @@ public class CreateSDRReferenceWindows extends SvrProcess {
         }
 
         MMenu menu = new MMenu(getCtx(), 0, get_TrxName());
+        menu.set_ValueOfColumn("AD_Client_ID", 0);
+        menu.setAD_Org_ID(0);
         menu.setName(REFERENCE_MENU_NAME);
         menu.setEntityType(ENTITY_TYPE);
         menu.setIsSOTrx(false);
