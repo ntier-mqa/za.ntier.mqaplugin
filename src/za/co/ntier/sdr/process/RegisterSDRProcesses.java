@@ -190,6 +190,7 @@ public class RegisterSDRProcesses extends SvrProcess {
             "CreateSDRGrantWindow",
             "CreateSDRUserSecurityWindow",
             "FixSDRWindowFieldNames",
+            "ExportSDRReconciliationReport",
     };
 
     @Override

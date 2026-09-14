@@ -59,7 +59,7 @@ public class AddSDRReferenceTables extends SvrProcess {
     private static final String ACCESS_LEVEL = "3";
 
     /** {target table name, source table, source Value column, source Name column, description}. */
-    private static final String[][] SPECS = {
+    static final String[][] SPECS = {
         // --- Person family (23 - Phase 2 mapping doc) ---
         {"SDR_Title", "mssdr_lkptitle", "id", "description", "Title reference (mssdr_lkptitle)"},
         {"SDR_Gender", "mssdr_lkpgender", "id", "description", "Gender reference (mssdr_lkpgender)"},
