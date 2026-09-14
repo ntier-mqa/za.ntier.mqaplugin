@@ -74,6 +74,7 @@ public class MigrateSDRLevyImportTable extends SvrProcess {
 
         int processed = 0;
         int created = 0;
+        long lastId = 0;
         boolean more = true;
         while (more) {
             int batchLimit = BATCH_SIZE;
@@ -86,7 +87,8 @@ public class MigrateSDRLevyImportTable extends SvrProcess {
             }
 
             String sql = "SELECT i.* FROM mssdr_levyimport i "
-                    + "WHERE NOT EXISTS (SELECT 1 FROM sdr_levyimport s WHERE s.id = i.id) "
+                    + "WHERE i.id > " + lastId + " "
+                    + "AND NOT EXISTS (SELECT 1 FROM sdr_levyimport s WHERE s.id = i.id) "
                     + "ORDER BY i.id LIMIT " + batchLimit;
 
             int rowsInBatch = 0;
@@ -102,11 +104,13 @@ public class MigrateSDRLevyImportTable extends SvrProcess {
                 while (rs.next()) {
                     rowsInBatch++;
                     processed++;
+                    int sourceId = rs.getInt("id");
+                    lastId = sourceId;
                     try {
                         processOneRow(table, rs, levyAccountCrosswalk, organisationCrosswalk);
                         created++;
                     } catch (Exception e) {
-                        logError(rs.getInt("id"), e);
+                        logError(sourceId, e);
                     }
 
                     if (processed % 100000 == 0) {

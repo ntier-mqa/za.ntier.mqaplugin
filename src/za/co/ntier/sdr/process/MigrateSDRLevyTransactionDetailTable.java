@@ -31,6 +31,16 @@ import za.co.ntier.learner.process.AddColumnsSupport;
  * rows, see the mapping doc) and carried as plain text.
  *
  * <p>Processes in bounded batches (like the WSPATR Annual Training Report fix) given the row count.
+ *
+ * <p>CORRECTED 2026-09-14: the first batching attempt paged purely off "WHERE NOT EXISTS (...) ORDER
+ * BY id LIMIT n", relying on successfully-created rows shrinking the candidate set each pass. That
+ * breaks if any row's SDR_LevyTransaction_ID lookup never resolves (a permanent skip, never inserted,
+ * so NOT EXISTS never excludes it) - once the number of such permanently-unresolvable rows reaches the
+ * batch size, every batch re-selects the same window forever with zero forward progress (observed
+ * live: still running after over an hour on a table that should take ~15-20 minutes). Fixed by adding
+ * an explicit "id > lastSeenId" keyset cursor that always advances past every row actually read,
+ * whether it was created or skipped - NOT EXISTS is kept only to avoid recreating rows already
+ * migrated by a prior run of this same idempotent process.
  */
 @Process(name = "za.co.ntier.sdr.process.MigrateSDRLevyTransactionDetailTable")
 public class MigrateSDRLevyTransactionDetailTable extends SvrProcess {
@@ -70,6 +80,7 @@ public class MigrateSDRLevyTransactionDetailTable extends SvrProcess {
         int processed = 0;
         int created = 0;
         int skippedNoLevyTransaction = 0;
+        long lastId = 0;
         boolean more = true;
         while (more) {
             int batchLimit = BATCH_SIZE;
@@ -82,7 +93,8 @@ public class MigrateSDRLevyTransactionDetailTable extends SvrProcess {
             }
 
             String sql = "SELECT d.* FROM mssdr_levytransactiondetail d "
-                    + "WHERE NOT EXISTS (SELECT 1 FROM sdr_levytransactiondetail s WHERE s.id = d.id) "
+                    + "WHERE d.id > " + lastId + " "
+                    + "AND NOT EXISTS (SELECT 1 FROM sdr_levytransactiondetail s WHERE s.id = d.id) "
                     + "ORDER BY d.id LIMIT " + batchLimit;
 
             int rowsInBatch = 0;
@@ -98,6 +110,8 @@ public class MigrateSDRLevyTransactionDetailTable extends SvrProcess {
                 while (rs.next()) {
                     rowsInBatch++;
                     processed++;
+                    int sourceId = rs.getInt("id");
+                    lastId = sourceId;
                     Integer levyTransactionId = levyTransactionCrosswalk.get(rs.getInt("levytransactionid"));
                     if (levyTransactionId == null) {
                         skippedNoLevyTransaction++;
@@ -107,7 +121,7 @@ public class MigrateSDRLevyTransactionDetailTable extends SvrProcess {
                         processOneRow(table, rs, levyTransactionId);
                         created++;
                     } catch (Exception e) {
-                        logError(rs.getInt("id"), e);
+                        logError(sourceId, e);
                     }
 
                     if (processed % 100000 == 0) {

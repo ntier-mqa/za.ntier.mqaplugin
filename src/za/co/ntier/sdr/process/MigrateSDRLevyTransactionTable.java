@@ -77,6 +77,7 @@ public class MigrateSDRLevyTransactionTable extends SvrProcess {
 
         int processed = 0;
         int created = 0;
+        long lastId = 0;
         boolean more = true;
         while (more) {
             int batchLimit = BATCH_SIZE;
@@ -89,7 +90,8 @@ public class MigrateSDRLevyTransactionTable extends SvrProcess {
             }
 
             String sql = "SELECT t.* FROM mssdr_levytransaction t "
-                    + "WHERE NOT EXISTS (SELECT 1 FROM sdr_levytransaction s WHERE s.id = t.id) "
+                    + "WHERE t.id > " + lastId + " "
+                    + "AND NOT EXISTS (SELECT 1 FROM sdr_levytransaction s WHERE s.id = t.id) "
                     + "ORDER BY t.id LIMIT " + batchLimit;
 
             int rowsInBatch = 0;
@@ -105,11 +107,13 @@ public class MigrateSDRLevyTransactionTable extends SvrProcess {
                 while (rs.next()) {
                     rowsInBatch++;
                     processed++;
+                    int sourceId = rs.getInt("id");
+                    lastId = sourceId;
                     try {
                         processOneRow(table, rs, organisationCrosswalk);
                         created++;
                     } catch (Exception e) {
-                        logError(rs.getInt("id"), e);
+                        logError(sourceId, e);
                     }
 
                     if (processed % 100000 == 0) {

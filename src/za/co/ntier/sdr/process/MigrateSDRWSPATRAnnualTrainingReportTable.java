@@ -87,6 +87,7 @@ public class MigrateSDRWSPATRAnnualTrainingReportTable extends SvrProcess {
         int processed = 0;
         int created = 0;
         int skippedNoWspatr = 0;
+        long lastId = 0;
         boolean more = true;
         while (more) {
             int batchLimit = BATCH_SIZE;
@@ -99,7 +100,8 @@ public class MigrateSDRWSPATRAnnualTrainingReportTable extends SvrProcess {
             }
 
             String sql = "SELECT a.* FROM mssdr_wspatrannualtrainingreport a "
-                    + "WHERE NOT EXISTS (SELECT 1 FROM sdr_wspatrannualtrainingreport s WHERE s.id = a.id) "
+                    + "WHERE a.id > " + lastId + " "
+                    + "AND NOT EXISTS (SELECT 1 FROM sdr_wspatrannualtrainingreport s WHERE s.id = a.id) "
                     + "ORDER BY a.id LIMIT " + batchLimit;
 
             int rowsInBatch = 0;
@@ -115,6 +117,8 @@ public class MigrateSDRWSPATRAnnualTrainingReportTable extends SvrProcess {
                 while (rs.next()) {
                     rowsInBatch++;
                     processed++;
+                    int sourceId = rs.getInt("id");
+                    lastId = sourceId;
                     Integer wspatrId = wspatrCrosswalk.get(rs.getInt("wspatrid"));
                     if (wspatrId == null) {
                         skippedNoWspatr++;
@@ -126,7 +130,7 @@ public class MigrateSDRWSPATRAnnualTrainingReportTable extends SvrProcess {
                                 yearCrosswalk);
                         created++;
                     } catch (Exception e) {
-                        logError(rs.getInt("id"), e);
+                        logError(sourceId, e);
                     }
 
                     if (processed % 100000 == 0) {
