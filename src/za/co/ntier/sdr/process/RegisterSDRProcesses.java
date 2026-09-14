@@ -170,6 +170,12 @@ public class RegisterSDRProcesses extends SvrProcess {
             "MigrateSDRGrantTransactionPaymentExceptionsTable",
             "MigrateSDRGrantTransactionApprovalTable",
             "MigrateSDRGrantGPProcessDataTable",
+            "MigrateSDRUserTable",
+            "MigrateSDRUserLoginTable",
+            "MigrateSDRUserLoginAttemptTable",
+            "MigrateSDRUserPasswordHistoryTable",
+            "MigrateSDRUserRoleTable",
+            "MigrateSDRLoginViolationsTable",
     };
 
     @Override
