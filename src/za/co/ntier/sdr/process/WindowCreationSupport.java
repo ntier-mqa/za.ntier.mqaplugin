@@ -165,6 +165,15 @@ final class WindowCreationSupport {
      * between words. Non-SDR_-prefixed columns (the standard system fields - Client/Org/Created/
      * CreatedBy/etc.) are left untouched, since those already have proper multi-word names from their
      * own long-established Elements.
+     *
+     * <p>CORRECTED 2026-09-14: this system has more than one language active (each with its own
+     * AD_Field_Trl row per field), and the UI displays that per-language row instead of the base
+     * AD_Field.Name whenever one exists - updating the base name alone left the old, poorly-spaced
+     * name showing on screen. Every AD_Field_Trl row for the field is now synced to the same improved
+     * name too, but only where IsTranslated='N' (an untouched auto-copy of the base, not a genuine
+     * deliberate translation into another language) - a real translation is never overwritten. The
+     * sync runs independently of whether the base name itself needed changing this call, so a second
+     * run safely catches translation rows left behind by an earlier run of this same method.
      */
     static void renameSdrFields(MTab tab, String trxName) {
         for (MField field : tab.getFields(true, trxName)) {
@@ -174,11 +183,15 @@ final class WindowCreationSupport {
                 continue;
             }
             String improvedName = improveFieldName(columnName);
-            if (improvedName.isEmpty() || improvedName.equals(field.getName())) {
+            if (improvedName.isEmpty()) {
                 continue;
             }
-            field.setName(improvedName);
-            field.saveEx();
+            if (!improvedName.equals(field.getName())) {
+                field.setName(improvedName);
+                field.saveEx();
+            }
+            DB.executeUpdateEx("UPDATE AD_Field_Trl SET Name=? WHERE AD_Field_ID=? AND IsTranslated='N' "
+                    + "AND Name <> ?", new Object[] { improvedName, field.getAD_Field_ID(), improvedName }, trxName);
         }
     }
 
