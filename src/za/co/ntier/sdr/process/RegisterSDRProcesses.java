@@ -160,6 +160,16 @@ public class RegisterSDRProcesses extends SvrProcess {
             "MigrateSDRLevyProcessTable",
             "MigrateSDRLevyGPProcessDataTable",
             "MigrateSDRLevyFileTable",
+            "MigrateSDRGrantTypeTable",
+            "MigrateSDRGrantTypeAccountTable",
+            "MigrateSDRGrantAccountTable",
+            "MigrateSDRGrantProcessTable",
+            "MigrateSDRGrantTransactionTable",
+            "MigrateSDRGrantTransactionDetailTable",
+            "MigrateSDRGrantTransactionStatusTable",
+            "MigrateSDRGrantTransactionPaymentExceptionsTable",
+            "MigrateSDRGrantTransactionApprovalTable",
+            "MigrateSDRGrantGPProcessDataTable",
     };
 
     @Override

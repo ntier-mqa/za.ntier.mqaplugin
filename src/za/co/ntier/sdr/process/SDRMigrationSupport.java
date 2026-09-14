@@ -99,6 +99,81 @@ final class SDRMigrationSupport {
         return key == null ? null : crosswalk.get(key);
     }
 
+    /**
+     * Two-tier Organisation lookup used throughout the Grant family: several ReferenceNumber/Creditor
+     * -shaped columns embed an org number as "&lt;Letter&gt;&lt;9 digits&gt;" (e.g. "L020815744",
+     * "D590723237") where the leading letter is a registration-type code, NOT part of the
+     * organisation's identity - CONFIRMED during the Grant mapping pass: matching the numeric suffix
+     * alone against the same suffix of SDR_Organisation.SDR_SDLNumber resolves 99.4% of all rows,
+     * versus only 7.7% if the exact full string (including the letter) is required. Tries an exact
+     * full-string match against SDLNumber first (unambiguous, the original working "L" subset), then
+     * falls back to the numeric-suffix match. Suffixes shared by more than one Organisation row
+     * (mostly degenerate placeholder SDL numbers, e.g. "L000000001" duplicated across two unrelated
+     * real organisations) are deliberately left OUT of the suffix map entirely - flagged as
+     * unresolvable rather than guessed, per the mapping doc's documented tie-break recommendation.
+     */
+    static final class OrganisationCrosswalk {
+        private final Map<String, Integer> exactBySdlNumber;
+        private final Map<String, Integer> byNumericSuffix;
+
+        private OrganisationCrosswalk(Map<String, Integer> exactBySdlNumber, Map<String, Integer> byNumericSuffix) {
+            this.exactBySdlNumber = exactBySdlNumber;
+            this.byNumericSuffix = byNumericSuffix;
+        }
+
+        /** Resolves a raw org-number token (e.g. "L020815744"), or {@code null} if unresolved. */
+        Integer resolve(String orgNumber) {
+            if (orgNumber == null || orgNumber.trim().isEmpty()) {
+                return null;
+            }
+            Integer exact = exactBySdlNumber.get(orgNumber);
+            if (exact != null) {
+                return exact;
+            }
+            String digits = orgNumber.replaceAll("[^0-9]", "");
+            if (digits.isEmpty()) {
+                return null;
+            }
+            return byNumericSuffix.get(digits);
+        }
+    }
+
+    static OrganisationCrosswalk buildOrganisationCrosswalk(String trxName) {
+        Map<String, Integer> exact = buildStringCrosswalk("sdr_organisation", "sdr_sdlnumber",
+                "sdr_organisation_id", trxName);
+
+        Map<String, Integer> bySuffix = new HashMap<>();
+        java.util.Set<String> ambiguousSuffixes = new java.util.HashSet<>();
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+        try {
+            pst = DB.prepareStatement(
+                    "SELECT sdr_organisation_id, sdr_sdlnumber FROM sdr_organisation "
+                            + "WHERE sdr_sdlnumber IS NOT NULL",
+                    trxName);
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                String digits = rs.getString("sdr_sdlnumber").replaceAll("[^0-9]", "");
+                if (digits.isEmpty() || ambiguousSuffixes.contains(digits)) {
+                    continue;
+                }
+                int orgId = rs.getInt("sdr_organisation_id");
+                Integer existing = bySuffix.get(digits);
+                if (existing == null) {
+                    bySuffix.put(digits, orgId);
+                } else if (existing != orgId) {
+                    bySuffix.remove(digits);
+                    ambiguousSuffixes.add(digits);
+                }
+            }
+        } catch (Exception e) {
+            throw new AdempiereException("Failed building Organisation numeric-suffix crosswalk", e);
+        } finally {
+            DB.close(rs, pst);
+        }
+        return new OrganisationCrosswalk(exact, bySuffix);
+    }
+
     /** MS tinyint 0/1 (or null) flag -&gt; Y/N. 0 = No, non-zero = Yes. */
     static String flagToYN(Integer flag) {
         if (flag == null) {
