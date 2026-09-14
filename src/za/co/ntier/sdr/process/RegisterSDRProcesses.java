@@ -152,6 +152,14 @@ public class RegisterSDRProcesses extends SvrProcess {
             "MigrateSDRWSPATRNonEmployeesTable",
             "MigrateSDRWSPATRTopUpSkillsTable",
             "MigrateSDRWSPATRWorkplaceSkillsPlanTable",
+            "MigrateSDRLevyAccountTable",
+            "MigrateSDRLevyTransactionTable",
+            "MigrateSDRLevyTransactionDetailTable",
+            "MigrateSDRLevyTransactionStatusTable",
+            "MigrateSDRLevyImportTable",
+            "MigrateSDRLevyProcessTable",
+            "MigrateSDRLevyGPProcessDataTable",
+            "MigrateSDRLevyFileTable",
     };
 
     @Override

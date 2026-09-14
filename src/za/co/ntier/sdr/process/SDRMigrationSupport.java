@@ -68,6 +68,37 @@ final class SDRMigrationSupport {
         return crosswalk.get(sourceId);
     }
 
+    /**
+     * Business-key crosswalk variant of {@link #buildIdCrosswalk} - for the handful of Levy family
+     * lookups that resolve via a text business key (e.g. SDR_Organisation.SDR_SDLNumber) rather than
+     * the usual staged "id" recon column, since mssdr_levytransaction/mssdr_levyimport carry the
+     * L-number itself, not Organisation's staged id.
+     */
+    static Map<String, Integer> buildStringCrosswalk(String targetTable, String targetKeyCol, String targetIdCol,
+            String trxName) {
+        Map<String, Integer> result = new HashMap<>();
+        PreparedStatement pst = null;
+        ResultSet rs = null;
+        try {
+            pst = DB.prepareStatement("SELECT " + targetKeyCol + ", " + targetIdCol + " FROM " + targetTable
+                    + " WHERE " + targetKeyCol + " IS NOT NULL", trxName);
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                result.put(rs.getString(targetKeyCol), rs.getInt(targetIdCol));
+            }
+        } catch (Exception e) {
+            throw new AdempiereException("Failed building string crosswalk for " + targetTable, e);
+        } finally {
+            DB.close(rs, pst);
+        }
+        return result;
+    }
+
+    /** String-keyed counterpart of {@link #resolveLookup(Map, int)}. */
+    static Integer resolveLookup(Map<String, Integer> crosswalk, String key) {
+        return key == null ? null : crosswalk.get(key);
+    }
+
     /** MS tinyint 0/1 (or null) flag -&gt; Y/N. 0 = No, non-zero = Yes. */
     static String flagToYN(Integer flag) {
         if (flag == null) {
