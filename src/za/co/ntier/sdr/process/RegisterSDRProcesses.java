@@ -179,6 +179,7 @@ public class RegisterSDRProcesses extends SvrProcess {
             "MigrateSDRQueryReasonsTable",
             "MigrateSDRRejectionReasonsTable",
             "MigrateSDRTrancheTypeTable",
+            "CreateSDRReferenceWindows",
     };
 
     @Override
