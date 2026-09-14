@@ -181,6 +181,7 @@ public class RegisterSDRProcesses extends SvrProcess {
             "MigrateSDRTrancheTypeTable",
             "CreateSDRReferenceWindows",
             "HideSDRReferenceIdFields",
+            "CreateSDRPersonWindow",
     };
 
     @Override
