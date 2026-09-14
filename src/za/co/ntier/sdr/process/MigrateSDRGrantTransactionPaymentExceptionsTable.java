@@ -33,6 +33,13 @@ import za.co.ntier.learner.process.AddColumnsSupport;
  * only (NOT resolved to a SDR_Organisation FK - not independently re-tested for this table, per the
  * mapping doc). SDR_LastUser_ID follows the platform's audit-trail pattern (Search + AD_User) - the
  * raw value already correlates directly to AD_User_ID, so it's a plain passthrough, not a crosswalk.
+ *
+ * <p>CORRECTED 2026-09-14: unlike every other table in this migration, mssdr_granttransactionpaymentexceptions
+ * has NO generic created/updated/isdeleted staging columns at all - confirmed the hard way ("The
+ * column name created was not found in this ResultSet" on every single row). This table's mapping doc
+ * section only lists its own bespoke LastDateChanged/LastUser audit columns, no isactive-from-isdeleted
+ * derivation. Fixed by dropping the created/updated read-and-stamp and the isdeleted-driven
+ * setIsActive() call entirely - IsActive is left at its standard 'Y' default.
  */
 @Process(name = "za.co.ntier.sdr.process.MigrateSDRGrantTransactionPaymentExceptionsTable")
 public class MigrateSDRGrantTransactionPaymentExceptionsTable extends SvrProcess {
@@ -116,9 +123,6 @@ public class MigrateSDRGrantTransactionPaymentExceptionsTable extends SvrProcess
     private void processOneRow(MTable table, ResultSet rs, int grantTransactionStatusId, int grantTransactionId)
             throws Exception {
         int sourceId = rs.getInt("id");
-        Timestamp created = rs.getTimestamp("created");
-        Timestamp updated = rs.getTimestamp("updated");
-        int isDeleted = rs.getInt("isdeleted");
 
         String trxName = Trx.createTrxName("SDRGrantTransactionPaymentExceptionsMigrate");
         Trx trx = Trx.get(trxName, true);
@@ -126,7 +130,6 @@ public class MigrateSDRGrantTransactionPaymentExceptionsTable extends SvrProcess
             PO po = table.getPO(0, trxName);
             po.set_ValueOfColumn("AD_Client_ID", Env.getAD_Client_ID(getCtx()));
             po.set_ValueOfColumn("AD_Org_ID", 0);
-            po.setIsActive(isDeleted == 0);
             po.set_ValueOfColumn("id", sourceId);
             po.set_ValueOfColumn("SDR_GrantTransactionStatus_ID", grantTransactionStatusId);
             po.set_ValueOfColumn("SDR_GrantTransaction_ID", grantTransactionId);
@@ -142,12 +145,6 @@ public class MigrateSDRGrantTransactionPaymentExceptionsTable extends SvrProcess
             setIfPresent(po, "SDR_LastUser_ID", rs.getInt("lastuserid"));
 
             po.saveEx();
-            int newId = po.get_ID();
-
-            if (created != null || updated != null) {
-                SDRMigrationSupport.stampCreatedUpdated("sdr_granttransactionpaymentexceptions",
-                        "sdr_granttransactionpaymentexceptions_id", newId, created, updated, trxName);
-            }
 
             trx.commit(true);
         } catch (Exception e) {
