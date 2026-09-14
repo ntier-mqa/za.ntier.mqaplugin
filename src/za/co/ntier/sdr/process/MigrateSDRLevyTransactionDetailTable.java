@@ -41,6 +41,11 @@ import za.co.ntier.learner.process.AddColumnsSupport;
  * an explicit "id > lastSeenId" keyset cursor that always advances past every row actually read,
  * whether it was created or skipped - NOT EXISTS is kept only to avoid recreating rows already
  * migrated by a prior run of this same idempotent process.
+ *
+ * <p>ALSO CORRECTED 2026-09-14: mssdr_levytransactiondetail.iscontraentry is staged as a genuine
+ * Postgres boolean column (unlike every other 0/1 flag column elsewhere in this migration, which are
+ * all staged as smallint/int) - reading it with ResultSet.getInt() threw "Bad value for type int : f"
+ * on every single row. Fixed by reading it with getBoolean() instead.
  */
 @Process(name = "za.co.ntier.sdr.process.MigrateSDRLevyTransactionDetailTable")
 public class MigrateSDRLevyTransactionDetailTable extends SvrProcess {
@@ -164,9 +169,9 @@ public class MigrateSDRLevyTransactionDetailTable extends SvrProcess {
             po.set_ValueOfColumn("SDR_LevyTransaction_ID", levyTransactionId);
 
             setIfPresent(po, "SDR_TransactionType", rs.getString("transactiontype"));
-            int isContraEntry = rs.getInt("iscontraentry");
+            boolean isContraEntry = rs.getBoolean("iscontraentry");
             if (!rs.wasNull()) {
-                po.set_ValueOfColumn("SDR_IsContraEntry", SDRMigrationSupport.flagToYN(isContraEntry));
+                po.set_ValueOfColumn("SDR_IsContraEntry", isContraEntry ? "Y" : "N");
             }
             setIfPresent(po, "SDR_AccountNumber", rs.getString("accountnumber"));
             setIfPresent(po, "SDR_TransactionValue", rs.getBigDecimal("transactionvalue"));
