@@ -100,6 +100,7 @@ public class CreateSDRPersonWindow extends SvrProcess {
 
             WindowCreationSupport.createFields(getCtx(), tab, get_TrxName());
             WindowCreationSupport.hideIdField(tab, table, get_TrxName());
+            WindowCreationSupport.renameSdrFields(tab, get_TrxName());
 
             addLog(tableName + ": created AD_Tab_ID=" + tab.getAD_Tab_ID() + " (TabLevel=" + tabLevel + ")");
             seqNo += 10;

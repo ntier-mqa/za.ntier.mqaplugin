@@ -182,6 +182,7 @@ public class RegisterSDRProcesses extends SvrProcess {
             "CreateSDRReferenceWindows",
             "HideSDRReferenceIdFields",
             "CreateSDRPersonWindow",
+            "FixSDRPersonWindowFieldNames",
     };
 
     @Override

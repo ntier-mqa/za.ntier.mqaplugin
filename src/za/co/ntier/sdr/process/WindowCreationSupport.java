@@ -152,4 +152,53 @@ final class WindowCreationSupport {
         field.setIsDisplayedGrid(false);
         field.saveEx();
     }
+
+    /**
+     * Overrides every SDR_-prefixed column's field-level display name (AD_Field.Name, NOT the shared
+     * AD_Element - since {@code M_Element} rows are shared database-wide by column name, renaming the
+     * element itself would rename every OTHER table's field that happens to share the same column
+     * name too) with a word-separated label, stripping the "SDR"/"SDR_" prefix. Per user feedback
+     * 2026-09-14: {@code TabCreateFields} derives its default field names from a naive underscore-only
+     * replace of the raw column name (e.g. "SDR_CurrentOccupation" -&gt; "SDR CurrentOccupation" - no
+     * space between "Current" and "Occupation" since the column name itself has no underscore there),
+     * which reads poorly for the majority of SDR_ columns that use camelCase rather than underscores
+     * between words. Non-SDR_-prefixed columns (the standard system fields - Client/Org/Created/
+     * CreatedBy/etc.) are left untouched, since those already have proper multi-word names from their
+     * own long-established Elements.
+     */
+    static void renameSdrFields(MTab tab, String trxName) {
+        for (MField field : tab.getFields(true, trxName)) {
+            String columnName = DB.getSQLValueStringEx(trxName,
+                    "SELECT ColumnName FROM AD_Column WHERE AD_Column_ID=?", field.getAD_Column_ID());
+            if (columnName == null || !columnName.toUpperCase().startsWith("SDR")) {
+                continue;
+            }
+            String improvedName = improveFieldName(columnName);
+            if (improvedName.isEmpty() || improvedName.equals(field.getName())) {
+                continue;
+            }
+            field.setName(improvedName);
+            field.saveEx();
+        }
+    }
+
+    /**
+     * Strips a leading "SDR_" or "SDR" prefix, replaces underscores with spaces, then splits camelCase
+     * word boundaries (lower-to-upper, and an uppercase run followed by a capitalized word, so runs of
+     * acronym-shaped capitals like "SDL"/"WSPATR" stay together rather than being split letter-by-letter).
+     * E.g. "SDR_CurrentOccupation" -&gt; "Current Occupation", "SDR_ParentPerson_ID" -&gt; "Parent Person ID",
+     * "SDR_SDLNumber" -&gt; "SDL Number".
+     */
+    static String improveFieldName(String columnName) {
+        String name = columnName;
+        if (name.regionMatches(true, 0, "SDR_", 0, 4)) {
+            name = name.substring(4);
+        } else if (name.regionMatches(true, 0, "SDR", 0, 3)) {
+            name = name.substring(3);
+        }
+        name = name.replace('_', ' ');
+        name = name.replaceAll("(?<=[a-z0-9])(?=[A-Z])", " ");
+        name = name.replaceAll("(?<=[A-Z])(?=[A-Z][a-z])", " ");
+        return name.trim().replaceAll(" {2,}", " ");
+    }
 }
