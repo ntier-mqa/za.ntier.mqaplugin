@@ -189,6 +189,7 @@ public class RegisterSDRProcesses extends SvrProcess {
             "CreateSDRLevyWindow",
             "CreateSDRGrantWindow",
             "CreateSDRUserSecurityWindow",
+            "FixSDRWindowFieldNames",
     };
 
     @Override

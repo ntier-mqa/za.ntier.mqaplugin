@@ -198,9 +198,14 @@ final class WindowCreationSupport {
     /**
      * Strips a leading "SDR_" or "SDR" prefix, replaces underscores with spaces, then splits camelCase
      * word boundaries (lower-to-upper, and an uppercase run followed by a capitalized word, so runs of
-     * acronym-shaped capitals like "SDL"/"WSPATR" stay together rather than being split letter-by-letter).
-     * E.g. "SDR_CurrentOccupation" -&gt; "Current Occupation", "SDR_ParentPerson_ID" -&gt; "Parent Person ID",
-     * "SDR_SDLNumber" -&gt; "SDL Number".
+     * acronym-shaped capitals like "SDL"/"WSPATR" stay together rather than being split letter-by-letter),
+     * then ALSO strips a trailing " ID" - per user feedback 2026-09-14, a field's on-screen label should
+     * never end in "ID" (that's a column-naming convention, not something a business user needs to see),
+     * even though the underlying column itself keeps its real "_ID" suffix. Applies uniformly to every
+     * SDR_-prefixed field, whether it's a genuine resolved lookup or a plain opaque integer that happens
+     * to be named like one. E.g. "SDR_CurrentOccupation" -&gt; "Current Occupation",
+     * "SDR_ParentPerson_ID" -&gt; "Parent Person", "SDR_SDLNumber" -&gt; "SDL Number",
+     * "SDR_WSPATR_ID" (a tab's own PK) -&gt; "WSPATR".
      */
     static String improveFieldName(String columnName) {
         String name = columnName;
@@ -212,6 +217,10 @@ final class WindowCreationSupport {
         name = name.replace('_', ' ');
         name = name.replaceAll("(?<=[a-z0-9])(?=[A-Z])", " ");
         name = name.replaceAll("(?<=[A-Z])(?=[A-Z][a-z])", " ");
-        return name.trim().replaceAll(" {2,}", " ");
+        name = name.trim().replaceAll(" {2,}", " ");
+        if (name.endsWith(" ID")) {
+            name = name.substring(0, name.length() - 3).trim();
+        }
+        return name;
     }
 }
