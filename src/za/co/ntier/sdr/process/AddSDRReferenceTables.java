@@ -18,6 +18,12 @@ import za.co.ntier.learner.process.AddColumnsSupport.ReferenceColumnSpec;
  * straight copy from its staged mssdr_lkp* (or, for SDR_LearningProgramme,
  * mssdr_wsplearningprogramme) source table.
  *
+ * <p>Extended 2026-09-15 with 35 further mssdr_lkp* tables that {@code ExportSDRReconciliationReport}
+ * flagged as "NOT MIGRATED" - none of these are referenced by any FK on an already-migrated SDR_
+ * table (they were never needed by a mapping doc), but the user asked for every remaining source
+ * lookup table to be migrated regardless of whether anything currently points at it. See the block
+ * comment above that group below for the reasoning; they follow the identical id/description shape.
+ *
  * <p>The 72 target names below were derived by extracting every "LOOKUP -&gt; SDR_X" reference
  * across all 8 mapping docs (not just each doc's own "REFERENCE TABLES NEEDED" summary,
  * which turned out to have omitted 3 real ones - SDR_OFOSpecialization, SDR_Year,
@@ -150,6 +156,47 @@ public class AddSDRReferenceTables extends SvrProcess {
         {"SDR_OFOSpecialization", "mssdr_lkpofospecialization", "id", "description", "OFO specialisation reference - confirmed 100% match on WSPATRBioData/HTFV/TopUpSkills/WorkplaceSkillsPlan.OFOSpecialisationID despite the source table's US-spelling name"},
         {"SDR_Year", "mssdr_lkpyear", "id", "description", "Generic year reference - used by WSPATRAnnualTrainingReport's YearEnrolled/YearCompleted and WSPATRBioData's BirthYear/EmpStartYear"},
         {"SDR_FormType", "mssdr_lkpformtype", "id", "description", "Form type reference - used by WSPATR.formTypeID and WSPATRForms.FormTypeID"},
+
+        // --- Unreferenced mssdr_lkp* tables (added 2026-09-15 per user request: migrate every
+        //     remaining source lookup table for completeness, even though no migrated SDR_ column
+        //     currently points at any of these 35 - confirmed via ExportSDRReconciliationReport's
+        //     "NOT MIGRATED" rows. Every one of these follows the same id/description shape as
+        //     every other mssdr_lkp* table migrated above, so no bespoke handling is needed. ---
+        {"SDR_ActiveStatus", "mssdr_lkpactivestatus", "id", "description", "Active status reference (unreferenced source lookup)"},
+        {"SDR_AETLevel", "mssdr_lkpaetlevel", "id", "description", "AET level reference (unreferenced source lookup)"},
+        {"SDR_AnnualHouseholdIncome", "mssdr_lkpannualhouseholdincome", "id", "description", "Annual household income reference (unreferenced source lookup)"},
+        {"SDR_CommunicationType", "mssdr_lkpcommunicationtype", "id", "description", "Communication type reference (unreferenced source lookup)"},
+        {"SDR_ContactPersonStatus", "mssdr_lkpcontactpersonstatus", "id", "description", "Contact person status reference (unreferenced source lookup)"},
+        {"SDR_District", "mssdr_lkpdistrict", "id", "description", "District reference (unreferenced source lookup)"},
+        {"SDR_FinancialYearLinkEnd", "mssdr_lkpfinancialyearlinkend", "id", "description", "Financial year link end reference (unreferenced source lookup)"},
+        {"SDR_GCCType", "mssdr_lkpgcctype", "id", "description", "GCC type reference (unreferenced source lookup)"},
+        {"SDR_HasSouthAfricanID", "mssdr_lkphassouthafricanid", "id", "description", "Has South African ID reference - distinct from SDR_HasSouthAfrican (unreferenced source lookup, empty in source at time of writing)"},
+        {"SDR_HighestEducation", "mssdr_lkphighesteducation", "id", "description", "Highest education reference - distinct from SDR_SDFHighestEducation (unreferenced source lookup)"},
+        {"SDR_HighestEducationLevel", "mssdr_lkphighesteducationlevel", "id", "description", "Highest education level reference (unreferenced source lookup)"},
+        {"SDR_Month", "mssdr_lkpmonth", "id", "description", "Month reference (unreferenced source lookup)"},
+        {"SDR_NQFLevel", "mssdr_lkpnqflevel", "id", "description", "NQF level reference - distinct from SDR_WSPNQFLevel (unreferenced source lookup)"},
+        {"SDR_OFOMajorGroup", "mssdr_lkpofomajorgroup", "id", "description", "OFO major group reference (unreferenced source lookup)"},
+        {"SDR_OFOOccupation", "mssdr_lkpofooccupation", "id", "description", "OFO occupation reference (unreferenced source lookup)"},
+        {"SDR_OFOSubMajorGroup", "mssdr_lkpofosubmajorgroup", "id", "description", "OFO sub-major group reference (unreferenced source lookup)"},
+        {"SDR_OFOUnitGroup", "mssdr_lkpofounitgroup", "id", "description", "OFO unit group reference (unreferenced source lookup)"},
+        {"SDR_PlacementStatus", "mssdr_lkpplacementstatus", "id", "description", "Placement status reference (unreferenced source lookup)"},
+        {"SDR_PlacementType", "mssdr_lkpplacementtype", "id", "description", "Placement type reference (unreferenced source lookup)"},
+        {"SDR_QualityAssuranceBody", "mssdr_lkpqualityassurancebody", "id", "description", "Quality assurance body reference (unreferenced source lookup)"},
+        {"SDR_SAQADataSuppliers", "mssdr_lkpsaqadatasuppliers", "id", "description", "SAQA data suppliers reference (unreferenced source lookup)"},
+        {"SDR_SICCodeChamber", "mssdr_lkpsiccodechamber", "id", "description", "SIC code chamber reference - distinct from SDR_SICCode (unreferenced source lookup)"},
+        {"SDR_SocialStatus", "mssdr_lkpsocialstatus", "id", "description", "Social status reference (unreferenced source lookup)"},
+        {"SDR_Sponsorship", "mssdr_lkpsponsorship", "id", "description", "Sponsorship reference (unreferenced source lookup)"},
+        {"SDR_TrancheCode", "mssdr_lkptranchecode", "id", "description", "Tranche code reference - distinct from SDR_TrancheType (unreferenced source lookup)"},
+        {"SDR_WSPATRImportQueueStatus", "mssdr_lkpwspatrimportqueuestatus", "id", "description", "WSPATR import queue status reference (unreferenced source lookup)"},
+        {"SDR_WSPCertificate", "mssdr_lkpwspcertificate", "id", "description", "WSP certificate reference (unreferenced source lookup)"},
+        {"SDR_WSPEquity", "mssdr_lkpwspequity", "id", "description", "WSP equity reference - distinct from SDR_WSPManagementEquity (unreferenced source lookup)"},
+        {"SDR_WSPImpact", "mssdr_lkpwspimpact", "id", "description", "WSP impact reference (unreferenced source lookup)"},
+        {"SDR_WSPNotAchieved", "mssdr_lkpwspnotachieved", "id", "description", "WSP not-achieved reason reference (unreferenced source lookup)"},
+        {"SDR_WSPNQFLevel", "mssdr_lkpwspnqflevel", "id", "description", "WSP-specific NQF level reference - distinct from SDR_NQFLevel (unreferenced source lookup)"},
+        {"SDR_WSPUnknownQualifications", "mssdr_lkpwspunknownqualifications", "id", "description", "WSP unknown qualifications reference (unreferenced source lookup)"},
+        {"SDR_YearOfApplicationActivity", "mssdr_lkpyearofapplicationactivity", "id", "description", "Year of application activity reference (unreferenced source lookup)"},
+        {"SDR_YearOfStudy", "mssdr_lkpyearofstudy", "id", "description", "Year of study reference (unreferenced source lookup)"},
+        {"SDR_YesNoNotApplicable", "mssdr_lkpyesnonotapplicable", "id", "description", "Yes/No/Not Applicable reference - distinct from SDR_YesNo (unreferenced source lookup)"},
     };
 
     @Override
