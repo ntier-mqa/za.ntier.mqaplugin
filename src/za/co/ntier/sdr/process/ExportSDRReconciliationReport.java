@@ -153,6 +153,11 @@ public class ExportSDRReconciliationReport extends SvrProcess {
         for (String[] spec : AddSDRReferenceTables.SPECS) {
             mapping.put(spec[1].toLowerCase(), spec[0].toLowerCase());
         }
+        // mssdr_lkpsiccodechamber is deliberately NOT in AddSDRReferenceTables.SPECS (it's a
+        // SICCode<->ChamberCode junction table, not a Value/Name lookup - see
+        // AddSDRSICCodeChamberTable's Javadoc), so it needs its own explicit override here or it
+        // would wrongly show as "NOT MIGRATED" despite sdr_siccodechamber existing and matching.
+        mapping.put("mssdr_lkpsiccodechamber", "sdr_siccodechamber");
         return mapping;
     }
 
@@ -214,6 +219,14 @@ public class ExportSDRReconciliationReport extends SvrProcess {
                 sheet.autoSizeColumn(i);
             }
 
+            Set<String> usedSheetNames = new HashSet<>();
+            usedSheetNames.add(sheet.getSheetName());
+            for (ReconRow r : rows) {
+                if (r.targetTable != null && r.targetCount != null && r.targetCount.longValue() != r.sourceCount) {
+                    addMissingRowsSheet(workbook, headerStyle, r.sourceTable, r.targetTable, usedSheetNames);
+                }
+            }
+
             String ts = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
             String fileName = "sdr-reconciliation-" + ts + ".xlsx";
             ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -226,6 +239,58 @@ public class ExportSDRReconciliationReport extends SvrProcess {
 
             return fileName;
         }
+    }
+
+    /**
+     * For a MISMATCH table, dumps every source row whose id has no counterpart in the target table
+     * into its own sheet - full column-for-column via ResultSetMetaData (no per-table column
+     * knowledge needed here), so a human can eyeball what these leftover rows have in common
+     * (e.g. all pointing at the same missing parent) without needing server/DB access.
+     */
+    private void addMissingRowsSheet(XSSFWorkbook workbook, CellStyle headerStyle, String sourceTable,
+            String targetTable, Set<String> usedSheetNames) throws Exception {
+        String sql = "SELECT a.* FROM " + sourceTable + " a WHERE NOT EXISTS "
+                + "(SELECT 1 FROM " + targetTable + " t WHERE t.id = a.id) ORDER BY a.id LIMIT 2000";
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            pstmt = DB.prepareStatement(sql, get_TrxName());
+            rs = pstmt.executeQuery();
+            java.sql.ResultSetMetaData meta = rs.getMetaData();
+            int columnCount = meta.getColumnCount();
+
+            Sheet sheet = workbook.createSheet(uniqueSheetName(sourceTable, usedSheetNames));
+            Row header = sheet.createRow(0);
+            for (int i = 1; i <= columnCount; i++) {
+                Cell cell = header.createCell(i - 1);
+                cell.setCellValue(meta.getColumnName(i));
+                cell.setCellStyle(headerStyle);
+            }
+
+            int rowIdx = 1;
+            while (rs.next()) {
+                Row row = sheet.createRow(rowIdx++);
+                for (int i = 1; i <= columnCount; i++) {
+                    Object value = rs.getObject(i);
+                    row.createCell(i - 1).setCellValue(value == null ? "" : String.valueOf(value));
+                }
+            }
+        } finally {
+            DB.close(rs, pstmt);
+        }
+    }
+
+    /** Excel sheet names: max 31 chars, must be unique within the workbook. */
+    private String uniqueSheetName(String sourceTable, Set<String> usedSheetNames) {
+        String base = "Missing_" + sourceTable;
+        String candidate = base.length() > 31 ? base.substring(0, 31) : base;
+        int suffix = 1;
+        while (!usedSheetNames.add(candidate)) {
+            String suffixStr = "_" + (++suffix);
+            int cut = Math.min(base.length(), 31 - suffixStr.length());
+            candidate = base.substring(0, cut) + suffixStr;
+        }
+        return candidate;
     }
 
     private void writeSummaryLine(Sheet sheet, int rowIdx, String label, int value) {
