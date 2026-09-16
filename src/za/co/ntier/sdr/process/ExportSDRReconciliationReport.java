@@ -1,6 +1,6 @@
 package za.co.ntier.sdr.process;
 
-import java.io.FileOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
@@ -21,6 +21,8 @@ import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.compiere.model.I_AD_PInstance;
+import org.compiere.model.MAttachment;
 import org.compiere.model.MProcessPara;
 import org.compiere.process.ProcessInfoParameter;
 import org.compiere.process.SvrProcess;
@@ -45,9 +47,10 @@ import org.compiere.util.DB;
  * those, this class reuses {@link AddSDRReferenceTables#SPECS} (the same {target, source} pairs that
  * built them) rather than re-deriving or re-typing the mapping a second time.
  *
- * <p>OUTPUT: written to /tmp/sdr-reconciliation-&lt;timestamp&gt;.xlsx on the server filesystem (same
- * "write to /tmp, fetch via server access" pattern already used for this project's error logs) - this
- * process has no way to hand a file directly to the browser.
+ * <p>OUTPUT: attached to this process run's own AD_PInstance record (2026-09-16, mirrors
+ * BulkLoadSgDocuments' {@code new MAttachment(ctx, tableId, recordId, null, trxName)} pattern) - the
+ * user downloads it from the paperclip/Attachment icon on the Process Audit window for this run,
+ * rather than needing server filesystem access to fetch a /tmp path.
  */
 @Process(name = "za.co.ntier.sdr.process.ExportSDRReconciliationReport")
 public class ExportSDRReconciliationReport extends SvrProcess {
@@ -108,12 +111,13 @@ public class ExportSDRReconciliationReport extends SvrProcess {
             rows.add(row);
         }
 
-        String filePath = writeExcel(rows, sourceTables.size(), targetTables.size(), matched, mismatched,
+        String fileName = attachExcel(rows, sourceTables.size(), targetTables.size(), matched, mismatched,
                 notMigrated);
 
         return "SDR reconciliation: " + sourceTables.size() + " MS SQL (mssdr_) table(s), "
                 + targetTables.size() + " Postgres (sdr_) table(s). " + matched + " matched, " + mismatched
-                + " count mismatch, " + notMigrated + " not migrated. Report written to " + filePath;
+                + " count mismatch, " + notMigrated + " not migrated. Download " + fileName
+                + " from the Attachment icon on this Process Audit record.";
     }
 
     private Set<String> queryTableNames(String likePattern) {
@@ -152,7 +156,7 @@ public class ExportSDRReconciliationReport extends SvrProcess {
         return mapping;
     }
 
-    private String writeExcel(List<ReconRow> rows, int sourceTableCount, int targetTableCount, int matched,
+    private String attachExcel(List<ReconRow> rows, int sourceTableCount, int targetTableCount, int matched,
             int mismatched, int notMigrated) throws Exception {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Reconciliation");
@@ -211,11 +215,16 @@ public class ExportSDRReconciliationReport extends SvrProcess {
             }
 
             String ts = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-            String filePath = "/tmp/sdr-reconciliation-" + ts + ".xlsx";
-            try (FileOutputStream out = new FileOutputStream(filePath)) {
-                workbook.write(out);
-            }
-            return filePath;
+            String fileName = "sdr-reconciliation-" + ts + ".xlsx";
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            workbook.write(out);
+
+            MAttachment attachment = new MAttachment(getCtx(), I_AD_PInstance.Table_ID, getAD_PInstance_ID(), null,
+                    get_TrxName());
+            attachment.addEntry(fileName, out.toByteArray());
+            attachment.saveEx();
+
+            return fileName;
         }
     }
 
