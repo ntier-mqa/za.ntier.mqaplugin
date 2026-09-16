@@ -191,6 +191,8 @@ public class RegisterSDRProcesses extends SvrProcess {
             "CreateSDRUserSecurityWindow",
             "FixSDRWindowFieldNames",
             "ExportSDRReconciliationReport",
+            "AddSDRSICCodeChamberTable",
+            "MigrateSDRSICCodeChamberTable",
     };
 
     @Override
