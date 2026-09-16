@@ -1,12 +1,18 @@
 package za.co.ntier.sdr.process;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import org.adempiere.base.annotation.Process;
+import org.adempiere.exceptions.AdempiereException;
 import org.compiere.model.MProcessPara;
 import org.compiere.model.MTable;
 import org.compiere.process.ProcessInfoParameter;
 import org.compiere.process.SvrProcess;
+import org.compiere.util.DB;
 
 import za.co.ntier.learner.process.AddColumnsSupport;
 import za.co.ntier.learner.process.AddColumnsSupport.ReferenceColumnSpec;
@@ -182,8 +188,12 @@ public class AddSDRReferenceTables extends SvrProcess {
         {"SDR_PlacementStatus", "mssdr_lkpplacementstatus", "id", "description", "Placement status reference (unreferenced source lookup)"},
         {"SDR_PlacementType", "mssdr_lkpplacementtype", "id", "description", "Placement type reference (unreferenced source lookup)"},
         {"SDR_QualityAssuranceBody", "mssdr_lkpqualityassurancebody", "id", "description", "Quality assurance body reference (unreferenced source lookup)"},
-        {"SDR_SAQADataSuppliers", "mssdr_lkpsaqadatasuppliers", "id", "description", "SAQA data suppliers reference (unreferenced source lookup)"},
-        {"SDR_SICCodeChamber", "mssdr_lkpsiccodechamber", "id", "description", "SIC code chamber reference - distinct from SDR_SICCode (unreferenced source lookup)"},
+        {"SDR_SAQADataSuppliers", "mssdr_lkpsaqadatasuppliers", "mnemonic", "datasupplier", "SAQA data suppliers reference (unreferenced source lookup - CORRECTED 2026-09-16: mssdr_lkpsaqadatasuppliers has no 'description' column, uses mnemonic/datasupplier instead, confirmed via AddSDRReferenceTables' own shape-check log)"},
+        // SDR_SICCodeChamber deliberately NOT here: mssdr_lkpsiccodechamber (confirmed via the
+        // shape-check log 2026-09-16) is a genuine SICCode<->ChamberCode junction table
+        // (id, siccodeid, chambercodeid, audit columns) with no Value/Name text of its own - it
+        // does not fit this class's Value/Name lookup shape at all. Built instead as a proper
+        // two-FK table by AddSDRSICCodeChamberTable / MigrateSDRSICCodeChamberTable.
         {"SDR_SocialStatus", "mssdr_lkpsocialstatus", "id", "description", "Social status reference (unreferenced source lookup)"},
         {"SDR_Sponsorship", "mssdr_lkpsponsorship", "id", "description", "Sponsorship reference (unreferenced source lookup)"},
         {"SDR_TrancheCode", "mssdr_lkptranchecode", "id", "description", "Tranche code reference - distinct from SDR_TrancheType (unreferenced source lookup)"},
@@ -212,6 +222,7 @@ public class AddSDRReferenceTables extends SvrProcess {
         String trxName = get_TrxName();
         int created = 0;
         int skipped = 0;
+        int emptyShapeMismatch = 0;
 
         for (String[] spec : SPECS) {
             String targetTable = spec[0];
@@ -230,12 +241,54 @@ public class AddSDRReferenceTables extends SvrProcess {
             MTable table = AddColumnsSupport.createReferenceTableSchema(ctx, targetTable, description,
                     ENTITY_TYPE, ACCESS_LEVEL, trxName, this::addLog);
 
+            List<String> sourceColumns = getColumnNames(sourceTable, trxName);
+            boolean hasId = containsIgnoreCase(sourceColumns, "id");
+            boolean hasValueCol = containsIgnoreCase(sourceColumns, valueCol);
+            boolean hasNameCol = containsIgnoreCase(sourceColumns, nameCol);
+            if (!hasId || !hasValueCol || !hasNameCol) {
+                addLog(targetTable + " created EMPTY - " + sourceTable + " does not have the expected id/"
+                        + valueCol + "/" + nameCol + " shape. Actual columns: " + sourceColumns);
+                emptyShapeMismatch++;
+                continue;
+            }
+
             ReferenceColumnSpec refSpec = new ReferenceColumnSpec(targetTable + "_ID", sourceTable, valueCol,
                     nameCol, description);
             AddColumnsSupport.populateReferenceTable(ctx, table, refSpec, trxName, this::addLog);
             created++;
         }
 
-        return "SDR reference tables: created " + created + ", skipped " + skipped + " (already existed).";
+        return "SDR reference tables: created " + created + ", skipped " + skipped + " (already existed), "
+                + emptyShapeMismatch + " created empty (source shape mismatch - see log).";
+    }
+
+    private static boolean containsIgnoreCase(List<String> values, String target) {
+        for (String value : values) {
+            if (value.equalsIgnoreCase(target)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static List<String> getColumnNames(String tableName, String trxName) {
+        List<String> columns = new ArrayList<>();
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            pstmt = DB.prepareStatement(
+                    "SELECT column_name FROM information_schema.columns WHERE table_name = ? ORDER BY ordinal_position",
+                    trxName);
+            pstmt.setString(1, tableName);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                columns.add(rs.getString(1));
+            }
+        } catch (Exception e) {
+            throw new AdempiereException("Failed listing columns for " + tableName, e);
+        } finally {
+            DB.close(rs, pstmt);
+        }
+        return columns;
     }
 }
