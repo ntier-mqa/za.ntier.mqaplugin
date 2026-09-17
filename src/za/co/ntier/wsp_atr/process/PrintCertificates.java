@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
+import java.sql.Timestamp;
 
 import org.adempiere.base.annotation.Process;
 import org.compiere.model.MSysConfig;
@@ -23,6 +24,9 @@ import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import za.co.ntier.api.model.I_ZZCompletedAssessments_v;
+import za.co.ntier.api.model.X_ZZLearnerLearnership;
+import za.co.ntier.api.model.X_ZZLearnerSkillsProgramme;
+import za.co.ntier.api.model.I_ZZLearnerLearnership;
 
 @Process(name = "za.co.ntier.wsp_atr.process.PrintCertificates")
 public class PrintCertificates extends SvrProcess
@@ -77,8 +81,36 @@ public class PrintCertificates extends SvrProcess
 				int learnershipId = rs.getInt(I_ZZCompletedAssessments_v.COLUMNNAME_ZZLearnerLearnership_ID);
 				int skillsId = rs.getInt(I_ZZCompletedAssessments_v.COLUMNNAME_ZZLearnerSkillsProgramme_ID);
 
+				Timestamp dateOfIssue = null;
+				if (learnershipId > 0)
+				{
+					X_ZZLearnerLearnership learnership = new X_ZZLearnerLearnership(getCtx(), learnershipId, get_TrxName());
+					dateOfIssue = learnership.getZZDateOfIssue();
+					if (dateOfIssue == null)
+					{
+						dateOfIssue = new Timestamp(System.currentTimeMillis());
+						learnership.setZZDateOfIssue(dateOfIssue);
+						learnership.saveEx();
+					}
+				}
+				else if (skillsId > 0)
+				{
+					X_ZZLearnerSkillsProgramme skillsProg = new X_ZZLearnerSkillsProgramme(getCtx(), skillsId, get_TrxName());
+					dateOfIssue = skillsProg.getZZDateOfIssue();
+					if (dateOfIssue == null)
+					{
+						dateOfIssue = new Timestamp(System.currentTimeMillis());
+						skillsProg.setZZDateOfIssue(dateOfIssue);
+						skillsProg.saveEx();
+					}
+				}
+
 				HashMap<String, Object> params = new HashMap<>();
 				params.put("RECORD_ID", recordId);
+				if (dateOfIssue != null)
+				{
+					params.put(I_ZZLearnerLearnership.COLUMNNAME_ZZDateOfIssue, dateOfIssue);
+				}
 
 				JasperPrint print = null;
 
