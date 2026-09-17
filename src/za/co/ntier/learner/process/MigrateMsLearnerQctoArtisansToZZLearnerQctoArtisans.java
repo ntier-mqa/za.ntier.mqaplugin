@@ -322,9 +322,9 @@ public class MigrateMsLearnerQctoArtisansToZZLearnerQctoArtisans extends SvrProc
             artisan.setZZSponsorship(sponsorshipId == null ? null : sponsorshipMap.get(sponsorshipId));
             artisan.setZZProject(projectId == null ? null : projectMap.get(projectId));
             // ZZFinancialYear_ID (financialyearid): NOT SET - see class Javadoc.
-            setIfResolved(providerCrosswalk, leadSdProviderId, artisan::setZZLeadSDProvider_ID);
+            setIfResolved(providerCrosswalk, leadSdProviderId, artisan::setZZ_SDP_ID);
             setIfResolved(providerCrosswalk, secondarySdProviderId, artisan::setZZSecondarySDProvider_ID);
-            setIfResolved(waCrosswalk, waId, artisan::setZZWA_ID);
+            setIfResolved(waCrosswalk, waId, artisan::setZZ_Employer_ID);
             setIfResolved(waCrosswalk, secondaryWaId, artisan::setZZSecondaryWA_ID);
             setIfResolved(acCrosswalk, acId, artisan::setZZAC_ID);
             setIfResolved(msUserToAdUser, enrolledBy, artisan::setZZEnrolledBy);
