@@ -65,7 +65,6 @@ WHERE ca.ZZCompletedAssessments_v_ID = $P{RECORD_ID}]]>
 		<band height="822" splitType="Stretch">
 			<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.FreeLayout"/>
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
-
 			<staticText>
 				<reportElement x="152" y="148" width="280" height="26" uuid="dbf37fc5-2f39-4e8d-be01-38333b66d023">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
