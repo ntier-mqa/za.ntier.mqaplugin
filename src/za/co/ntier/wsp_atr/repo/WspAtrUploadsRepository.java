@@ -108,10 +108,33 @@ public class WspAtrUploadsRepository {
         return any > 0;
     }
 
+    /**
+     * Whether the consolidated print dialog should be offered for this submission.
+     *
+     * Being typed as a PARENT business partner is not enough on its own: the consolidated report
+     * is driven by ZZ_WSP_ATR_Sub_Levy_Orgs, which only contains children whose linkage is
+     * flagged ZZ_Parent_Uploads = 'Y'. A parent with no flagged children would be offered a
+     * consolidation that comes back empty, so we require at least one.
+     *
+     * Note this is an EXISTS test, not an "all children" test: a parent with a mix of flagged
+     * and unflagged children still gets the dialog, and the consolidation simply covers the
+     * flagged subset.
+     */
     public boolean isParentOrganisationTypeForSubmitted(int submittedId) {
         int isParent = DB.getSQLValueEx(null,
             "SELECT CASE "
-            + "WHEN UPPER(COALESCE(bp.zzorganisationtype, '')) = 'PARENT' THEN 1 "
+            + "WHEN UPPER(COALESCE(bp.zzorganisationtype, '')) = 'PARENT' "
+            + " AND EXISTS ( "
+            + "       SELECT 1 "
+            + "       FROM adempiere.zzorganisationlinkage l "
+            + "       JOIN adempiere.zzsdforganisation child_so "
+            + "         ON child_so.c_bpartner_id = l.c_bpartner_id "
+            + "       WHERE l.bpartner_parent_id = bp.c_bpartner_id "
+            + "         AND l.isactive = 'Y' "
+            + "         AND child_so.isactive = 'Y' "
+            + "         AND COALESCE(child_so.zz_docstatus, '') = 'AP' "
+            + "         AND COALESCE(l.zz_parent_uploads, 'N') = 'Y' "
+            + "     ) THEN 1 "
             + "ELSE 0 END "
             + "FROM adempiere.zz_wsp_atr_submitted s "
             + "JOIN adempiere.zzsdforganisation so "

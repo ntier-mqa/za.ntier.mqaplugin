@@ -320,6 +320,10 @@ public class ImportWspApprovalList extends SvrProcess {
         link.setBPartner_Parent_ID(parentBpId);
         link.setZZ_SDL_No(childSdl);
         link.setAD_Org_ID(0);
+        // ZZ_Parent_Uploads is mandatory with no default, so it must be set explicitly here.
+        // Links created from the approval list are parent-managed by definition, which also
+        // matches the 'Y' backfill applied to pre-existing linkages.
+        link.setZZ_Parent_Uploads(X_ZZOrganisationLinkage.ZZ_PARENT_UPLOADS_Yes);
         link.saveEx();
         detail.append("+link");
         addLog("INFO: SDL=" + childSdl + " linked to parent SDL=" + parentSdl

@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -57,6 +58,8 @@ public class ExportSDRReconciliationReport extends SvrProcess {
 
     private static final String SOURCE_PREFIX = "mssdr_";
     private static final String TARGET_PREFIX = "sdr_";
+    private static final Set<String> EXCLUDED_ID_COLUMNS = new HashSet<>(
+            Arrays.asList("id", "ad_client_id", "ad_org_id"));
 
     @Override
     protected void prepare() {
@@ -111,8 +114,9 @@ public class ExportSDRReconciliationReport extends SvrProcess {
             rows.add(row);
         }
 
+        Set<String> sourceTableSet = new HashSet<>(sourceTables);
         String fileName = attachExcel(rows, sourceTables.size(), targetTables.size(), matched, mismatched,
-                notMigrated);
+                notMigrated, sourceTableSet);
 
         return "SDR reconciliation: " + sourceTables.size() + " MS SQL (mssdr_) table(s), "
                 + targetTables.size() + " Postgres (sdr_) table(s). " + matched + " matched, " + mismatched
@@ -162,7 +166,7 @@ public class ExportSDRReconciliationReport extends SvrProcess {
     }
 
     private String attachExcel(List<ReconRow> rows, int sourceTableCount, int targetTableCount, int matched,
-            int mismatched, int notMigrated) throws Exception {
+            int mismatched, int notMigrated, Set<String> knownSourceTables) throws Exception {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Reconciliation");
 
@@ -223,7 +227,8 @@ public class ExportSDRReconciliationReport extends SvrProcess {
             usedSheetNames.add(sheet.getSheetName());
             for (ReconRow r : rows) {
                 if (r.targetTable != null && r.targetCount != null && r.targetCount.longValue() != r.sourceCount) {
-                    addMissingRowsSheet(workbook, headerStyle, r.sourceTable, r.targetTable, usedSheetNames);
+                    addMissingRowsSheet(workbook, headerStyle, r.sourceTable, r.targetTable, usedSheetNames,
+                            knownSourceTables);
                 }
             }
 
@@ -244,11 +249,12 @@ public class ExportSDRReconciliationReport extends SvrProcess {
     /**
      * For a MISMATCH table, dumps every source row whose id has no counterpart in the target table
      * into its own sheet - full column-for-column via ResultSetMetaData (no per-table column
-     * knowledge needed here), so a human can eyeball what these leftover rows have in common
-     * (e.g. all pointing at the same missing parent) without needing server/DB access.
+     * knowledge needed here) - plus a derived "Likely Reason" column (see
+     * {@link #computeLikelyReason}) explaining WHY each row didn't migrate, so a human doesn't have
+     * to eyeball raw FK values to spot the sentinel/orphan pattern themselves.
      */
     private void addMissingRowsSheet(XSSFWorkbook workbook, CellStyle headerStyle, String sourceTable,
-            String targetTable, Set<String> usedSheetNames) throws Exception {
+            String targetTable, Set<String> usedSheetNames, Set<String> knownSourceTables) throws Exception {
         String sql = "SELECT a.* FROM " + sourceTable + " a WHERE NOT EXISTS "
                 + "(SELECT 1 FROM " + targetTable + " t WHERE t.id = a.id) ORDER BY a.id LIMIT 2000";
         PreparedStatement pstmt = null;
@@ -258,26 +264,83 @@ public class ExportSDRReconciliationReport extends SvrProcess {
             rs = pstmt.executeQuery();
             java.sql.ResultSetMetaData meta = rs.getMetaData();
             int columnCount = meta.getColumnCount();
+            String[] columnNames = new String[columnCount];
+            for (int i = 1; i <= columnCount; i++) {
+                columnNames[i - 1] = meta.getColumnName(i);
+            }
 
             Sheet sheet = workbook.createSheet(uniqueSheetName(sourceTable, usedSheetNames));
             Row header = sheet.createRow(0);
-            for (int i = 1; i <= columnCount; i++) {
-                Cell cell = header.createCell(i - 1);
-                cell.setCellValue(meta.getColumnName(i));
+            for (int i = 0; i < columnCount; i++) {
+                Cell cell = header.createCell(i);
+                cell.setCellValue(columnNames[i]);
                 cell.setCellStyle(headerStyle);
             }
+            Cell reasonHeaderCell = header.createCell(columnCount);
+            reasonHeaderCell.setCellValue("Likely Reason");
+            reasonHeaderCell.setCellStyle(headerStyle);
 
             int rowIdx = 1;
             while (rs.next()) {
-                Row row = sheet.createRow(rowIdx++);
+                Object[] values = new Object[columnCount];
                 for (int i = 1; i <= columnCount; i++) {
-                    Object value = rs.getObject(i);
-                    row.createCell(i - 1).setCellValue(value == null ? "" : String.valueOf(value));
+                    values[i - 1] = rs.getObject(i);
                 }
+                Row row = sheet.createRow(rowIdx++);
+                for (int i = 0; i < columnCount; i++) {
+                    row.createCell(i).setCellValue(values[i] == null ? "" : String.valueOf(values[i]));
+                }
+                row.createCell(columnCount).setCellValue(computeLikelyReason(columnNames, values, knownSourceTables));
             }
         } finally {
             DB.close(rs, pstmt);
         }
+    }
+
+    /**
+     * Heuristic, dynamically-derived explanation for why a row has no migrated counterpart: scans
+     * every *id-suffixed column (skipping id/ad_client_id/ad_org_id) and flags it as a likely cause
+     * if its value is a non-positive "sentinel" (0/-1/null - this migration's convention for "no
+     * parent") or, for a positive value, if it doesn't actually exist as an "id" in the plausibly-
+     * named source table ("personid" -&gt; mssdr_person). The guessed source table name is checked
+     * against {@code knownSourceTables} first so an unmatched guess (e.g. "roleid" -&gt;
+     * mssdr_role, when the real table is mssdr_lkprole) is silently skipped rather than reported
+     * wrong.
+     */
+    private String computeLikelyReason(String[] columnNames, Object[] values, Set<String> knownSourceTables) {
+        List<String> reasons = new ArrayList<>();
+        for (int i = 0; i < columnNames.length; i++) {
+            String colName = columnNames[i].toLowerCase();
+            if (!colName.endsWith("id") || EXCLUDED_ID_COLUMNS.contains(colName)) {
+                continue;
+            }
+            Object value = values[i];
+            if (value == null) {
+                continue;
+            }
+            String valueStr = String.valueOf(value).trim();
+            long numericValue;
+            try {
+                numericValue = Long.parseLong(valueStr);
+            } catch (NumberFormatException e) {
+                continue;
+            }
+            if (numericValue <= 0) {
+                reasons.add(colName + "=" + numericValue + " (sentinel/no-parent value)");
+                continue;
+            }
+            String guessedTable = SOURCE_PREFIX + colName.substring(0, colName.length() - 2);
+            if (!knownSourceTables.contains(guessedTable)) {
+                continue;
+            }
+            long count = DB.getSQLValueEx(get_TrxName(),
+                    "SELECT COUNT(*) FROM " + guessedTable + " WHERE id = " + numericValue);
+            if (count == 0) {
+                reasons.add(colName + "=" + numericValue + " not found in " + guessedTable
+                        + " (orphaned source reference)");
+            }
+        }
+        return String.join("; ", reasons);
     }
 
     /** Excel sheet names: max 31 chars, must be unique within the workbook. */

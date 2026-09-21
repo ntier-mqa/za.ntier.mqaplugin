@@ -1239,6 +1239,12 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 		}
 	}
 
+	/**
+	 * Rebuilds the sub levy organisation links that drive the parent's consolidated submission
+	 * and consolidated report. Only children whose linkage is flagged ZZ_Parent_Uploads = 'Y'
+	 * are uploaded/submitted by the parent; unflagged children submit on their own and are
+	 * therefore excluded here.
+	 */
 	public static void rebuildSubLevyOrgLinks(int parentSubmittedId, String trxName) {
 		// delete existing rows for this parent submission
 		final String deleteSql =
@@ -1263,7 +1269,8 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 						+ "   JOIN parent p "
 						+ "     ON l.bpartner_parent_id = p.parent_bp "
 						+ "   WHERE l.isactive = 'Y' "
-					//	+ "     AND l.zz_parent_uploads = 'Y' "
+						// Nullable Yes/No list column - NULL is read as 'N'.
+						+ "     AND COALESCE(l.zz_parent_uploads, 'N') = 'Y' "
 						+ "), "
 						+ "children_orgs AS ( "
 						+ "   SELECT DISTINCT so.zzsdforganisation_id "

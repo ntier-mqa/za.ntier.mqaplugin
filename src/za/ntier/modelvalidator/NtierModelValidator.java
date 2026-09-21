@@ -60,6 +60,10 @@ import za.co.ntier.api.model.X_ZZAssessorPerson_v;
 import za.co.ntier.api.model.X_ZZLinkAssessorQualification;
 import za.co.ntier.api.model.X_ZZ_Allocations;
 import za.co.ntier.api.model.X_ZZ_QAAuditAllocations;
+import za.co.ntier.api.model.X_ZZOrganisationLinkage;
+import za.co.ntier.api.model.I_ZZOrganisationLinkage;
+import za.co.ntier.wsp_atr.form.WspAtrSubmittedADForm;
+import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
 import za.co.ntier.api.model.X_ZZ_WPA_Application;
 
 public class NtierModelValidator implements ModelValidator
@@ -97,6 +101,11 @@ public class NtierModelValidator implements ModelValidator
 		engine.addModelChange(X_ZZ_Allocations.Table_Name, this);
 		engine.addModelChange(X_ZZ_QAAuditAllocations.Table_Name, this);
 
+		// ZZ_Parent_Uploads decides which children a parent uploads/submits for. The resulting
+		// sub levy org links are only built when a Submitted record is created, so without this
+		// hook a later change to the flag (or to the linkage itself) would never reach
+		// ZZ_WSP_ATR_Sub_Levy_Orgs and the parent's consolidation would silently go stale.
+		engine.addModelChange(X_ZZOrganisationLinkage.Table_Name, this);
 	}
 
 	@Override
@@ -673,7 +682,86 @@ public class NtierModelValidator implements ModelValidator
 		{
 			updateRelatedAllocationStatus(po);
 		}
+
+		if (X_ZZOrganisationLinkage.Table_Name.equals(po.get_TableName())
+			&& (type == ModelValidator.TYPE_AFTER_NEW
+				|| type == ModelValidator.TYPE_AFTER_CHANGE
+				|| type == ModelValidator.TYPE_AFTER_DELETE))
+		{
+			rebuildSubLevyOrgsForLinkage(po, type);
+		}
 		return null;
+	}
+
+	/**
+	 * Keeps ZZ_WSP_ATR_Sub_Levy_Orgs in step with the ZZ_Parent_Uploads flag.
+	 *
+	 * Only submissions that have not yet been submitted are rebuilt - once a parent has gone
+	 * past Draft/Imported its consolidation is part of a lodged submission and must not be
+	 * silently re-scoped underneath it.
+	 *
+	 * On change we only act when something that actually affects membership moved
+	 * (ZZ_Parent_Uploads, the parent, the child, or IsActive); other edits to the linkage
+	 * would otherwise trigger a pointless delete/insert of the whole child set.
+	 */
+	private void rebuildSubLevyOrgsForLinkage(PO po, int type)
+	{
+		if (type == ModelValidator.TYPE_AFTER_CHANGE
+			&& !po.is_ValueChanged(I_ZZOrganisationLinkage.COLUMNNAME_ZZ_Parent_Uploads)
+			&& !po.is_ValueChanged(I_ZZOrganisationLinkage.COLUMNNAME_BPartner_Parent_ID)
+			&& !po.is_ValueChanged(I_ZZOrganisationLinkage.COLUMNNAME_C_BPartner_ID)
+			&& !po.is_ValueChanged(I_ZZOrganisationLinkage.COLUMNNAME_IsActive))
+		{
+			return;
+		}
+
+		// On a parent reassignment both the old and the new parent's consolidation change.
+		List<Integer> parentBpIds = new ArrayList<>();
+		int parentBpId = po.get_ValueAsInt(I_ZZOrganisationLinkage.COLUMNNAME_BPartner_Parent_ID);
+		if (parentBpId > 0)
+			parentBpIds.add(Integer.valueOf(parentBpId));
+
+		Object oldParent = po.get_ValueOld(I_ZZOrganisationLinkage.COLUMNNAME_BPartner_Parent_ID);
+		if (oldParent instanceof Number)
+		{
+			int oldParentBpId = ((Number)oldParent).intValue();
+			if (oldParentBpId > 0 && !parentBpIds.contains(Integer.valueOf(oldParentBpId)))
+				parentBpIds.add(Integer.valueOf(oldParentBpId));
+		}
+
+		for (Integer bpId : parentBpIds)
+		{
+			List<List<Object>> rows = DB.getSQLArrayObjectsEx(po.get_TrxName(),
+				"SELECT s.zz_wsp_atr_submitted_id "
+				+ "FROM adempiere.zz_wsp_atr_submitted s "
+				+ "JOIN adempiere.zzsdforganisation so "
+				+ "  ON so.zzsdforganisation_id = s.zzsdforganisation_id "
+				+ "WHERE so.c_bpartner_id = ? "
+				+ "  AND s.isactive = 'Y' "
+				+ "  AND s.zz_docstatus IN (?, ?)",
+				bpId,
+				X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Draft,
+				X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported);
+
+			if (rows == null)
+				continue;
+
+			for (List<Object> row : rows)
+			{
+				int submittedId = ((Number)row.get(0)).intValue();
+				try
+				{
+					WspAtrSubmittedADForm.rebuildSubLevyOrgLinks(submittedId, po.get_TrxName());
+				}
+				catch (Exception e)
+				{
+					// Never block the linkage save itself: a stale consolidation is recoverable
+					// (re-save the linkage, or run the rebuild script), a failed save is not.
+					log.severe("Failed to rebuild sub levy orgs for submitted " + submittedId
+						+ " after linkage change: " + e.getMessage());
+				}
+			}
+		}
 	}
 
 	private void updateRelatedAllocationStatus(PO po)

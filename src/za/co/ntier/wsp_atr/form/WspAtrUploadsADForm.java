@@ -291,6 +291,14 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
                 ||X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Query.equals(status);
     }
 
+    /**
+     * An organisation only counts as a parent for WSP/ATR upload purposes when it has at least one
+     * active, approved child linked to it AND that linkage is flagged ZZ_Parent_Uploads = 'Y'.
+     * Children that are not flagged upload and submit on their own, so they must not turn their
+     * parent into an uploading parent.
+     *
+     * ZZ_Parent_Uploads is a nullable Yes/No list column, so NULL is read as 'N'.
+     */
     public boolean isParentOrganisation(int zzSdfOrganisationId, String trxName) {
         final String sql =
                 "SELECT 1 "
@@ -305,6 +313,8 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
                 + "  AND l.isactive = 'Y' "
                 + "  AND COALESCE(parent_so.zz_docstatus, '') = 'AP' "
                 + "  AND COALESCE(child_so.zz_docstatus, '') = 'AP' "
+                // Only children the parent is responsible for uploading.
+                + "  AND COALESCE(l.zz_parent_uploads, 'N') = 'Y' "
                 + "LIMIT 1";
 
         return DB.getSQLValueEx(trxName, sql, zzSdfOrganisationId) > 0;
@@ -326,6 +336,11 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
         return X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported.equals(status);
     }
 
+    /**
+     * Only children flagged ZZ_Parent_Uploads = 'Y' may trigger the creation/display of the
+     * parent's upload row. An unflagged child that imports its own data submits in its own right
+     * and must not pull the parent onto this form.
+     */
     private boolean anyChildHasImportedStatus(int zzSdfOrganisationId, String trxName) {
         final String sql =
                 "SELECT child_so.zzsdforganisation_id "
@@ -339,7 +354,9 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
                 + "  AND child_so.isactive = 'Y' "
                 + "  AND l.isactive = 'Y' "
                 + "  AND COALESCE(parent_so.zz_docstatus, '') = 'AP' "
-                + "  AND COALESCE(child_so.zz_docstatus, '') = 'AP'";
+                + "  AND COALESCE(child_so.zz_docstatus, '') = 'AP' "
+                // Only children the parent is responsible for uploading.
+                + "  AND COALESCE(l.zz_parent_uploads, 'N') = 'Y'";
 
         List<List<Object>> rows = DB.getSQLArrayObjectsEx(trxName, sql, zzSdfOrganisationId);
         if (rows == null || rows.isEmpty()) {
