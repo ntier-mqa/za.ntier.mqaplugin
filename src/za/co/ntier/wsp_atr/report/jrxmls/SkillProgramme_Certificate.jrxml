@@ -66,7 +66,7 @@ WHERE ca.ZZCompletedAssessments_v_ID = $P{RECORD_ID}]]>
 			<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.FreeLayout"/>
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
 			<staticText>
-				<reportElement x="152" y="148" width="280" height="26" uuid="dbf37fc5-2f39-4e8d-be01-38333b66d023">
+				<reportElement x="77" y="148" width="400" height="26" uuid="dbf37fc5-2f39-4e8d-be01-38333b66d023">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
@@ -201,6 +201,13 @@ Mining Qualifications Authority]]></text>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{zzskillsprogrammecode}]]></textFieldExpression>
 			</textField>
+			<staticText>
+				<reportElement positionType="Float" x="127" y="770" width="300" height="20" uuid="9b3a934f-27fb-4ba0-8afa-114c7cddf730"/>
+				<textElement textAlignment="Center">
+					<font fontName="Serif" size="10" isBold="true" isItalic="true"/>
+				</textElement>
+				<text><![CDATA[Issued in terms of Section 26I as delegated by QCTO]]></text>
+			</staticText>
 		</band>
 	</background>
 </jasperReport>
