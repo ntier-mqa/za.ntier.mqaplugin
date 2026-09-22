@@ -202,12 +202,18 @@ Mining Qualifications Authority]]></text>
 				<textFieldExpression><![CDATA[$F{zzskillsprogrammecode}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement positionType="Float" x="127" y="770" width="300" height="20" uuid="9b3a934f-27fb-4ba0-8afa-114c7cddf730"/>
+				<reportElement positionType="Float" x="127" y="733" width="300" height="20" uuid="9b3a934f-27fb-4ba0-8afa-114c7cddf730">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
 				<textElement textAlignment="Center">
 					<font fontName="Serif" size="10" isBold="true" isItalic="true"/>
 				</textElement>
 				<text><![CDATA[Issued in terms of Section 26I as delegated by QCTO]]></text>
 			</staticText>
+			<image>
+				<reportElement x="0" y="0" width="50" height="50" uuid="5127716f-aa42-417f-a105-ff0c44cf5125"/>
+				<imageExpression><![CDATA["SkillProgramme_Certi_BG.png"]]></imageExpression>
+			</image>
 		</band>
 	</background>
 </jasperReport>
