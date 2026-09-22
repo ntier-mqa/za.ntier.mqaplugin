@@ -210,10 +210,6 @@ Mining Qualifications Authority]]></text>
 				</textElement>
 				<text><![CDATA[Issued in terms of Section 26I as delegated by QCTO]]></text>
 			</staticText>
-			<image>
-				<reportElement x="0" y="0" width="50" height="50" uuid="5127716f-aa42-417f-a105-ff0c44cf5125"/>
-				<imageExpression><![CDATA["SkillProgramme_Certi_BG.png"]]></imageExpression>
-			</image>
 		</band>
 	</background>
 </jasperReport>
