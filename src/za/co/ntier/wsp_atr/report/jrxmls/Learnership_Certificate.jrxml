@@ -86,11 +86,13 @@ WHERE ca.ZZCompletedAssessments_v_ID = $P{RECORD_ID}]]>
 				<text><![CDATA[This is to confirm that :]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="127" y="140" width="300" height="30" uuid="eb788922-9b3a-4b6e-8232-fc52f86c196c"/>
+				<reportElement x="127" y="146" width="300" height="30" uuid="eb788922-9b3a-4b6e-8232-fc52f86c196c">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
 				<textElement textAlignment="Center">
 					<font fontName="Serif" size="18"/>
 				</textElement>
-				<text><![CDATA[Learnership]]></text>
+				<text><![CDATA[CERTIFICATE]]></text>
 			</staticText>
 			<textField isBlankWhenNull="true">
 				<reportElement x="45" y="208" width="460" height="28" uuid="8ea06f42-f706-4507-a579-7acb288c64f4">
@@ -123,42 +125,42 @@ WHERE ca.ZZCompletedAssessments_v_ID = $P{RECORD_ID}]]>
 				<textFieldExpression><![CDATA[$F{zzlearnershiptitle}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement positionType="Float" x="152" y="346" width="100" height="22" uuid="43cd3019-eba5-4dea-941c-0f8ea80c79d6"/>
+				<reportElement positionType="Float" x="152" y="346" width="130" height="22" uuid="43cd3019-eba5-4dea-941c-0f8ea80c79d6"/>
 				<textElement>
 					<font fontName="Serif" size="12" isItalic="true"/>
 				</textElement>
 				<text><![CDATA[NLRD No:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement positionType="Float" x="152" y="373" width="100" height="22" uuid="bdb27710-9b30-4577-9ea5-1a70c66b661c"/>
+				<reportElement positionType="Float" x="152" y="373" width="130" height="22" uuid="bdb27710-9b30-4577-9ea5-1a70c66b661c"/>
 				<textElement>
 					<font fontName="Serif" size="12" isItalic="true"/>
 				</textElement>
 				<text><![CDATA[Level:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement positionType="Float" x="152" y="402" width="100" height="22" uuid="b72e944b-e03e-4f96-9cd0-05102ad1b962"/>
+				<reportElement positionType="Float" x="152" y="402" width="130" height="22" uuid="b72e944b-e03e-4f96-9cd0-05102ad1b962"/>
 				<textElement>
 					<font fontName="Serif" size="12" isItalic="true"/>
 				</textElement>
 				<text><![CDATA[Credit Achieved:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement positionType="Float" x="152" y="431" width="100" height="24" uuid="27718308-d036-42dc-8417-4cb74d613e8d"/>
+				<reportElement positionType="Float" x="152" y="431" width="130" height="24" uuid="27718308-d036-42dc-8417-4cb74d613e8d"/>
 				<textElement>
 					<font fontName="Serif" size="12" isItalic="true"/>
 				</textElement>
 				<text><![CDATA[Date of Issue:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement positionType="Float" x="152" y="460" width="100" height="26" uuid="ec1ac393-8a56-44a2-89f8-6b4b9df7ab47"/>
+				<reportElement positionType="Float" x="152" y="460" width="130" height="26" uuid="ec1ac393-8a56-44a2-89f8-6b4b9df7ab47"/>
 				<textElement>
 					<font fontName="Serif" size="12" isItalic="true"/>
 				</textElement>
 				<text><![CDATA[Certificate No:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="80" y="556" width="183" height="38" uuid="d8dbb67a-41d5-4115-8e82-a5b1878548af">
+				<reportElement x="80" y="556" width="210" height="38" uuid="d8dbb67a-41d5-4115-8e82-a5b1878548af">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textElement>
@@ -168,7 +170,7 @@ WHERE ca.ZZCompletedAssessments_v_ID = $P{RECORD_ID}]]>
 Mining Qualifications Authority]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="283" y="556" width="183" height="38" uuid="b9036f61-05e5-4817-aafe-757f065de6c2">
+				<reportElement x="283" y="556" width="210" height="38" uuid="b9036f61-05e5-4817-aafe-757f065de6c2">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textElement>

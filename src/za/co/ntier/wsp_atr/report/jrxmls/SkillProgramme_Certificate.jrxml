@@ -102,7 +102,7 @@ WHERE ca.ZZCompletedAssessments_v_ID = $P{RECORD_ID}]]>
 				<textFieldExpression><![CDATA[$F{passportno}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="120" y="269" width="300" height="19" uuid="e2a4216e-bb6a-4ea1-bbaa-afe3e77f41e0">
+				<reportElement x="90" y="269" width="360" height="19" uuid="e2a4216e-bb6a-4ea1-bbaa-afe3e77f41e0">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
@@ -119,7 +119,7 @@ WHERE ca.ZZCompletedAssessments_v_ID = $P{RECORD_ID}]]>
 				<textFieldExpression><![CDATA[$F{zzskillsprogrammetitle}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement positionType="Float" x="124" y="340" width="117" height="22" uuid="b938d56a-a324-477c-b509-5d6c673a8d7c">
+				<reportElement positionType="Float" x="124" y="340" width="150" height="22" uuid="b938d56a-a324-477c-b509-5d6c673a8d7c">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
 				<textElement textAlignment="Left">
@@ -128,7 +128,7 @@ WHERE ca.ZZCompletedAssessments_v_ID = $P{RECORD_ID}]]>
 				<text><![CDATA[Reference Number: ]]></text>
 			</staticText>
 			<staticText>
-				<reportElement positionType="Float" x="124" y="375" width="117" height="22" uuid="6cd60a1f-208a-412b-8df7-9688e57e69d9">
+				<reportElement positionType="Float" x="124" y="375" width="150" height="22" uuid="6cd60a1f-208a-412b-8df7-9688e57e69d9">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textElement textAlignment="Left">
@@ -137,7 +137,7 @@ WHERE ca.ZZCompletedAssessments_v_ID = $P{RECORD_ID}]]>
 				<text><![CDATA[Date of Issue]]></text>
 			</staticText>
 			<staticText>
-				<reportElement positionType="Float" x="124" y="412" width="117" height="22" uuid="7c789972-441d-43b8-a53d-7391c63eadb5">
+				<reportElement positionType="Float" x="124" y="412" width="150" height="22" uuid="7c789972-441d-43b8-a53d-7391c63eadb5">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textElement textAlignment="Left">
@@ -146,7 +146,7 @@ WHERE ca.ZZCompletedAssessments_v_ID = $P{RECORD_ID}]]>
 				<text><![CDATA[Certificate Number:]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="285" y="556" width="183" height="36" uuid="b2a4b039-ee1b-4e50-8ccb-6d50fda26dbc">
+				<reportElement x="285" y="556" width="210" height="36" uuid="b2a4b039-ee1b-4e50-8ccb-6d50fda26dbc">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textElement>
@@ -156,7 +156,7 @@ WHERE ca.ZZCompletedAssessments_v_ID = $P{RECORD_ID}]]>
 Mining Qualifications Authority]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="82" y="556" width="183" height="36" uuid="86f68c32-61a7-4d08-9d55-b79a00bfdbb5"/>
+				<reportElement x="82" y="556" width="210" height="36" uuid="86f68c32-61a7-4d08-9d55-b79a00bfdbb5"/>
 				<textElement>
 					<font fontName="Serif" size="12" isItalic="true"/>
 				</textElement>
