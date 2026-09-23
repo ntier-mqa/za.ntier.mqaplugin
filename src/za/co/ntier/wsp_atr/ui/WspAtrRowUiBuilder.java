@@ -2,7 +2,6 @@ package za.co.ntier.wsp_atr.ui;
 
 import org.adempiere.webui.AdempiereWebUI;
 import org.adempiere.webui.component.Button;
-import org.adempiere.webui.component.Checkbox;
 import org.adempiere.webui.component.Label;
 import org.compiere.util.Util;
 import org.zkoss.zk.ui.event.Event;
@@ -10,9 +9,6 @@ import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.event.Events;
 import org.zkoss.zk.ui.util.Clients;
 import org.zkoss.zul.Hbox;
-import org.zkoss.zul.Separator;
-import org.zkoss.zul.Vbox;
-import org.zkoss.zul.Window;
 
 import za.co.ntier.wsp_atr.domain.UploadTypeDef;
 import za.co.ntier.wsp_atr.form.WspAtrUploadsADForm;
@@ -50,10 +46,17 @@ public class WspAtrRowUiBuilder {
         lblMsg.setStyle("margin-left:6px; color:#555;");
 
         btnPrint.addEventListener(Events.ON_CLICK, (EventListener<Event>) e -> {
-            if (repo.isParentOrganisationTypeForSubmitted(submittedId)) {
-                openPrintPrompt(submittedId, btnPrint, lblMsg);
-                return;
-            }
+            // Consolidation is no longer something the user picks. A parent with at least one
+            // child flagged ZZ_Parent_Uploads = 'Y' must always report parent + children, so the
+            // answer is derived rather than prompted for. isParentOrganisationTypeForSubmitted()
+            // already means "PARENT business partner AND has at least one flagged child", so an
+            // ordinary org - or a parent whose children are all flagged 'N' - correctly falls
+            // through to its own figures only.
+            //
+            // The children-only variant (onlySubLevyOrgs) is deliberately fixed at false: it has
+            // no remaining UI, and parent + children is the required output. The process
+            // parameter and ZZ_WSP_ATR_Report column are left in place so it can be re-exposed.
+            boolean consolidated = repo.isParentOrganisationTypeForSubmitted(submittedId);
 
             btnPrint.setLabel("Re Print...");
             lblMsg.setValue("Your report will be emailed to you");
@@ -63,7 +66,7 @@ public class WspAtrRowUiBuilder {
                     "info", btnPrint, "top_center", 3500
             );
 
-            service.generateReport(submittedId, false, false);
+            service.generateReport(submittedId, consolidated, false);
         });
 
         hb.appendChild(btnPrint);
@@ -146,81 +149,5 @@ public class WspAtrRowUiBuilder {
         hb.appendChild(btn);
         hb.appendChild(lblMsg);
         return hb;
-    }
-  
-    
-    private void openPrintPrompt(int submittedId, Button btnPrint, Label lblMsg) {
-        Window win = new Window("Generate Report", "normal", true);
-        win.setClosable(true);
-        win.setWidth("420px");
-        win.setBorder("normal");
-        win.setSizable(false);
-        win.setPosition("center,center");
-        win.setParent(form);
-
-        Vbox root = new Vbox();
-        root.setSpacing("10px");
-        root.setStyle("padding:15px;");
-
-        Label lbl = new Label("Please select report options:");
-        root.appendChild(lbl);
-
-        Checkbox chkConsolidated = new Checkbox();
-        chkConsolidated.setLabel("Consolidated Submission?");
-        chkConsolidated.setChecked(false);
-        root.appendChild(chkConsolidated);
-
-        Checkbox chkOnlySubLevyOrgs = new Checkbox();
-        chkOnlySubLevyOrgs.setLabel("Only Sub Levy Orgs?");
-        chkOnlySubLevyOrgs.setChecked(false);
-        chkOnlySubLevyOrgs.setDisabled(true);
-        root.appendChild(chkOnlySubLevyOrgs);
-
-        chkConsolidated.addEventListener(Events.ON_CHECK, e -> {
-            boolean consolidated = chkConsolidated.isChecked();
-            chkOnlySubLevyOrgs.setDisabled(!consolidated);
-
-            if (!consolidated) {
-                chkOnlySubLevyOrgs.setChecked(false);
-            }
-        });
-
-        Separator sep = new Separator();
-        sep.setBar(true);
-        root.appendChild(sep);
-
-        Hbox buttons = new Hbox();
-        buttons.setSpacing("10px");
-
-        Button okBtn = new Button("OK");
-        okBtn.setSclass("btn btn-sm btn-primary wsp-edit-purple");
-
-        Button cancelBtn = new Button("Cancel");
-        cancelBtn.setSclass("btn btn-sm");
-
-        okBtn.addEventListener(Events.ON_CLICK, e -> {
-            boolean consolidatedSubmission = chkConsolidated.isChecked();
-            boolean onlySubLevyOrgs = chkOnlySubLevyOrgs.isChecked();
-
-            btnPrint.setLabel("Re Print...");
-            lblMsg.setValue("Your report will be emailed to you");
-
-            Clients.showNotification(
-                "Your Report is being prepared and will be emailed to you.",
-                "info", btnPrint, "top_center", 3500
-            );
-
-            service.generateReport(submittedId, consolidatedSubmission, onlySubLevyOrgs);
-            win.detach();
-        });
-
-        cancelBtn.addEventListener(Events.ON_CLICK, e -> win.detach());
-
-        buttons.appendChild(okBtn);
-        buttons.appendChild(cancelBtn);
-
-        root.appendChild(buttons);
-        win.appendChild(root);
-        win.doModal();
     }
 }
