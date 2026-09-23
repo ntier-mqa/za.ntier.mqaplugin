@@ -101,8 +101,13 @@ public class ApproveLearnerQualificationProcess extends SvrProcess
 											// The status of the qual will change to ‘Completed’
 											record.set_ValueOfColumn(	X_ZZLearnerLearnership.COLUMNNAME_ZZ_DocStatus,
 																		X_ZZLearnerLearnership.ZZ_DOCSTATUS_Completed);
-											record.set_ValueOfColumn(X_ZZLearnerLearnership.COLUMNNAME_ZZCompletionDate, new Timestamp(System
-																																				.currentTimeMillis()));
+											
+											if (record.get_Value(X_ZZLearnerLearnership.COLUMNNAME_ZZApprovalDate) == null)
+											{
+												record.set_ValueOfColumn(	X_ZZLearnerLearnership.COLUMNNAME_ZZApprovalDate, 
+																			new Timestamp(System.currentTimeMillis()));
+											}
+
 											record.saveEx();
 											completedCount++;
 										}
