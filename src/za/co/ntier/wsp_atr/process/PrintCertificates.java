@@ -90,6 +90,7 @@ public class PrintCertificates extends SvrProcess
 					{
 						dateOfIssue = new Timestamp(System.currentTimeMillis());
 						learnership.setZZDateOfIssue(dateOfIssue);
+						learnership.setZZIssueUser_ID(getAD_User_ID());
 						learnership.saveEx();
 					}
 				}
@@ -101,6 +102,7 @@ public class PrintCertificates extends SvrProcess
 					{
 						dateOfIssue = new Timestamp(System.currentTimeMillis());
 						skillsProg.setZZDateOfIssue(dateOfIssue);
+						skillsProg.setZZIssueUser_ID(getAD_User_ID());
 						skillsProg.saveEx();
 					}
 				}
