@@ -12,7 +12,7 @@
     COALESCE(ca.ZZ_ID_PASSPORT_NO, ca.ZZOTHERIDNO) AS ID_NO,
     emp.Name AS EMPLOYER,
     sdp.Name AS PROVIDER,
-    LSHIP.ZZAGREEMENTREFERENCENUMBER AS REFERENCE_NO,
+    SP.ZZSkillsProgrammeCode AS REFERENCE_NO,
     SP.ZZSKILLSPROGRAMMETITLE AS QUALIFICATION,
     SP.ZZSKILLSPROGRAMME_ID AS QUALIFICATION_ID,
     ca.ZZLearnerSkillsProgramme_ID AS ENROLLMENT_ID,
@@ -133,7 +133,7 @@ WHERE
 				<textFieldExpression><![CDATA[$F{qualification}]]></textFieldExpression>
 			</textField>
 			<subreport>
-				<reportElement x="0" y="43" width="555" height="30" uuid="d3e4f5a6-7890-abcd-ef12-34567890abcd"/>
+				<reportElement positionType="Float" x="0" y="43" width="555" height="30" uuid="d3e4f5a6-7890-abcd-ef12-34567890abcd"/>
 				<subreportParameter name="ENROLLMENT_ID">
 					<subreportParameterExpression><![CDATA[$F{enrollment_id}]]></subreportParameterExpression>
 				</subreportParameter>

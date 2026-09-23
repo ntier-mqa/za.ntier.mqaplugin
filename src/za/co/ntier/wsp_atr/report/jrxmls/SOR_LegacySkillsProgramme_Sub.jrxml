@@ -30,7 +30,7 @@ WHERE
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font isBold="true"/>
 				</textElement>
-				<text><![CDATA[Module Code]]></text>
+				<text><![CDATA[Unit Standard Code]]></text>
 			</staticText>
 			<staticText>
 				<reportElement x="150" y="0" width="300" height="30" uuid="c4d5e6f7-890a-bcde-f123-4567890abcde"/>
@@ -40,7 +40,7 @@ WHERE
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font isBold="true"/>
 				</textElement>
-				<text><![CDATA[Module Title]]></text>
+				<text><![CDATA[Unit Standard Title]]></text>
 			</staticText>
 			<staticText>
 				<reportElement x="450" y="0" width="105" height="30" uuid="d4e5f6a7-890a-bcde-f123-4567890abcde"/>
