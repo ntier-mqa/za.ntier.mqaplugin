@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.5.final using JasperReports Library version 6.20.5-3efcf2e67f959db3888d79f73dde2dbd7acb4f8e  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Certificate_Collection_Letter" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="8ccce5de-3545-4c96-ac02-4720475eeb67">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="PostgreSQL"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<parameter name="RESOURCE_DIR" class="java.lang.String">
+		<defaultValueExpression><![CDATA["./"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="AD_User_ID" class="java.lang.Integer"/>
+	<parameter name="p_SDP_ID" class="java.lang.Integer"/>
+	<parameter name="p_ProgrammeType" class="java.lang.String"/>
+	<parameter name="p_DatePrinted" class="java.util.Date"/>
+	<parameter name="p_ProgrammeCode" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT 
+    'Learnership' as ProgType,
+    ll.ZZLearnerLearnership_ID as Record_ID,
+    l.ZZFirstName as LearnerName,
+    l.Surname as LearnerSurname,
+    COALESCE(l.ZZ_ID_Passport_No, l.ZZOtherIDNo) as LearnerIDNo,
+    emp.Name as EmployerName,
+    lp.ZZLearnershipCode as ProgrammeCode,
+    sdp.Name as ProviderName,
+    usr.Name as PrintedByUserName,
+    usr.Title as PrintedByUserDesignation
+FROM ZZLearnerLearnership ll
+JOIN ZZLearner_v l ON ll.ZZLearner_ID = l.ZZLearner_ID
+LEFT JOIN C_BPartner emp ON ll.ZZ_Employer_ID = emp.C_BPartner_ID
+LEFT JOIN ZZLearnership lp ON ll.ZZLearnership_ID = lp.ZZLearnership_ID
+LEFT JOIN C_BPartner sdp ON ll.ZZ_SDP_ID = sdp.C_BPartner_ID
+LEFT JOIN AD_User usr ON usr.AD_User_ID = COALESCE(CAST($P{AD_User_ID} AS integer), 0)
+WHERE ll.ZZDateOfIssue IS NOT NULL
+  AND ll.ZZ_SDP_ID = CAST($P{p_SDP_ID} AS integer)
+  AND (CAST($P{p_DatePrinted} AS timestamp) IS NULL OR date_trunc('day', ll.ZZDateOfIssue) = date_trunc('day', CAST($P{p_DatePrinted} AS timestamp)))
+  AND (CAST($P{p_ProgrammeCode} AS varchar) IS NULL OR lp.ZZLearnershipCode = CAST($P{p_ProgrammeCode} AS varchar))
+  AND 'Learnership' = CAST($P{p_ProgrammeType} AS varchar)
+
+UNION ALL
+
+SELECT 
+    'Skills Programme' as ProgType,
+    sp.ZZLearnerSkillsProgramme_ID as Record_ID,
+    l.ZZFirstName as LearnerName,
+    l.Surname as LearnerSurname,
+    COALESCE(l.ZZ_ID_Passport_No, l.ZZOtherIDNo) as LearnerIDNo,
+    emp.Name as EmployerName,
+    p.ZZSkillsProgrammeCode as ProgrammeCode,
+    sdp.Name as ProviderName,
+    usr.Name as PrintedByUserName,
+    usr.Title as PrintedByUserDesignation
+FROM ZZLearnerSkillsProgramme sp
+JOIN ZZLearner_v l ON sp.ZZLearner_ID = l.ZZLearner_ID
+LEFT JOIN C_BPartner emp ON sp.ZZ_Employer_ID = emp.C_BPartner_ID
+LEFT JOIN ZZSkillsProgramme p ON sp.ZZSkillsProgramme_ID = p.ZZSkillsProgramme_ID
+LEFT JOIN C_BPartner sdp ON sp.ZZ_SDP_ID = sdp.C_BPartner_ID
+LEFT JOIN AD_User usr ON usr.AD_User_ID = COALESCE(CAST($P{AD_User_ID} AS integer), 0)
+WHERE sp.ZZDateOfIssue IS NOT NULL
+  AND sp.ZZ_SDP_ID = CAST($P{p_SDP_ID} AS integer)
+  AND (CAST($P{p_DatePrinted} AS timestamp) IS NULL OR date_trunc('day', sp.ZZDateOfIssue) = date_trunc('day', CAST($P{p_DatePrinted} AS timestamp)))
+  AND (CAST($P{p_ProgrammeCode} AS varchar) IS NULL OR p.ZZSkillsProgrammeCode = CAST($P{p_ProgrammeCode} AS varchar))
+  AND 'Skills Programme' = CAST($P{p_ProgrammeType} AS varchar)]]>
+	</queryString>
+	<field name="LearnerName" class="java.lang.String"/>
+	<field name="LearnerSurname" class="java.lang.String"/>
+	<field name="LearnerIDNo" class="java.lang.String"/>
+	<field name="EmployerName" class="java.lang.String"/>
+	<field name="ProgrammeCode" class="java.lang.String"/>
+	<field name="ProviderName" class="java.lang.String"/>
+	<field name="PrintedByUserName" class="java.lang.String"/>
+	<field name="PrintedByUserDesignation" class="java.lang.String"/>
+	<field name="ProgType" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="180" splitType="Stretch">
+			<image scaleImage="RetainShape" onErrorType="Blank">
+				<reportElement x="0" y="0" width="555" height="60" uuid="f8b3c124-7be4-419a-a8ee-d12afe052f34"/>
+				<imageExpression><![CDATA[$P{RESOURCE_DIR} + "MQA_Address_Logo_Header.png"]]></imageExpression>
+			</image>
+			<textField isBlankWhenNull="true">
+				<reportElement x="0" y="70" width="250" height="20" uuid="5de6fbf8-6c03-4d9e-9a3b-deea2f3a874e"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ProviderName}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd MMMM yyyy">
+				<reportElement x="0" y="90" width="200" height="20" uuid="50471916-bf94-48fd-8f77-84a7f53b3e9a"/>
+				<textElement>
+					<font fontName="SansSerif" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="120" width="200" height="20" uuid="f236dfc2-7fc5-4b85-b3a7-e245401cbe90"/>
+				<textElement>
+					<font fontName="SansSerif" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[DEAR SIR/ MADAM]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="145" width="555" height="15" uuid="684a0c7a-d918-4385-83f0-fd3911f57354"/>
+				<textElement>
+					<font fontName="SansSerif" size="11" isBold="true" isUnderline="true"/>
+				</textElement>
+				<text><![CDATA[STATEMENT OF ATTAINMENTS]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="0" y="160" width="555" height="15" uuid="112ee12f-2880-4768-8bc1-1702025cc9e9"/>
+				<textElement>
+					<font fontName="SansSerif" size="11" isBold="true" isUnderline="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($P{p_ProgrammeType} != null ? $P{p_ProgrammeType}.toUpperCase() : "") + " CERTIFICATE COLLECTION LETTER"]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="30" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="5" width="555" height="20" uuid="cb527385-7aa4-4caa-9585-293c08662747"/>
+				<textElement>
+					<font fontName="SansSerif" size="10" isBold="false"/>
+				</textElement>
+				<text><![CDATA[ENCLOSED ARE THE STATEMENT OF ATTAINMENTS IN RESPECT OF THE FOLLOWING LEARNER(S).]]></text>
+			</staticText>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band height="30" splitType="Stretch">
+			<staticText>
+				<reportElement mode="Opaque" x="0" y="0" width="30" height="30" backcolor="#E0E0E0" uuid="27dc48bc-faea-40b5-a625-6eeb2ee35862"/>
+				<box padding="2">
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[NO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="30" y="0" width="120" height="30" backcolor="#E0E0E0" uuid="b2846be3-d283-4fd2-ac66-b4f84fd7e6cb"/>
+				<box padding="2">
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[LEARNER NAME]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="150" y="0" width="100" height="30" backcolor="#E0E0E0" uuid="b272cf4a-2425-4245-8f8e-6134217baff2"/>
+				<box padding="2">
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[LEARNER SURNAME]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="250" y="0" width="90" height="30" backcolor="#E0E0E0" uuid="4da434b0-3e99-4240-9a5a-2e695d37a5a3"/>
+				<box padding="2">
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[LEARNER ID NO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="340" y="0" width="115" height="30" backcolor="#E0E0E0" uuid="41a60ef2-c412-43a4-8a78-24cf171d1122"/>
+				<box padding="2">
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[EMPLOYER NAME]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="455" y="0" width="100" height="30" backcolor="#E0E0E0" uuid="dbaf86d4-006b-4c12-a329-887aac7853a6"/>
+				<box padding="2">
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[PROGRAMME CODE]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="20" splitType="Stretch">
+			<textField isBlankWhenNull="true">
+				<reportElement x="0" y="0" width="30" height="20" uuid="b5e75e4f-e3e0-4842-99fd-7a0bdba25977"/>
+				<box padding="2">
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{REPORT_COUNT} + "."]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="30" y="0" width="120" height="20" uuid="912849a4-25df-4af9-9c14-6432a222beed"/>
+				<box padding="2">
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{LearnerName}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="150" y="0" width="100" height="20" uuid="5a271ef5-6a99-4cbc-9104-d0d68a8d3f43"/>
+				<box padding="2">
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{LearnerSurname}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="250" y="0" width="90" height="20" uuid="b3d5177d-55e6-4712-b4a1-296fc6d83617"/>
+				<box padding="2">
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{LearnerIDNo}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement x="340" y="0" width="115" height="20" uuid="f17bffbb-790e-497d-b368-bf2d90994ea1"/>
+				<box padding="2">
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{EmployerName}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="455" y="0" width="100" height="20" uuid="32cf050f-3fc0-4c4d-9aca-1d8903b90d98"/>
+				<box padding="2">
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ProgrammeCode}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<summary>
+		<band height="180" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="10" width="100" height="20" uuid="a8ea1e42-3cea-4f4a-99a2-c06650542e2b"/>
+				<textElement>
+					<font fontName="SansSerif" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[PRINTED BY:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="35" width="230" height="15" uuid="95845915-51da-4b19-bdb7-bf9c7c642b6e"/>
+				<textElement verticalAlignment="Bottom"/>
+				<text><![CDATA[___________________________________]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement x="0" y="50" width="230" height="15" uuid="94845915-51da-4b19-bdb7-bf9c7c642b6e"/>
+				<textElement>
+					<font fontName="SansSerif" size="10" isBold="false" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{PrintedByUserName} != null ? $F{PrintedByUserName} : ""]]></textFieldExpression>
+			</textField>
+
+			<staticText>
+				<reportElement x="0" y="80" width="100" height="20" uuid="25c48bb5-b635-4cb1-9bcb-fd6498ec7578"/>
+				<textElement>
+					<font fontName="SansSerif" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[RECEIVED BY:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="100" width="70" height="15" uuid="6e244ca3-b383-485f-9862-f5f1ffc81ae0"/>
+				<textElement>
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<text><![CDATA[NAME:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="70" y="100" width="230" height="15" uuid="2d72afd1-aa5f-41e7-99e6-0447da7bb55a"/>
+				<textElement verticalAlignment="Bottom"/>
+				<text><![CDATA[___________________________________]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="115" width="70" height="15" uuid="086eaff3-759e-472e-90c7-0f752ffcf77f"/>
+				<textElement>
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<text><![CDATA[CONTACT NO:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="70" y="115" width="230" height="15" uuid="b52c60f3-7a3f-4df7-b6e2-fa9d84078771"/>
+				<textElement verticalAlignment="Bottom"/>
+				<text><![CDATA[___________________________________]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="130" width="70" height="15" uuid="5e3eec57-b8b8-4a60-847d-09bae672a478"/>
+				<textElement>
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<text><![CDATA[DESIGNATION:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="70" y="130" width="230" height="15" uuid="1dd35126-2b8b-4020-a5e7-9d23c9c1f002"/>
+				<textElement verticalAlignment="Bottom"/>
+				<text><![CDATA[___________________________________]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="145" width="70" height="15" uuid="ae189977-ddb4-470d-803c-1c5fb0c103ef"/>
+				<textElement>
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<text><![CDATA[SIGNATURE:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="70" y="145" width="230" height="15" uuid="fccfa883-b5b9-4853-b81d-00c9b7cd3ac8"/>
+				<textElement verticalAlignment="Bottom"/>
+				<text><![CDATA[___________________________________]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="160" width="70" height="15" uuid="c352b846-7ee4-4944-bbf6-d84429845893"/>
+				<textElement>
+					<font fontName="SansSerif" size="10"/>
+				</textElement>
+				<text><![CDATA[DATE:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="70" y="160" width="230" height="15" uuid="1c34eb11-2fb8-4e36-ad3c-496bc7f5aa11"/>
+				<textElement verticalAlignment="Bottom"/>
+				<text><![CDATA[___________________________________]]></text>
+			</staticText>
+		</band>
+	</summary>
+</jasperReport>
