@@ -26,6 +26,7 @@ import net.sf.jasperreports.engine.JasperPrint;
 import za.co.ntier.api.model.I_ZZCompletedAssessments_v;
 import za.co.ntier.api.model.X_ZZLearnerLearnership;
 import za.co.ntier.api.model.X_ZZLearnerSkillsProgramme;
+import za.co.ntier.api.model.X_ZZ_CertificateReprints;
 import za.co.ntier.api.model.I_ZZLearnerLearnership;
 
 @Process(name = "za.co.ntier.wsp_atr.process.PrintCertificates")
@@ -155,6 +156,19 @@ public class PrintCertificates extends SvrProcess
 					File tempPdf = File.createTempFile("Certificate_" + recordId + "_", ".pdf");
 					JasperExportManager.exportReportToPdfFile(print, tempPdf.getAbsolutePath());
 					generatedPdfs.add(tempPdf);
+
+					X_ZZ_CertificateReprints reprint = new X_ZZ_CertificateReprints(getCtx(), 0, get_TrxName());
+					if (learnershipId > 0)
+					{
+						reprint.setZZLearnerLearnership_ID(learnershipId);
+					}
+					else if (skillsId > 0)
+					{
+						reprint.setZZLearnerSkillsProgramme_ID(skillsId);
+					}
+					reprint.setZZReprintDate(new Timestamp(System.currentTimeMillis()));
+					reprint.setZZReprintedBy(getAD_User_ID());
+					reprint.saveEx();
 				}
 			}
 		}
