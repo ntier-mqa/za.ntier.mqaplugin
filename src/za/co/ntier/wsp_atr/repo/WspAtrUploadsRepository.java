@@ -1,6 +1,7 @@
 package za.co.ntier.wsp_atr.repo;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -264,6 +265,58 @@ public class WspAtrUploadsRepository {
 
         // TODO: change to your real value for “Uploaded”
         return X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Uploaded.equalsIgnoreCase(status);
+    }
+
+    /**
+     * SDL numbers of this parent's flagged children that have not yet contributed a submission.
+     *
+     * The children come from ZZ_WSP_ATR_Sub_Levy_Orgs, which holds exactly the children whose
+     * linkage is flagged ZZ_Parent_Uploads = 'Y' and which the model validator keeps in step
+     * with that flag. A non-parent submission has no rows there, so this harmlessly returns
+     * empty rather than needing a separate "is this a parent" test.
+     *
+     * "Contributed" uses the same status set as the consolidated report
+     * (AbstractReportSectionBuilder.getParentAndChildSubmittedIdsInClause). Keeping the two
+     * identical is the point: a child outside that set is silently left out of the report, so
+     * the parent must not be able to submit a consolidation that is missing it.
+     *
+     * The SDL number is C_BPartner.Value - the same lookup ImportWspApprovalList uses.
+     */
+    public List<String> findChildOrgsNotSubmitted(int parentSubmittedId) {
+        String sql =
+            "SELECT bp.value "
+            + "FROM adempiere.zz_wsp_atr_sub_levy_orgs slo "
+            + "JOIN adempiere.zzsdforganisation so "
+            + "  ON so.zzsdforganisation_id = slo.zzsdforganisation_id "
+            + "JOIN adempiere.c_bpartner bp "
+            + "  ON bp.c_bpartner_id = so.c_bpartner_id "
+            + "WHERE slo.zz_wsp_atr_submitted_id = ? "
+            + "  AND NOT EXISTS ( "
+            + "        SELECT 1 "
+            + "        FROM adempiere.zz_wsp_atr_submitted s "
+            + "        WHERE s.zzsdforganisation_id = slo.zzsdforganisation_id "
+            + "          AND s.isactive = 'Y' "
+            + "          AND s.zz_docstatus IN ('"
+            + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Submitted + "','"
+            + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported + "','"
+            + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Uploaded + "','"
+            + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Query + "') "
+            + "      ) "
+            + "ORDER BY bp.value";
+
+        List<String> pending = new ArrayList<>();
+        List<List<Object>> rows = DB.getSQLArrayObjectsEx(null, sql, parentSubmittedId);
+        if (rows == null) {
+            return pending;
+        }
+
+        for (List<Object> row : rows) {
+            Object v = row.get(0);
+            if (v != null && !Util.isEmpty(v.toString(), true)) {
+                pending.add(v.toString().trim());
+            }
+        }
+        return pending;
     }
 
     // small DTO inside repo package

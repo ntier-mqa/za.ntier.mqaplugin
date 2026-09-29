@@ -2,6 +2,7 @@ package za.co.ntier.wsp_atr.ui;
 
 import org.adempiere.webui.AdempiereWebUI;
 import org.adempiere.webui.component.Button;
+import org.adempiere.webui.component.Checkbox;
 import org.adempiere.webui.component.Label;
 import org.compiere.util.Util;
 import org.zkoss.zk.ui.event.Event;
@@ -9,6 +10,9 @@ import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.event.Events;
 import org.zkoss.zk.ui.util.Clients;
 import org.zkoss.zul.Hbox;
+import org.zkoss.zul.Separator;
+import org.zkoss.zul.Vbox;
+import org.zkoss.zul.Window;
 
 import za.co.ntier.wsp_atr.domain.UploadTypeDef;
 import za.co.ntier.wsp_atr.form.WspAtrUploadsADForm;
@@ -46,32 +50,102 @@ public class WspAtrRowUiBuilder {
         lblMsg.setStyle("margin-left:6px; color:#555;");
 
         btnPrint.addEventListener(Events.ON_CLICK, (EventListener<Event>) e -> {
-            // Consolidation is no longer something the user picks. A parent with at least one
-            // child flagged ZZ_Parent_Uploads = 'Y' must always report parent + children, so the
-            // answer is derived rather than prompted for. isParentOrganisationTypeForSubmitted()
-            // already means "PARENT business partner AND has at least one flagged child", so an
-            // ordinary org - or a parent whose children are all flagged 'N' - correctly falls
-            // through to its own figures only.
-            //
-            // The children-only variant (onlySubLevyOrgs) is deliberately fixed at false: it has
-            // no remaining UI, and parent + children is the required output. The process
-            // parameter and ZZ_WSP_ATR_Report column are left in place so it can be re-exposed.
-            boolean consolidated = repo.isParentOrganisationTypeForSubmitted(submittedId);
+            // isParentOrganisationTypeForSubmitted() means "PARENT business partner AND has at
+            // least one flagged child", i.e. there is actually something to consolidate.
+            boolean canConsolidate = repo.isParentOrganisationTypeForSubmitted(submittedId);
+            boolean parentUploaded = repo.hasUploadTypeAttachment(submittedId,
+                    X_ZZ_WSP_ATR_Uploads.ZZ_WSP_ATR_UPLOAD_TYPE_UploadWSP_ATRReport);
 
-            btnPrint.setLabel("Re Print...");
-            lblMsg.setValue("Your report will be emailed to you");
+            // There is only a choice worth offering when a parent has BOTH children to
+            // consolidate and a WSP-ATR of its own. Without its own upload there is nothing to
+            // report independently, so consolidation is the only meaningful outcome and asking
+            // would be a prompt with one real answer.
+            if (canConsolidate && parentUploaded) {
+                openPrintPrompt(submittedId, btnPrint, lblMsg);
+                return;
+            }
 
-            Clients.showNotification(
-                    "Your Report is being prepared and will be emailed to you.",
-                    "info", btnPrint, "top_center", 3500
-            );
-
-            service.generateReport(submittedId, consolidated, false);
+            startReport(submittedId, canConsolidate, btnPrint, lblMsg);
         });
 
         hb.appendChild(btnPrint);
         hb.appendChild(lblMsg);
         return hb;
+    }
+
+    /**
+     * Shared tail of both report paths - the prompted one and the derived one.
+     *
+     * onlySubLevyOrgs stays false: a consolidation always includes the parent. When the parent
+     * has not uploaded, its own submission simply contributes nothing, so that case needs no
+     * special handling, and the children-only variant has no UI.
+     */
+    private void startReport(int submittedId, boolean consolidated, Button btnPrint, Label lblMsg) {
+        btnPrint.setLabel("Re Print...");
+        lblMsg.setValue("Your report will be emailed to you");
+
+        Clients.showNotification(
+                "Your Report is being prepared and will be emailed to you.",
+                "info", btnPrint, "top_center", 3500
+        );
+
+        service.generateReport(submittedId, consolidated, false);
+    }
+
+    /**
+     * Asks a parent that has uploaded its own WSP-ATR whether to report on itself alone
+     * (independent) or to include its child organisations as well (consolidated). Only reachable
+     * in that case - see buildPrintLine.
+     */
+    private void openPrintPrompt(int submittedId, Button btnPrint, Label lblMsg) {
+        Window win = new Window("Generate Report", "normal", true);
+        win.setClosable(true);
+        win.setWidth("420px");
+        win.setBorder("normal");
+        win.setSizable(false);
+        win.setPosition("center,center");
+        win.setParent(form);
+
+        Vbox root = new Vbox();
+        root.setSpacing("10px");
+        root.setStyle("padding:15px;");
+
+        root.appendChild(new Label("Please select report options:"));
+
+        Checkbox chkConsolidated = new Checkbox();
+        chkConsolidated.setLabel("Consolidated submission (include child organisations)");
+        // Defaulted on: a parent with flagged children is normally consolidating. Unticking it
+        // gives the independent submission - this organisation only.
+        chkConsolidated.setChecked(true);
+        root.appendChild(chkConsolidated);
+
+        Separator sep = new Separator();
+        sep.setBar(true);
+        root.appendChild(sep);
+
+        Hbox buttons = new Hbox();
+        buttons.setSpacing("10px");
+
+        Button okBtn = new Button("OK");
+        okBtn.setSclass("btn btn-sm btn-primary wsp-edit-purple");
+
+        Button cancelBtn = new Button("Cancel");
+        cancelBtn.setSclass("btn btn-sm");
+
+        okBtn.addEventListener(Events.ON_CLICK, e -> {
+            boolean consolidated = chkConsolidated.isChecked();
+            win.detach();
+            startReport(submittedId, consolidated, btnPrint, lblMsg);
+        });
+
+        cancelBtn.addEventListener(Events.ON_CLICK, e -> win.detach());
+
+        buttons.appendChild(okBtn);
+        buttons.appendChild(cancelBtn);
+
+        root.appendChild(buttons);
+        win.appendChild(root);
+        win.doModal();
     }
 
     public Hbox buildUploadLine(int submittedId, UploadTypeDef typeDef) {
