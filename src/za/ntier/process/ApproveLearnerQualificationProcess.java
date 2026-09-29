@@ -102,6 +102,8 @@ public class ApproveLearnerQualificationProcess extends SvrProcess
 											record.set_ValueOfColumn(	X_ZZLearnerLearnership.COLUMNNAME_ZZ_DocStatus,
 																		X_ZZLearnerLearnership.ZZ_DOCSTATUS_Completed);
 											
+											record.set_ValueOfColumn(X_ZZLearnerLearnership.COLUMNNAME_ZZ_ApprovedBy_ID, getAD_User_ID());
+											
 											if (record.get_Value(X_ZZLearnerLearnership.COLUMNNAME_ZZApprovalDate) == null)
 											{
 												record.set_ValueOfColumn(	X_ZZLearnerLearnership.COLUMNNAME_ZZApprovalDate, 
