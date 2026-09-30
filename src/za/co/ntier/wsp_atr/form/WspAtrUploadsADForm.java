@@ -192,9 +192,13 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
 
         v.appendChild(ui.buildPrintLine(submittedId));
 
-        v.appendChild(ui.buildUploadLine(submittedId, UploadTypeDef.WSP_ATR_REPORT));
-        v.appendChild(ui.buildUploadLine(submittedId, UploadTypeDef.SIGNED_MINUTES));
-        v.appendChild(ui.buildUploadLine(submittedId, UploadTypeDef.ATTENDANCE_REGISTER));
+        // A child whose parent uploads and submits for it may do neither itself, so its upload
+        // buttons are disabled. Resolved once per row rather than per button.
+        boolean parentManaged = repo.isChildWithParentUploads(zzSdfOrganisationId);
+
+        v.appendChild(ui.buildUploadLine(submittedId, UploadTypeDef.WSP_ATR_REPORT, parentManaged));
+        v.appendChild(ui.buildUploadLine(submittedId, UploadTypeDef.SIGNED_MINUTES, parentManaged));
+        v.appendChild(ui.buildUploadLine(submittedId, UploadTypeDef.ATTENDANCE_REGISTER, parentManaged));
         v.appendChild(ui.buildSubmitLine(submittedId, zzSdfOrganisationId, status));
 
         actionsCell.appendChild(v);

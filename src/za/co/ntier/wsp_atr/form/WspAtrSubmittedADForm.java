@@ -333,6 +333,15 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 			throw new AdempiereException("File Name cannot start with Error, please rename and try again");
 		}
 
+		// A child organisation whose linkage is flagged ZZ_Parent_Uploads = 'Y' ("Separate
+		// WSP-ATR? = No" on the SDR form) does not submit a WSP-ATR of its own - its parent
+		// includes its figures. getSdfOrganisationsForUser() already keeps it out of the picker;
+		// this is the enforcement, so the rule holds regardless of how the organisation got here.
+		if (new WspAtrUploadsRepository(Env.getCtx()).isChildWithParentUploads(org.zzSdfOrganisationId)) {
+			throw new AdempiereException("Upload not allowed: " + org.orgName
+					+ " does not submit a separate WSP-ATR. Its parent organisation uploads and submits on its behalf.");
+		}
+
 		// ===== [WSP-ATR-WINDOW-GATE] BEGIN =====
 		// Blocks .xlsm uploads unless "now" falls inside the configured WSP-ATR
 		// submission window (zz_sdr_configuration), or inside the extension window
@@ -939,10 +948,15 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 		List<List<Object>> rows =
 				org.compiere.util.DB.getSQLArrayObjectsEx(null, sql, adUserId);
 		if (rows != null) {
+			WspAtrUploadsRepository listRepo = new WspAtrUploadsRepository(Env.getCtx());
 			return rows.stream()
 					.map(r -> new SdfOrgRow(
 							((Number) r.get(0)).intValue(),
 							(String) r.get(1)))
+					// A child whose parent uploads for it never submits its own WSP-ATR, so it
+					// must not be selectable here at all. doUploadWithOrganisation() enforces the
+					// same rule again for any other route into the upload.
+					.filter(o -> !listRepo.isChildWithParentUploads(o.zzSdfOrganisationId))
 					.collect(Collectors.toList());
 		} 
 		return null;

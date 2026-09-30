@@ -268,6 +268,36 @@ public class WspAtrUploadsRepository {
     }
 
     /**
+     * True when this organisation is a child whose parent uploads and submits on its behalf
+     * (linkage flagged ZZ_Parent_Uploads = 'Y', shown as "Separate WSP-ATR? = No" on the SDR
+     * form). Such an organisation may neither upload nor submit in its own right - the parent
+     * includes its figures.
+     *
+     * Keyed on the organisation rather than a submission, because the upload path chooses an
+     * organisation before any ZZ_WSP_ATR_Submitted record exists.
+     */
+    public boolean isChildWithParentUploads(int zzSdfOrganisationId) {
+        final String sql =
+            "SELECT 1 "
+            + "FROM adempiere.zzsdforganisation child_so "
+            + "JOIN adempiere.zzorganisationlinkage l "
+            + "  ON l.c_bpartner_id = child_so.c_bpartner_id "
+            + "JOIN adempiere.zzsdforganisation parent_so "
+            + "  ON parent_so.c_bpartner_id = l.bpartner_parent_id "
+            + "WHERE child_so.zzsdforganisation_id = ? "
+            + "  AND l.isactive = 'Y' "
+            + "  AND l.bpartner_parent_id IS NOT NULL "
+            + "  AND child_so.isactive = 'Y' "
+            + "  AND parent_so.isactive = 'Y' "
+            + "  AND COALESCE(child_so.zz_docstatus, '') = 'AP' "
+            + "  AND COALESCE(parent_so.zz_docstatus, '') = 'AP' "
+            + "  AND COALESCE(l.zz_parent_uploads, 'N') = 'Y' "
+            + "LIMIT 1";
+
+        return DB.getSQLValueEx(null, sql, zzSdfOrganisationId) > 0;
+    }
+
+    /**
      * SDL numbers of this parent's flagged children that have not yet contributed a submission.
      *
      * The children come from ZZ_WSP_ATR_Sub_Levy_Orgs, which holds exactly the children whose

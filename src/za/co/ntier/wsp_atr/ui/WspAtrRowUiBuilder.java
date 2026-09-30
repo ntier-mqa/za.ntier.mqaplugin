@@ -148,7 +148,12 @@ public class WspAtrRowUiBuilder {
         win.doModal();
     }
 
-    public Hbox buildUploadLine(int submittedId, UploadTypeDef typeDef) {
+    /**
+     * @param parentManaged this organisation's parent uploads and submits for it, so the upload
+     *                      button is shown disabled rather than hidden - the file already
+     *                      attached (if any) stays visible.
+     */
+    public Hbox buildUploadLine(int submittedId, UploadTypeDef typeDef, boolean parentManaged) {
         Hbox hb = new Hbox();
         hb.setSpacing("10px");
         hb.setAlign("center");
@@ -162,8 +167,14 @@ public class WspAtrRowUiBuilder {
 
         Button btn = new Button(btnLabel);
         btn.setSclass("btn btn-sm btn-primary wsp-edit-purple");
-        btn.setUpload(AdempiereWebUI.getUploadSetting());
-        btn.addEventListener(Events.ON_UPLOAD, form);
+        if (!parentManaged) {
+            btn.setUpload(AdempiereWebUI.getUploadSetting());
+            btn.addEventListener(Events.ON_UPLOAD, form);
+        } else {
+            // Leave the upload behaviour off entirely rather than only disabling the button, so
+            // the rule does not rest on the client-side disabled state alone.
+            btn.setDisabled(true);
+        }
 
         btn.setAttribute("SubmittedId", Integer.valueOf(submittedId));
         btn.setAttribute("UploadType", typeDef.code);

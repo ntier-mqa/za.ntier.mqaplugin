@@ -1,7 +1,5 @@
 package za.co.ntier.wsp_atr.service;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -207,10 +205,10 @@ public class WspAtrUploadsService {
         if (!(inMainWindow || inExtWindow))
             return false;
 
-        // A child flagged ZZ_Parent_Uploads = 'Y' may upload its documents, but the parent
-        // submits on its behalf - so the child's own Submit button stays disabled.
-        if (isChildWithParentUploadsEnabled(ctx, submittedId, null)) {
-            submitButtonMsg = "Child Organisation configured for Upload only";
+        // A child flagged ZZ_Parent_Uploads = 'Y' may neither upload nor submit - the parent
+        // includes its figures and submits on its behalf.
+        if (repo.isChildWithParentUploads(orgId)) {
+            submitButtonMsg = "Parent Organisation uploads and submits for this Organisation";
             return false;
         }
 
@@ -257,49 +255,6 @@ public class WspAtrUploadsService {
         }
         return String.join(", ", sdlNumbers.subList(0, maxNamed))
                 + " (+" + (sdlNumbers.size() - maxNamed) + " more)";
-    }
-
-    /**
-     * True when the submission belongs to a child organisation whose linkage to its parent is
-     * flagged ZZ_Parent_Uploads = 'Y'. Such a child is "upload only" - the parent consolidates
-     * and submits for it. Children without the flag submit for themselves as normal.
-     *
-     * ZZ_Parent_Uploads is a nullable Yes/No list column, so NULL is read as 'N'.
-     */
-    private boolean isChildWithParentUploadsEnabled(Properties ctx, int submittedId, String trxName) {
-
-        final String sql =
-                "SELECT 1 "
-                        + "FROM adempiere.zz_wsp_atr_submitted s "
-                        + "JOIN adempiere.zzsdforganisation child_so "
-                        + "  ON child_so.zzsdforganisation_id = s.zzsdforganisation_id "
-                        + "JOIN adempiere.zzorganisationlinkage l "
-                        + "  ON l.c_bpartner_id = child_so.c_bpartner_id "
-                        + "JOIN adempiere.zzsdforganisation parent_so "
-                        + "  ON parent_so.c_bpartner_id = l.bpartner_parent_id "
-                        + "WHERE s.zz_wsp_atr_submitted_id = ? "
-                        + "  AND l.isactive = 'Y' "
-                        + "  AND l.bpartner_parent_id IS NOT NULL "
-                        // Match the parent/child qualification used by WspAtrUploadsADForm.isParentOrganisation
-                        + "  AND child_so.isactive = 'Y' "
-                        + "  AND parent_so.isactive = 'Y' "
-                        + "  AND COALESCE(child_so.zz_docstatus, '') = 'AP' "
-                        + "  AND COALESCE(parent_so.zz_docstatus, '') = 'AP' "
-                        + "  AND COALESCE(l.zz_parent_uploads, 'N') = 'Y' "
-                        + "LIMIT 1";
-
-        try (PreparedStatement pstmt = DB.prepareStatement(sql, trxName)) {
-            pstmt.setInt(1, submittedId);
-
-            try (ResultSet rs = pstmt.executeQuery()) {
-                return rs.next();
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(
-                    "Failed to check child parent-upload rule for submittedId "
-                            + submittedId + ": " + e.getMessage(),
-                    e);
-        }
     }
 
     private boolean isBetween(Timestamp now, Timestamp start, Timestamp end) {
