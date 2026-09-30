@@ -152,6 +152,8 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
                 continue;
             }
 
+            resyncSubLevyOrgs(submitted);
+
             addRow(
                     submitted.getZZ_WSP_ATR_Submitted_ID(),
                     org.zzSdfOrganisationId,
@@ -159,6 +161,35 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
                     submitted.getSubmittedDate(),
                     statusLabel(submitted.getZZ_DocStatus())
             );
+        }
+    }
+
+    /**
+     * Re-derives this submission's consolidation set (ZZ_WSP_ATR_Sub_Levy_Orgs) from the current
+     * linkage before the row is drawn.
+     *
+     * rebuildSubLevyOrgLinks otherwise only runs when a submission is created or when the model
+     * validator sees a linkage change. Anything that bypasses both - a direct data fix, a restore,
+     * or a change to the membership rule itself - leaves stale rows behind, and the consolidated
+     * report is then silently built from the wrong children. Doing it on refresh means the set
+     * cannot drift from the flag for longer than one page load.
+     *
+     * Draft/Imported only: once a submission is lodged its consolidation is part of that lodgement
+     * and must not be re-scoped underneath it. Failures are logged, never thrown - a stale set is
+     * recoverable, a form that will not render is not.
+     */
+    private void resyncSubLevyOrgs(MZZWSPATRSubmitted submitted) {
+        String status = submitted.getZZ_DocStatus();
+        if (!X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Draft.equals(status)
+                && !X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported.equals(status)) {
+            return;
+        }
+
+        try {
+            WspAtrSubmittedADForm.rebuildSubLevyOrgLinks(submitted.getZZ_WSP_ATR_Submitted_ID(), null);
+        } catch (Exception e) {
+            logger.warning("Failed to rebuild sub levy orgs for submitted "
+                    + submitted.getZZ_WSP_ATR_Submitted_ID() + ": " + e.getMessage());
         }
     }
 
