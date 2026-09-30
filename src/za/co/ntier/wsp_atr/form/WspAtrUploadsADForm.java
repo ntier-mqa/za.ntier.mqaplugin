@@ -317,8 +317,11 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
                 + "  AND l.isactive = 'Y' "
                 + "  AND COALESCE(parent_so.zz_docstatus, '') = 'AP' "
                 + "  AND COALESCE(child_so.zz_docstatus, '') = 'AP' "
-                // Only children the parent is responsible for uploading.
-                + "  AND COALESCE(l.zz_parent_uploads, 'N') = 'Y' "
+                // Stored 'N' = "Separate WSP-ATR? = Yes" - a child that submits its own return
+                // for the parent to consolidate. Children the parent uploads for (stored 'Y')
+                // are already covered by the parent's own figures and do not make it a
+                // consolidating parent.
+                + "  AND COALESCE(l.zz_parent_uploads, 'N') = 'N' "
                 + "LIMIT 1";
 
         return DB.getSQLValueEx(trxName, sql, zzSdfOrganisationId) > 0;
@@ -359,8 +362,8 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
                 + "  AND l.isactive = 'Y' "
                 + "  AND COALESCE(parent_so.zz_docstatus, '') = 'AP' "
                 + "  AND COALESCE(child_so.zz_docstatus, '') = 'AP' "
-                // Only children the parent is responsible for uploading.
-                + "  AND COALESCE(l.zz_parent_uploads, 'N') = 'Y'";
+                // Separate-WSP-ATR children only - see isParentOrganisation above.
+                + "  AND COALESCE(l.zz_parent_uploads, 'N') = 'N'";
 
         List<List<Object>> rows = DB.getSQLArrayObjectsEx(trxName, sql, zzSdfOrganisationId);
         if (rows == null || rows.isEmpty()) {

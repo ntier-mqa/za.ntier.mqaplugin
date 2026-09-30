@@ -134,7 +134,9 @@ public class WspAtrUploadsRepository {
             + "         AND l.isactive = 'Y' "
             + "         AND child_so.isactive = 'Y' "
             + "         AND COALESCE(child_so.zz_docstatus, '') = 'AP' "
-            + "         AND COALESCE(l.zz_parent_uploads, 'N') = 'Y' "
+            // Stored 'N' = "Separate WSP-ATR? = Yes" - the children that file their own returns
+            // and are therefore what a consolidation is made of.
+            + "         AND COALESCE(l.zz_parent_uploads, 'N') = 'N' "
             + "     ) THEN 1 "
             + "ELSE 0 END "
             + "FROM adempiere.zz_wsp_atr_submitted s "
@@ -298,17 +300,19 @@ public class WspAtrUploadsRepository {
     }
 
     /**
-     * SDL numbers of this parent's flagged children that have not yet contributed a submission.
+     * SDL numbers of this parent's separate-WSP-ATR children that have not yet uploaded.
      *
-     * The children come from ZZ_WSP_ATR_Sub_Levy_Orgs, which holds exactly the children whose
-     * linkage is flagged ZZ_Parent_Uploads = 'Y' and which the model validator keeps in step
-     * with that flag. A non-parent submission has no rows there, so this harmlessly returns
-     * empty rather than needing a separate "is this a parent" test.
+     * The children come from ZZ_WSP_ATR_Sub_Levy_Orgs - the consolidation set, i.e. children
+     * whose linkage is stored ZZ_Parent_Uploads = 'N' ("Separate WSP-ATR? = Yes"), kept in step
+     * with the flag by the model validator. Children the parent uploads for are not in there and
+     * are irrelevant here: their figures already sit inside the parent's own return. A non-parent
+     * submission has no rows at all, so this returns empty without needing an "is this a parent"
+     * test.
      *
-     * "Contributed" uses the same status set as the consolidated report
+     * "Uploaded" uses the same status set as the consolidated report
      * (AbstractReportSectionBuilder.getParentAndChildSubmittedIdsInClause). Keeping the two
-     * identical is the point: a child outside that set is silently left out of the report, so
-     * the parent must not be able to submit a consolidation that is missing it.
+     * identical is the point: a child outside that set is silently absent from the report, which
+     * is exactly what the consolidated-report guard exists to prevent.
      *
      * The SDL number is C_BPartner.Value - the same lookup ImportWspApprovalList uses.
      */

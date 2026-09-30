@@ -1283,8 +1283,12 @@ public class WspAtrSubmittedADForm extends ADForm implements EventListener<Event
 						+ "   JOIN parent p "
 						+ "     ON l.bpartner_parent_id = p.parent_bp "
 						+ "   WHERE l.isactive = 'Y' "
-						// Nullable Yes/No list column - NULL is read as 'N'.
-						+ "     AND COALESCE(l.zz_parent_uploads, 'N') = 'Y' "
+						// Stored 'N' = "Separate WSP-ATR? = Yes": the child uploads and submits
+						// its own return, which is exactly what the parent consolidates. A stored
+						// 'Y' child has no return of its own - its figures are already inside the
+						// parent's upload - so it is not part of the consolidation set.
+						// Nullable Yes/No list column, so NULL is read as 'N'.
+						+ "     AND COALESCE(l.zz_parent_uploads, 'N') = 'N' "
 						+ "), "
 						+ "children_orgs AS ( "
 						+ "   SELECT DISTINCT so.zzsdforganisation_id "

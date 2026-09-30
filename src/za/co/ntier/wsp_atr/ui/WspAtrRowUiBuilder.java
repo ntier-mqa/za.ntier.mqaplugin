@@ -1,5 +1,6 @@
 package za.co.ntier.wsp_atr.ui;
 
+import org.adempiere.exceptions.AdempiereException;
 import org.adempiere.webui.AdempiereWebUI;
 import org.adempiere.webui.component.Button;
 import org.adempiere.webui.component.Checkbox;
@@ -81,6 +82,22 @@ public class WspAtrRowUiBuilder {
      * special handling, and the children-only variant has no UI.
      */
     private void startReport(int submittedId, boolean consolidated, Button btnPrint, Label lblMsg) {
+        // A consolidated report is assembled from the separate-WSP-ATR children's own returns.
+        // A child that has not uploaded yet contributes nothing and would simply be absent, with
+        // nothing on the report to say so - so the report is refused rather than produced
+        // quietly incomplete. Checked here rather than in the dialog so it also covers the
+        // unprompted consolidated path (a parent that has not uploaded its own WSP-ATR).
+        if (consolidated) {
+            java.util.List<String> pending = repo.findChildOrgsNotSubmitted(submittedId);
+            if (!pending.isEmpty()) {
+                throw new AdempiereException(
+                        "Cannot generate a consolidated report yet. The following child "
+                        + "organisation(s) have not uploaded their WSP-ATR: "
+                        + String.join(", ", pending)
+                        + ". They must upload before a consolidated report can be produced.");
+            }
+        }
+
         btnPrint.setLabel("Re Print...");
         lblMsg.setValue("Your report will be emailed to you");
 

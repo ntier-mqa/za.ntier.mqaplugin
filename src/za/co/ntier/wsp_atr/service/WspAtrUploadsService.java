@@ -3,7 +3,6 @@ package za.co.ntier.wsp_atr.service;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.Properties;
 
 import org.adempiere.exceptions.AdempiereException;
@@ -212,17 +211,6 @@ public class WspAtrUploadsService {
             return false;
         }
 
-        // The other half of that rule: because those children cannot submit for themselves, the
-        // parent must not submit until every one of them has actually contributed. Otherwise the
-        // parent lodges a "consolidated" submission that silently omits them - the report builds
-        // its child set from the same status list, so a child outside it simply disappears.
-        // Returns empty for a non-parent submission, so this costs one query and no special case.
-        List<String> pendingChildren = repo.findChildOrgsNotSubmitted(submittedId);
-        if (!pendingChildren.isEmpty()) {
-            submitButtonMsg = "Child has not submitted yet: " + describePendingChildren(pendingChildren);
-            return false;
-        }
-
        // boolean hasTemplate = true;
       //  boolean hasTemplate = repo.hasSubmittedTemplateAttachment(submittedId);
         boolean hasReport = repo.hasUploadTypeAttachment(submittedId,
@@ -241,20 +229,6 @@ public class WspAtrUploadsService {
 
         submitButtonMsg = "WSP-ATR report not uploaded";
         return false;
-    }
-
-    /**
-     * Renders the blocking children for the Submit button's label. A parent can have many
-     * children and the label sits inline in the grid, so only the first few SDL numbers are
-     * named - enough for the SDF to know where to chase, without an unreadable row.
-     */
-    private static String describePendingChildren(List<String> sdlNumbers) {
-        final int maxNamed = 3;
-        if (sdlNumbers.size() <= maxNamed) {
-            return String.join(", ", sdlNumbers);
-        }
-        return String.join(", ", sdlNumbers.subList(0, maxNamed))
-                + " (+" + (sdlNumbers.size() - maxNamed) + " more)";
     }
 
     private boolean isBetween(Timestamp now, Timestamp start, Timestamp end) {
