@@ -3,7 +3,6 @@ package za.co.ntier.wsp_atr.ui;
 import org.adempiere.exceptions.AdempiereException;
 import org.adempiere.webui.AdempiereWebUI;
 import org.adempiere.webui.component.Button;
-import org.adempiere.webui.component.Checkbox;
 import org.adempiere.webui.component.Label;
 import org.compiere.util.Util;
 import org.zkoss.zk.ui.event.Event;
@@ -11,6 +10,8 @@ import org.zkoss.zk.ui.event.EventListener;
 import org.zkoss.zk.ui.event.Events;
 import org.zkoss.zk.ui.util.Clients;
 import org.zkoss.zul.Hbox;
+import org.zkoss.zul.Radio;
+import org.zkoss.zul.Radiogroup;
 import org.zkoss.zul.Separator;
 import org.zkoss.zul.Vbox;
 import org.zkoss.zul.Window;
@@ -53,20 +54,19 @@ public class WspAtrRowUiBuilder {
         btnPrint.addEventListener(Events.ON_CLICK, (EventListener<Event>) e -> {
             // isParentOrganisationTypeForSubmitted() means "PARENT business partner AND has at
             // least one flagged child", i.e. there is actually something to consolidate.
-            boolean canConsolidate = repo.isParentOrganisationTypeForSubmitted(submittedId);
-            boolean parentUploaded = repo.hasUploadTypeAttachment(submittedId,
-                    X_ZZ_WSP_ATR_Uploads.ZZ_WSP_ATR_UPLOAD_TYPE_UploadWSP_ATRReport);
-
-            // There is only a choice worth offering when a parent has BOTH children to
-            // consolidate and a WSP-ATR of its own. Without its own upload there is nothing to
-            // report independently, so consolidation is the only meaningful outcome and asking
-            // would be a prompt with one real answer.
-            if (canConsolidate && parentUploaded) {
+            //
+            // Any such parent is asked, whether or not it has uploaded its own WSP-ATR. The
+            // consolidated option is always offered and fails loudly if the children are not in
+            // yet (see startReport) - rather than being withheld - so that a parent blocked from
+            // consolidating can still fall back to its own Independent report. Deciding for them
+            // here would leave a parent whose child has not uploaded unable to print anything.
+            if (repo.isParentOrganisationTypeForSubmitted(submittedId)) {
                 openPrintPrompt(submittedId, btnPrint, lblMsg);
                 return;
             }
 
-            startReport(submittedId, canConsolidate, btnPrint, lblMsg);
+            // Not a parent: nothing to consolidate, so there is no question to ask.
+            startReport(submittedId, false, btnPrint, lblMsg);
         });
 
         hb.appendChild(btnPrint);
@@ -94,7 +94,8 @@ public class WspAtrRowUiBuilder {
                         "Cannot generate a consolidated report yet. The following child "
                         + "organisation(s) have not uploaded their WSP-ATR: "
                         + String.join(", ", pending)
-                        + ". They must upload before a consolidated report can be produced.");
+                        + ". They must upload before a consolidated report can be produced. "
+                        + "You can still generate an Independent report for this organisation.");
             }
         }
 
@@ -127,14 +128,22 @@ public class WspAtrRowUiBuilder {
         root.setSpacing("10px");
         root.setStyle("padding:15px;");
 
-        root.appendChild(new Label("Please select report options:"));
+        root.appendChild(new Label("Generate Report:"));
 
-        Checkbox chkConsolidated = new Checkbox();
-        chkConsolidated.setLabel("Consolidated submission (include child organisations)");
-        // Defaulted on: a parent with flagged children is normally consolidating. Unticking it
-        // gives the independent submission - this organisation only.
-        chkConsolidated.setChecked(true);
-        root.appendChild(chkConsolidated);
+        // Two named options rather than a tick-box, so Independent is a visible choice. That
+        // matters because it is the fallback when Consolidated is refused for missing children.
+        // (Radio/Radiogroup are plain ZK components; org.zkoss.zul is already imported by this
+        // bundle for Hbox/Vbox/Window, so no MANIFEST change is needed.)
+        Radiogroup rgScope = new Radiogroup();
+        rgScope.setOrient("vertical");
+        root.appendChild(rgScope);
+
+        Radio rbIndependent = new Radio("Independent (this organisation only)");
+        Radio rbConsolidated = new Radio("Consolidated (this organisation and its child organisations)");
+        rgScope.appendChild(rbIndependent);
+        rgScope.appendChild(rbConsolidated);
+        // A parent with separate children is normally consolidating, so that is pre-selected.
+        rbConsolidated.setSelected(true);
 
         Separator sep = new Separator();
         sep.setBar(true);
@@ -150,8 +159,10 @@ public class WspAtrRowUiBuilder {
         cancelBtn.setSclass("btn btn-sm");
 
         okBtn.addEventListener(Events.ON_CLICK, e -> {
-            boolean consolidated = chkConsolidated.isChecked();
+            boolean consolidated = rbConsolidated.isSelected();
             win.detach();
+            // startReport refuses a consolidation whose children are not all in. The dialog is
+            // already closed, so the SDF sees the error and can print again choosing Independent.
             startReport(submittedId, consolidated, btnPrint, lblMsg);
         });
 
