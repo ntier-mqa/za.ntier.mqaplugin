@@ -28,29 +28,38 @@
 	</style>
 	<parameter name="ZZ_WSP_ATR_Submitted_ID" class="java.lang.Integer"/>
 	<queryString>
-		<![CDATA[SELECT
+		<![CDATA[-- Lists EVERY active child organisation of this submission's organisation - both those that
+-- file their own separate WSP-ATR and those the parent uploads for. Driving this from
+-- zz_wsp_atr_sub_levy_orgs showed only the former, because that table holds just the
+-- consolidation set (ZZ_Parent_Uploads = 'N').
+--
+-- separate_wsp_atr is the INVERSE of the stored flag: ZZ_Parent_Uploads = 'N' means the child
+-- files its own separate WSP-ATR ('Y' here); 'Y' means the parent uploads for it ('N' here).
+-- It was previously the literal 'Y', so every row reported Yes regardless of the flag.
+--
+-- Kept identical to WSP_ATR_Section_1_Sub_Levy_Orgs so the two sections cannot disagree.
+SELECT DISTINCT
     COALESCE(v.orgname, bp.name, '<Sub Levy Organisation>') AS organisation_name,
     COALESCE(v.zz_sdl_no, bp.zz_sdl_no, '<SDL Number>')     AS sdl_number,
     COALESCE(NULLIF(bp.zzsiccode,''), '<SIC Code>')         AS sic_code,
-    'Y'                                 AS separate_wsp_atr
-FROM adempiere.zz_wsp_atr_sub_levy_orgs slo
+    CASE WHEN COALESCE(l.zz_parent_uploads, 'N') = 'N' THEN 'Y' ELSE 'N' END AS separate_wsp_atr
+FROM adempiere.zz_wsp_atr_submitted s
+JOIN adempiere.zzsdforganisation parent_so
+  ON parent_so.zzsdforganisation_id = s.zzsdforganisation_id
+JOIN adempiere.zzorganisationlinkage l
+  ON l.bpartner_parent_id = parent_so.c_bpartner_id
+ AND l.isactive = 'Y'
+JOIN adempiere.zzsdforganisation child_so
+  ON child_so.c_bpartner_id = l.c_bpartner_id
+ AND child_so.isactive = 'Y'
+ AND child_so.zz_docstatus <> 'UnSdfOrg'
 LEFT JOIN adempiere.zzsdforganisation_v v
-  ON v.zzsdforganisation_id = slo.zzsdforganisation_id
+  ON v.zzsdforganisation_id = child_so.zzsdforganisation_id
 LEFT JOIN adempiere.c_bpartner bp
   ON bp.isactive = 'Y'
- AND bp.c_bpartner_id = v.c_bpartner_id
-LEFT JOIN LATERAL (
-    SELECT DISTINCT ON (s.zzsdforganisation_id)
-           s.zz_wsp_atr_submitted_id
-    FROM adempiere.zz_wsp_atr_submitted s
-    WHERE s.zzsdforganisation_id = slo.zzsdforganisation_id
-      AND s.isactive = 'Y'
-      AND s.zz_docstatus IN ('IM','UP','QR','RE','RA','AP')
-    ORDER BY s.zzsdforganisation_id, s.updated DESC, s.zz_wsp_atr_submitted_id DESC
-) child_sub ON true
-WHERE slo.zz_wsp_atr_submitted_id = $P{ZZ_WSP_ATR_Submitted_ID}
-ORDER BY COALESCE(v.orgname, bp.name, ''),
-         COALESCE(v.zz_sdl_no, bp.zz_sdl_no, '')]]>
+ AND bp.c_bpartner_id = child_so.c_bpartner_id
+WHERE s.zz_wsp_atr_submitted_id = $P{ZZ_WSP_ATR_Submitted_ID}
+ORDER BY 1, 2]]>
 	</queryString>
 	<field name="organisation_name" class="java.lang.String"/>
 	<field name="sdl_number" class="java.lang.String"/>

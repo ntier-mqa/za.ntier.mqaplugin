@@ -6,11 +6,14 @@
 -- WspAtrSubmittedADForm.rebuildSubLevyOrgLinks, WspAtrUploadsService.isChildWithParentUploadsEnabled)
 -- and everywhere reads NULL as 'N'.
 --
--- That makes this script a HARD PREREQUISITE for the code release: every existing linkage row
--- has ZZ_Parent_Uploads = NULL, so deploying the code without backfilling would instantly drop
--- every child out of its parent's consolidation. Backfilling to 'Y' preserves exactly the
--- behaviour that is live today (all linked children are parent-managed) and lets SDFs opt
--- individual children OUT from there.
+-- Stored 'N' means "Separate WSP-ATR? = Yes": the child files its own return and the parent
+-- consolidates it. Stored 'Y' means the parent uploads for the child, which may then neither
+-- upload nor submit.
+--
+-- 'N' is the agreed starting state, matching the column's own database default. On an environment
+-- where the column is already NOT NULL DEFAULT 'N' (UAT, verified 2026-09-30) every row is
+-- already 'N' and the UPDATE below is a harmless no-op; it only does work where the column was
+-- added nullable and rows were left unset.
 --
 -- Run ZZ_Verify_Parent_Uploads_Config.sql first to confirm the physical column exists.
 -- Run this BEFORE deploying the plugin.
@@ -53,28 +56,30 @@ BEGIN
   --    Rows already explicitly set to 'Y' or 'N' are left exactly as they are.
   ----------------------------------------------------------------------------------
   UPDATE adempiere.zzorganisationlinkage
-  SET    zz_parent_uploads = 'Y',
+  SET    zz_parent_uploads = 'N',
          updated           = now(),
          updatedby         = 0
   WHERE  zz_parent_uploads IS NULL
      OR  TRIM(zz_parent_uploads) = '';
 
   GET DIAGNOSTICS v_backfilled = ROW_COUNT;
-  RAISE NOTICE 'Backfilled % linkage row(s) to ZZ_Parent_Uploads = Y', v_backfilled;
+  RAISE NOTICE 'Backfilled % linkage row(s) to ZZ_Parent_Uploads = N (Separate WSP-ATR? = Yes)', v_backfilled;
 
   ----------------------------------------------------------------------------------
   -- 2. Make the flag mandatory so new linkages force an explicit Yes/No choice.
-  --    No DefaultValue on purpose - the SDF must decide per child rather than inherit
-  --    one by omission.
+  --    The SDR form marks the field required() so the SDF still has to choose per child;
+  --    the default only applies to rows created outside that form.
   --
   --    This is AD-level (PO.save) enforcement only. A physical NOT NULL constraint is
   --    deliberately NOT applied here: it would hard-fail any insert path that does not
   --    set the column, and it cannot be undone as cheaply as this flag. See the note at
   --    the bottom of this file if you decide you want it later.
   ----------------------------------------------------------------------------------
+  -- DefaultValue is set to 'N' to match the column's physical database default. Leaving it NULL
+  -- would mean a future "Synchronize Column" could drop that default from the table.
   UPDATE AD_Column
   SET    IsMandatory  = 'Y',
-         DefaultValue = NULL,
+         DefaultValue = 'N',
          Updated      = now(),
          UpdatedBy    = 0
   WHERE  AD_Column_ID = v_column_id;

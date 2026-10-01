@@ -320,10 +320,12 @@ public class ImportWspApprovalList extends SvrProcess {
         link.setBPartner_Parent_ID(parentBpId);
         link.setZZ_SDL_No(childSdl);
         link.setAD_Org_ID(0);
-        // ZZ_Parent_Uploads is mandatory with no default, so it must be set explicitly here.
-        // Links created from the approval list are parent-managed by definition, which also
-        // matches the 'Y' backfill applied to pre-existing linkages.
-        link.setZZ_Parent_Uploads(X_ZZOrganisationLinkage.ZZ_PARENT_UPLOADS_Yes);
+        // ZZ_Parent_Uploads is mandatory, so it must be set explicitly here. 'N' means
+        // "Separate WSP-ATR? = Yes" - the child files its own return, which the parent then
+        // consolidates. That matches the column's database default and the starting state of
+        // every existing linkage; an SDF switches a child to "No" where the parent genuinely
+        // uploads on its behalf.
+        link.setZZ_Parent_Uploads(X_ZZOrganisationLinkage.ZZ_PARENT_UPLOADS_No);
         link.saveEx();
         detail.append("+link");
         addLog("INFO: SDL=" + childSdl + " linked to parent SDL=" + parentSdl
