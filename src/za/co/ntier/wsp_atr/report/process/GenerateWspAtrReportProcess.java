@@ -1,5 +1,10 @@
 package za.co.ntier.wsp_atr.report.process;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
@@ -15,6 +20,7 @@ import org.compiere.process.ProcessInfo;
 import org.compiere.process.SvrProcess;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
+import org.compiere.util.Util;
 
 import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Submitted;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Report;
@@ -34,6 +40,9 @@ public class GenerateWspAtrReportProcess extends SvrProcess {
 	private int p_ZZ_WSP_ATR_Submitted_ID;
 	private Properties ctx = null;
 	private static final String PROCESS_PRINT_REPORT_UU = "0875c375-6e37-49fb-a5c0-798529189260";
+
+	/** Leading part of the generated PDF's file name, as specified by the business. */
+	private static final String REPORT_FILE_BASE_NAME = "WORKPLACE_SKILLS_PLAN_AND_ANNUAL_TRAINING_REPORT";
 	
 	
 	@Override
@@ -92,7 +101,8 @@ public class GenerateWspAtrReportProcess extends SvrProcess {
 		    PROCESS_PRINT_REPORT_UU,
 		    "ZZ_WSP_ATR_Report_ID",
 		    report.getZZ_WSP_ATR_Report_ID(),
-		    submitted.getZZ_WSP_ATR_Submitted_ID()
+		    submitted.getZZ_WSP_ATR_Submitted_ID(),
+		    buildReportPdfPath(submitted)
 		);
 
 		if (isNewReport) {
@@ -159,7 +169,53 @@ public class GenerateWspAtrReportProcess extends SvrProcess {
 	}
 
 
-	private void runProcessInBackgroundWithIntParam(String adProcessUU, String paramName, int paramValue, int recordIdForInstance) {
+	/**
+	 * Builds the file name the generated PDF is written to, e.g.
+	 * WORKPLACE_SKILLS_PLAN_AND_ANNUAL_TRAINING_REPORT_L8767868687_202610010953.pdf
+	 *
+	 * Without this the shared Jasper starter falls back to
+	 * File.createTempFile(makePrefix(reportName), ".pdf"), which appends a random long - the
+	 * meaningless 19-20 digit number users were seeing. DazzleReportStarter honours
+	 * ProcessInfo.getPDFFileName() when it is set, so the name is fixed here rather than in that
+	 * shared code, which names every Jasper report in the system.
+	 *
+	 * The SDL number is the PARENT's: a consolidated report carries its children in the detail,
+	 * not in the file name.
+	 *
+	 * The file goes in a freshly created temp DIRECTORY rather than being made unique itself.
+	 * That keeps the readable name on the emailed attachment while making it impossible for two
+	 * prints of the same submission in the same minute to overwrite each other's file.
+	 *
+	 * Returns null if the directory cannot be created, which simply restores the old behaviour
+	 * rather than failing the print.
+	 */
+	private String buildReportPdfPath(MZZWSPATRSubmitted submitted) {
+		String sdlNo = DB.getSQLValueStringEx(get_TrxName(),
+				"SELECT bp.value "
+				+ "FROM adempiere.zzsdforganisation so "
+				+ "JOIN adempiere.c_bpartner bp ON bp.c_bpartner_id = so.c_bpartner_id "
+				+ "WHERE so.zzsdforganisation_id = ?",
+				submitted.getZZSdfOrganisation_ID());
+
+		StringBuilder fileName = new StringBuilder(REPORT_FILE_BASE_NAME);
+		if (!Util.isEmpty(sdlNo, true)) {
+			fileName.append('_').append(sdlNo.trim());
+		}
+		fileName.append('_').append(new SimpleDateFormat("yyyyMMddHHmm").format(new Date()));
+		fileName.append(".pdf");
+
+		try {
+			Path dir = Files.createTempDirectory("wspatr_report_");
+			return dir.resolve(fileName.toString()).toString();
+		} catch (IOException e) {
+			log.warning("Could not create temp directory for the report PDF, falling back to the"
+					+ " default generated name: " + e.getMessage());
+			return null;
+		}
+	}
+
+	private void runProcessInBackgroundWithIntParam(String adProcessUU, String paramName, int paramValue,
+			int recordIdForInstance, String pdfFileName) {
 		MProcess proc = MProcess.get(ctx, adProcessUU);
 		if (proc == null || proc.getAD_Process_ID() <= 0) throw new AdempiereException("Process not found (UU=" + adProcessUU + ")");
 
@@ -169,6 +225,9 @@ public class GenerateWspAtrReportProcess extends SvrProcess {
 		pi.setTable_ID(MTable.getTable_ID(X_ZZ_WSP_ATR_Report.Table_Name));
 		pi.setRecord_ID(recordIdForInstance);
 		pi.setAD_Process_UU(proc.getAD_Process_UU());
+		if (pdfFileName != null) {
+			pi.setPDFFileName(pdfFileName);
+		}
 
 		MPInstance instance = new MPInstance(ctx, proc.getAD_Process_ID(), 0, recordIdForInstance, null);
 		instance.setIsRunAsJob(true);
