@@ -3,7 +3,6 @@ package za.co.ntier.wsp_atr.service;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.Properties;
 
 import org.adempiere.exceptions.AdempiereException;
@@ -220,41 +219,12 @@ public class WspAtrUploadsService {
             return true; //  &&hasTemplate &&
         }
 
-        // A parent that consolidates its children may submit without a WSP-ATR of its own - the
-        // submission is then made up entirely of the children's returns. That only holds if those
-        // returns actually exist, so every separate child must have uploaded first; otherwise the
-        // parent would lodge a submission carrying no data at all.
-        //
-        // This deliberately uses the same check as the consolidated report, so anything that can
-        // be submitted on this path can also be printed. Note it applies ONLY here: a parent that
-        // HAS uploaded is not held to it, because it may legitimately be making an independent
-        // submission of its own figures, which does not depend on the children at all.
-        if (repo.isParentOrganisationTypeForSubmitted(submittedId)) {
-            List<String> pendingChildren = repo.findChildOrgsNotSubmitted(submittedId);
-            if (pendingChildren.isEmpty()) {
-                return true;
-            }
-            submitButtonMsg = "Child has not uploaded yet: " + describePendingChildren(pendingChildren);
-            return false;
-        }
-
+        // Submission depends only on THIS organisation's own upload, parent or not. The children
+        // are deliberately not consulted here: whether their returns are in is a question for the
+        // consolidated report (see WspAtrRowUiBuilder.startReport, which blocks and names them),
+        // not for whether this organisation may submit.
         submitButtonMsg = "WSP-ATR report not uploaded";
         return false;
-    }
-
-    /**
-     * Renders the blocking children for the Submit button's label. A parent can have many
-     * children and the label sits inline in the grid, so only the first few SDL numbers are
-     * named - enough for the SDF to know where to chase, without an unreadable row. The
-     * consolidated-report guard lists them all, since a modal has the room.
-     */
-    private static String describePendingChildren(List<String> sdlNumbers) {
-        final int maxNamed = 3;
-        if (sdlNumbers.size() <= maxNamed) {
-            return String.join(", ", sdlNumbers);
-        }
-        return String.join(", ", sdlNumbers.subList(0, maxNamed))
-                + " (+" + (sdlNumbers.size() - maxNamed) + " more)";
     }
 
     private boolean isBetween(Timestamp now, Timestamp start, Timestamp end) {
