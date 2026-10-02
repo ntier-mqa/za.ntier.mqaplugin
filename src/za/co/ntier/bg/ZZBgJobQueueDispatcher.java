@@ -24,6 +24,10 @@ public class ZZBgJobQueueDispatcher extends SvrProcess {
 
     private static final CLogger log = CLogger.getCLogger(ZZBgJobQueueDispatcher.class);
 
+    // Fixed role used to run queued background jobs, regardless of which role the
+    // triggering user happened to be logged in as. Must match AD_Role.Name exactly.
+    private static final String DISPATCHER_ROLE_NAME = "MQA Admin";
+
     @Override
     protected void prepare() {
     }
@@ -121,11 +125,20 @@ public class ZZBgJobQueueDispatcher extends SvrProcess {
             Env.setContext(jobCtx, Env.AD_USER_ID, r.adUserId);
 
             // IMPORTANT: BackgroundJobCallable expects AD_ROLE_ID in context.
-            // Since your queue table doesn't store role, we derive one from AD_User_Roles.
-            int roleId = getRoleForUser(r.adUserId, r.adClientId);
+            // Run under the fixed "MQA Admin" role rather than one of the triggering user's own
+            // roles: the queue table doesn't record which role was active at upload time, and an
+            // arbitrarily-picked role may lack AD_Process_Access for the target process even
+            // though the user's actual session role has it. AD_USER_ID stays the real requester
+            // so notifications still go to them.
+            int roleId = getAdminRoleId(r.adClientId);
             if (roleId <= 0) {
-                // fallback to dispatcher role (avoids crash; may be more permissive)
-                roleId = Env.getAD_Role_ID(getCtx());
+                // "MQA Admin" missing/renamed for this client - degrade instead of failing every job
+                log.warning("Role '" + DISPATCHER_ROLE_NAME + "' not found for AD_Client_ID=" + r.adClientId
+                        + "; falling back to a role of the triggering user");
+                roleId = getRoleForUser(r.adUserId, r.adClientId);
+                if (roleId <= 0) {
+                    roleId = Env.getAD_Role_ID(getCtx());
+                }
             }
             Env.setContext(jobCtx, Env.AD_ROLE_ID, roleId);
 
@@ -208,6 +221,16 @@ public class ZZBgJobQueueDispatcher extends SvrProcess {
                 } catch (Exception ignore) {}
             }
         }
+    }
+
+    /**
+     * Resolve the AD_Role_ID of the fixed DISPATCHER_ROLE_NAME role for this client.
+     * Returns 0 if no such active role exists.
+     */
+    private int getAdminRoleId(int adClientId) {
+        return DB.getSQLValue(null,
+                "SELECT ad_role_id FROM ad_role WHERE ad_client_id=? AND name=? AND isactive='Y' LIMIT 1",
+                adClientId, DISPATCHER_ROLE_NAME);
     }
 
     /**
