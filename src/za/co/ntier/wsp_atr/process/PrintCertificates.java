@@ -267,6 +267,9 @@ public class PrintCertificates extends SvrProcess
 						{
 							reprint.setZZ_RequestedBy_ID(zzRequestedBy_ID);
 						}
+						
+						reprint.setIsCertifiedIDAttached(zzCertifiedIDCopy != null);
+						reprint.setIsAffidavitAttached(zzAffidavit != null);
 
 						reprint.saveEx();
 
