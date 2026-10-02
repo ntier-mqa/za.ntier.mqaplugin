@@ -107,80 +107,107 @@ public class ZZBgJobQueueDispatcher extends SvrProcess {
 
     private void scheduleBackgroundRun(QueueRow r) {
 
-        // Build a context for the target user so notifications go to that user
-        final Properties jobCtx = new Properties();
-        Env.setContext(jobCtx, Env.AD_CLIENT_ID, r.adClientId);
-        Env.setContext(jobCtx, Env.AD_ORG_ID, r.adOrgId);
-        Env.setContext(jobCtx, Env.AD_USER_ID, r.adUserId);
+        // NOTE: claimOldestQueued() has already committed status='R' for this row.
+        // Everything below must either hand the job off to the thread pool or mark
+        // the row 'E' on failure - otherwise it wedges at 'R' forever, and since
+        // doIt()'s "is anything running" check is client-wide, that one orphaned row
+        // blocks every other queued job for the client too.
+        MPInstance instance = null;
+        try {
+            // Build a context for the target user so notifications go to that user
+            final Properties jobCtx = new Properties();
+            Env.setContext(jobCtx, Env.AD_CLIENT_ID, r.adClientId);
+            Env.setContext(jobCtx, Env.AD_ORG_ID, r.adOrgId);
+            Env.setContext(jobCtx, Env.AD_USER_ID, r.adUserId);
 
-        // IMPORTANT: BackgroundJobCallable expects AD_ROLE_ID in context.
-        // Since your queue table doesn't store role, we derive one from AD_User_Roles.
-        int roleId = getRoleForUser(r.adUserId, r.adClientId);
-        if (roleId <= 0) {
-            // fallback to dispatcher role (avoids crash; may be more permissive)
-            roleId = Env.getAD_Role_ID(getCtx());
-        }
-        Env.setContext(jobCtx, Env.AD_ROLE_ID, roleId);
+            // IMPORTANT: BackgroundJobCallable expects AD_ROLE_ID in context.
+            // Since your queue table doesn't store role, we derive one from AD_User_Roles.
+            int roleId = getRoleForUser(r.adUserId, r.adClientId);
+            if (roleId <= 0) {
+                // fallback to dispatcher role (avoids crash; may be more permissive)
+                roleId = Env.getAD_Role_ID(getCtx());
+            }
+            Env.setContext(jobCtx, Env.AD_ROLE_ID, roleId);
 
-        final ProcessInfo pi = new ProcessInfo("Queued:" + r.adProcessId, r.adProcessId);
-        pi.setAD_Client_ID(r.adClientId);
-        pi.setAD_User_ID(r.adUserId);
-        pi.setRecord_ID(r.recordId);
+            final ProcessInfo pi = new ProcessInfo("Queued:" + r.adProcessId, r.adProcessId);
+            pi.setAD_Client_ID(r.adClientId);
+            pi.setAD_User_ID(r.adUserId);
+            pi.setRecord_ID(r.recordId);
 
-        // Create MPInstance so notifications (Email/Notice) behave like normal background jobs
-        final MPInstance instance = new MPInstance(jobCtx, r.adProcessId, 0, r.recordId, null);
-        instance.setAD_User_ID(r.adUserId);
-        instance.setIsRunAsJob(true);
-        instance.setIsProcessing(true);
-        instance.setNotificationType(MPInstance.NOTIFICATIONTYPE_EMailPlusNotice); // or Notice only
-        instance.saveEx();
+            // Create MPInstance so notifications (Email/Notice) behave like normal background jobs
+            instance = new MPInstance(jobCtx, r.adProcessId, 0, r.recordId, null);
+            instance.setAD_User_ID(r.adUserId);
+            instance.setIsRunAsJob(true);
+            instance.setIsProcessing(true);
+            instance.setNotificationType(MPInstance.NOTIFICATIONTYPE_EMailPlusNotice); // or Notice only
+            instance.saveEx();
 
-        pi.setAD_PInstance_ID(instance.getAD_PInstance_ID());
+            pi.setAD_PInstance_ID(instance.getAD_PInstance_ID());
 
-        // Store AD_PInstance_ID in queue row
-        DB.executeUpdateEx(
-            "UPDATE zz_bg_job_queue SET ad_pinstance_id=?, updated=now(), updatedby=? WHERE zz_bg_job_queue_id=?",
-            new Object[] { instance.getAD_PInstance_ID(), r.adUserId, r.queueId },
-            null
-        );
+            // Store AD_PInstance_ID in queue row
+            DB.executeUpdateEx(
+                "UPDATE zz_bg_job_queue SET ad_pinstance_id=?, updated=now(), updatedby=? WHERE zz_bg_job_queue_id=?",
+                new Object[] { instance.getAD_PInstance_ID(), r.adUserId, r.queueId },
+                null
+            );
 
-        Adempiere.getThreadPoolExecutor().schedule(() -> {
-            ServerContext.setCurrentInstance(jobCtx);
-            try {
-                // Runs the actual process + sends email/notice based on MPInstance notification type
-                ProcessInfo result = new BackgroundJobCallable(jobCtx, pi).call();
+            final MPInstance finalInstance = instance;
+            Adempiere.getThreadPoolExecutor().schedule(() -> {
+                ServerContext.setCurrentInstance(jobCtx);
+                try {
+                    // Runs the actual process + sends email/notice based on MPInstance notification type
+                    ProcessInfo result = new BackgroundJobCallable(jobCtx, pi).call();
 
-                String summary = result != null ? result.getSummary() : "Completed";
-                boolean isError = result != null && result.isError();
+                    String summary = result != null ? result.getSummary() : "Completed";
+                    boolean isError = result != null && result.isError();
 
-                DB.executeUpdateEx(
-                    "UPDATE zz_bg_job_queue " +
-                    "SET status=?, finished=now(), summary=?, updated=now(), updatedby=? " +
-                    "WHERE zz_bg_job_queue_id=?",
-                    new Object[] { isError ? "E" : "D", summary, r.adUserId, r.queueId },
-                    null
-                );
+                    DB.executeUpdateEx(
+                        "UPDATE zz_bg_job_queue " +
+                        "SET status=?, finished=now(), summary=?, updated=now(), updatedby=? " +
+                        "WHERE zz_bg_job_queue_id=?",
+                        new Object[] { isError ? "E" : "D", summary, r.adUserId, r.queueId },
+                        null
+                    );
 
-            } catch (Throwable t) {
-                log.log(Level.SEVERE, t.getMessage(), t);
+                } catch (Throwable t) {
+                    log.log(Level.SEVERE, t.getMessage(), t);
 
-                DB.executeUpdateEx(
-                    "UPDATE zz_bg_job_queue " +
-                    "SET status='E', finished=now(), summary=?, updated=now(), updatedby=? " +
-                    "WHERE zz_bg_job_queue_id=?",
-                    new Object[] { safeMsg(t), r.adUserId, r.queueId },
-                    null
-                );
+                    DB.executeUpdateEx(
+                        "UPDATE zz_bg_job_queue " +
+                        "SET status='E', finished=now(), summary=?, updated=now(), updatedby=? " +
+                        "WHERE zz_bg_job_queue_id=?",
+                        new Object[] { safeMsg(t), r.adUserId, r.queueId },
+                        null
+                    );
 
-            } finally {
+                } finally {
+                    try {
+                        finalInstance.setIsProcessing(false);
+                        finalInstance.saveEx();
+                    } catch (Exception ignore) {}
+
+                    ServerContext.dispose();
+                }
+            }, 0, TimeUnit.MILLISECONDS);
+
+        } catch (Throwable t) {
+            // Setup failed before the job could be handed off to the thread pool.
+            // Resolve the row now so the dispatcher isn't blocked on the next cycle.
+            log.log(Level.SEVERE, "Failed to start queued job queueId=" + r.queueId, t);
+
+            DB.executeUpdateEx(
+                "UPDATE zz_bg_job_queue SET status='E', finished=now(), summary=?, updated=now(), updatedby=? WHERE zz_bg_job_queue_id=?",
+                new Object[] { safeMsg(t), r.adUserId, r.queueId },
+                null
+            );
+
+            if (instance != null) {
                 try {
                     instance.setIsProcessing(false);
                     instance.saveEx();
                 } catch (Exception ignore) {}
-
-                ServerContext.dispose();
             }
-        }, 0, TimeUnit.MILLISECONDS);
+        }
     }
 
     /**
