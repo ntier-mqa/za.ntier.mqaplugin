@@ -188,7 +188,8 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
                     attached++;
                 } catch (Exception e) {
                     errorCount++;
-                    addToListCapped(errors, tableName + ".id=" + pk + " file=" + saved + ": " + describeError(e));
+                    addToListCapped(errors, tableName + ".id=" + pk + " file=" + saved + " entryName=["
+                            + original + "] bytes=" + describeFileSize(dir, saved) + ": " + describeError(e));
                 }
             }
         } finally {
@@ -218,6 +219,11 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
             }
         }
         return sb.toString();
+    }
+
+    private static String describeFileSize(File dir, String saved) {
+        File file = new File(dir, saved.trim());
+        return file.isFile() ? String.valueOf(file.length()) : "?";
     }
 
     private void addToListCapped(List<String> list, String entry) {
