@@ -52,7 +52,7 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
     private static final String DEFAULT_BASE_DIR = "/home/ntier/MQASkillsDocuments_25092026";
     private static final String SAVED_FILENAME_COL = "sdr_savedfilename";
     private static final String ORIGINAL_FILENAME_COL = "sdr_originalfilename";
-    private static final int MAX_LOGGED = 2000;
+    private static final int MAX_LOGGED = 20000;
 
     private final List<String> missingFiles = new ArrayList<>();
     private final List<String> errors = new ArrayList<>();
@@ -188,7 +188,7 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
                     attached++;
                 } catch (Exception e) {
                     errorCount++;
-                    addToListCapped(errors, tableName + ".id=" + pk + ": " + e.getMessage());
+                    addToListCapped(errors, tableName + ".id=" + pk + " file=" + saved + ": " + describeError(e));
                 }
             }
         } finally {
@@ -199,6 +199,25 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
                 + ", missing " + missing + ", errors " + errorCount);
 
         return new int[] { processed, attached, already, missing, errorCount };
+    }
+
+    /**
+     * saveEx() falls back to the unhelpful literal "SaveError" whenever PO.save() fails without
+     * CLogger having a specific validation message logged - but it still attaches the real
+     * underlying exception as the cause (see PO#saveEx's own source), which plain
+     * {@code e.getMessage()} silently drops. Surfacing the cause here is the difference between a
+     * diagnosable log and 2000 identical "SaveError" lines.
+     */
+    private static String describeError(Exception e) {
+        StringBuilder sb = new StringBuilder(String.valueOf(e.getMessage()));
+        Throwable cause = e.getCause();
+        if (cause != null) {
+            sb.append(" | cause: ").append(cause.getClass().getSimpleName());
+            if (cause.getMessage() != null) {
+                sb.append(": ").append(cause.getMessage());
+            }
+        }
+        return sb.toString();
     }
 
     private void addToListCapped(List<String> list, String entry) {
