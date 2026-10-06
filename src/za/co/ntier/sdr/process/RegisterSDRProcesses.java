@@ -193,6 +193,7 @@ public class RegisterSDRProcesses extends SvrProcess {
             "ExportSDRReconciliationReport",
             "AddSDRSICCodeChamberTable",
             "MigrateSDRSICCodeChamberTable",
+            "ExportSDRDocumentTables",
     };
 
     @Override
