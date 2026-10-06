@@ -80,7 +80,11 @@ public class ExportSDRDocumentTables extends SvrProcess {
                     return i;
                 });
                 info.matchingColumns.add(columnName);
-                if (info.filePathColumn == null && columnName.toLowerCase().contains("filepath")) {
+                // sdr_savedfilename (the GUID-based stored name) is the confirmed match key against
+                // the on-disk files (2026-09-16) - sdr_filepath is known-stale (old server paths).
+                if (columnName.toLowerCase().contains("savedfilename")) {
+                    info.filePathColumn = columnName;
+                } else if (info.filePathColumn == null && columnName.toLowerCase().contains("filepath")) {
                     info.filePathColumn = columnName;
                 }
             }
@@ -116,8 +120,8 @@ public class ExportSDRDocumentTables extends SvrProcess {
 
             int rowIdx = 0;
             Row header = sheet.createRow(rowIdx++);
-            String[] headers = { "Table", "Matching Columns", "FilePath Column Used", "Total Rows",
-                    "Rows With Non-Blank FilePath" };
+            String[] headers = { "Table", "Matching Columns", "Match Key Column Used", "Total Rows",
+                    "Rows With Non-Blank Match Key" };
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = header.createCell(i);
                 cell.setCellValue(headers[i]);
