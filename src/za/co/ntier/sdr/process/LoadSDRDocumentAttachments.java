@@ -7,7 +7,9 @@ import java.nio.file.Files;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.adempiere.base.annotation.Parameter;
 import org.adempiere.base.annotation.Process;
@@ -55,7 +57,9 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
     private static final int MAX_LOGGED = 20000;
 
     private final List<String> missingFiles = new ArrayList<>();
+    private final List<String> emptyOnDiskFiles = new ArrayList<>();
     private final List<String> errors = new ArrayList<>();
+    private final List<String> orphanFiles = new ArrayList<>();
 
     @Override
     protected void prepare() {
@@ -97,14 +101,18 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
             totalErrors += stats[5];
         }
 
+        int orphanCount = findOrphanFiles(dir, tables);
+
         attachListIfAny(missingFiles, "load-sdr-attachments-missing-files");
+        attachListIfAny(emptyOnDiskFiles, "load-sdr-attachments-zero-byte-files");
         attachListIfAny(errors, "load-sdr-attachments-errors");
+        attachListIfAny(orphanFiles, "load-sdr-attachments-orphan-files-on-disk");
 
         return "Processed " + totalProcessed + " row(s) across " + tables.size() + " table(s): " + totalAttached
                 + " attached, " + totalAlready + " already attached, " + totalMissing
                 + " file(s) not found on disk, " + totalEmptyOnDisk + " file(s) 0 bytes on disk, " + totalErrors
-                + " error(s)."
-                + ((totalMissing > 0 || totalEmptyOnDisk > 0 || totalErrors > 0)
+                + " error(s), " + orphanCount + " file(s) on disk never referenced by any row."
+                + ((totalMissing > 0 || totalEmptyOnDisk > 0 || totalErrors > 0 || orphanCount > 0)
                         ? " See the Attachment icon on this Process Audit record for details."
                         : "");
     }
@@ -185,8 +193,7 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
                         // attach. Tracked separately from "missing" (file is there, just 0 bytes) and
                         // from "errors" (not a save failure - we never attempt the save).
                         emptyOnDisk++;
-                        addToListCapped(missingFiles,
-                                tableName + ".id=" + pk + ": " + file.getAbsolutePath() + " (0 bytes on disk)");
+                        addToListCapped(emptyOnDiskFiles, tableName + ".id=" + pk + ": " + file.getAbsolutePath());
                         continue;
                     }
 
@@ -214,6 +221,55 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
                 + ", missing " + missing + ", empty-on-disk " + emptyOnDisk + ", errors " + errorCount);
 
         return new int[] { processed, attached, already, missing, emptyOnDisk, errorCount };
+    }
+
+    /**
+     * Reverse check: files physically present in the directory that no row in any document table
+     * references at all (by sdr_savedfilename) - e.g. leftovers from a partial copy, renamed files,
+     * or files for records that were never migrated. Deliberately queries the FULL referenced-name
+     * set per table (no MaxRows limit) regardless of how the main attach loop was bounded, since a
+     * MaxRows test run must not report every not-yet-processed file as "orphaned".
+     */
+    private int findOrphanFiles(File dir, List<String> tables) {
+        Set<String> referenced = new HashSet<>();
+        for (String tableName : tables) {
+            PreparedStatement pstmt = null;
+            ResultSet rs = null;
+            try {
+                pstmt = DB.prepareStatement("SELECT DISTINCT " + SAVED_FILENAME_COL + " FROM " + tableName
+                        + " WHERE " + SAVED_FILENAME_COL + " IS NOT NULL AND " + SAVED_FILENAME_COL + " <> ''",
+                        get_TrxName());
+                rs = pstmt.executeQuery();
+                while (rs.next()) {
+                    String name = rs.getString(1);
+                    if (name != null) {
+                        referenced.add(name.trim());
+                    }
+                }
+            } catch (Exception e) {
+                throw new AdempiereException("Failed collecting referenced filenames for " + tableName, e);
+            } finally {
+                DB.close(rs, pstmt);
+            }
+        }
+
+        File[] diskFiles = dir.listFiles();
+        if (diskFiles == null) {
+            return 0;
+        }
+        int orphanCount = 0;
+        for (File f : diskFiles) {
+            if (!f.isFile()) {
+                continue;
+            }
+            if (!referenced.contains(f.getName())) {
+                orphanCount++;
+                addToListCapped(orphanFiles, f.getAbsolutePath() + " (" + f.length() + " bytes)");
+            }
+        }
+        addLog("Orphan check: " + referenced.size() + " distinct filename(s) referenced across " + tables.size()
+                + " table(s), " + orphanCount + " file(s) on disk not referenced by any row.");
+        return orphanCount;
     }
 
     /**
