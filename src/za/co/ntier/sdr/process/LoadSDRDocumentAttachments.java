@@ -84,6 +84,7 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
         int totalAttached = 0;
         int totalAlready = 0;
         int totalMissing = 0;
+        int totalEmptyOnDisk = 0;
         int totalErrors = 0;
 
         for (String tableName : tables) {
@@ -92,7 +93,8 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
             totalAttached += stats[1];
             totalAlready += stats[2];
             totalMissing += stats[3];
-            totalErrors += stats[4];
+            totalEmptyOnDisk += stats[4];
+            totalErrors += stats[5];
         }
 
         attachListIfAny(missingFiles, "load-sdr-attachments-missing-files");
@@ -100,8 +102,9 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
 
         return "Processed " + totalProcessed + " row(s) across " + tables.size() + " table(s): " + totalAttached
                 + " attached, " + totalAlready + " already attached, " + totalMissing
-                + " file(s) not found on disk, " + totalErrors + " error(s)."
-                + ((totalMissing > 0 || totalErrors > 0)
+                + " file(s) not found on disk, " + totalEmptyOnDisk + " file(s) 0 bytes on disk, " + totalErrors
+                + " error(s)."
+                + ((totalMissing > 0 || totalEmptyOnDisk > 0 || totalErrors > 0)
                         ? " See the Attachment icon on this Process Audit record for details."
                         : "");
     }
@@ -131,12 +134,12 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
         MTable table = AddColumnsSupport.findTable(getCtx(), tableName, get_TrxName());
         if (table == null) {
             addLog(tableName + ": AD_Table not found - skipped.");
-            return new int[5];
+            return new int[6];
         }
         String[] keyColumns = table.getKeyColumns();
         if (keyColumns == null || keyColumns.length != 1) {
             addLog(tableName + ": does not have exactly one key column - skipped.");
-            return new int[5];
+            return new int[6];
         }
         String keyColumn = keyColumns[0];
 
@@ -149,6 +152,7 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
         int attached = 0;
         int already = 0;
         int missing = 0;
+        int emptyOnDisk = 0;
         int errorCount = 0;
 
         PreparedStatement pstmt = null;
@@ -176,10 +180,20 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
                         addToListCapped(missingFiles, tableName + ".id=" + pk + ": " + file.getAbsolutePath());
                         continue;
                     }
+                    if (file.length() == 0) {
+                        // Genuinely empty/corrupt source file on disk - not a loader bug, nothing to
+                        // attach. Tracked separately from "missing" (file is there, just 0 bytes) and
+                        // from "errors" (not a save failure - we never attempt the save).
+                        emptyOnDisk++;
+                        addToListCapped(missingFiles,
+                                tableName + ".id=" + pk + ": " + file.getAbsolutePath() + " (0 bytes on disk)");
+                        continue;
+                    }
 
                     byte[] data = Files.readAllBytes(file.toPath());
-                    String entryName = (original != null && !original.trim().isEmpty()) ? original.trim()
+                    String rawEntryName = (original != null && !original.trim().isEmpty()) ? original.trim()
                             : saved.trim();
+                    String entryName = sanitizeEntryName(rawEntryName);
 
                     MAttachment attachment = existing != null ? existing
                             : new MAttachment(getCtx(), table.getAD_Table_ID(), pk, null, get_TrxName());
@@ -197,9 +211,20 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
         }
 
         addLog(tableName + ": processed " + processed + ", attached " + attached + ", already " + already
-                + ", missing " + missing + ", errors " + errorCount);
+                + ", missing " + missing + ", empty-on-disk " + emptyOnDisk + ", errors " + errorCount);
 
-        return new int[] { processed, attached, already, missing, errorCount };
+        return new int[] { processed, attached, already, missing, emptyOnDisk, errorCount };
+    }
+
+    /**
+     * iDempiere's attachment store treats "/" in an entry name as a path separator (confirmed
+     * 2026-09-16: every "SaveError" with no logged cause on sdr_organisationdocuments had a "/" in
+     * its sdr_originalfilename - e.g. a date embedded as "2023/04/17 13:12:44" - and the store
+     * silently returned false rather than throwing). Replacing filesystem-unsafe characters with
+     * "-" avoids the silent failure without losing the human-readable name.
+     */
+    private static String sanitizeEntryName(String name) {
+        return name.replaceAll("[\\\\/:*?\"<>|]", "-");
     }
 
     /**
