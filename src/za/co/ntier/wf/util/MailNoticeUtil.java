@@ -115,9 +115,14 @@ public final class MailNoticeUtil {
 			if (X_AD_User.NOTIFICATIONTYPE_Notice.equals(mUser.getNotificationType()) ||
 					X_AD_User.NOTIFICATIONTYPE_EMailPlusNotice.equals(mUser.getNotificationType())	) {
 
+				String noteMsgBody = msgBody;
+				if (!mailTemplate.isHtml() && noteMsgBody != null) {
+					noteMsgBody = noteMsgBody.replace("\r\n", "<br/>").replace("\n", "<br/>");
+				}
+
 				MNote note = new MNote(Env.getCtx(), 0, mUser.getAD_User_ID(),
 						tableID, recordID, 
-						msgHeader, msgBody, trxName);
+						msgHeader, noteMsgBody, trxName);
 				note.setAD_Org_ID(po.getAD_Org_ID());
 				note.saveEx();
 			}
