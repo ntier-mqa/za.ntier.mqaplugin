@@ -21,6 +21,7 @@ import org.compiere.util.DB;
 import org.compiere.util.Env;
 import org.apache.commons.lang3.StringUtils;
 
+import za.co.ntier.api.model.I_ZZLearner;
 import za.co.ntier.wf.model.MZZWFHeader;
 import za.co.ntier.wf.model.MZZWFLines;
 import za.co.ntier.wf.util.ADColumnUtil;
@@ -54,7 +55,9 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 	private String pZZ_One_Person_Signed_More_Than_Once = "N";
 	@Parameter(name=I_ZZ_WSP_ATR_Submitted.COLUMNNAME_ZZ_Sign_Pages_Not_Clear)
 	private String pZZ_Signature_Pages_Not_Clear = "N";
-
+	@Parameter(name=I_ZZLearner.COLUMNNAME_ZZ_Reason)
+	private String pZZ_Reason = "";
+	
 	private PO po;
 	private String trxName;
 	private Properties ctx;
@@ -175,6 +178,11 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 		} else {
 			po.set_ValueOfColumn(ADColumnUtil.getColumnName(ctx, step.getZZ_Rejected_User_COL_ID(), trxName),actor);
 			po.set_ValueOfColumn(ADColumnUtil.getColumnName(ctx, step.getZZ_Rejected_TS_COL_ID(), trxName),now);
+			
+			// Save ZZ_Reason if provided and the column exists on the current table
+			if (po.get_ColumnIndex(I_ZZLearner.COLUMNNAME_ZZ_Reason) >= 0) {
+				po.set_ValueOfColumn(I_ZZLearner.COLUMNNAME_ZZ_Reason, pZZ_Reason);
+			}
 		}
 		po.saveEx();
 
@@ -404,6 +412,12 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 		// Persist new state
 		po.set_ValueOfColumn("ZZ_DocStatus", nextStatus);
 		po.set_ValueOfColumn("ZZ_DocAction", nextAction);
+		
+		// If rejecting, save ZZ_Reason if the column exists on this table
+		if (!approve && po.get_ColumnIndex(I_ZZLearner.COLUMNNAME_ZZ_Reason) >= 0) {
+			po.set_ValueOfColumn(I_ZZLearner.COLUMNNAME_ZZ_Reason, pZZ_Reason);
+		}
+		
 		po.saveEx();
 
 		// Notify responsible role on the next WF line using the node's mail template
