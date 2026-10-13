@@ -6,8 +6,10 @@ import java.util.Properties;
 import org.compiere.model.MClient;
 import org.compiere.model.MMailText;
 import org.compiere.model.MSequence;
+import org.compiere.model.MSysConfig;
 import org.compiere.model.MUser;
 import org.compiere.model.Query;
+import org.compiere.util.EMail;
 import org.compiere.util.Util;
 
 import za.co.ntier.api.model.X_ZZLearner;
@@ -22,6 +24,7 @@ public class MZZLearner extends X_ZZLearner
 
 	private static final String	LEARNER_CONFIRMATION_MAIL_TEMPLATE_UU	= "eac216ef-5331-4d12-980d-7d7710b9829c";
 	private static final String	LEARNER_QUERY_MAIL_TEMPLATE_UU			= "ba58e3ff-6b42-4f4c-be01-cfbe1255803e";
+	private static final String	LEARNER_REGISTRATION_LETTER_CC			= "LEARNER_REGISTRATION_LETTER_CC";
 
 	public MZZLearner(Properties ctx, int ZZLearner_ID, String trxName)
 	{
@@ -173,8 +176,7 @@ public class MZZLearner extends X_ZZLearner
 			mailTemplate.setUser(sdpUser);
 			mailTemplate.setPO(this);
 
-			MClient client = MClient.get(getCtx(), getAD_Client_ID());
-			client.sendEMail(sdpUser.getEMail(), mailTemplate.getMailHeader(), mailTemplate.getMailText(), null, mailTemplate.isHtml());
+			sendEmailWithCC(sdpUser.getEMail(), mailTemplate);
 			log.info("Learner confirmation email sent to SDP user " + sdpUser.getName() + " (" + sdpUser.getEMail() + ") for learner " + get_ID());
 		}
 		catch (Exception e)
@@ -210,13 +212,41 @@ public class MZZLearner extends X_ZZLearner
 			mailTemplate.setUser(sdpUser);
 			mailTemplate.setPO(this);
 
-			MClient client = MClient.get(getCtx(), getAD_Client_ID());
-			client.sendEMail(sdpUser.getEMail(), mailTemplate.getMailHeader(), mailTemplate.getMailText(), null, mailTemplate.isHtml());
+			sendEmailWithCC(sdpUser.getEMail(), mailTemplate);
 			log.info("Learner query email sent to SDP user " + sdpUser.getName() + " (" + sdpUser.getEMail() + ") for learner " + get_ID());
 		}
 		catch (Exception e)
 		{
 			log.severe("Failed to send learner query email to SDP: " + e.getMessage());
+		}
+	}
+
+	private void sendEmailWithCC(String toEmail, MMailText mailTemplate)
+	{
+		MClient client = MClient.get(getCtx(), getAD_Client_ID());
+		EMail email = client.createEMail(toEmail, mailTemplate.getMailHeader(), mailTemplate.getMailText(), mailTemplate.isHtml());
+		if (email == null)
+		{
+			log.warning("Failed to create email for learner: " + get_ID());
+			return;
+		}
+
+		String ccEmails = MSysConfig.getValue(LEARNER_REGISTRATION_LETTER_CC, getAD_Client_ID());
+		if (!Util.isEmpty(ccEmails))
+		{
+			for (String cc : ccEmails.split(","))
+			{
+				if (!Util.isEmpty(cc, true))
+				{
+					email.addCc(cc.trim());
+				}
+			}
+		}
+
+		String msg = email.send();
+		if (!EMail.SENT_OK.equals(msg))
+		{
+			log.warning("Failed to send email for learner " + get_ID() + ": " + msg);
 		}
 	}
 }
