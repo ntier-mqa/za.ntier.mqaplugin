@@ -127,6 +127,30 @@ public class MZZLearner extends X_ZZLearner
 	}
 
 	/**
+	 * Resolves learner surname from linked ZZPerson.
+	 * Also serves as getter for @=ZZSurname@ or @=Surname@ in mail templates.
+	 */
+	public String getZZSurname()
+	{
+		if (getZZPerson_ID() > 0)
+		{
+			X_ZZPerson person = new X_ZZPerson(getCtx(), getZZPerson_ID(), get_TrxName());
+			return person.getSurname() != null ? person.getSurname() : "";
+		}
+		return "";
+	}
+
+	public String getSurname()
+	{
+		return getZZSurname();
+	}
+
+	public String getLearnerSurname()
+	{
+		return getZZSurname();
+	}
+
+	/**
 	 * Getter for @=ZZReason@ in mail templates (matches template property without underscore).
 	 */
 	public String getZZReason()
