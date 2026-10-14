@@ -84,7 +84,7 @@ public class SendTemporaryPasswordProcess extends SvrProcess
 		{
 			msgBody = msgBody	.replace("@Name@", Objects.requireNonNullElse(user.getName(), ""))
 								.replace("@EMail@", Objects.requireNonNullElse(user.getEMail(), ""))
-								.replace("@Password@", Objects.requireNonNullElse(user.getPassword(), ""));
+								.replace("@Password@", tempPwd);
 		}
 
 		var client = MClient.get(getCtx(), user.getAD_Client_ID());
