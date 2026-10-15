@@ -83,18 +83,18 @@ public class WspAtrRowUiBuilder {
      */
     private void startReport(int submittedId, boolean consolidated, Button btnPrint, Label lblMsg) {
         // A consolidated report is assembled from the separate-WSP-ATR children's own returns.
-        // A child that has not uploaded yet contributes nothing and would simply be absent, with
-        // nothing on the report to say so - so the report is refused rather than produced
-        // quietly incomplete. Checked here rather than in the dialog so it also covers the
-        // unprompted consolidated path (a parent that has not uploaded its own WSP-ATR).
+        // SDR requires each of those children to have SUBMITTED its WSP-ATR before the parent may
+        // consolidate - having merely uploaded or imported is not enough. Checked here rather
+        // than in the dialog so it also covers the unprompted consolidated path (a parent that
+        // has not uploaded its own WSP-ATR).
         if (consolidated) {
             java.util.List<String> pending = repo.findChildOrgsNotSubmitted(submittedId);
             if (!pending.isEmpty()) {
                 throw new AdempiereException(
                         "Cannot generate a consolidated report yet. The following child "
-                        + "organisation(s) have not uploaded their WSP-ATR: "
+                        + "organisation(s) have not submitted their WSP-ATR: "
                         + String.join(", ", pending)
-                        + ". They must upload before a consolidated report can be produced. "
+                        + ". They must submit before a consolidated report can be produced. "
                         + "You can still generate an Independent report for this organisation.");
             }
         }

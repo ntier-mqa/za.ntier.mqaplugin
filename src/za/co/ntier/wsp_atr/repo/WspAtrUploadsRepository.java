@@ -300,7 +300,7 @@ public class WspAtrUploadsRepository {
     }
 
     /**
-     * SDL numbers of this parent's separate-WSP-ATR children that have not yet uploaded.
+     * SDL numbers of this parent's separate-WSP-ATR children that have not yet SUBMITTED.
      *
      * The children come from ZZ_WSP_ATR_Sub_Levy_Orgs - the consolidation set, i.e. children
      * whose linkage is stored ZZ_Parent_Uploads = 'N' ("Separate WSP-ATR? = Yes"), kept in step
@@ -309,10 +309,11 @@ public class WspAtrUploadsRepository {
      * submission has no rows at all, so this returns empty without needing an "is this a parent"
      * test.
      *
-     * "Uploaded" uses the same status set as the consolidated report
-     * (AbstractReportSectionBuilder.getParentAndChildSubmittedIdsInClause). Keeping the two
-     * identical is the point: a child outside that set is silently absent from the report, which
-     * is exactly what the consolidated-report guard exists to prevent.
+     * "Submitted" is deliberately STRICTER than the status set the consolidated report itself
+     * uses to pull child data (AbstractReportSectionBuilder, which also accepts Imported and
+     * Uploaded). SDR requires the child to have actually lodged its WSP-ATR - not merely loaded
+     * it - before the parent may consolidate. So a child sitting at Imported now blocks the
+     * parent even though its figures would have been included.
      *
      * The SDL number is C_BPartner.Value - the same lookup ImportWspApprovalList uses.
      */
@@ -330,11 +331,18 @@ public class WspAtrUploadsRepository {
             + "        FROM adempiere.zz_wsp_atr_submitted s "
             + "        WHERE s.zzsdforganisation_id = slo.zzsdforganisation_id "
             + "          AND s.isactive = 'Y' "
+            // "Submitted or beyond". Imported/Uploaded deliberately do NOT count: the child has
+            // loaded its data but has not lodged it, and SDR requires an actual submission before
+            // the parent may consolidate. RE/RA/AP are only reachable after SU, so a child that
+            // has moved on through evaluation still qualifies. Verified/Evaluated are listed for
+            // completeness in case the workflow routes through them.
             + "          AND s.zz_docstatus IN ('"
             + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Submitted + "','"
-            + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Imported + "','"
-            + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Uploaded + "','"
-            + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Query + "') "
+            + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Verified + "','"
+            + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Evaluated + "','"
+            + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_RecommendedForEvaluation + "','"
+            + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_RecommendedForApproval + "','"
+            + X_ZZ_WSP_ATR_Submitted.ZZ_DOCSTATUS_Approved + "') "
             + "      ) "
             + "ORDER BY bp.value";
 
