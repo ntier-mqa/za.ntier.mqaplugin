@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.5.final using JasperReports Library version 6.20.5-3efcf2e67f959db3888d79f73dde2dbd7acb4f8e  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Learner_Registration_Confirmation_Letter" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="7cf44d21-f5b2-4d24-8501-1bfa2b3d88b4">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
+	<parameter name="RESOURCE_DIR" class="java.lang.String">
+		<defaultValueExpression><![CDATA["./"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="HeaderImagePath" class="java.lang.Object">
+		<defaultValueExpression><![CDATA[$P{RESOURCE_DIR} + "MQA_Address_Logo_Header.png"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="FooterImagePath" class="java.lang.Object">
+		<defaultValueExpression><![CDATA[$P{RESOURCE_DIR} + "Footer_Mining_Future_Skills.png"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="SDPName" class="java.lang.String"/>
+	<parameter name="SDPSearchKey" class="java.lang.String"/>
+	<parameter name="DatePrinted" class="java.lang.String"/>
+	<parameter name="ProgrammeName" class="java.lang.String"/>
+	<parameter name="CompanyName" class="java.lang.String"/>
+	<field name="LearnerName" class="java.lang.String"/>
+	<field name="LearnerSurname" class="java.lang.String"/>
+	<field name="LearnerIDNo" class="java.lang.String"/>
+	<field name="StartDate" class="java.lang.String"/>
+	<field name="EndDate" class="java.lang.String"/>
+	<field name="RegistrationDate" class="java.lang.String"/>
+	<title>
+		<band height="220" splitType="Stretch">
+			<image scaleImage="RetainShape" onErrorType="Blank">
+				<reportElement x="0" y="0" width="555" height="60" uuid="a1111111-0001-0001-0001-000000000000"/>
+				<imageExpression><![CDATA[$P{HeaderImagePath} != null ? $P{HeaderImagePath} : $P{RESOURCE_DIR} + "MQA_Address_Logo_Header.png"]]></imageExpression>
+			</image>
+			<textField isBlankWhenNull="true">
+				<reportElement x="0" y="75" width="350" height="16" uuid="a1111111-0001-0001-0001-000000000001"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{SDPName}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="0" y="91" width="350" height="16" uuid="a1111111-0001-0001-0001-000000000002"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{SDPSearchKey}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="0" y="112" width="350" height="16" uuid="a1111111-0001-0001-0001-000000000003"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{DatePrinted}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="140" width="350" height="18" uuid="a1111111-0001-0001-0001-000000000004"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="10" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Dear Stakeholder,]]></text>
+			</staticText>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement positionType="Float" x="0" y="165" width="802" height="45" uuid="a1111111-0001-0001-0001-000000000005"/>
+				<textElement textAlignment="Justified" verticalAlignment="Top" markup="html">
+					<font fontName="SansSerif" size="10"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<textFieldExpression><![CDATA["This letter serves to confirm that the learners in the table below are registered with the <b>Mining Qualifications Authority</b> on <b>" + ($P{ProgrammeName} != null ? $P{ProgrammeName} : "") + "</b> under the company <b>" + ($P{CompanyName} != null ? $P{CompanyName} : "") + "</b>"]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<columnHeader>
+		<band height="28" splitType="Stretch">
+			<staticText>
+				<reportElement mode="Opaque" x="0" y="0" width="35" height="28" backcolor="#E0E0E0" uuid="b1111111-0001-0001-0001-000000000001"/>
+				<box padding="2">
+					<pen lineWidth="0.5" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[No]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="35" y="0" width="130" height="28" backcolor="#E0E0E0" uuid="b1111111-0001-0001-0001-000000000002"/>
+				<box padding="2">
+					<pen lineWidth="0.5" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[LEARNER NAME]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="165" y="0" width="130" height="28" backcolor="#E0E0E0" uuid="b1111111-0001-0001-0001-000000000003"/>
+				<box padding="2">
+					<pen lineWidth="0.5" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[LEARNER SURNAME]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="295" y="0" width="115" height="28" backcolor="#E0E0E0" uuid="b1111111-0001-0001-0001-000000000004"/>
+				<box padding="2">
+					<pen lineWidth="0.5" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[ID NUMBER]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="410" y="0" width="130" height="28" backcolor="#E0E0E0" uuid="b1111111-0001-0001-0001-000000000005"/>
+				<box padding="2">
+					<pen lineWidth="0.5" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[START DATE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="540" y="0" width="130" height="28" backcolor="#E0E0E0" uuid="b1111111-0001-0001-0001-000000000006"/>
+				<box padding="2">
+					<pen lineWidth="0.5" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[END DATE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="670" y="0" width="132" height="28" backcolor="#E0E0E0" uuid="b1111111-0001-0001-0001-000000000007"/>
+				<box padding="2">
+					<pen lineWidth="0.5" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[REGISTRATION DATE]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="22" splitType="Stretch">
+			<textField isBlankWhenNull="true">
+				<reportElement stretchType="ElementGroupHeight" x="0" y="0" width="35" height="22" uuid="c1111111-0001-0001-0001-000000000001"/>
+				<box padding="2">
+					<pen lineWidth="0.5" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement stretchType="ElementGroupHeight" x="35" y="0" width="130" height="22" uuid="c1111111-0001-0001-0001-000000000002"/>
+				<box topPadding="2" leftPadding="5" bottomPadding="2" rightPadding="2">
+					<pen lineWidth="0.5" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{LearnerName}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement stretchType="ElementGroupHeight" x="165" y="0" width="130" height="22" uuid="c1111111-0001-0001-0001-000000000003"/>
+				<box topPadding="2" leftPadding="5" bottomPadding="2" rightPadding="2">
+					<pen lineWidth="0.5" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{LearnerSurname}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement stretchType="ElementGroupHeight" x="295" y="0" width="115" height="22" uuid="c1111111-0001-0001-0001-000000000004"/>
+				<box padding="2">
+					<pen lineWidth="0.5" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{LearnerIDNo}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement stretchType="ElementGroupHeight" x="410" y="0" width="130" height="22" uuid="c1111111-0001-0001-0001-000000000005"/>
+				<box padding="2">
+					<pen lineWidth="0.5" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{StartDate}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement stretchType="ElementGroupHeight" x="540" y="0" width="130" height="22" uuid="c1111111-0001-0001-0001-000000000006"/>
+				<box padding="2">
+					<pen lineWidth="0.5" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{EndDate}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement stretchType="ElementGroupHeight" x="670" y="0" width="132" height="22" uuid="c1111111-0001-0001-0001-000000000007"/>
+				<box padding="2">
+					<pen lineWidth="0.5" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RegistrationDate}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<pageFooter>
+		<band height="45" splitType="Stretch">
+			<image scaleImage="FillFrame" onErrorType="Blank">
+				<reportElement x="0" y="0" width="802" height="25" uuid="e1111111-0001-0001-0001-000000000001"/>
+				<imageExpression><![CDATA[$P{FooterImagePath} != null ? $P{FooterImagePath} : $P{RESOURCE_DIR} + "Footer_Mining_Future_Skills.png"]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement x="0" y="27" width="180" height="15" uuid="e1111111-0001-0001-0001-000000000003"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[MQA/LP/04/014]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="220" y="27" width="180" height="15" uuid="e1111111-0001-0001-0001-000000000004"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Approved: COO]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="440" y="27" width="180" height="15" uuid="e1111111-0001-0001-0001-000000000005"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Revision: 02]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="652" y="27" width="150" height="15" uuid="e1111111-0001-0001-0001-000000000006"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="SansSerif" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Date:09/10/2024]]></text>
+			</staticText>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="140" splitType="Stretch">
+			<staticText>
+				<reportElement positionType="Float" x="0" y="15" width="802" height="20" uuid="d1111111-0001-0001-0001-000000000001"/>
+				<textElement verticalAlignment="Middle" markup="html">
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<text><![CDATA[<b>NB:</b> If you realise that some of the information is incorrectly captured on this Registration Confirmation Letter, do not hesitate to contact the Learning Programmes unit at <b>011 547 2600</b>.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="0" y="38" width="802" height="18" uuid="d1111111-0001-0001-0001-000000000002"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<text><![CDATA[The MQA will only pay Learnership discretionary grants to learners who are eligible for funding as per the allocations criteria.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="0" y="65" width="300" height="16" uuid="d1111111-0001-0001-0001-000000000003"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9"/>
+				</textElement>
+				<text><![CDATA[Yours Faithfully,]]></text>
+			</staticText>
+			<staticText>
+				<reportElement positionType="Float" x="0" y="95" width="300" height="18" uuid="d1111111-0001-0001-0001-000000000004"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="SansSerif" size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[LEARNING PROGRAMMES UNIT]]></text>
+			</staticText>
+		</band>
+	</summary>
+</jasperReport>
