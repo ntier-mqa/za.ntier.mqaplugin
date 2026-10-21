@@ -43,6 +43,9 @@ import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Lookup_Mapping_Detail;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_Employees;
 import za.co.ntier.api.model.I_C_BP_OC;
+import za.co.ntier.api.model.I_ZZ_Allocation_Offer;
+import za.co.ntier.api.model.I_ZZ_Allocation_Intake_Plan;
+import za.co.ntier.api.model.X_ZZ_Allocation_Intake_Plan;
 
 @Component(
 
@@ -115,6 +118,8 @@ public class MyModelFactory implements IModelFactory {
         register(I_ZZQctoModule.Table_Name, MZZQctoModule.class);
         register(I_C_BP_OC.Table_Name, MBPOC.class);
         register(I_ZZLearner.Table_Name, MZZLearner.class);
+        register(I_ZZ_Allocation_Offer.Table_Name, MZZAllocationOffer.class);
+        register(I_ZZ_Allocation_Intake_Plan.Table_Name, X_ZZ_Allocation_Intake_Plan.class);
     }
 
     private static void register(String tableName, Class<? extends PO> modelClass) {
