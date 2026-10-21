@@ -45,15 +45,18 @@ import za.co.ntier.learner.process.AddColumnsSupport;
 @Process(name = "za.co.ntier.sdr.process.LoadSDRDocumentAttachments")
 public class LoadSDRDocumentAttachments extends SvrProcess {
 
+    /** Comma-separated list of directories to search, in order - first match wins. */
     @Parameter(name = "BaseDirectory")
     private String p_BaseDirectory;
 
     @Parameter(name = "MaxRows")
     private BigDecimal p_MaxRows;
 
-    private static final String DEFAULT_BASE_DIR = "/home/ntier/MQASkillsDocuments_25092026";
+    private static final String[] DEFAULT_BASE_DIRS = { "/home/ntier/MQASkillsDocuments",
+            "/home/ntier/MQASkillsDocuments_25092026" };
     private static final String SAVED_FILENAME_COL = "sdr_savedfilename";
     private static final String ORIGINAL_FILENAME_COL = "sdr_originalfilename";
+    private static final String ISACTIVE_COL = "isactive";
     private static final int MAX_LOGGED = 20000;
 
     private final List<String> missingFiles = new ArrayList<>();
@@ -70,16 +73,20 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
 
     @Override
     protected String doIt() throws Exception {
-        String baseDir = (p_BaseDirectory != null && !p_BaseDirectory.trim().isEmpty())
-                ? p_BaseDirectory.trim()
-                : DEFAULT_BASE_DIR;
+        List<File> dirs = new ArrayList<>();
+        String[] dirNames = (p_BaseDirectory != null && !p_BaseDirectory.trim().isEmpty())
+                ? p_BaseDirectory.split(",")
+                : DEFAULT_BASE_DIRS;
+        for (String dirName : dirNames) {
+            File dir = new File(dirName.trim());
+            if (!dir.isDirectory()) {
+                throw new AdempiereException("Base directory does not exist or is not a directory: " + dirName);
+            }
+            dirs.add(dir);
+        }
         long maxRows = p_MaxRows != null ? p_MaxRows.longValue() : 0L;
 
-        File dir = new File(baseDir);
-        if (!dir.isDirectory()) {
-            throw new AdempiereException("Base directory does not exist or is not a directory: " + baseDir);
-        }
-        addLog("Base directory: " + baseDir);
+        addLog("Searching " + dirs.size() + " director(ies) in order: " + dirs);
 
         List<String> tables = findDocumentTables();
         addLog("Found " + tables.size() + " SDR_ table(s) with " + SAVED_FILENAME_COL + ": " + tables);
@@ -92,7 +99,7 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
         int totalErrors = 0;
 
         for (String tableName : tables) {
-            int[] stats = processTable(tableName, dir, maxRows);
+            int[] stats = processTable(tableName, dirs, maxRows);
             totalProcessed += stats[0];
             totalAttached += stats[1];
             totalAlready += stats[2];
@@ -101,7 +108,7 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
             totalErrors += stats[5];
         }
 
-        int orphanCount = findOrphanFiles(dir, tables);
+        int orphanCount = findOrphanFiles(dirs, tables);
 
         attachListIfAny(missingFiles, "load-sdr-attachments-missing-files");
         attachListIfAny(emptyOnDiskFiles, "load-sdr-attachments-zero-byte-files");
@@ -138,7 +145,7 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
         return tables;
     }
 
-    private int[] processTable(String tableName, File dir, long maxRows) throws Exception {
+    private int[] processTable(String tableName, List<File> dirs, long maxRows) throws Exception {
         MTable table = AddColumnsSupport.findTable(getCtx(), tableName, get_TrxName());
         if (table == null) {
             addLog(tableName + ": AD_Table not found - skipped.");
@@ -152,14 +159,15 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
         String keyColumn = keyColumns[0];
 
         String sql = "SELECT " + keyColumn + " AS pk, " + SAVED_FILENAME_COL + " AS saved, "
-                + ORIGINAL_FILENAME_COL + " AS original FROM " + tableName + " WHERE " + SAVED_FILENAME_COL
-                + " IS NOT NULL AND " + SAVED_FILENAME_COL + " <> '' ORDER BY " + keyColumn
-                + (maxRows > 0 ? " LIMIT " + maxRows : "");
+                + ORIGINAL_FILENAME_COL + " AS original, " + ISACTIVE_COL + " AS active FROM " + tableName
+                + " WHERE " + SAVED_FILENAME_COL + " IS NOT NULL AND " + SAVED_FILENAME_COL + " <> '' ORDER BY "
+                + keyColumn + (maxRows > 0 ? " LIMIT " + maxRows : "");
 
         int processed = 0;
         int attached = 0;
         int already = 0;
         int missing = 0;
+        int missingInactive = 0;
         int emptyOnDisk = 0;
         int errorCount = 0;
 
@@ -174,6 +182,7 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
                 int pk = rs.getInt("pk");
                 String saved = rs.getString("saved");
                 String original = rs.getString("original");
+                boolean isActive = !"N".equals(rs.getString("active"));
 
                 try {
                     MAttachment existing = MAttachment.get(getCtx(), table.getAD_Table_ID(), pk, get_TrxName());
@@ -182,10 +191,19 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
                         continue;
                     }
 
-                    File file = new File(dir, saved.trim());
-                    if (!file.isFile()) {
-                        missing++;
-                        addToListCapped(missingFiles, tableName + ".id=" + pk + ": " + file.getAbsolutePath());
+                    File file = findInDirs(dirs, saved.trim());
+                    if (file == null) {
+                        if (isActive) {
+                            missing++;
+                            addToListCapped(missingFiles, tableName + ".id=" + pk + " file=" + saved);
+                        } else {
+                            // Record itself is soft-deleted (isactive='N') - a missing file here is
+                            // expected, not a loader problem, so it's tracked separately rather than
+                            // mixed into the "needs investigation" missing-files list.
+                            missingInactive++;
+                            addToListCapped(missingFiles,
+                                    tableName + ".id=" + pk + " file=" + saved + " (record inactive/deleted)");
+                        }
                         continue;
                     }
                     if (file.length() == 0) {
@@ -210,7 +228,7 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
                 } catch (Exception e) {
                     errorCount++;
                     addToListCapped(errors, tableName + ".id=" + pk + " file=" + saved + " entryName=["
-                            + original + "] bytes=" + describeFileSize(dir, saved) + ": " + describeError(e));
+                            + original + "] bytes=" + describeFileSize(dirs, saved) + ": " + describeError(e));
                 }
             }
         } finally {
@@ -218,9 +236,21 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
         }
 
         addLog(tableName + ": processed " + processed + ", attached " + attached + ", already " + already
-                + ", missing " + missing + ", empty-on-disk " + emptyOnDisk + ", errors " + errorCount);
+                + ", missing " + missing + " (+ " + missingInactive + " missing but record inactive/deleted), "
+                + "empty-on-disk " + emptyOnDisk + ", errors " + errorCount);
 
-        return new int[] { processed, attached, already, missing, emptyOnDisk, errorCount };
+        return new int[] { processed, attached, already, missing + missingInactive, emptyOnDisk, errorCount };
+    }
+
+    /** Searches each directory in order, returning the first match or null if none has the file. */
+    private static File findInDirs(List<File> dirs, String fileName) {
+        for (File dir : dirs) {
+            File candidate = new File(dir, fileName);
+            if (candidate.isFile()) {
+                return candidate;
+            }
+        }
+        return null;
     }
 
     /**
@@ -230,7 +260,7 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
      * set per table (no MaxRows limit) regardless of how the main attach loop was bounded, since a
      * MaxRows test run must not report every not-yet-processed file as "orphaned".
      */
-    private int findOrphanFiles(File dir, List<String> tables) {
+    private int findOrphanFiles(List<File> dirs, List<String> tables) {
         Set<String> referenced = new HashSet<>();
         for (String tableName : tables) {
             PreparedStatement pstmt = null;
@@ -253,18 +283,20 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
             }
         }
 
-        File[] diskFiles = dir.listFiles();
-        if (diskFiles == null) {
-            return 0;
-        }
         int orphanCount = 0;
-        for (File f : diskFiles) {
-            if (!f.isFile()) {
+        for (File dir : dirs) {
+            File[] diskFiles = dir.listFiles();
+            if (diskFiles == null) {
                 continue;
             }
-            if (!referenced.contains(f.getName())) {
-                orphanCount++;
-                addToListCapped(orphanFiles, f.getAbsolutePath() + " (" + f.length() + " bytes)");
+            for (File f : diskFiles) {
+                if (!f.isFile()) {
+                    continue;
+                }
+                if (!referenced.contains(f.getName())) {
+                    orphanCount++;
+                    addToListCapped(orphanFiles, f.getAbsolutePath() + " (" + f.length() + " bytes)");
+                }
             }
         }
         addLog("Orphan check: " + referenced.size() + " distinct filename(s) referenced across " + tables.size()
@@ -302,9 +334,9 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
         return sb.toString();
     }
 
-    private static String describeFileSize(File dir, String saved) {
-        File file = new File(dir, saved.trim());
-        return file.isFile() ? String.valueOf(file.length()) : "?";
+    private static String describeFileSize(List<File> dirs, String saved) {
+        File file = findInDirs(dirs, saved.trim());
+        return file != null ? String.valueOf(file.length()) : "?";
     }
 
     private void addToListCapped(List<String> list, String entry) {
