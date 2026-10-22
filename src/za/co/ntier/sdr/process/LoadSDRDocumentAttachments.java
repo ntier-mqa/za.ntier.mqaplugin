@@ -53,7 +53,7 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
     private BigDecimal p_MaxRows;
 
     private static final String[] DEFAULT_BASE_DIRS = { "/home/ntier/MQASkillsDocuments",
-            "/home/ntier/MQASkillsDocuments_25092026" };
+            "/home/ntier/MQASkillsDocuments_19102026" };
     private static final String SAVED_FILENAME_COL = "sdr_savedfilename";
     private static final String ORIGINAL_FILENAME_COL = "sdr_originalfilename";
     private static final String ISACTIVE_COL = "isactive";
@@ -195,14 +195,15 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
                     if (file == null) {
                         if (isActive) {
                             missing++;
-                            addToListCapped(missingFiles, tableName + ".id=" + pk + " file=" + saved);
+                            addToListCapped(missingFiles, tableName + ".id=" + pk + " file=" + saved
+                                    + " original=[" + original + "]");
                         } else {
                             // Record itself is soft-deleted (isactive='N') - a missing file here is
                             // expected, not a loader problem, so it's tracked separately rather than
                             // mixed into the "needs investigation" missing-files list.
                             missingInactive++;
-                            addToListCapped(missingFiles,
-                                    tableName + ".id=" + pk + " file=" + saved + " (record inactive/deleted)");
+                            addToListCapped(missingFiles, tableName + ".id=" + pk + " file=" + saved
+                                    + " original=[" + original + "] (record inactive/deleted)");
                         }
                         continue;
                     }
@@ -211,7 +212,8 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
                         // attach. Tracked separately from "missing" (file is there, just 0 bytes) and
                         // from "errors" (not a save failure - we never attempt the save).
                         emptyOnDisk++;
-                        addToListCapped(emptyOnDiskFiles, tableName + ".id=" + pk + ": " + file.getAbsolutePath());
+                        addToListCapped(emptyOnDiskFiles, tableName + ".id=" + pk + " file=" + file.getAbsolutePath()
+                                + " original=[" + original + "]");
                         continue;
                     }
 
