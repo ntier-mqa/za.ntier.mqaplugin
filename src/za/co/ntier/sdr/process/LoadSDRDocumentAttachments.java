@@ -53,13 +53,14 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
     private BigDecimal p_MaxRows;
 
     private static final String[] DEFAULT_BASE_DIRS = { "/home/ntier/MQASkillsDocuments",
-            "/home/ntier/MQASkillsDocuments_19102026" };
+            "/home/ntier/MQASkillsDocuments_25092026", "/home/ntier/MQASkillsDocuments_19102026" };
     private static final String SAVED_FILENAME_COL = "sdr_savedfilename";
     private static final String ORIGINAL_FILENAME_COL = "sdr_originalfilename";
     private static final String ISACTIVE_COL = "isactive";
     private static final int MAX_LOGGED = 20000;
 
     private final List<String> missingFiles = new ArrayList<>();
+    private final List<String> missingFilesInactive = new ArrayList<>();
     private final List<String> emptyOnDiskFiles = new ArrayList<>();
     private final List<String> errors = new ArrayList<>();
     private final List<String> orphanFiles = new ArrayList<>();
@@ -111,6 +112,7 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
         int orphanCount = findOrphanFiles(dirs, tables);
 
         attachListIfAny(missingFiles, "load-sdr-attachments-missing-files");
+        attachListIfAny(missingFilesInactive, "load-sdr-attachments-missing-files-deleted-records");
         attachListIfAny(emptyOnDiskFiles, "load-sdr-attachments-zero-byte-files");
         attachListIfAny(errors, "load-sdr-attachments-errors");
         attachListIfAny(orphanFiles, "load-sdr-attachments-orphan-files-on-disk");
@@ -199,11 +201,11 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
                                     + " original=[" + original + "]");
                         } else {
                             // Record itself is soft-deleted (isactive='N') - a missing file here is
-                            // expected, not a loader problem, so it's tracked separately rather than
-                            // mixed into the "needs investigation" missing-files list.
+                            // expected, not a loader problem, so it's attached as its own separate
+                            // report rather than mixed into the "needs investigation" missing-files list.
                             missingInactive++;
-                            addToListCapped(missingFiles, tableName + ".id=" + pk + " file=" + saved
-                                    + " original=[" + original + "] (record inactive/deleted)");
+                            addToListCapped(missingFilesInactive,
+                                    tableName + ".id=" + pk + " file=" + saved + " original=[" + original + "]");
                         }
                         continue;
                     }
