@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import org.adempiere.base.annotation.Parameter;
 import org.adempiere.exceptions.AdempiereException;
+import org.compiere.model.I_AD_Table;
 import org.compiere.model.I_R_MailText;
 import org.compiere.model.MTable;
 import org.compiere.model.MSysConfig;
@@ -28,6 +29,7 @@ import za.co.ntier.wf.util.ADColumnUtil;
 import za.co.ntier.wf.util.MailNoticeUtil;
 import za.co.ntier.wf.util.MailNoticeUtil.NotificationFields;
 import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Submitted;
+import za.ntier.models.I_ZZ_WF_Audit;
 import za.ntier.models.I_ZZ_WF_Next_Node;
 import za.ntier.models.X_ZZ_WF_Next_Node;
 
@@ -70,20 +72,48 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 		trxName = get_TrxName();
 		now = new Timestamp(System.currentTimeMillis());
 		MTable t = MTable.get(ctx, getTable_ID());
-		if (t.isView()) {
+		if (t.isView())
+		{
 			String s = t.getTableName();
-			if (s != null && s.length() > 2) {
-			    s = s.substring(0, s.length() - 2);
-			}
-
-			t = MTable.get(ctx, s);
-			if (t == null) {
-				return;
+			if (s != null && s.length() > 2)
+			{
+				s = s.substring(0, s.length() - 2);
 			}
 			int recordID = getRecord_ID();
-			po = t.getPO(recordID, trxName);
-		} else {
+			
+			MTable baseTable = MTable.get(ctx, s);
+			if (baseTable != null && !baseTable.isView())
+			{
+				po = baseTable.getPO(recordID, trxName);
+			}
+			else
+			{
+				// Next depth: substring table doesn't exist (e.g. ZZ_LearnerInfo_V)
+				// Fetch the view record 't' to read AD_Table_ID and Record_ID
+				PO viewPO = t.getPO(recordID, trxName);
+				if (viewPO != null)
+				{
+					int tableID = viewPO.get_ValueAsInt(I_AD_Table.COLUMNNAME_AD_Table_ID);
+					int subRecordID = viewPO.get_ValueAsInt(I_ZZ_WF_Audit.COLUMNNAME_Record_ID);
+					if (tableID > 0 && subRecordID > 0)
+					{
+						MTable targetTable = MTable.get(ctx, tableID);
+						if (targetTable != null)
+						{
+							po = targetTable.getPO(subRecordID, trxName);
+						}
+					}
+				}
+			}
+		}
+		else
+		{
 			po = t.getPO(getRecord_ID(), trxName);
+		}
+
+		if (po == null)
+		{
+			throw new AdempiereException("Unable to resolve workflow document record for table: " + t.getTableName());
 		}
 	}
 
