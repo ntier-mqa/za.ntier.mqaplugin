@@ -108,9 +108,13 @@ public final class MailNoticeUtil {
 			if (!mUser.isActive()) {
 				return;
 			}
-			mailTemplate.setUser(mUser);
 			String msgHeader = mailTemplate.getMailHeader();
 			String msgBody = mailTemplate.getMailText();
+			mailTemplate.setMailText(msgBody);
+			
+			mailTemplate.setUser(mUser);
+			msgHeader = mailTemplate.getMailHeader();
+			msgBody = mailTemplate.getMailText();
 
 			if (X_AD_User.NOTIFICATIONTYPE_Notice.equals(mUser.getNotificationType()) ||
 					X_AD_User.NOTIFICATIONTYPE_EMailPlusNotice.equals(mUser.getNotificationType())	) {
