@@ -123,7 +123,7 @@ public class NtierModelValidator implements ModelValidator
 	@Override
 	public String modelChange(PO po, int type) throws Exception
 	{
-		if (type == ModelValidator.TYPE_AFTER_CHANGE && X_ZZ_WPA_Application.Table_Name.equals(po.get_TableName()))
+		if (type == ModelValidator.TYPE_BEFORE_CHANGE && X_ZZ_WPA_Application.Table_Name.equals(po.get_TableName()))
 		{
 			var ColStatus = I_ZZ_WPA_Application.COLUMNNAME_ZZ_DocStatus;
 			var ColWpaNumber = I_ZZ_WPA_Application.COLUMNNAME_ZZ_WPA_Number;
@@ -146,14 +146,25 @@ public class NtierModelValidator implements ModelValidator
 							var dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("ddMMyy"));
 							var wpaNumber = "16/MQA/WPA/" + nextSeqNo + "/" + dateStr;
 							po.set_ValueNoCheck(ColWpaNumber, wpaNumber);
-							po.saveEx();
 						}
 						else
 						{
 							log.severe("Failed to fetch sequence for ZZ_WPA_Application. Ensure AD_Sequence is configured.");
 						}
 					}
-					
+				}
+			}
+		}
+
+		if (type == ModelValidator.TYPE_AFTER_CHANGE && X_ZZ_WPA_Application.Table_Name.equals(po.get_TableName()))
+		{
+			var ColStatus = I_ZZ_WPA_Application.COLUMNNAME_ZZ_DocStatus;
+
+			if (po.is_ValueChanged(ColStatus))
+			{
+				var newStatus = po.get_ValueAsString(ColStatus);
+				if (X_ZZ_WPA_Application.ZZ_DOCSTATUS_Approved.equals(newStatus))
+				{
 					// Generate WPA Approval Letter
 					generateAndSendWPAApprovalLetter((X_ZZ_WPA_Application) po);
 				}
