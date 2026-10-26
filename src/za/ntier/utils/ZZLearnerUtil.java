@@ -81,12 +81,12 @@ public class ZZLearnerUtil
 		if (prog.is_ValueChanged(I_ZZLearnerLearnership.COLUMNNAME_ZZ_DocStatus) || newRecord)
 		{
 			String status = prog.get_ValueAsString(I_ZZLearnerLearnership.COLUMNNAME_ZZ_DocStatus);
-			if (newRecord && (Util.isEmpty(status) || X_ZZLearner.ZZ_DOCSTATUS_Draft.equals(status)))
+			if (newRecord && Util.isEmpty(status))
 			{
 				if (prog.get_ColumnIndex(I_ZZLearnerLearnership.COLUMNNAME_ZZ_DocStatus) >= 0)
 				{
-					prog.set_ValueOfColumn(I_ZZLearnerLearnership.COLUMNNAME_ZZ_DocStatus, X_ZZLearnerDGProgramme.ZZ_DOCSTATUS_Created);
-					status = X_ZZLearnerDGProgramme.ZZ_DOCSTATUS_Created;
+					prog.set_ValueOfColumn(I_ZZLearnerLearnership.COLUMNNAME_ZZ_DocStatus, X_ZZLearnerDGProgramme.ZZ_DOCSTATUS_Draft);
+					status = X_ZZLearnerDGProgramme.ZZ_DOCSTATUS_Draft;
 				}
 			}
 			if (X_ZZLearner.ZZ_DOCSTATUS_Registered.equals(status))
