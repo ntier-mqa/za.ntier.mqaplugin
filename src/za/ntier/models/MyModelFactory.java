@@ -14,6 +14,12 @@ import org.osgi.service.component.annotations.Component;
 
 import za.co.ntier.api.model.I_ZZAssessorPerson;
 import za.co.ntier.api.model.I_ZZLearner;
+import za.co.ntier.api.model.I_ZZLearnerLearnership;
+import za.co.ntier.api.model.I_ZZLearnerSkillsProgramme;
+import za.co.ntier.api.model.I_ZZLearnerQCTOLearnership;
+import za.co.ntier.api.model.I_ZZLearnerQCTOSkillsProgramme;
+import za.co.ntier.api.model.I_ZZLearnerQCTOArtisans;
+import za.co.ntier.api.model.I_ZZLearnerDGProgramme;
 import za.co.ntier.api.model.I_ZZQctoModule;
 import za.co.ntier.api.model.I_ZZQctoSkillsProgramme;
 import za.co.ntier.api.model.I_ZZSdfOrganisation;
@@ -118,6 +124,12 @@ public class MyModelFactory implements IModelFactory {
         register(I_ZZQctoModule.Table_Name, MZZQctoModule.class);
         register(I_C_BP_OC.Table_Name, MBPOC.class);
         register(I_ZZLearner.Table_Name, MZZLearner.class);
+        register(I_ZZLearnerLearnership.Table_Name, MZZLearnerLearnership.class);
+        register(I_ZZLearnerSkillsProgramme.Table_Name, MZZLearnerSkillsProgramme.class);
+        register(I_ZZLearnerQCTOLearnership.Table_Name, MZZLearnerQCTOLearnership.class);
+        register(I_ZZLearnerQCTOSkillsProgramme.Table_Name, MZZLearnerQCTOSkillsProgramme.class);
+        register(I_ZZLearnerQCTOArtisans.Table_Name, MZZLearnerQCTOArtisans.class);
+        register(I_ZZLearnerDGProgramme.Table_Name, MZZLearnerDGProgramme.class);
         register(I_ZZ_Allocation_Offer.Table_Name, MZZAllocationOffer.class);
         register(I_ZZ_Allocation_Intake_Plan.Table_Name, X_ZZ_Allocation_Intake_Plan.class);
     }
