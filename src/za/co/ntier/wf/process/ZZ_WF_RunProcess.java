@@ -126,7 +126,8 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 		String curStatus = po.get_ValueAsString("ZZ_DocStatus");
 		String curAction = po.get_ValueAsString("ZZ_DocAction");
 
-		MZZWFHeader hdr = MZZWFHeader.forTable(ctx, po.get_Table_ID(), trxName);
+		MZZWFHeader hdr = MZZWFHeader.forTable(ctx, po.get_Table_ID(),
+				po.getAD_Client_ID(), po.getAD_Org_ID(), trxName);
 		if (hdr == null || !hdr.isActive())
 			throw new AdempiereException("No active workflow found for this table.");
 
