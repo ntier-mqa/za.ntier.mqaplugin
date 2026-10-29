@@ -82,6 +82,8 @@ public class ReconcileBudgetImport extends SvrProcess {
 	protected void prepare() {
 		if (Util.isEmpty(p_RootPath, true))
 			p_RootPath = DEFAULT_ROOT_PATH;
+		else
+			p_RootPath = p_RootPath.trim();
 		if (Util.isEmpty(p_Description, true))
 			p_Description = DEFAULT_DESCRIPTION;
 		if (p_Tolerance == null)
@@ -92,7 +94,9 @@ public class ReconcileBudgetImport extends SvrProcess {
 	protected String doIt() throws Exception {
 		File root = new File(p_RootPath);
 		if (!root.isDirectory())
-			throw new AdempiereException("Not a directory on the server: " + p_RootPath);
+			throw new AdempiereException("Not a directory on the server: [" + p_RootPath + "] (length="
+					+ p_RootPath.length() + ", exists=" + root.exists() + ", canRead=" + root.canRead() + ", absolute="
+					+ root.getAbsolutePath() + ")");
 
 		List<File> yearDirs = new ArrayList<>();
 		File[] children = root.listFiles(File::isDirectory);
