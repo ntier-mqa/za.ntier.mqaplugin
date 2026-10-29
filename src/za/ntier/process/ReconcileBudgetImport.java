@@ -74,20 +74,22 @@ public class ReconcileBudgetImport extends SvrProcess {
 	private static final String[] COLUMN_HEADERS = { "Period", "Src Count", "GL Count", "Count Diff", "Src Amount",
 			"GL Amount", "Amount Diff", "Status" };
 
+	private static final String DEFAULT_ROOT_PATH = "/home/ntier/fwdbudgetexport";
+	private static final String DEFAULT_DESCRIPTION = "ZZ_GLImportDesc";
+	private static final BigDecimal DEFAULT_TOLERANCE = new BigDecimal("0.01");
+
 	@Override
 	protected void prepare() {
+		if (Util.isEmpty(p_RootPath, true))
+			p_RootPath = DEFAULT_ROOT_PATH;
 		if (Util.isEmpty(p_Description, true))
-			p_Description = "ZZ_GLImportDesc";
+			p_Description = DEFAULT_DESCRIPTION;
 		if (p_Tolerance == null)
-			p_Tolerance = new BigDecimal("0.01");
+			p_Tolerance = DEFAULT_TOLERANCE;
 	}
 
 	@Override
 	protected String doIt() throws Exception {
-		if (Util.isEmpty(p_RootPath, true))
-			throw new AdempiereException(
-					"RootPath parameter is required - server path to the folder containing the 'YYYY-YY' year folders (e.g. /home/ntier/fwdbudgetexport)");
-
 		File root = new File(p_RootPath);
 		if (!root.isDirectory())
 			throw new AdempiereException("Not a directory on the server: " + p_RootPath);
