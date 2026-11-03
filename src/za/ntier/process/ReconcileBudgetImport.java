@@ -1,8 +1,8 @@
 package za.ntier.process;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -34,7 +34,8 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.compiere.process.ProcessInfo;
+import org.compiere.model.I_AD_PInstance;
+import org.compiere.model.MAttachment;
 import org.compiere.process.SvrProcess;
 import org.compiere.util.DB;
 import org.compiere.util.Util;
@@ -93,10 +94,19 @@ public class ReconcileBudgetImport extends SvrProcess {
 	@Override
 	protected String doIt() throws Exception {
 		File root = new File(p_RootPath);
-		if (!root.isDirectory())
+		if (!root.isDirectory()) {
+			String jvmId = java.lang.management.ManagementFactory.getRuntimeMXBean().getName();
+			String osUser = System.getProperty("user.name");
+			File home = new File("/home");
+			File ntierHome = new File("/home/ntier");
+			String homeListing = home.exists() ? java.util.Arrays.toString(home.list()) : "MISSING (exists=false)";
+			String ntierHomeListing = ntierHome.exists() ? java.util.Arrays.toString(ntierHome.list())
+					: "MISSING (exists=false)";
 			throw new AdempiereException("Not a directory on the server: [" + p_RootPath + "] (length="
-					+ p_RootPath.length() + ", exists=" + root.exists() + ", canRead=" + root.canRead() + ", absolute="
-					+ root.getAbsolutePath() + ")");
+					+ p_RootPath.length() + ", exists=" + root.exists() + ", canRead=" + root.canRead() + ")\n" + "JVM="
+					+ jvmId + " osUser=" + osUser + "\n" + "/home listing: " + homeListing + "\n"
+					+ "/home/ntier listing: " + ntierHomeListing);
+		}
 
 		List<File> yearDirs = new ArrayList<>();
 		File[] children = root.listFiles(File::isDirectory);
@@ -182,20 +192,19 @@ public class ReconcileBudgetImport extends SvrProcess {
 			wb.setActiveSheet(0);
 
 			String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-			File outFile = new File(System.getProperty("java.io.tmpdir"),
-					"BudgetImportReconciliation_" + timestamp + ".xlsx");
-			try (FileOutputStream fos = new FileOutputStream(outFile)) {
-				wb.write(fos);
-			}
-			addLog("Report written: " + outFile.getAbsolutePath());
+			String fileName = "BudgetImportReconciliation_" + timestamp + ".xlsx";
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			wb.write(out);
 
-			ProcessInfo pi = getProcessInfo();
-			pi.setExport(true);
-			pi.setExportFile(outFile);
-			pi.setExportFileExtension("xlsx");
+			MAttachment attachment = new MAttachment(getCtx(), I_AD_PInstance.Table_ID, getAD_PInstance_ID(), null,
+					get_TrxName());
+			attachment.addEntry(fileName, out.toByteArray());
+			attachment.saveEx();
+			addLog("Report attached: " + fileName);
 
 			return (grandOk ? "MATCH" : "MISMATCH") + " across " + yearDirs.size() + " year(s): "
-					+ String.join(", ", yearStatus) + " - see attached Excel report for full detail";
+					+ String.join(", ", yearStatus) + " - download " + fileName
+					+ " from the Attachment icon on this Process Audit record";
 		}
 	}
 
