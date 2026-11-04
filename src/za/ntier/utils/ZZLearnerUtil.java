@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
@@ -40,6 +41,7 @@ import za.co.ntier.api.model.I_ZZLearnerQCTOArtisans;
 import za.co.ntier.api.model.I_ZZLearnerQCTOLearnership;
 import za.co.ntier.api.model.I_ZZLearnerQCTOSkillsProgramme;
 import za.co.ntier.api.model.I_ZZLearnerSkillsProgramme;
+import za.co.ntier.api.model.I_ZZLearnership;
 import za.co.ntier.api.model.X_ZZLearner;
 import za.co.ntier.api.model.X_ZZLearnerDGProgramme;
 import za.co.ntier.api.model.X_ZZLearnerLearnership;
@@ -51,7 +53,6 @@ import za.co.ntier.api.model.X_ZZLearnership;
 import za.co.ntier.api.model.X_ZZPerson;
 import za.co.ntier.api.model.X_ZZQctoLearnership;
 import za.co.ntier.api.model.X_ZZQctoSkillsProgramme;
-import za.co.ntier.api.model.X_ZZQualification;
 import za.co.ntier.api.model.X_ZZSkillsProgramme;
 import za.co.ntier.api.model.X_ZZ_Program_Master_Data;
 
@@ -629,17 +630,7 @@ public class ZZLearnerUtil
 			if (lsId > 0)
 			{
 				X_ZZLearnership ls = new X_ZZLearnership(ctx, lsId, trxName);
-				String qualTitle = "";
-				if (ls.getZZQualification_ID() > 0)
-				{
-					X_ZZQualification q = new X_ZZQualification(ctx, ls.getZZQualification_ID(), trxName);
-					qualTitle = q.getZZSaqaQualificationTitle();
-				}
-				if (Util.isEmpty(qualTitle))
-				{
-					qualTitle = ls.getZZLearnershipTitle();
-				}
-				return !Util.isEmpty(qualTitle) ? "learnership (" + qualTitle + ")" : "learnership";
+				return selectedProgrammeName(ls, "learnership", ls.getZZLearnershipTitle());
 			}
 			return "learnership";
 		}
@@ -650,7 +641,7 @@ public class ZZLearnerUtil
 			{
 				X_ZZSkillsProgramme sp = new X_ZZSkillsProgramme(ctx, spId, trxName);
 				String title = sp.getZZSkillsProgrammeTitle();
-				return !Util.isEmpty(title) ? "skills programme (" + title + ")" : "skills programme";
+				return selectedProgrammeName(sp, "skills programme", title);
 			}
 			return "skills programme";
 		}
@@ -661,7 +652,7 @@ public class ZZLearnerUtil
 			{
 				X_ZZQctoLearnership qls = new X_ZZQctoLearnership(ctx, qlsId, trxName);
 				String title = qls.getZZLearnershipTitle();
-				return !Util.isEmpty(title) ? "learnership (" + title + ")" : "learnership";
+				return selectedProgrammeName(qls, "learnership", title);
 			}
 			return "learnership";
 		}
@@ -672,7 +663,7 @@ public class ZZLearnerUtil
 			{
 				X_ZZQctoLearnership qls = new X_ZZQctoLearnership(ctx, qartId, trxName);
 				String title = qls.getZZLearnershipTitle();
-				return !Util.isEmpty(title) ? "artisan (" + title + ")" : "artisan";
+				return selectedProgrammeName(qls, "artisan", title);
 			}
 			return "artisan";
 		}
@@ -683,23 +674,97 @@ public class ZZLearnerUtil
 			{
 				X_ZZQctoSkillsProgramme qsp = new X_ZZQctoSkillsProgramme(ctx, qspId, trxName);
 				String title = qsp.getZZSkillsProgrammeTitle();
-				return !Util.isEmpty(title) ? "skills programme (" + title + ")" : "skills programme";
+				return selectedProgrammeName(qsp, "skills programme", title);
 			}
 			return "skills programme";
 		}
 		else if (I_ZZLearnerDGProgramme.Table_Name.equals(prog.get_TableName()))
 		{
-			int progId = prog.get_ValueAsInt(I_ZZLearnerDGProgramme.COLUMNNAME_ZZ_Program_Master_Data_ID);
-			if (progId > 0)
-			{
-				X_ZZ_Program_Master_Data pmd = new X_ZZ_Program_Master_Data(ctx, progId, trxName);
-				String name = pmd.getTitle();
-				return !Util.isEmpty(name) ? name : "discretionary grant";
-			}
-			return "discretionary grant";
+			return resolveDGProgrammeName(prog);
 		}
 
 		return "learning programme";
+	}
+
+	/** Resolve the programme selected by the revised DG registration process. */
+	private static String resolveDGProgrammeName(PO prog)
+	{
+		int definitionId = prog.get_ValueAsInt(I_ZZLearnerDGProgramme.COLUMNNAME_ZZ_Program_Master_Data_ID);
+		if (definitionId <= 0)
+			definitionId = prog.get_ValueAsInt(I_ZZLearnerDGProgramme.COLUMNNAME_ZZ_DGProgram_ID);
+		if (definitionId <= 0)
+			return "discretionary grant";
+
+		X_ZZ_Program_Master_Data definition = new X_ZZ_Program_Master_Data(prog.getCtx(), definitionId, prog.get_TrxName());
+		String name = definition.getTitle();
+		if (Util.isEmpty(name, true))
+			name = definition.getName();
+		if (Util.isEmpty(name, true))
+			name = "discretionary grant";
+		if (!definition.isEnterQualification())
+			return name;
+
+		int programmeId = prog.get_ValueAsInt(I_ZZLearnerDGProgramme.COLUMNNAME_zzlearnerprogram_id);
+		if (programmeId <= 0)
+			return name;
+
+		String type = prog.get_ValueAsString(I_ZZLearnerDGProgramme.COLUMNNAME_ZZProgramType);
+		PO selected;
+		String label;
+		String title;
+		if (X_ZZLearnerDGProgramme.ZZPROGRAMTYPE_Learnership.equals(type))
+		{
+			X_ZZLearnership ls = new X_ZZLearnership(prog.getCtx(), programmeId, prog.get_TrxName());
+			selected = ls;
+			label = "learnership";
+			title = ls.getZZLearnershipTitle();
+		}
+		else if (X_ZZLearnerDGProgramme.ZZPROGRAMTYPE_QCTOLearnership.equals(type)
+				|| X_ZZLearnerDGProgramme.ZZPROGRAMTYPE_QCTOArtisans.equals(type))
+		{
+			X_ZZQctoLearnership ls = new X_ZZQctoLearnership(prog.getCtx(), programmeId, prog.get_TrxName());
+			selected = ls;
+			label = X_ZZLearnerDGProgramme.ZZPROGRAMTYPE_QCTOArtisans.equals(type) ? "artisan" : "learnership";
+			title = ls.getZZLearnershipTitle();
+		}
+		else if (X_ZZLearnerDGProgramme.ZZPROGRAMTYPE_SkillsProgramme.equals(type))
+		{
+			X_ZZSkillsProgramme sp = new X_ZZSkillsProgramme(prog.getCtx(), programmeId, prog.get_TrxName());
+			selected = sp;
+			label = "skills programme";
+			title = sp.getZZSkillsProgrammeTitle();
+		}
+		else if (X_ZZLearnerDGProgramme.ZZPROGRAMTYPE_QCTOSkillsProgramme.equals(type))
+		{
+			X_ZZQctoSkillsProgramme sp = new X_ZZQctoSkillsProgramme(prog.getCtx(), programmeId, prog.get_TrxName());
+			selected = sp;
+			label = "skills programme";
+			title = sp.getZZSkillsProgrammeTitle();
+		}
+		else
+			return name;
+
+		if (selected.get_ID() <= 0)
+			return name;
+		if (Util.isEmpty(title, true))
+			title = prog.get_ValueAsString(I_ZZLearnerDGProgramme.COLUMNNAME_ZZProgramTitle);
+		return selectedProgrammeName(selected, label, title);
+	}
+
+	/** Format the title and level of the programme selected during registration. */
+	private static String selectedProgrammeName(PO selected, String label, String title)
+	{
+		String level = selected.get_ValueAsString(I_ZZLearnership.COLUMNNAME_ZZNqfLevel);
+		if (Util.isEmpty(title, true))
+			return label;
+		String description = title.trim();
+		if (!Util.isEmpty(level, true))
+		{
+			String levelText = level.trim().toUpperCase(Locale.ROOT)
+					.replaceFirst("^(?:LEVEL\\s*)?0*(\\d+)$", "LEVEL $1");
+			description += " " + levelText;
+		}
+		return label + " (" + description + ")";
 	}
 
 	/**
