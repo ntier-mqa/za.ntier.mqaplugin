@@ -7,8 +7,10 @@ import java.nio.file.Files;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.adempiere.base.annotation.Parameter;
@@ -77,7 +79,20 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
             { "sdr_wspatrdocumentuploads", "sdr_organisation_id", "sdr_organisation" },
             { "sdr_sdfcertificatedocument", "sdr_sdf_id", "sdr_sdf" },
             { "sdr_sdforganisationdocumentupload", "sdr_sdforganisation_id", "sdr_sdforganisation" },
+            { "sdr_wspatrevaluationverificationchecklist", "sdr_wspatr_id", "sdr_wspatr" },
+            { "sdr_persondocumentupload", "sdr_person_id", "sdr_person" },
     };
+
+    /**
+     * sdr_wspatrbulkapprovaldocumentupload has no single parent FK - sdr_wspatrids is a free-text
+     * CSV of MULTIPLE sdr_wspatr.id (source id) values (confirmed 2026-10-26, true many-to-many,
+     * see [[project_wspatrbulkapproval_m2m_pending]] for the junction-table follow-up). Until that
+     * junction table exists, "is the parent deleted" is answered by resolving every id in the CSV
+     * and checking whether ALL of them are inactive - handled separately from PARENT_SPECS below.
+     */
+    private static final String WSPATR_CSV_TABLE = "sdr_wspatrbulkapprovaldocumentupload";
+    private static final String WSPATR_CSV_COLUMN = "sdr_wspatrids";
+    private static final String WSPATR_TABLE = "sdr_wspatr";
 
     private final List<String> missingFiles = new ArrayList<>();
     private final List<String> missingFilesInactive = new ArrayList<>();
@@ -168,6 +183,60 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
         return count > 0;
     }
 
+    /** source id (sdr_wspatr.id) -&gt; isActive, for the CSV parent check below. */
+    private Map<Integer, Boolean> buildWspatrActiveMap() {
+        Map<Integer, Boolean> map = new HashMap<>();
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            pstmt = DB.prepareStatement(
+                    "SELECT id, " + ISACTIVE_COL + " FROM " + WSPATR_TABLE + " WHERE id IS NOT NULL",
+                    get_TrxName());
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                map.put(rs.getInt(1), !"N".equals(rs.getString(2)));
+            }
+        } catch (Exception e) {
+            throw new AdempiereException("Failed loading " + WSPATR_TABLE + " active status map", e);
+        } finally {
+            DB.close(rs, pstmt);
+        }
+        return map;
+    }
+
+    /**
+     * sdr_wspatrids is a CSV of sdr_wspatr.id (source ids, not the surrogate PK - see
+     * WSPATR_CSV_TABLE's Javadoc). The parent is considered deleted only if EVERY id that actually
+     * resolves against {@code activeMap} is inactive; an id that doesn't resolve at all is ignored
+     * (not evidence either way), and if NOTHING resolves, the conservative default is "active" (no
+     * evidence of deletion) rather than wrongly suppressing a genuine missing-file report.
+     */
+    private static boolean computeCsvParentActive(String csv, Map<Integer, Boolean> activeMap) {
+        if (csv == null || csv.trim().isEmpty()) {
+            return true;
+        }
+        boolean anyResolved = false;
+        boolean anyActive = false;
+        for (String part : csv.split(",")) {
+            String trimmed = part.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            try {
+                Boolean active = activeMap.get(Integer.parseInt(trimmed));
+                if (active != null) {
+                    anyResolved = true;
+                    if (active) {
+                        anyActive = true;
+                    }
+                }
+            } catch (NumberFormatException e) {
+                // Not a plain integer token - ignore, doesn't count as evidence either way.
+            }
+        }
+        return !anyResolved || anyActive;
+    }
+
     private List<String> findDocumentTables() {
         List<String> tables = new ArrayList<>();
         PreparedStatement pstmt = null;
@@ -210,21 +279,43 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
                     + ") not found - parent delete-status check skipped for this table.");
         }
 
+        boolean isCsvParentCheck = tableName.equalsIgnoreCase(WSPATR_CSV_TABLE)
+                && columnExists(tableName, WSPATR_CSV_COLUMN) && tableExists(WSPATR_TABLE)
+                && columnExists(WSPATR_TABLE, "id") && columnExists(WSPATR_TABLE, ISACTIVE_COL);
+        Map<Integer, Boolean> wspatrActiveMap = null;
+        if (isCsvParentCheck) {
+            wspatrActiveMap = buildWspatrActiveMap();
+            addLog(tableName + ": CSV parent check enabled via " + WSPATR_CSV_COLUMN + " -> " + WSPATR_TABLE
+                    + ".id (" + wspatrActiveMap.size() + " source id(s) loaded).");
+        } else if (tableName.equalsIgnoreCase(WSPATR_CSV_TABLE)) {
+            addLog(tableName + ": expected CSV parent column/table (" + WSPATR_CSV_COLUMN + " / " + WSPATR_TABLE
+                    + ") not found - parent delete-status check skipped for this table.");
+        }
+
+        // "id" is the plain reconciliation column every migration class stamped with the ORIGINAL
+        // mssdr_* source row id (see AddColumnsSupport#createReconIdColumn) - unrelated to the
+        // table's own surrogate primary key (keyColumn, e.g. sdr_organisationdocuments_id). Both get
+        // logged, clearly labelled, so a missing/error entry can be cross-referenced either against
+        // this Postgres table (by pk) or against the original MS SQL source table (by source id).
+        boolean hasReconId = columnExists(tableName, "id");
+        String reconIdSelect = hasReconId ? ", " + (hasParentCheck ? "d." : "") + "id AS reconid" : "";
+
         String sql;
         if (hasParentCheck) {
             String fkColumn = parentSpec[1];
             String parentTable = parentSpec[2];
             sql = "SELECT d." + keyColumn + " AS pk, d." + SAVED_FILENAME_COL + " AS saved, d."
                     + ORIGINAL_FILENAME_COL + " AS original, d." + ISACTIVE_COL + " AS active, p." + ISACTIVE_COL
-                    + " AS parent_active FROM " + tableName + " d LEFT JOIN " + parentTable + " p ON d." + fkColumn
-                    + " = p." + fkColumn + " WHERE d." + SAVED_FILENAME_COL + " IS NOT NULL AND d."
-                    + SAVED_FILENAME_COL + " <> '' ORDER BY d." + keyColumn
+                    + " AS parent_active" + reconIdSelect + " FROM " + tableName + " d LEFT JOIN " + parentTable
+                    + " p ON d." + fkColumn + " = p." + fkColumn + " WHERE d." + SAVED_FILENAME_COL
+                    + " IS NOT NULL AND d." + SAVED_FILENAME_COL + " <> '' ORDER BY d." + keyColumn
                     + (maxRows > 0 ? " LIMIT " + maxRows : "");
         } else {
+            String csvSelect = isCsvParentCheck ? ", " + WSPATR_CSV_COLUMN + " AS wspatrids" : "";
             sql = "SELECT " + keyColumn + " AS pk, " + SAVED_FILENAME_COL + " AS saved, " + ORIGINAL_FILENAME_COL
-                    + " AS original, " + ISACTIVE_COL + " AS active FROM " + tableName + " WHERE "
-                    + SAVED_FILENAME_COL + " IS NOT NULL AND " + SAVED_FILENAME_COL + " <> '' ORDER BY " + keyColumn
-                    + (maxRows > 0 ? " LIMIT " + maxRows : "");
+                    + " AS original, " + ISACTIVE_COL + " AS active" + reconIdSelect + csvSelect + " FROM "
+                    + tableName + " WHERE " + SAVED_FILENAME_COL + " IS NOT NULL AND " + SAVED_FILENAME_COL
+                    + " <> '' ORDER BY " + keyColumn + (maxRows > 0 ? " LIMIT " + maxRows : "");
         }
 
         int processed = 0;
@@ -247,8 +338,17 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
                 String saved = rs.getString("saved");
                 String original = rs.getString("original");
                 boolean ownActive = !"N".equals(rs.getString("active"));
-                boolean parentActive = !hasParentCheck || !"N".equals(rs.getString("parent_active"));
+                boolean parentActive;
+                if (hasParentCheck) {
+                    parentActive = !"N".equals(rs.getString("parent_active"));
+                } else if (isCsvParentCheck) {
+                    parentActive = computeCsvParentActive(rs.getString("wspatrids"), wspatrActiveMap);
+                } else {
+                    parentActive = true;
+                }
                 boolean isActive = ownActive && parentActive;
+                String rowRef = tableName + ".pk=" + pk
+                        + (hasReconId ? " source_id=" + rs.getInt("reconid") : "");
 
                 try {
                     MAttachment existing = MAttachment.get(getCtx(), table.getAD_Table_ID(), pk, get_TrxName());
@@ -261,15 +361,15 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
                     if (file == null) {
                         if (isActive) {
                             missing++;
-                            addToListCapped(missingFiles, tableName + ".id=" + pk + " file=" + saved
-                                    + " original=[" + original + "]");
+                            addToListCapped(missingFiles, rowRef + " file=" + saved + " original=[" + original
+                                    + "]");
                         } else {
                             // Record itself is soft-deleted (isactive='N') - a missing file here is
                             // expected, not a loader problem, so it's attached as its own separate
                             // report rather than mixed into the "needs investigation" missing-files list.
                             missingInactive++;
                             addToListCapped(missingFilesInactive,
-                                    tableName + ".id=" + pk + " file=" + saved + " original=[" + original + "]");
+                                    rowRef + " file=" + saved + " original=[" + original + "]");
                         }
                         continue;
                     }
@@ -278,8 +378,8 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
                         // attach. Tracked separately from "missing" (file is there, just 0 bytes) and
                         // from "errors" (not a save failure - we never attempt the save).
                         emptyOnDisk++;
-                        addToListCapped(emptyOnDiskFiles, tableName + ".id=" + pk + " file=" + file.getAbsolutePath()
-                                + " original=[" + original + "]");
+                        addToListCapped(emptyOnDiskFiles,
+                                rowRef + " file=" + file.getAbsolutePath() + " original=[" + original + "]");
                         continue;
                     }
 
@@ -295,8 +395,8 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
                     attached++;
                 } catch (Exception e) {
                     errorCount++;
-                    addToListCapped(errors, tableName + ".id=" + pk + " file=" + saved + " entryName=["
-                            + original + "] bytes=" + describeFileSize(dirs, saved) + ": " + describeError(e));
+                    addToListCapped(errors, rowRef + " file=" + saved + " entryName=[" + original + "] bytes="
+                            + describeFileSize(dirs, saved) + ": " + describeError(e));
                 }
             }
         } finally {
