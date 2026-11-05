@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -61,27 +62,50 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
     private static final String ISACTIVE_COL = "isactive";
     private static final int MAX_LOGGED = 20000;
 
+    /** One FK hop in a parent chain: fkColumn lives on the PREVIOUS level, pointing at parentTable. */
+    private static final class ParentHop {
+        final String fkColumn;
+        final String parentTable;
+
+        ParentHop(String fkColumn, String parentTable) {
+            this.fkColumn = fkColumn;
+            this.parentTable = parentTable;
+        }
+    }
+
     /**
-     * Maps a document table to the FK column pointing at its real parent record, whose OWN delete
-     * status (not the document row's own isactive) determines whether a missing file is expected.
-     * Confirmed 2026-10-26: the document rows migrated with isactive='Y' even when their parent
-     * Organisation/SDFOrganisation/SDF was itself marked deleted - the document table's own
-     * isactive flag never reflected the parent's deletion. {documentTable, fkColumn, parentTable} -
-     * fkColumn is assumed to be the parent table's own PK column name too (this project's standard
-     * TableDir naming convention), verified at runtime via information_schema before use so a wrong
-     * guess here degrades to "no parent check" rather than a broken query.
+     * Maps a document table to the FULL chain of ancestor records whose OWN delete status (not the
+     * document row's own isactive) determines whether a missing file is expected. Confirmed
+     * 2026-10-26: document rows migrated with isactive='Y' even when their true ancestor
+     * (Organisation/SDFOrganisation/SDF) was itself marked deleted - and confirmed again the same
+     * day that a single hop isn't always enough: sdr_organisationbankingdetailsdocumentupload's
+     * DIRECT parent (sdr_organisationbankingdetails) can itself show isactive='Y' while ITS OWN
+     * parent sdr_organisation is deleted - the deletion cascade isn't reflected at the intermediate
+     * level either. Each hop's fkColumn is assumed to be that hop's parent table's own PK column
+     * name too (this project's standard TableDir naming convention) and is verified at runtime via
+     * information_schema before use (see {@link #buildVerifiedChain}) - an unverifiable hop (and
+     * every hop depending on it) is dropped rather than risking a broken query.
      */
-    private static final String[][] PARENT_SPECS = {
-            { "sdr_organisationdocuments", "sdr_organisation_id", "sdr_organisation" },
-            { "sdr_organisationemails", "sdr_organisation_id", "sdr_organisation" },
-            { "sdr_organisationbankingdetailsdocumentupload", "sdr_organisationbankingdetails_id",
-                    "sdr_organisationbankingdetails" },
-            { "sdr_wspatrdocumentuploads", "sdr_organisation_id", "sdr_organisation" },
-            { "sdr_sdfcertificatedocument", "sdr_sdf_id", "sdr_sdf" },
-            { "sdr_sdforganisationdocumentupload", "sdr_sdforganisation_id", "sdr_sdforganisation" },
-            { "sdr_wspatrevaluationverificationchecklist", "sdr_wspatr_id", "sdr_wspatr" },
-            { "sdr_persondocumentupload", "sdr_person_id", "sdr_person" },
-    };
+    private static final Map<String, List<ParentHop>> PARENT_CHAINS = new HashMap<>();
+    static {
+        PARENT_CHAINS.put("sdr_organisationdocuments",
+                Arrays.asList(new ParentHop("sdr_organisation_id", "sdr_organisation")));
+        PARENT_CHAINS.put("sdr_organisationemails",
+                Arrays.asList(new ParentHop("sdr_organisation_id", "sdr_organisation")));
+        // Confirmed 2026-10-26: this table carries its own direct sdr_organisation_id column
+        // (alongside sdr_organisationbankingdetails_id) - a single direct hop straight to
+        // sdr_organisation, rather than going via sdr_organisationbankingdetails's own FK.
+        PARENT_CHAINS.put("sdr_organisationbankingdetailsdocumentupload",
+                Arrays.asList(new ParentHop("sdr_organisation_id", "sdr_organisation")));
+        PARENT_CHAINS.put("sdr_wspatrdocumentuploads",
+                Arrays.asList(new ParentHop("sdr_organisation_id", "sdr_organisation")));
+        PARENT_CHAINS.put("sdr_sdfcertificatedocument", Arrays.asList(new ParentHop("sdr_sdf_id", "sdr_sdf")));
+        PARENT_CHAINS.put("sdr_sdforganisationdocumentupload",
+                Arrays.asList(new ParentHop("sdr_sdforganisation_id", "sdr_sdforganisation")));
+        PARENT_CHAINS.put("sdr_wspatrevaluationverificationchecklist",
+                Arrays.asList(new ParentHop("sdr_wspatr_id", "sdr_wspatr")));
+        PARENT_CHAINS.put("sdr_persondocumentupload", Arrays.asList(new ParentHop("sdr_person_id", "sdr_person")));
+    }
 
     /**
      * sdr_wspatrbulkapprovaldocumentupload has no single parent FK - sdr_wspatrids is a free-text
@@ -161,13 +185,30 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
                         : "");
     }
 
-    private static String[] findParentSpec(String tableName) {
-        for (String[] spec : PARENT_SPECS) {
-            if (spec[0].equalsIgnoreCase(tableName)) {
-                return spec;
+    /**
+     * Walks the declared chain for this table, verifying each hop's fkColumn/parentTable actually
+     * exist before trusting it. Stops (and logs) at the first unverifiable hop, since every
+     * subsequent hop depends on the join reaching that point.
+     */
+    private List<ParentHop> buildVerifiedChain(String tableName) {
+        List<ParentHop> chain = PARENT_CHAINS.get(tableName.toLowerCase());
+        if (chain == null) {
+            return java.util.Collections.emptyList();
+        }
+        List<ParentHop> verified = new ArrayList<>();
+        String currentTable = tableName;
+        for (ParentHop hop : chain) {
+            if (columnExists(currentTable, hop.fkColumn) && tableExists(hop.parentTable)
+                    && columnExists(hop.parentTable, hop.fkColumn)) {
+                verified.add(hop);
+                currentTable = hop.parentTable;
+            } else {
+                addLog(tableName + ": expected parent hop (" + currentTable + "." + hop.fkColumn + " -> "
+                        + hop.parentTable + ") not found - parent chain stops here for this table.");
+                break;
             }
         }
-        return null;
+        return verified;
     }
 
     private boolean columnExists(String tableName, String columnName) {
@@ -271,13 +312,8 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
         }
         String keyColumn = keyColumns[0];
 
-        String[] parentSpec = findParentSpec(tableName);
-        boolean hasParentCheck = parentSpec != null && columnExists(tableName, parentSpec[1])
-                && tableExists(parentSpec[2]) && columnExists(parentSpec[2], parentSpec[1]);
-        if (parentSpec != null && !hasParentCheck) {
-            addLog(tableName + ": expected parent column/table (" + parentSpec[1] + " / " + parentSpec[2]
-                    + ") not found - parent delete-status check skipped for this table.");
-        }
+        List<ParentHop> parentChain = buildVerifiedChain(tableName);
+        boolean hasParentCheck = !parentChain.isEmpty();
 
         boolean isCsvParentCheck = tableName.equalsIgnoreCase(WSPATR_CSV_TABLE)
                 && columnExists(tableName, WSPATR_CSV_COLUMN) && tableExists(WSPATR_TABLE)
@@ -302,12 +338,23 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
 
         String sql;
         if (hasParentCheck) {
-            String fkColumn = parentSpec[1];
-            String parentTable = parentSpec[2];
+            StringBuilder joinSql = new StringBuilder();
+            StringBuilder parentSelectSql = new StringBuilder();
+            String prevAlias = "d";
+            int hopIdx = 0;
+            for (ParentHop hop : parentChain) {
+                hopIdx++;
+                String alias = "p" + hopIdx;
+                joinSql.append(" LEFT JOIN ").append(hop.parentTable).append(' ').append(alias).append(" ON ")
+                        .append(prevAlias).append('.').append(hop.fkColumn).append(" = ").append(alias).append('.')
+                        .append(hop.fkColumn);
+                parentSelectSql.append(", ").append(alias).append('.').append(ISACTIVE_COL).append(" AS parent_active_")
+                        .append(hopIdx);
+                prevAlias = alias;
+            }
             sql = "SELECT d." + keyColumn + " AS pk, d." + SAVED_FILENAME_COL + " AS saved, d."
-                    + ORIGINAL_FILENAME_COL + " AS original, d." + ISACTIVE_COL + " AS active, p." + ISACTIVE_COL
-                    + " AS parent_active" + reconIdSelect + " FROM " + tableName + " d LEFT JOIN " + parentTable
-                    + " p ON d." + fkColumn + " = p." + fkColumn + " WHERE d." + SAVED_FILENAME_COL
+                    + ORIGINAL_FILENAME_COL + " AS original, d." + ISACTIVE_COL + " AS active" + parentSelectSql
+                    + reconIdSelect + " FROM " + tableName + " d" + joinSql + " WHERE d." + SAVED_FILENAME_COL
                     + " IS NOT NULL AND d." + SAVED_FILENAME_COL + " <> '' ORDER BY d." + keyColumn
                     + (maxRows > 0 ? " LIMIT " + maxRows : "");
         } else {
@@ -340,7 +387,14 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
                 boolean ownActive = !"N".equals(rs.getString("active"));
                 boolean parentActive;
                 if (hasParentCheck) {
-                    parentActive = !"N".equals(rs.getString("parent_active"));
+                    // Deleted if ANY ancestor in the chain is inactive, not just the direct parent.
+                    parentActive = true;
+                    for (int hopIdx = 1; hopIdx <= parentChain.size(); hopIdx++) {
+                        if ("N".equals(rs.getString("parent_active_" + hopIdx))) {
+                            parentActive = false;
+                            break;
+                        }
+                    }
                 } else if (isCsvParentCheck) {
                     parentActive = computeCsvParentActive(rs.getString("wspatrids"), wspatrActiveMap);
                 } else {
