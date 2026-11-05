@@ -59,6 +59,26 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
     private static final String ISACTIVE_COL = "isactive";
     private static final int MAX_LOGGED = 20000;
 
+    /**
+     * Maps a document table to the FK column pointing at its real parent record, whose OWN delete
+     * status (not the document row's own isactive) determines whether a missing file is expected.
+     * Confirmed 2026-10-26: the document rows migrated with isactive='Y' even when their parent
+     * Organisation/SDFOrganisation/SDF was itself marked deleted - the document table's own
+     * isactive flag never reflected the parent's deletion. {documentTable, fkColumn, parentTable} -
+     * fkColumn is assumed to be the parent table's own PK column name too (this project's standard
+     * TableDir naming convention), verified at runtime via information_schema before use so a wrong
+     * guess here degrades to "no parent check" rather than a broken query.
+     */
+    private static final String[][] PARENT_SPECS = {
+            { "sdr_organisationdocuments", "sdr_organisation_id", "sdr_organisation" },
+            { "sdr_organisationemails", "sdr_organisation_id", "sdr_organisation" },
+            { "sdr_organisationbankingdetailsdocumentupload", "sdr_organisationbankingdetails_id",
+                    "sdr_organisationbankingdetails" },
+            { "sdr_wspatrdocumentuploads", "sdr_organisation_id", "sdr_organisation" },
+            { "sdr_sdfcertificatedocument", "sdr_sdf_id", "sdr_sdf" },
+            { "sdr_sdforganisationdocumentupload", "sdr_sdforganisation_id", "sdr_sdforganisation" },
+    };
+
     private final List<String> missingFiles = new ArrayList<>();
     private final List<String> missingFilesInactive = new ArrayList<>();
     private final List<String> emptyOnDiskFiles = new ArrayList<>();
@@ -126,6 +146,28 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
                         : "");
     }
 
+    private static String[] findParentSpec(String tableName) {
+        for (String[] spec : PARENT_SPECS) {
+            if (spec[0].equalsIgnoreCase(tableName)) {
+                return spec;
+            }
+        }
+        return null;
+    }
+
+    private boolean columnExists(String tableName, String columnName) {
+        long count = DB.getSQLValueEx(get_TrxName(),
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_name = '" + tableName
+                        + "' AND column_name = '" + columnName + "'");
+        return count > 0;
+    }
+
+    private boolean tableExists(String tableName) {
+        long count = DB.getSQLValueEx(get_TrxName(),
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = '" + tableName + "'");
+        return count > 0;
+    }
+
     private List<String> findDocumentTables() {
         List<String> tables = new ArrayList<>();
         PreparedStatement pstmt = null;
@@ -160,10 +202,30 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
         }
         String keyColumn = keyColumns[0];
 
-        String sql = "SELECT " + keyColumn + " AS pk, " + SAVED_FILENAME_COL + " AS saved, "
-                + ORIGINAL_FILENAME_COL + " AS original, " + ISACTIVE_COL + " AS active FROM " + tableName
-                + " WHERE " + SAVED_FILENAME_COL + " IS NOT NULL AND " + SAVED_FILENAME_COL + " <> '' ORDER BY "
-                + keyColumn + (maxRows > 0 ? " LIMIT " + maxRows : "");
+        String[] parentSpec = findParentSpec(tableName);
+        boolean hasParentCheck = parentSpec != null && columnExists(tableName, parentSpec[1])
+                && tableExists(parentSpec[2]) && columnExists(parentSpec[2], parentSpec[1]);
+        if (parentSpec != null && !hasParentCheck) {
+            addLog(tableName + ": expected parent column/table (" + parentSpec[1] + " / " + parentSpec[2]
+                    + ") not found - parent delete-status check skipped for this table.");
+        }
+
+        String sql;
+        if (hasParentCheck) {
+            String fkColumn = parentSpec[1];
+            String parentTable = parentSpec[2];
+            sql = "SELECT d." + keyColumn + " AS pk, d." + SAVED_FILENAME_COL + " AS saved, d."
+                    + ORIGINAL_FILENAME_COL + " AS original, d." + ISACTIVE_COL + " AS active, p." + ISACTIVE_COL
+                    + " AS parent_active FROM " + tableName + " d LEFT JOIN " + parentTable + " p ON d." + fkColumn
+                    + " = p." + fkColumn + " WHERE d." + SAVED_FILENAME_COL + " IS NOT NULL AND d."
+                    + SAVED_FILENAME_COL + " <> '' ORDER BY d." + keyColumn
+                    + (maxRows > 0 ? " LIMIT " + maxRows : "");
+        } else {
+            sql = "SELECT " + keyColumn + " AS pk, " + SAVED_FILENAME_COL + " AS saved, " + ORIGINAL_FILENAME_COL
+                    + " AS original, " + ISACTIVE_COL + " AS active FROM " + tableName + " WHERE "
+                    + SAVED_FILENAME_COL + " IS NOT NULL AND " + SAVED_FILENAME_COL + " <> '' ORDER BY " + keyColumn
+                    + (maxRows > 0 ? " LIMIT " + maxRows : "");
+        }
 
         int processed = 0;
         int attached = 0;
@@ -184,7 +246,9 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
                 int pk = rs.getInt("pk");
                 String saved = rs.getString("saved");
                 String original = rs.getString("original");
-                boolean isActive = !"N".equals(rs.getString("active"));
+                boolean ownActive = !"N".equals(rs.getString("active"));
+                boolean parentActive = !hasParentCheck || !"N".equals(rs.getString("parent_active"));
+                boolean isActive = ownActive && parentActive;
 
                 try {
                     MAttachment existing = MAttachment.get(getCtx(), table.getAD_Table_ID(), pk, get_TrxName());
