@@ -18,6 +18,7 @@ import org.adempiere.webui.component.ListItem;
 import org.adempiere.webui.component.Listbox;
 import org.adempiere.webui.panel.ADForm;
 import org.adempiere.webui.util.ZKUpdateUtil;
+import org.adempiere.webui.window.Dialog;
 import org.compiere.model.MRefList;
 import org.compiere.model.MReference;
 import org.compiere.util.DB;
@@ -120,6 +121,7 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
         String uploadType = (String) uploadTypeObj;
 
         service.uploadReplace(submittedId, uploadType, media);
+        boolean isWspAtrReport = UploadTypeDef.WSP_ATR_REPORT.code.equals(uploadType);
 
         // Immediate UI feedback (row will rebuild after refresh)
         if (ue.getTarget() instanceof org.adempiere.webui.component.Button) {
@@ -130,12 +132,19 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
             if (fileLblObj instanceof org.adempiere.webui.component.Label) {
                 ((org.adempiere.webui.component.Label) fileLblObj).setValue(media.getName());
             }
-            Clients.showNotification("File Uploaded", "info", b, "top_center", 2500);
-        } else {
+            if (!isWspAtrReport)
+                Clients.showNotification("File Uploaded", "info", b, "top_center", 2500);
+        } else if (!isWspAtrReport) {
             Clients.showNotification("File Uploaded", "info", null, "top_center", 2500);
         }
 
         refreshList();
+
+        // The WSP-ATR Report is the upload that makes Submit available, so remind the SDF
+        // with a message box that stays until it is acknowledged.
+        if (isWspAtrReport) {
+            Dialog.info(getWindowNo(), "File Uploaded", "\nPlease remember to click Submit", "WSP-ATR Report");
+        }
     }
 
     private void refreshList() {
@@ -258,7 +267,10 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
                 "AND isactive = 'Y' " +
                 "AND zzsdfroletype = ? " +
             //    "AND COALESCE(zz_docstatus, '') <> 'DR' " +
-                "AND COALESCE(zz_docstatus, '') = 'AP' " + // <> 'UnSdfOrg' "  Unlinked
+                // Approved links, plus Pending link requests: a Pending organisation is still
+                // listed, but its Submit button stays disabled until the link is approved
+                // (see WspAtrUploadsService.isEligibleToSubmit).
+                "AND COALESCE(zz_docstatus, '') IN ('AP', 'PE') " + // <> 'UnSdfOrg' "  Unlinked
                 "ORDER BY orgname";
 
         List<List<Object>> rows = DB.getSQLArrayObjectsEx(null, sql,

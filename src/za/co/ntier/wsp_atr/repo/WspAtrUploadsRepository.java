@@ -270,6 +270,16 @@ public class WspAtrUploadsRepository {
     }
 
     /**
+     * True while the SDF's link request to this organisation is still Pending approval.
+     */
+    public boolean isSdfLinkPending(int zzSdfOrganisationId) {
+        String status = DB.getSQLValueStringEx(null,
+                "SELECT zz_docstatus FROM adempiere.zzsdforganisation WHERE zzsdforganisation_id = ?",
+                zzSdfOrganisationId);
+        return X_ZZSdfOrganisation.ZZ_DOCSTATUS_Pending.equals(status);
+    }
+
+    /**
      * True when this organisation is a child whose parent uploads and submits on its behalf
      * (linkage flagged ZZ_Parent_Uploads = 'Y', shown as "Separate WSP-ATR? = No" on the SDR
      * form). Such an organisation may neither upload nor submit in its own right - the parent

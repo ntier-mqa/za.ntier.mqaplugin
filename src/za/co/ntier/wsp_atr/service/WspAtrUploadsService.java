@@ -189,6 +189,12 @@ public class WspAtrUploadsService {
         int clientId = Env.getAD_Client_ID(ctx);
         int orgId = repo.getSubmittedOrgId(submittedId);
 
+        // The organisation is shown while the SDF link request is Pending, but may not submit yet.
+        if (repo.isSdfLinkPending(orgId)) {
+            submitButtonMsg = "Organisation link is pending approval";
+            return false;
+        }
+
         WspAtrUploadsRepository.SdrWindowConfig cfg = WspAtrUploadsRepository.getSdrWindowConfig(clientId);
         if (cfg == null)
             return false;
