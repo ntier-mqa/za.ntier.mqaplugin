@@ -138,7 +138,9 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
             Clients.showNotification("File Uploaded", "info", null, "top_center", 2500);
         }
 
-        refreshList();
+        // Rebuild only this organisation's row so the list keeps its scroll position;
+        // clearing and refilling the whole list sends the user back to the top.
+        refreshRow(submittedId);
 
         // The WSP-ATR Report is the upload that makes Submit available, so remind the SDF
         // with a message box that stays until it is acknowledged.
@@ -163,14 +165,40 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
 
             resyncSubLevyOrgs(submitted);
 
-            addRow(
-                    submitted.getZZ_WSP_ATR_Submitted_ID(),
-                    org.zzSdfOrganisationId,
-                    !Util.isEmpty(org.displayName, true) ? org.displayName : "",
-                    submitted.getSubmittedDate(),
-                    statusLabel(submitted.getZZ_DocStatus())
-            );
+            list.appendChild(buildRow(submitted, org.zzSdfOrganisationId, org.displayName));
         }
+    }
+
+    /**
+     * Replaces the row for one submission in place, leaving every other row (and the list's
+     * scroll position) untouched. Falls back to a full refresh if the row cannot be found.
+     */
+    private void refreshRow(int submittedId) {
+        org.zkoss.zul.Listitem oldItem = null;
+        for (org.zkoss.zul.Listitem item : list.getItems()) {
+            if (Integer.valueOf(submittedId).equals(item.getValue())) {
+                oldItem = item;
+                break;
+            }
+        }
+
+        Object orgIdObj = oldItem != null ? oldItem.getAttribute(ATTR_SDF_ORG_ID) : null;
+        if (!(orgIdObj instanceof Integer)) {
+            refreshList();
+            return;
+        }
+
+        MZZWSPATRSubmitted submitted = new MZZWSPATRSubmitted(ctx, submittedId, null);
+        if (submitted.get_ID() <= 0) {
+            refreshList();
+            return;
+        }
+
+        resyncSubLevyOrgs(submitted);
+
+        ListItem newItem = buildRow(submitted, (Integer) orgIdObj, (String) oldItem.getAttribute(ATTR_ORG_NAME));
+        list.insertBefore(newItem, oldItem);
+        list.removeChild(oldItem);
     }
 
     /**
@@ -214,9 +242,20 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
         return Util.isEmpty(name, true) ? code : name;
     }
 
-    private void addRow(int submittedId, int zzSdfOrganisationId, String orgName, Timestamp submittedDate, String status) {
+    private static final String ATTR_SDF_ORG_ID = "ZZSdfOrganisationId";
+    private static final String ATTR_ORG_NAME = "OrgName";
+
+    private ListItem buildRow(MZZWSPATRSubmitted submitted, int zzSdfOrganisationId, String displayName) {
+        int submittedId = submitted.getZZ_WSP_ATR_Submitted_ID();
+        String orgName = !Util.isEmpty(displayName, true) ? displayName : "";
+        Timestamp submittedDate = submitted.getSubmittedDate();
+        String status = statusLabel(submitted.getZZ_DocStatus());
+
         ListItem item = new ListItem();
         item.setValue(Integer.valueOf(submittedId));
+        // Kept on the row so refreshRow can rebuild it without reloading the organisation list
+        item.setAttribute(ATTR_SDF_ORG_ID, Integer.valueOf(zzSdfOrganisationId));
+        item.setAttribute(ATTR_ORG_NAME, orgName);
         String formattedDate = "";
 	    if (submittedDate != null) {
 	        formattedDate = submittedDate.toLocalDateTime().format(TS_FORMAT);
@@ -244,7 +283,7 @@ public class WspAtrUploadsADForm extends ADForm implements EventListener<Event> 
         actionsCell.appendChild(v);
         item.appendChild(actionsCell);
 
-        list.appendChild(item);
+        return item;
     }
     
     private static class SdfOrgRow {
