@@ -32,6 +32,7 @@ import za.co.ntier.wsp_atr.models.I_ZZ_WSP_ATR_Submitted;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Approvals;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Checklist_Ref;
 import za.co.ntier.wsp_atr.models.X_ZZ_WSP_ATR_Submitted;
+import za.co.ntier.api.model.MBPartner_New;
 
 
 
@@ -328,7 +329,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 		return new MZZSdfOrganisation(getCtx(), orgId, get_TrxName());
 	}
 
-	private MBPartner getBusinessPartner() {
+	private MBPartner_New getBusinessPartner() {
 
 		MZZSdfOrganisation sdfOrg = getSdfOrganisation();
 		if (sdfOrg == null)
@@ -338,7 +339,7 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 		if (bpId <= 0)
 			return null;
 
-		return new MBPartner(getCtx(), bpId, get_TrxName());
+		return new MBPartner_New(getCtx(), bpId, get_TrxName());
 	}
 
 	public String getOrganisationName() {
@@ -349,6 +350,19 @@ public class MZZWSPATRSubmitted extends X_ZZ_WSP_ATR_Submitted {
 	public String getSdlNumber() {
 		MBPartner bp = getBusinessPartner();
 		return bp != null ? bp.getValue() : "";
+	}
+
+	/**
+	 * Organisation type (Parent / Child / Independent) from C_BPartner.ZZOrganisationType.
+	 * Used by the WSP-ATR acknowledgement letter template as @=OrganisationType@.
+	 */
+	public String getOrganisationType() {
+		MBPartner_New bp = getBusinessPartner();
+		if (bp == null)
+			return "";
+
+		String orgType = bp.getZZOrganisationType();
+		return orgType != null ? orgType : "";
 	}
 
 
