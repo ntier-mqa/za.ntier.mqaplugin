@@ -246,7 +246,9 @@ public class WspAtrRowUiBuilder {
         Label lblMsg =
             new Label((service.getSubmitButtonMsg() != null)
                 ? service.getSubmitButtonMsg()
-                : (eligible ? "" : "Not in submission window / missing uploads"));
+                : (eligible
+                    ? "Please remember to Click the \"Submit WSP-ATR\" button"
+                    : "Not in submission window / missing uploads"));
         lblMsg.setStyle("margin-left:6px; color:#555;");
 
         btn.addEventListener(Events.ON_CLICK, (EventListener<Event>) e -> {

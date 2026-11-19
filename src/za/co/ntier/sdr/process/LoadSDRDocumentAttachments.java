@@ -56,7 +56,7 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
     private BigDecimal p_MaxRows;
 
     private static final String[] DEFAULT_BASE_DIRS = { "/home/ntier/MQASkillsDocuments",
-            "/home/ntier/MQASkillsDocuments_25092026", "/home/ntier/MQASkillsDocuments_19102026" };
+            "/home/ntier/MQASkillsDocuments_250926-1", "/home/ntier/MQASkillsDocuments_250926-2","/home/ntier/MQASkillsDocuments_19102026" };
     private static final String SAVED_FILENAME_COL = "sdr_savedfilename";
     private static final String ORIGINAL_FILENAME_COL = "sdr_originalfilename";
     private static final String ISACTIVE_COL = "isactive";
