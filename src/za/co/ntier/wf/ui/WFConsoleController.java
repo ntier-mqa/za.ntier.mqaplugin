@@ -62,8 +62,7 @@ public class WFConsoleController extends SelectorComposer<Window> {
 
         MTable t = MTable.get(ctx, adTableId);
         po = t.getPO(recordId, trxName);
-        hdr = MZZWFHeader.forTable(ctx, po.get_Table_ID(),
-                po.getAD_Client_ID(), po.getAD_Org_ID(), trxName);
+        hdr = MZZWFHeader.forTable(ctx, po, trxName);
 
         lblTable.setValue(t.getTableName());
         lblRecord.setValue(String.valueOf(recordId));

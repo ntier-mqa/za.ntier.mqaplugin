@@ -126,8 +126,7 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 		String curStatus = po.get_ValueAsString("ZZ_DocStatus");
 		String curAction = po.get_ValueAsString("ZZ_DocAction");
 
-		MZZWFHeader hdr = MZZWFHeader.forTable(ctx, po.get_Table_ID(),
-				po.getAD_Client_ID(), po.getAD_Org_ID(), trxName);
+		MZZWFHeader hdr = MZZWFHeader.forTable(ctx, po, trxName);
 		if (hdr == null || !hdr.isActive())
 			throw new AdempiereException("No active workflow found for this table.");
 
@@ -219,7 +218,7 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 
 		// --- Notifications ---
 		Integer requesterUserId = po.getCreatedBy();
-		MZZWFLines submitStep = MZZWFHeader.getFirstLine(ctx,hdr.get_ID(),trxName);
+		MZZWFLines submitStep = hdr.getFirstLine();
 		if (submitStep != null) {
 			requesterUserId = (Integer) po.get_Value(ADColumnUtil.getColumnName(ctx, submitStep.getZZ_Approved_User_COL_ID(), trxName));
 			if (requesterUserId == null || requesterUserId <= 0) {
@@ -323,15 +322,11 @@ public class ZZ_WF_RunProcess extends SvrProcess {
 	private void resetDecisionStampsIfFirstNode(MZZWFHeader hdr, MZZWFLines step, PO po) {
 	    if (hdr == null || step == null || po == null) return;
 
-	    int minSeq = MZZWFHeader.getMinSeqNo(ctx,hdr.get_ID(),trxName);
+	    int minSeq = hdr.getMinSeqNo();
 	    if (step.getSeqNo() != minSeq) return; // only clear on the very first node
 
 	    // Load all active workflow lines for this header
-	    List<MZZWFLines> lines = new org.compiere.model.Query(ctx, MZZWFLines.Table_Name,
-	            "ZZ_WF_Header_ID=? AND IsActive='Y'", trxName)
-	            .setParameters(hdr.get_ID())
-	            .setOrderBy("SeqNo ASC")
-	            .list();
+	    List<MZZWFLines> lines = hdr.getLines();
 
 	    java.util.Set<String> colsToClear = new java.util.HashSet<>();
 

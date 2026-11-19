@@ -7,7 +7,6 @@ import java.util.Properties;
 
 import org.compiere.model.Query;
 
-import za.ntier.models.I_ZZ_WF_Line_Role;
 import za.ntier.models.X_ZZ_WF_Line_Role;
 
 public class MZZWFLineRole extends X_ZZ_WF_Line_Role {
