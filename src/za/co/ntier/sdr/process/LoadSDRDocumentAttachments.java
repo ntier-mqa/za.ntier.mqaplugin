@@ -55,7 +55,8 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
     @Parameter(name = "MaxRows")
     private BigDecimal p_MaxRows;
 
-    private static final String[] DEFAULT_BASE_DIRS = { "/home/ntier/MQASkillsDocuments",
+    // Package-private: ExportSDRReconciliationReport searches the same directories.
+    static final String[] DEFAULT_BASE_DIRS = { "/home/ntier/MQASkillsDocuments",
             "/home/ntier/MQASkillsDocuments_250926-1", "/home/ntier/MQASkillsDocuments_250926-2","/home/ntier/MQASkillsDocuments_19102026" };
     private static final String SAVED_FILENAME_COL = "sdr_savedfilename";
     private static final String ORIGINAL_FILENAME_COL = "sdr_originalfilename";
@@ -63,7 +64,7 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
     private static final int MAX_LOGGED = 20000;
 
     /** One FK hop in a parent chain: fkColumn lives on the PREVIOUS level, pointing at parentTable. */
-    private static final class ParentHop {
+    static final class ParentHop {
         final String fkColumn;
         final String parentTable;
 
@@ -86,7 +87,8 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
      * information_schema before use (see {@link #buildVerifiedChain}) - an unverifiable hop (and
      * every hop depending on it) is dropped rather than risking a broken query.
      */
-    private static final Map<String, List<ParentHop>> PARENT_CHAINS = new HashMap<>();
+    // Package-private: also used by ExportSDRReconciliationReport so both classify "deleted" identically.
+    static final Map<String, List<ParentHop>> PARENT_CHAINS = new HashMap<>();
     static {
         PARENT_CHAINS.put("sdr_organisationdocuments",
                 Arrays.asList(new ParentHop("sdr_organisation_id", "sdr_organisation")));
@@ -114,9 +116,9 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
      * junction table exists, "is the parent deleted" is answered by resolving every id in the CSV
      * and checking whether ALL of them are inactive - handled separately from PARENT_SPECS below.
      */
-    private static final String WSPATR_CSV_TABLE = "sdr_wspatrbulkapprovaldocumentupload";
-    private static final String WSPATR_CSV_COLUMN = "sdr_wspatrids";
-    private static final String WSPATR_TABLE = "sdr_wspatr";
+    static final String WSPATR_CSV_TABLE = "sdr_wspatrbulkapprovaldocumentupload";
+    static final String WSPATR_CSV_COLUMN = "sdr_wspatrids";
+    static final String WSPATR_TABLE = "sdr_wspatr";
 
     private final List<String> missingFiles = new ArrayList<>();
     private final List<String> missingFilesInactive = new ArrayList<>();
@@ -252,7 +254,7 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
      * (not evidence either way), and if NOTHING resolves, the conservative default is "active" (no
      * evidence of deletion) rather than wrongly suppressing a genuine missing-file report.
      */
-    private static boolean computeCsvParentActive(String csv, Map<Integer, Boolean> activeMap) {
+    static boolean computeCsvParentActive(String csv, Map<Integer, Boolean> activeMap) {
         if (csv == null || csv.trim().isEmpty()) {
             return true;
         }
@@ -465,7 +467,7 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
     }
 
     /** Searches each directory in order, returning the first match or null if none has the file. */
-    private static File findInDirs(List<File> dirs, String fileName) {
+    static File findInDirs(List<File> dirs, String fileName) {
         for (File dir : dirs) {
             File candidate = new File(dir, fileName);
             if (candidate.isFile()) {

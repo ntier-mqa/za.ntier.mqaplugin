@@ -91,7 +91,18 @@ public class ExportSDRReconciliationReport extends SvrProcess {
         long totalRows;
         long withFileName;
         long attached;
+        /** Rows with a file name but no attachment whose own record, or an ancestor, is inactive/deleted. */
+        long noAttachDeleted;
+        /** Active record, no attachment, and the file is not in any search directory. */
+        long activeNotFound;
+        /** Active record, no attachment, file exists but is 0 bytes (the loader skips these). */
+        long activeZeroByte;
+        /** Active record, no attachment, file exists with content - should have loaded (check loader errors). */
+        long activeOnDisk;
     }
+
+    /** Directories searched for the disk check - same list the loader defaults to; empty = unavailable. */
+    private final List<java.io.File> diskDirs = new ArrayList<>();
 
     @Override
     protected String doIt() throws Exception {
@@ -191,6 +202,15 @@ public class ExportSDRReconciliationReport extends SvrProcess {
             DB.close(rs, pstmt);
         }
 
+        for (String dirName : LoadSDRDocumentAttachments.DEFAULT_BASE_DIRS) {
+            java.io.File dir = new java.io.File(dirName);
+            if (dir.isDirectory()) {
+                diskDirs.add(dir);
+            } else {
+                addLog("Attachment recon: directory not found, not searched: " + dirName);
+            }
+        }
+
         List<AttachRow> result = new ArrayList<>();
         String nonBlank = SAVED_FILENAME_COL + " IS NOT NULL AND " + SAVED_FILENAME_COL + " <> ''";
         for (String tableName : tables) {
@@ -202,25 +222,154 @@ public class ExportSDRReconciliationReport extends SvrProcess {
             }
             AttachRow ar = new AttachRow();
             ar.tableName = tableName;
-            try {
-                pstmt = DB.prepareStatement("SELECT COUNT(*), "
-                        + "SUM(CASE WHEN " + nonBlank + " THEN 1 ELSE 0 END), "
-                        + "SUM(CASE WHEN (" + nonBlank + ") AND EXISTS (SELECT 1 FROM ad_attachment a "
-                        + "WHERE a.ad_table_id = ? AND a.record_id = d." + keys[0] + ") THEN 1 ELSE 0 END) "
-                        + "FROM " + tableName + " d", get_TrxName());
-                pstmt.setInt(1, table.getAD_Table_ID());
-                rs = pstmt.executeQuery();
-                if (rs.next()) {
-                    ar.totalRows = rs.getLong(1);
-                    ar.withFileName = rs.getLong(2); // SUM over zero rows is NULL -> 0
-                    ar.attached = rs.getLong(3);
-                }
-            } finally {
-                DB.close(rs, pstmt);
-            }
+            countAttachmentRow(ar, table, keys[0], nonBlank);
             result.add(ar);
         }
         return result;
+    }
+
+    /**
+     * Fills total / with-file-name / attached, and classifies the no-attachment rows (deleted vs active; active split by disk state), for one table. "Deleted"
+     * uses the SAME rule as {@link LoadSDRDocumentAttachments}: the document row's own isactive = 'N',
+     * OR any ancestor in {@link LoadSDRDocumentAttachments#PARENT_CHAINS} has isactive = 'N'. The
+     * many-to-many sdr_wspatrbulkapprovaldocumentupload is classified row-by-row in Java via its
+     * sdr_wspatrids CSV (same helper as the loader).
+     */
+    private void countAttachmentRow(AttachRow ar, MTable table, String keyColumn, String nonBlank) throws Exception {
+        String tableName = ar.tableName;
+        String attachedExists = "EXISTS (SELECT 1 FROM ad_attachment a WHERE a.ad_table_id = ? AND a.record_id = d."
+                + keyColumn + ")";
+        String nb = prefixed(nonBlank);
+
+        boolean hasIsActive = columnExists(tableName, "isactive");
+        List<LoadSDRDocumentAttachments.ParentHop> chain = verifiedChain(tableName);
+        StringBuilder joins = new StringBuilder();
+        StringBuilder deletedCond = new StringBuilder(hasIsActive ? "d.isactive = 'N'" : "FALSE");
+        String prevAlias = "d";
+        int hopIdx = 0;
+        for (LoadSDRDocumentAttachments.ParentHop hop : chain) {
+            String alias = "p" + (++hopIdx);
+            joins.append(" LEFT JOIN ").append(hop.parentTable).append(' ').append(alias).append(" ON ")
+                    .append(prevAlias).append('.').append(hop.fkColumn).append(" = ").append(alias).append('.')
+                    .append(hop.fkColumn);
+            deletedCond.append(" OR ").append(alias).append(".isactive = 'N'");
+            prevAlias = alias;
+        }
+        boolean csvCheck = tableName.equalsIgnoreCase(LoadSDRDocumentAttachments.WSPATR_CSV_TABLE)
+                && columnExists(tableName, LoadSDRDocumentAttachments.WSPATR_CSV_COLUMN)
+                && tableExists(LoadSDRDocumentAttachments.WSPATR_TABLE)
+                && columnExists(LoadSDRDocumentAttachments.WSPATR_TABLE, "id")
+                && columnExists(LoadSDRDocumentAttachments.WSPATR_TABLE, "isactive");
+
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            pstmt = DB.prepareStatement("SELECT COUNT(*), "
+                    + "SUM(CASE WHEN " + nb + " THEN 1 ELSE 0 END), "
+                    + "SUM(CASE WHEN (" + nb + ") AND " + attachedExists + " THEN 1 ELSE 0 END) "
+                    + "FROM " + tableName + " d", get_TrxName());
+            pstmt.setInt(1, table.getAD_Table_ID());
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                ar.totalRows = rs.getLong(1);
+                ar.withFileName = rs.getLong(2); // SUM over zero rows is NULL -> 0
+                ar.attached = rs.getLong(3);
+            }
+        } finally {
+            DB.close(rs, pstmt);
+        }
+
+        // The no-attachment rows themselves (a few thousand at most): classify each as deleted or
+        // active, and for active ones check the disk.
+        Map<Integer, Boolean> wspatrActive = csvCheck ? loadWspatrActiveMap() : null;
+        String csvSelect = csvCheck ? ", d." + LoadSDRDocumentAttachments.WSPATR_CSV_COLUMN : "";
+        try {
+            pstmt = DB.prepareStatement("SELECT d." + SAVED_FILENAME_COL + ", CASE WHEN (" + deletedCond
+                    + ") THEN 1 ELSE 0 END" + csvSelect + " FROM " + tableName + " d" + joins + " WHERE (" + nb
+                    + ") AND NOT " + attachedExists, get_TrxName());
+            pstmt.setInt(1, table.getAD_Table_ID());
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                String saved = rs.getString(1);
+                boolean deleted = rs.getInt(2) == 1;
+                if (csvCheck && !deleted) {
+                    deleted = !LoadSDRDocumentAttachments.computeCsvParentActive(rs.getString(3), wspatrActive);
+                }
+                if (deleted) {
+                    ar.noAttachDeleted++;
+                } else if (diskDirs.isEmpty()) {
+                    ar.activeNotFound++; // disk not available - reported as blank cells, see sheet note
+                } else {
+                    java.io.File file = LoadSDRDocumentAttachments.findInDirs(diskDirs, saved.trim());
+                    if (file == null) {
+                        ar.activeNotFound++;
+                    } else if (file.length() == 0) {
+                        ar.activeZeroByte++;
+                    } else {
+                        ar.activeOnDisk++;
+                    }
+                }
+            }
+        } finally {
+            DB.close(rs, pstmt);
+        }
+    }
+
+    /** source id (sdr_wspatr.id) -> isActive, for the CSV-parent classification. */
+    private Map<Integer, Boolean> loadWspatrActiveMap() throws Exception {
+        Map<Integer, Boolean> activeMap = new HashMap<>();
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            pstmt = DB.prepareStatement("SELECT id, isactive FROM " + LoadSDRDocumentAttachments.WSPATR_TABLE
+                    + " WHERE id IS NOT NULL", get_TrxName());
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                activeMap.put(rs.getInt(1), !"N".equals(rs.getString(2)));
+            }
+        } finally {
+            DB.close(rs, pstmt);
+        }
+        return activeMap;
+    }
+
+    /** nonBlank is built unqualified; qualify it with the "d" alias used by the joined query. */
+    private static String prefixed(String nonBlank) {
+        return nonBlank.replace(SAVED_FILENAME_COL, "d." + SAVED_FILENAME_COL);
+    }
+
+    /** Same walk as the loader's buildVerifiedChain: stops at the first hop that can't be verified. */
+    private List<LoadSDRDocumentAttachments.ParentHop> verifiedChain(String tableName) {
+        List<LoadSDRDocumentAttachments.ParentHop> chain = LoadSDRDocumentAttachments.PARENT_CHAINS
+                .get(tableName.toLowerCase());
+        List<LoadSDRDocumentAttachments.ParentHop> verified = new ArrayList<>();
+        if (chain == null) {
+            return verified;
+        }
+        String currentTable = tableName;
+        for (LoadSDRDocumentAttachments.ParentHop hop : chain) {
+            if (columnExists(currentTable, hop.fkColumn) && tableExists(hop.parentTable)
+                    && columnExists(hop.parentTable, hop.fkColumn) && columnExists(hop.parentTable, "isactive")) {
+                verified.add(hop);
+                currentTable = hop.parentTable;
+            } else {
+                addLog(tableName + ": expected parent hop (" + currentTable + "." + hop.fkColumn + " -> "
+                        + hop.parentTable + ") not found - parent chain stops here for this table.");
+                break;
+            }
+        }
+        return verified;
+    }
+
+    private boolean columnExists(String tableName, String columnName) {
+        return DB.getSQLValueEx(get_TrxName(),
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_name = ? AND column_name = ?",
+                tableName, columnName) > 0;
+    }
+
+    private boolean tableExists(String tableName) {
+        return DB.getSQLValueEx(get_TrxName(),
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = ?", tableName) > 0;
     }
 
     private long countRows(String tableName) {
@@ -277,8 +426,20 @@ public class ExportSDRReconciliationReport extends SvrProcess {
             writeSummaryLine(sheet, rowIdx++, "Document tables with saved file name:", attachRows.size());
             writeSummaryLine(sheet, rowIdx++, "Rows with a saved file name:", attWithName);
             writeSummaryLine(sheet, rowIdx++, "...with attachment loaded:", attLoaded);
+            long attDeleted = attachRows.stream().mapToLong(a -> a.noAttachDeleted).sum();
             writeSummaryLine(sheet, rowIdx++, "...without attachment (see 'SDR Attachments' tab):",
                     attWithName - attLoaded);
+            writeSummaryLine(sheet, rowIdx++, "......record deleted/inactive:", attDeleted);
+            long attNotFound = attachRows.stream().mapToLong(a -> a.activeNotFound).sum();
+            long attZero = attachRows.stream().mapToLong(a -> a.activeZeroByte).sum();
+            long attOnDisk = attachRows.stream().mapToLong(a -> a.activeOnDisk).sum();
+            writeSummaryLine(sheet, rowIdx++, "......record active (investigate):",
+                    attWithName - attLoaded - attDeleted);
+            if (!diskDirs.isEmpty()) {
+                writeSummaryLine(sheet, rowIdx++, ".........file not found on disk:", attNotFound);
+                writeSummaryLine(sheet, rowIdx++, ".........file is 0 bytes on disk:", attZero);
+                writeSummaryLine(sheet, rowIdx++, ".........file on disk but not attached (check errors):", attOnDisk);
+            }
             rowIdx++;
 
             Row header = sheet.createRow(rowIdx++);
@@ -338,7 +499,9 @@ public class ExportSDRReconciliationReport extends SvrProcess {
     private void addAttachmentsSheet(XSSFWorkbook workbook, CellStyle headerStyle, List<AttachRow> rows) {
         Sheet sheet = workbook.createSheet("SDR Attachments");
         String[] headers = { "Table", "Total Rows", "Rows With File Name", "Attachment Loaded",
-                "No Attachment" };
+                "No Attachment", "No Attachment - Record Deleted/Inactive",
+                "No Attachment - Record Active (investigate)", "Active - File Not Found", "Active - File 0 Bytes",
+                "Active - File On Disk, Not Attached" };
         Row header = sheet.createRow(0);
         for (int i = 0; i < headers.length; i++) {
             Cell cell = header.createCell(i);
@@ -348,6 +511,11 @@ public class ExportSDRReconciliationReport extends SvrProcess {
         long totRows = 0;
         long totName = 0;
         long totAttached = 0;
+        long totDeleted = 0;
+        long totNotFound = 0;
+        long totZero = 0;
+        long totOnDisk = 0;
+        boolean disk = !diskDirs.isEmpty();
         int rowIdx = 1;
         for (AttachRow ar : rows) {
             Row row = sheet.createRow(rowIdx++);
@@ -356,9 +524,20 @@ public class ExportSDRReconciliationReport extends SvrProcess {
             row.createCell(2).setCellValue(ar.withFileName);
             row.createCell(3).setCellValue(ar.attached);
             row.createCell(4).setCellValue(ar.withFileName - ar.attached);
+            row.createCell(5).setCellValue(ar.noAttachDeleted);
+            row.createCell(6).setCellValue(ar.withFileName - ar.attached - ar.noAttachDeleted);
+            if (disk) {
+                row.createCell(7).setCellValue(ar.activeNotFound);
+                row.createCell(8).setCellValue(ar.activeZeroByte);
+                row.createCell(9).setCellValue(ar.activeOnDisk);
+            }
+            totNotFound += ar.activeNotFound;
+            totZero += ar.activeZeroByte;
+            totOnDisk += ar.activeOnDisk;
             totRows += ar.totalRows;
             totName += ar.withFileName;
             totAttached += ar.attached;
+            totDeleted += ar.noAttachDeleted;
         }
         Row total = sheet.createRow(rowIdx);
         Cell label = total.createCell(0);
@@ -368,6 +547,19 @@ public class ExportSDRReconciliationReport extends SvrProcess {
         total.createCell(2).setCellValue(totName);
         total.createCell(3).setCellValue(totAttached);
         total.createCell(4).setCellValue(totName - totAttached);
+        total.createCell(5).setCellValue(totDeleted);
+        total.createCell(6).setCellValue(totName - totAttached - totDeleted);
+        if (disk) {
+            total.createCell(7).setCellValue(totNotFound);
+            total.createCell(8).setCellValue(totZero);
+            total.createCell(9).setCellValue(totOnDisk);
+        }
+        Row note = sheet.createRow(rowIdx + 2);
+        note.createCell(0).setCellValue("Deleted/Inactive = the document row, or its parent record (Organisation / "
+                + "SDF Organisation / SDF / Person / WSPATR), has isactive = N. The three 'Active - ...' columns "
+                + "split 'Record Active' by what is on disk in the loader's search directories: "
+                + (disk ? diskDirs.toString() : "(NONE FOUND - disk check unavailable on this server, cells left blank)")
+                + ". 'File 0 Bytes' files are skipped by the loader.");
         sheet.createFreezePane(0, 1);
         for (int i = 0; i < headers.length; i++) {
             sheet.autoSizeColumn(i);
