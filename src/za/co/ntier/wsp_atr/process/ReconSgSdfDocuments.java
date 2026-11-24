@@ -1,8 +1,8 @@
 package za.co.ntier.wsp_atr.process;
 
 import java.io.File;
-import java.io.ByteArrayOutputStream;
 import java.io.FileFilter;
+import java.io.FileOutputStream;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
@@ -28,16 +28,12 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.compiere.model.I_AD_PInstance;
-import org.compiere.model.MAttachment;
-import org.compiere.model.MTable;
 import org.compiere.process.SvrProcess;
 import org.compiere.util.DB;
 import org.compiere.util.Env;
 
 import za.co.ntier.api.model.X_ZZSdf;
 import za.co.ntier.api.model.X_ZZSdfOrganisation;
-import za.co.ntier.learner.process.AddColumnsSupport;
 
 /**
  * Reconciles ZZSdf records in the database against the SDF Excel spreadsheet
@@ -50,12 +46,9 @@ import za.co.ntier.learner.process.AddColumnsSupport;
  *   4. Field Diffs     — matched records where Name / Gender / Equity differ
  *   5. Org Links       — all SDFs with their org-link counts and SDL numbers
  *   6. No Org Links    — SDFs that have zero org links
- *   7. SDR Attachments — per SDR_ document table: rows with a saved file name vs. how many
- *                        have an attachment loaded by LoadSDRDocumentAttachments (headline
- *                        totals are also on the Summary tab)
  *
- * The output is attached to this process run's own Process Audit record as
- * SDF_Recon_<yyyyMMdd_HHmmss>.xlsx - download it from the Attachment icon there.
+ * The output file is written to the parent directory of BASE_DIR, named
+ * SDF_Recon_<yyyyMMdd_HHmmss>.xlsx, and the path is returned in the result.
  */
 @org.adempiere.base.annotation.Process(name = "za.co.ntier.wsp_atr.process.ReconSgSdfDocuments")
 public class ReconSgSdfDocuments extends SvrProcess {
@@ -89,12 +82,6 @@ public class ReconSgSdfDocuments extends SvrProcess {
     private static class FieldDiff {
         String idNo, field, excelValue, dbValue;
         int    sdfId;
-    }
-
-    /** Per SDR_ document table: how many rows carry a file name vs. have an attachment loaded. */
-    private static class SdrAttachRow {
-        String tableName;
-        long   totalRows, withFileName, attached;
     }
 
     // =========================================================================
@@ -131,22 +118,14 @@ public class ReconSgSdfDocuments extends SvrProcess {
         // 4. Find field differences for matched records
         List<FieldDiff> diffs = buildDiffs(inBoth, excelMap, dbMap);
 
-        // 5. Attachments loaded by LoadSDRDocumentAttachments, per SDR_ document table
-        List<SdrAttachRow> sdrAttach = loadSdrAttachmentStats();
-        long sdrWithName = sdrAttach.stream().mapToLong(a -> a.withFileName).sum();
-        long sdrAttached = sdrAttach.stream().mapToLong(a -> a.attached).sum();
-        addLog("SDR document tables: " + sdrAttach.size() + ", rows with file name: " + sdrWithName
-                + ", attachment loaded: " + sdrAttached);
-
-        // 6. Write output workbook
-        String outPath = writeExcel(base, excelMap, dbMap, inBoth, excelOnly, dbOnly, diffs, sdrAttach);
-        addLog("Report attached to this Process Audit record as: " + outPath);
+        // 5. Write output workbook
+        String outPath = writeExcel(base, excelMap, dbMap, inBoth, excelOnly, dbOnly, diffs);
+        addLog("Report written to: " + outPath);
 
         return String.format(
-            "Excel=%d  DB=%d  Matched=%d  ExcelOnly=%d  DBOnly=%d  FieldDiffs=%d  "
-            + "SDRAttachments=%d/%d  Output: %s",
+            "Excel=%d  DB=%d  Matched=%d  ExcelOnly=%d  DBOnly=%d  FieldDiffs=%d  Output: %s",
             excelMap.size(), dbMap.size(), inBoth.size(),
-            excelOnly.size(), dbOnly.size(), diffs.size(), sdrAttached, sdrWithName, outPath);
+            excelOnly.size(), dbOnly.size(), diffs.size(), outPath);
     }
 
     // =========================================================================
@@ -288,68 +267,6 @@ public class ReconSgSdfDocuments extends SvrProcess {
     }
 
     // =========================================================================
-    //  Data loading — SDR_ document attachments (see LoadSDRDocumentAttachments)
-    // =========================================================================
-
-    private static final String SDR_SAVED_FILENAME_COL = "sdr_savedfilename";
-
-    /**
-     * Same table discovery as LoadSDRDocumentAttachments (every sdr_ table with an
-     * sdr_savedfilename column), then per table: total rows, rows with a non-blank file name, and
-     * how many of those have an AD_Attachment row on their record. Counts the AD_Attachment row's
-     * existence rather than its entries - it is a cheap SQL check and the loader only ever creates
-     * the row when it adds an entry.
-     */
-    private List<SdrAttachRow> loadSdrAttachmentStats() throws Exception {
-        List<String> tables = new ArrayList<>();
-        PreparedStatement pst = null;
-        ResultSet rs = null;
-        try {
-            pst = DB.prepareStatement(
-                "SELECT DISTINCT table_name FROM information_schema.columns " +
-                "WHERE table_name LIKE 'sdr\\_%' ESCAPE '\\' AND column_name = ? ORDER BY table_name", null);
-            pst.setString(1, SDR_SAVED_FILENAME_COL);
-            rs = pst.executeQuery();
-            while (rs.next()) tables.add(rs.getString(1));
-        } finally {
-            DB.close(rs, pst);
-        }
-
-        List<SdrAttachRow> result = new ArrayList<>();
-        String nonBlank = SDR_SAVED_FILENAME_COL + " IS NOT NULL AND " + SDR_SAVED_FILENAME_COL + " <> ''";
-        for (String tableName : tables) {
-            MTable table = AddColumnsSupport.findTable(getCtx(), tableName, null);
-            String[] keys = table == null ? null : table.getKeyColumns();
-            if (keys == null || keys.length != 1) {
-                addLog(tableName + ": no AD_Table / single key column - skipped in SDR attachment recon.");
-                continue;
-            }
-
-            SdrAttachRow ar = new SdrAttachRow();
-            ar.tableName = tableName;
-            try {
-                pst = DB.prepareStatement(
-                    "SELECT COUNT(*), " +
-                    "SUM(CASE WHEN " + nonBlank + " THEN 1 ELSE 0 END), " +
-                    "SUM(CASE WHEN (" + nonBlank + ") AND EXISTS (SELECT 1 FROM ad_attachment a " +
-                    "    WHERE a.ad_table_id = ? AND a.record_id = d." + keys[0] + ") THEN 1 ELSE 0 END) " +
-                    "FROM " + tableName + " d", null);
-                pst.setInt(1, table.getAD_Table_ID());
-                rs = pst.executeQuery();
-                if (rs.next()) {
-                    ar.totalRows    = rs.getLong(1);
-                    ar.withFileName = rs.getLong(2);   // SUM over zero rows is NULL -> 0
-                    ar.attached     = rs.getLong(3);
-                }
-            } finally {
-                DB.close(rs, pst);
-            }
-            result.add(ar);
-        }
-        return result;
-    }
-
-    // =========================================================================
     //  Field difference analysis
     // =========================================================================
 
@@ -402,35 +319,27 @@ public class ReconSgSdfDocuments extends SvrProcess {
                                Set<String>          inBoth,
                                Set<String>          excelOnly,
                                Set<String>          dbOnly,
-                               List<FieldDiff>      diffs,
-                               List<SdrAttachRow>   sdrAttach) throws Exception {
+                               List<FieldDiff>      diffs) throws Exception {
 
         try (XSSFWorkbook wb = new XSSFWorkbook()) {
             Styles s = new Styles(wb);
 
             writeSummary(wb.createSheet("Summary"), s,
                     excelMap.size(), dbMap.size(), inBoth.size(),
-                    excelOnly.size(), dbOnly.size(), diffs.size(), dbMap, sdrAttach);
+                    excelOnly.size(), dbOnly.size(), diffs.size(), dbMap);
 
             writeExcelOnly(wb.createSheet("In Excel Only"), s, excelOnly, excelMap);
             writeDbOnly(wb.createSheet("In DB Only"), s, dbOnly, dbMap);
             writeFieldDiffs(wb.createSheet("Field Differences"), s, diffs, dbMap);
             writeOrgLinks(wb.createSheet("Org Links"), s, dbMap);
             writeNoOrgLinks(wb.createSheet("No Org Links"), s, dbMap, excelMap);
-            writeSdrAttachments(wb.createSheet("SDR Attachments"), s, sdrAttach);
 
             String ts = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-            String fileName = "SDF_Recon_" + ts + ".xlsx";
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            wb.write(out);
-
-            // Attached to this run's own Process Audit record (same pattern as
-            // ExportSDRReconciliationReport) so it can be downloaded from the Attachment icon.
-            MAttachment attachment = new MAttachment(getCtx(), I_AD_PInstance.Table_ID,
-                    getAD_PInstance_ID(), null, get_TrxName());
-            attachment.addEntry(fileName, out.toByteArray());
-            attachment.saveEx();
-            return fileName;
+            String outPath = new File("/tmp", "SDF_Recon_" + ts + ".xlsx").getAbsolutePath();
+            try (FileOutputStream fos = new FileOutputStream(outPath)) {
+                wb.write(fos);
+            }
+            return outPath;
         }
     }
 
@@ -441,7 +350,7 @@ public class ReconSgSdfDocuments extends SvrProcess {
     private void writeSummary(Sheet sheet, Styles s,
                                int excelCnt, int dbCnt, int matchedCnt,
                                int excelOnlyCnt, int dbOnlyCnt, int diffCnt,
-                               Map<String, DbRow> dbMap, List<SdrAttachRow> sdrAttach) {
+                               Map<String, DbRow> dbMap) {
 
         // Title
         Row titleRow = sheet.createRow(0);
@@ -478,17 +387,6 @@ public class ReconSgSdfDocuments extends SvrProcess {
         metric(sheet, 16, "Max org links for a single SDF",   (int) maxLinks,   "");
         metric(sheet, 17, "SDFs with ID Copy attached",       (int) withIdCopy, "");
         metric(sheet, 18, "SDFs without ID Copy attached",    (int) noIdCopy,   "");
-
-        sheet.createRow(19); // spacer
-
-        // Section: SDR_ document attachments loaded by LoadSDRDocumentAttachments
-        long sdrWithName = sdrAttach.stream().mapToLong(a -> a.withFileName).sum();
-        long sdrAttached = sdrAttach.stream().mapToLong(a -> a.attached).sum();
-        rowHdr(sheet, 20, "SDR Document Attachments (LoadSDRDocumentAttachments)", s.sectionHdr);
-        metric(sheet, 21, "SDR document tables checked",             sdrAttach.size(),                  "");
-        metric(sheet, 22, "Rows with a saved file name",             (int) sdrWithName,                 "");
-        metric(sheet, 23, "...with attachment loaded",               (int) sdrAttached,                 "");
-        metric(sheet, 24, "...without attachment",                   (int) (sdrWithName - sdrAttached), "See 'SDR Attachments' tab");
 
         sheet.setColumnWidth(0, 45 * 256);
         sheet.setColumnWidth(1, 10 * 256);
@@ -679,41 +577,6 @@ public class ReconSgSdfDocuments extends SvrProcess {
     }
 
     // =========================================================================
-    //  Tab 7 — SDR Attachments
-    // =========================================================================
-
-    private void writeSdrAttachments(Sheet sheet, Styles s, List<SdrAttachRow> rows) {
-        String[] hdrs = {"Table","Total Rows","Rows With File Name","Attachment Loaded","No Attachment"};
-        writeHeaderRow(sheet, s, hdrs);
-        sheet.createFreezePane(0, 1);
-
-        long totRows = 0, totName = 0, totAttached = 0;
-        int r = 1;
-        for (SdrAttachRow ar : rows) {
-            long notAttached = ar.withFileName - ar.attached;
-            Row row = sheet.createRow(r++);
-            int c = 0;
-            sv(row, c++, ar.tableName, notAttached > 0 ? s.warn : s.label);
-            lv(row, c++, ar.totalRows);
-            lv(row, c++, ar.withFileName);
-            lv(row, c++, ar.attached);
-            lv(row, c++, notAttached);
-            totRows += ar.totalRows;
-            totName += ar.withFileName;
-            totAttached += ar.attached;
-        }
-
-        Row total = sheet.createRow(r);
-        int c = 0;
-        sv(total, c++, "TOTAL", s.hdr);
-        lv(total, c++, totRows);
-        lv(total, c++, totName);
-        lv(total, c++, totAttached);
-        lv(total, c++, totName - totAttached);
-        autoSize(sheet, hdrs.length);
-    }
-
-    // =========================================================================
     //  Styles holder
     // =========================================================================
 
@@ -795,11 +658,6 @@ public class ReconSgSdfDocuments extends SvrProcess {
 
     /** Integer / numeric cell. */
     private void iv(Row row, int col, int value) {
-        row.createCell(col).setCellValue(value);
-    }
-
-    /** Long numeric cell (row counts). */
-    private void lv(Row row, int col, long value) {
         row.createCell(col).setCellValue(value);
     }
 

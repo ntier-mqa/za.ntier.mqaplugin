@@ -25,9 +25,12 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.compiere.model.I_AD_PInstance;
 import org.compiere.model.MAttachment;
 import org.compiere.model.MProcessPara;
+import org.compiere.model.MTable;
 import org.compiere.process.ProcessInfoParameter;
 import org.compiere.process.SvrProcess;
 import org.compiere.util.DB;
+
+import za.co.ntier.learner.process.AddColumnsSupport;
 
 /**
  * Reconciliation report: compares every staged MS SQL source table (mssdr_*) against its migrated
@@ -47,6 +50,11 @@ import org.compiere.util.DB;
  * "mssdr_lkptitle" -&gt; "sdr_title", "mssdr_wsplearningprogramme" -&gt; "sdr_learningprogramme") - for
  * those, this class reuses {@link AddSDRReferenceTables#SPECS} (the same {target, source} pairs that
  * built them) rather than re-deriving or re-typing the mapping a second time.
+ *
+ * <p>ATTACHMENTS: a second tab, "SDR Attachments", reconciles the document files loaded by
+ * {@link LoadSDRDocumentAttachments}: per sdr_ table that has an sdr_savedfilename column, how many rows
+ * carry a file name vs. how many have an attachment on their record. Headline totals are repeated on the
+ * Reconciliation tab's summary block.
  *
  * <p>OUTPUT: attached to this process run's own AD_PInstance record (2026-09-16, mirrors
  * BulkLoadSgDocuments' {@code new MAttachment(ctx, tableId, recordId, null, trxName)} pattern) - the
@@ -73,6 +81,16 @@ public class ExportSDRReconciliationReport extends SvrProcess {
         String targetTable;
         long sourceCount;
         Long targetCount;
+    }
+
+    private static final String SAVED_FILENAME_COL = "sdr_savedfilename";
+
+    /** Per SDR_ document table: how many rows carry a file name vs. have an attachment loaded. */
+    private static final class AttachRow {
+        String tableName;
+        long totalRows;
+        long withFileName;
+        long attached;
     }
 
     @Override
@@ -114,13 +132,18 @@ public class ExportSDRReconciliationReport extends SvrProcess {
             rows.add(row);
         }
 
+        List<AttachRow> attachRows = loadAttachmentStats();
+        long attWithName = attachRows.stream().mapToLong(a -> a.withFileName).sum();
+        long attLoaded = attachRows.stream().mapToLong(a -> a.attached).sum();
+
         Set<String> sourceTableSet = new HashSet<>(sourceTables);
         String fileName = attachExcel(rows, sourceTables.size(), targetTables.size(), matched, mismatched,
-                notMigrated, sourceTableSet);
+                notMigrated, sourceTableSet, attachRows);
 
         return "SDR reconciliation: " + sourceTables.size() + " MS SQL (mssdr_) table(s), "
                 + targetTables.size() + " Postgres (sdr_) table(s). " + matched + " matched, " + mismatched
-                + " count mismatch, " + notMigrated + " not migrated. Download " + fileName
+                + " count mismatch, " + notMigrated + " not migrated. Document attachments loaded: "
+                + attLoaded + " of " + attWithName + " rows with a saved file name. Download " + fileName
                 + " from the Attachment icon on this Process Audit record.";
     }
 
@@ -142,6 +165,62 @@ public class ExportSDRReconciliationReport extends SvrProcess {
             DB.close(rs, pstmt);
         }
         return names;
+    }
+
+    /**
+     * Same table discovery as {@link LoadSDRDocumentAttachments} (every sdr_ table with an
+     * sdr_savedfilename column), then per table: total rows, rows with a non-blank file name, and how
+     * many of those have an AD_Attachment row on their record. Counts the AD_Attachment row's existence
+     * rather than its entries - cheap in SQL, and the loader only creates the row when it adds an entry.
+     * Run this under the same client the loader ran under (MQA): AD_Attachment is client-scoped.
+     */
+    private List<AttachRow> loadAttachmentStats() throws Exception {
+        List<String> tables = new ArrayList<>();
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            pstmt = DB.prepareStatement("SELECT DISTINCT table_name FROM information_schema.columns "
+                    + "WHERE table_name LIKE 'sdr\\_%' ESCAPE '\\' AND column_name = ? ORDER BY table_name",
+                    get_TrxName());
+            pstmt.setString(1, SAVED_FILENAME_COL);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                tables.add(rs.getString(1));
+            }
+        } finally {
+            DB.close(rs, pstmt);
+        }
+
+        List<AttachRow> result = new ArrayList<>();
+        String nonBlank = SAVED_FILENAME_COL + " IS NOT NULL AND " + SAVED_FILENAME_COL + " <> ''";
+        for (String tableName : tables) {
+            MTable table = AddColumnsSupport.findTable(getCtx(), tableName, get_TrxName());
+            String[] keys = table == null ? null : table.getKeyColumns();
+            if (keys == null || keys.length != 1) {
+                addLog(tableName + ": no AD_Table / single key column - skipped in attachment recon.");
+                continue;
+            }
+            AttachRow ar = new AttachRow();
+            ar.tableName = tableName;
+            try {
+                pstmt = DB.prepareStatement("SELECT COUNT(*), "
+                        + "SUM(CASE WHEN " + nonBlank + " THEN 1 ELSE 0 END), "
+                        + "SUM(CASE WHEN (" + nonBlank + ") AND EXISTS (SELECT 1 FROM ad_attachment a "
+                        + "WHERE a.ad_table_id = ? AND a.record_id = d." + keys[0] + ") THEN 1 ELSE 0 END) "
+                        + "FROM " + tableName + " d", get_TrxName());
+                pstmt.setInt(1, table.getAD_Table_ID());
+                rs = pstmt.executeQuery();
+                if (rs.next()) {
+                    ar.totalRows = rs.getLong(1);
+                    ar.withFileName = rs.getLong(2); // SUM over zero rows is NULL -> 0
+                    ar.attached = rs.getLong(3);
+                }
+            } finally {
+                DB.close(rs, pstmt);
+            }
+            result.add(ar);
+        }
+        return result;
     }
 
     private long countRows(String tableName) {
@@ -166,7 +245,8 @@ public class ExportSDRReconciliationReport extends SvrProcess {
     }
 
     private String attachExcel(List<ReconRow> rows, int sourceTableCount, int targetTableCount, int matched,
-            int mismatched, int notMigrated, Set<String> knownSourceTables) throws Exception {
+            int mismatched, int notMigrated, Set<String> knownSourceTables, List<AttachRow> attachRows)
+            throws Exception {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Reconciliation");
 
@@ -192,6 +272,13 @@ public class ExportSDRReconciliationReport extends SvrProcess {
             writeSummaryLine(sheet, rowIdx++, "Matched (counts equal):", matched);
             writeSummaryLine(sheet, rowIdx++, "Count mismatch:", mismatched);
             writeSummaryLine(sheet, rowIdx++, "Not migrated (no target table found):", notMigrated);
+            long attWithName = attachRows.stream().mapToLong(a -> a.withFileName).sum();
+            long attLoaded = attachRows.stream().mapToLong(a -> a.attached).sum();
+            writeSummaryLine(sheet, rowIdx++, "Document tables with saved file name:", attachRows.size());
+            writeSummaryLine(sheet, rowIdx++, "Rows with a saved file name:", attWithName);
+            writeSummaryLine(sheet, rowIdx++, "...with attachment loaded:", attLoaded);
+            writeSummaryLine(sheet, rowIdx++, "...without attachment (see 'SDR Attachments' tab):",
+                    attWithName - attLoaded);
             rowIdx++;
 
             Row header = sheet.createRow(rowIdx++);
@@ -225,6 +312,8 @@ public class ExportSDRReconciliationReport extends SvrProcess {
 
             Set<String> usedSheetNames = new HashSet<>();
             usedSheetNames.add(sheet.getSheetName());
+            usedSheetNames.add("SDR Attachments");
+            addAttachmentsSheet(workbook, headerStyle, attachRows);
             for (ReconRow r : rows) {
                 if (r.targetTable != null && r.targetCount != null && r.targetCount.longValue() != r.sourceCount) {
                     addMissingRowsSheet(workbook, headerStyle, r.sourceTable, r.targetTable, usedSheetNames,
@@ -243,6 +332,45 @@ public class ExportSDRReconciliationReport extends SvrProcess {
             attachment.saveEx();
 
             return fileName;
+        }
+    }
+
+    private void addAttachmentsSheet(XSSFWorkbook workbook, CellStyle headerStyle, List<AttachRow> rows) {
+        Sheet sheet = workbook.createSheet("SDR Attachments");
+        String[] headers = { "Table", "Total Rows", "Rows With File Name", "Attachment Loaded",
+                "No Attachment" };
+        Row header = sheet.createRow(0);
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = header.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
+        }
+        long totRows = 0;
+        long totName = 0;
+        long totAttached = 0;
+        int rowIdx = 1;
+        for (AttachRow ar : rows) {
+            Row row = sheet.createRow(rowIdx++);
+            row.createCell(0).setCellValue(ar.tableName);
+            row.createCell(1).setCellValue(ar.totalRows);
+            row.createCell(2).setCellValue(ar.withFileName);
+            row.createCell(3).setCellValue(ar.attached);
+            row.createCell(4).setCellValue(ar.withFileName - ar.attached);
+            totRows += ar.totalRows;
+            totName += ar.withFileName;
+            totAttached += ar.attached;
+        }
+        Row total = sheet.createRow(rowIdx);
+        Cell label = total.createCell(0);
+        label.setCellValue("TOTAL");
+        label.setCellStyle(headerStyle);
+        total.createCell(1).setCellValue(totRows);
+        total.createCell(2).setCellValue(totName);
+        total.createCell(3).setCellValue(totAttached);
+        total.createCell(4).setCellValue(totName - totAttached);
+        sheet.createFreezePane(0, 1);
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
         }
     }
 
@@ -356,7 +484,7 @@ public class ExportSDRReconciliationReport extends SvrProcess {
         return candidate;
     }
 
-    private void writeSummaryLine(Sheet sheet, int rowIdx, String label, int value) {
+    private void writeSummaryLine(Sheet sheet, int rowIdx, String label, long value) {
         Row row = sheet.createRow(rowIdx);
         row.createCell(0).setCellValue(label);
         row.createCell(1).setCellValue(value);
