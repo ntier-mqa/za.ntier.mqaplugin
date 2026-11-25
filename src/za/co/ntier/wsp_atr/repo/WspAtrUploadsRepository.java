@@ -335,12 +335,17 @@ public class WspAtrUploadsRepository {
             + "  ON so.zzsdforganisation_id = slo.zzsdforganisation_id "
             + "JOIN adempiere.c_bpartner bp "
             + "  ON bp.c_bpartner_id = so.c_bpartner_id "
+            + "JOIN adempiere.zz_wsp_atr_submitted ps "
+            + "  ON ps.zz_wsp_atr_submitted_id = slo.zz_wsp_atr_submitted_id "
             + "WHERE slo.zz_wsp_atr_submitted_id = ? "
             + "  AND NOT EXISTS ( "
             + "        SELECT 1 "
             + "        FROM adempiere.zz_wsp_atr_submitted s "
             + "        WHERE s.zzsdforganisation_id = slo.zzsdforganisation_id "
             + "          AND s.isactive = 'Y' "
+            // Same financial year as the parent's submission - a child's submission from a
+            // previous year must not count as submitted for this one.
+            + "          AND s.zz_finyear_id = ps.zz_finyear_id "
             // "Submitted or beyond". Imported/Uploaded deliberately do NOT count: the child has
             // loaded its data but has not lodged it, and SDR requires an actual submission before
             // the parent may consolidate. RE/RA/AP are only reachable after SU, so a child that

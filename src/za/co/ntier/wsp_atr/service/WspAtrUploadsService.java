@@ -3,6 +3,7 @@ package za.co.ntier.wsp_atr.service;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
 import org.adempiere.exceptions.AdempiereException;
@@ -221,16 +222,22 @@ public class WspAtrUploadsService {
       //  boolean hasTemplate = repo.hasSubmittedTemplateAttachment(submittedId);
         boolean hasReport = repo.hasUploadTypeAttachment(submittedId,
                 X_ZZ_WSP_ATR_Uploads.ZZ_WSP_ATR_UPLOAD_TYPE_UploadWSP_ATRReport);
-        if (hasReport) {
-            return true; //  &&hasTemplate &&
+        if (!hasReport) {
+            submitButtonMsg = "WSP-ATR report not uploaded";
+            return false;
         }
 
-        // Submission depends only on THIS organisation's own upload, parent or not. The children
-        // are deliberately not consulted here: whether their returns are in is a question for the
-        // consolidated report (see WspAtrRowUiBuilder.startReport, which blocks and names them),
-        // not for whether this organisation may submit.
-        submitButtonMsg = "WSP-ATR report not uploaded";
-        return false;
+        // A parent may only submit once all of its separate-WSP-ATR children have submitted -
+        // the same rule the consolidated report applies (WspAtrRowUiBuilder.startReport). A
+        // non-parent has no ZZ_WSP_ATR_Sub_Levy_Orgs rows, so this returns empty and has no effect.
+        List<String> pendingChildren = repo.findChildOrgsNotSubmitted(submittedId);
+        if (!pendingChildren.isEmpty()) {
+            submitButtonMsg = "Child organisation(s) have not submitted their WSP-ATR: "
+                    + String.join(", ", pendingChildren);
+            return false;
+        }
+
+        return true;
     }
 
     private boolean isBetween(Timestamp now, Timestamp start, Timestamp end) {
@@ -241,8 +248,9 @@ public class WspAtrUploadsService {
 
     public void submitWspAtr(int submittedId) {
         if (!isEligibleToSubmit(submittedId)) {
-            throw new AdempiereException(
-                    "Cannot submit: outside submission window, status not Uploaded, or required uploads missing.");
+            throw new AdempiereException(submitButtonMsg != null
+                    ? "Cannot submit: " + submitButtonMsg
+                    : "Cannot submit: outside submission window, status not Uploaded, or required uploads missing.");
         }
 
         String trxName = Trx.createTrxName("WSPATRSubmit");
