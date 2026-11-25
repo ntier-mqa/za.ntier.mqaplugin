@@ -195,6 +195,7 @@ public class RegisterSDRProcesses extends SvrProcess {
             "MigrateSDRSICCodeChamberTable",
             "ExportSDRDocumentTables",
             "LoadSDRDocumentAttachments",
+            "BumpSDRSequences",
     };
 
     @Override
