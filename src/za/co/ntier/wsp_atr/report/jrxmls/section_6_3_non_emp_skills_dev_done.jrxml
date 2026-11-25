@@ -17,44 +17,50 @@
 	<style name="CellNum" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="12"/>
 	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
 	<queryString language="SQL">
-		<![CDATA[SELECT
-    COALESCE(lpt.Name,'') AS programme_type,
-    COALESCE(y.FiscalYear,'') AS fiscal_year,
-    COALESCE(
-        CASE
-            WHEN NULLIF(regexp_replace(y.FiscalYear, '[^0-9]', '', 'g'), '') IS NOT NULL
-            THEN CAST(NULLIF(regexp_replace(y.FiscalYear, '[^0-9]', '', 'g'), '') AS INTEGER) - 1
-        END,
-        0
-    ) AS atr_year,
-    COALESCE(t.ZZ_LP_Other_Done,'') AS specify_txt,
-    COALESCE(tb.Name,'') AS target_beneficiaries,
-
-    COALESCE(t.ZZ_Male,0)   AS male_cnt,
-    COALESCE(t.ZZ_Female,0) AS female_cnt,
-    COALESCE(t.ZZ_Total_Done,0) AS total_gender,
-
-    COALESCE(t.ZZ_African,0)  AS african_cnt,
-    COALESCE(t.ZZ_Coloured,0) AS coloured_cnt,
-    COALESCE(t.ZZ_Indian,0)   AS indian_cnt,
-    COALESCE(t.ZZ_White,0)    AS white_cnt,
-    (COALESCE(t.ZZ_African,0)+COALESCE(t.ZZ_Coloured,0)+COALESCE(t.ZZ_Indian,0)+COALESCE(t.ZZ_White,0)) AS total_race,
-
-    COALESCE(t.ZZ_Disabled_Done,0) AS disabled_total
-FROM ZZ_WSP_ATR_Non_Emp_Skills_Dev_Rep t
-LEFT JOIN ZZ_Learning_Programme_Ref lpt
-       ON lpt.ZZ_Learning_Programme_Ref_ID = t.ZZ_Learning_Programme_Type_Done_ID
-LEFT JOIN ZZ_Target_Beneficiary_Ref tb
-       ON tb.ZZ_Target_Beneficiary_Ref_ID = t.ZZ_Target_Ben_Done_ID
-LEFT JOIN ZZ_WSP_ATR_Report r
-       ON r.ZZ_WSP_ATR_Report_ID = t.ZZ_WSP_ATR_Report_ID
-LEFT JOIN ZZ_WSP_ATR_Submitted s
-       ON s.ZZ_WSP_ATR_Submitted_ID = r.ZZ_WSP_ATR_Submitted_ID
-LEFT JOIN C_Year y
-       ON y.C_Year_ID = s.ZZ_FinYear_ID
-WHERE t.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
-  AND COALESCE(t.ZZ_Report_Section,'') = '6.3'
-ORDER BY programme_type, specify_txt, target_beneficiaries]]>
+		<![CDATA[WITH hdr AS (
+    SELECT COALESCE(y.FiscalYear,'') AS fiscal_year,
+           COALESCE(CAST(NULLIF(regexp_replace(y.FiscalYear, '[^0-9]', '', 'g'), '') AS INTEGER) - 1, 0) AS atr_year
+    FROM ZZ_WSP_ATR_Report r
+    LEFT JOIN ZZ_WSP_ATR_Submitted s
+           ON s.ZZ_WSP_ATR_Submitted_ID = r.ZZ_WSP_ATR_Submitted_ID
+    LEFT JOIN C_Year y
+           ON y.C_Year_ID = s.ZZ_FinYear_ID
+    WHERE r.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
+),
+d AS (
+    SELECT
+        TRUE AS has_detail,
+        COALESCE(lpt.Name,'') AS programme_type,
+        COALESCE(t.ZZ_LP_Other_Done,'') AS specify_txt,
+        COALESCE(tb.Name,'') AS target_beneficiaries,
+        COALESCE(t.ZZ_Male,0)   AS male_cnt,
+        COALESCE(t.ZZ_Female,0) AS female_cnt,
+        COALESCE(t.ZZ_Total_Done,0) AS total_gender,
+        COALESCE(t.ZZ_African,0)  AS african_cnt,
+        COALESCE(t.ZZ_Coloured,0) AS coloured_cnt,
+        COALESCE(t.ZZ_Indian,0)   AS indian_cnt,
+        COALESCE(t.ZZ_White,0)    AS white_cnt,
+        (COALESCE(t.ZZ_African,0)+COALESCE(t.ZZ_Coloured,0)+COALESCE(t.ZZ_Indian,0)+COALESCE(t.ZZ_White,0)) AS total_race,
+        COALESCE(t.ZZ_Disabled_Done,0) AS disabled_total
+    FROM ZZ_WSP_ATR_Non_Emp_Skills_Dev_Rep t
+    LEFT JOIN ZZ_Learning_Programme_Ref lpt
+           ON lpt.ZZ_Learning_Programme_Ref_ID = t.ZZ_Learning_Programme_Type_Done_ID
+    LEFT JOIN ZZ_Target_Beneficiary_Ref tb
+           ON tb.ZZ_Target_Beneficiary_Ref_ID = t.ZZ_Target_Ben_Done_ID
+    WHERE t.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
+      AND COALESCE(t.ZZ_Report_Section,'') = '6.3'
+)
+SELECT
+    hdr.fiscal_year,
+    hdr.atr_year,
+    COALESCE(d.has_detail, FALSE) AS has_detail,
+    d.programme_type, d.specify_txt, d.target_beneficiaries,
+    d.male_cnt, d.female_cnt, d.total_gender,
+    d.african_cnt, d.coloured_cnt, d.indian_cnt, d.white_cnt, d.total_race,
+    d.disabled_total
+FROM hdr
+LEFT JOIN d ON TRUE
+ORDER BY d.programme_type, d.specify_txt, d.target_beneficiaries]]>
 	</queryString>
 	<field name="programme_type" class="java.lang.String"/>
 	<field name="fiscal_year" class="java.lang.String"/>
@@ -70,6 +76,7 @@ ORDER BY programme_type, specify_txt, target_beneficiaries]]>
 	<field name="white_cnt" class="java.math.BigDecimal"/>
 	<field name="total_race" class="java.math.BigDecimal"/>
 	<field name="disabled_total" class="java.math.BigDecimal"/>
+	<field name="has_detail" class="java.lang.Boolean"/>
 	<variable name="SumMale" class="java.math.BigDecimal" calculation="Sum">
 		<variableExpression><![CDATA[$F{male_cnt}]]></variableExpression>
 	</variable>
@@ -222,6 +229,7 @@ ORDER BY programme_type, specify_txt, target_beneficiaries]]>
 	</columnHeader>
 	<detail>
 		<band height="26" splitType="Stretch">
+			<printWhenExpression><![CDATA[$F{has_detail}]]></printWhenExpression>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
 				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="0" y="0" width="240" height="26" uuid="a40bb412-c751-46be-82e1-194d2a41807c"/>
 				<box>

@@ -17,34 +17,44 @@
 	<style name="CellNum" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="12"/>
 	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
 	<queryString language="SQL">
-		<![CDATA[SELECT
-    t.Row_No,
-    qd.Name AS programme_name,
-    st.Name AS non_emp_status,
-    COALESCE(y.FiscalYear,'') AS fiscal_year,
-    COALESCE(
-        CASE
-            WHEN NULLIF(regexp_replace(y.FiscalYear, '[^0-9]', '', 'g'), '') IS NOT NULL
-            THEN CAST(NULLIF(regexp_replace(y.FiscalYear, '[^0-9]', '', 'g'), '') AS INTEGER) - 1
-        END,
-        0
-    ) AS atr_year,
-    COALESCE(t.ZZ_Total_Done,0)    AS total_done,
-    COALESCE(t.ZZ_Total_Planned,0) AS total_planned
-FROM ZZ_WSP_ATR_Non_Emp_Burs_Rep t
-LEFT JOIN ZZ_Qualification_Type_Details_Ref qd
-       ON qd.ZZ_Qualification_Type_Details_Ref_ID = t.ZZ_Learning_Programme_Done_ID
-LEFT JOIN ZZ_WSP_Non_Employee_Status_Ref st
-       ON st.ZZ_WSP_Non_Employee_Status_Ref_ID = t.ZZ_Non_Emp_Status_Done_ID
-LEFT JOIN ZZ_WSP_ATR_Report r
-       ON r.ZZ_WSP_ATR_Report_ID = t.ZZ_WSP_ATR_Report_ID
-LEFT JOIN ZZ_WSP_ATR_Submitted s
-       ON s.ZZ_WSP_ATR_Submitted_ID = r.ZZ_WSP_ATR_Submitted_ID
-LEFT JOIN C_Year y
-       ON y.C_Year_ID = s.ZZ_FinYear_ID
-WHERE t.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
-  AND COALESCE(t.ZZ_Report_Section,'') = '6.2'
-ORDER BY t.Row_No]]>
+		<![CDATA[WITH hdr AS (
+    SELECT COALESCE(y.FiscalYear,'') AS fiscal_year,
+           COALESCE(CAST(NULLIF(regexp_replace(y.FiscalYear, '[^0-9]', '', 'g'), '') AS INTEGER) - 1, 0) AS atr_year
+    FROM ZZ_WSP_ATR_Report r
+    LEFT JOIN ZZ_WSP_ATR_Submitted s
+           ON s.ZZ_WSP_ATR_Submitted_ID = r.ZZ_WSP_ATR_Submitted_ID
+    LEFT JOIN C_Year y
+           ON y.C_Year_ID = s.ZZ_FinYear_ID
+    WHERE r.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
+),
+d AS (
+    SELECT
+        TRUE AS has_detail,
+        t.Row_No,
+        qd.Name AS programme_name,
+        st.Name AS non_emp_status,
+        COALESCE(t.ZZ_Total_Done,0)    AS total_done,
+        COALESCE(t.ZZ_Total_Planned,0) AS total_planned
+    FROM ZZ_WSP_ATR_Non_Emp_Burs_Rep t
+    LEFT JOIN ZZ_Qualification_Type_Details_Ref qd
+           ON qd.ZZ_Qualification_Type_Details_Ref_ID = t.ZZ_Learning_Programme_Done_ID
+    LEFT JOIN ZZ_WSP_Non_Employee_Status_Ref st
+           ON st.ZZ_WSP_Non_Employee_Status_Ref_ID = t.ZZ_Non_Emp_Status_Done_ID
+    WHERE t.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
+      AND COALESCE(t.ZZ_Report_Section,'') = '6.2'
+)
+SELECT
+    hdr.fiscal_year,
+    hdr.atr_year,
+    COALESCE(d.has_detail, FALSE) AS has_detail,
+    d.Row_No,
+    d.programme_name,
+    d.non_emp_status,
+    d.total_done,
+    d.total_planned
+FROM hdr
+LEFT JOIN d ON TRUE
+ORDER BY d.Row_No]]>
 	</queryString>
 	<field name="Row_No" class="java.lang.Integer"/>
 	<field name="programme_name" class="java.lang.String"/>
@@ -53,6 +63,7 @@ ORDER BY t.Row_No]]>
 	<field name="atr_year" class="java.lang.Integer"/>
 	<field name="total_done" class="java.math.BigDecimal"/>
 	<field name="total_planned" class="java.math.BigDecimal"/>
+	<field name="has_detail" class="java.lang.Boolean"/>
 	<variable name="Sum_Done" class="java.math.BigDecimal" calculation="Sum">
 		<variableExpression><![CDATA[$F{total_done}]]></variableExpression>
 	</variable>
@@ -114,6 +125,7 @@ ORDER BY t.Row_No]]>
 	</columnHeader>
 	<detail>
 		<band height="26" splitType="Stretch">
+			<printWhenExpression><![CDATA[$F{has_detail}]]></printWhenExpression>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
 				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="0" y="0" width="380" height="26" uuid="d1111111-2222-3333-4444-555555555555"/>
 				<box>

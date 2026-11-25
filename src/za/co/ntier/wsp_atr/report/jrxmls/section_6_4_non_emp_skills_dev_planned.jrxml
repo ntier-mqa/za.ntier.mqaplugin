@@ -17,28 +17,40 @@
 	<style name="CellNum" hTextAlign="Center" vTextAlign="Middle" fontName="SansSerif" fontSize="12"/>
 	<parameter name="ZZ_WSP_ATR_Report_ID" class="java.lang.Integer"/>
 	<queryString language="SQL">
-		<![CDATA[SELECT
-    COALESCE(lpt.Name,'') AS programme_type,
-    COALESCE(y.FiscalYear,'') AS fiscal_year,
-    COALESCE(lp.Name,'')  AS specify_txt,
-    COALESCE(tb.Name,'')  AS target_beneficiaries,
-    COALESCE(t.ZZ_Total_Planned,0)    AS total_planned,
-    COALESCE(t.ZZ_Disabled_Planned,0) AS disabled_total
-FROM ZZ_WSP_ATR_Non_Emp_Skills_Dev_Plan_Rep t
-LEFT JOIN ZZ_Learning_Programme_Ref lpt
-       ON lpt.ZZ_Learning_Programme_Ref_ID = t.ZZ_Learning_Programme_Type_Planned_ID
-LEFT JOIN ZZ_Qualification_Type_Details_Ref lp
-       ON lp.ZZ_Qualification_Type_Details_Ref_ID = t.ZZ_Learning_Programme_Planned_ID
-LEFT JOIN ZZ_Target_Beneficiary_Ref tb
-       ON tb.ZZ_Target_Beneficiary_Ref_ID = t.ZZ_Target_Ben_Planned_ID
-LEFT JOIN ZZ_WSP_ATR_Report r
-       ON r.ZZ_WSP_ATR_Report_ID = t.ZZ_WSP_ATR_Report_ID
-LEFT JOIN ZZ_WSP_ATR_Submitted s
-       ON s.ZZ_WSP_ATR_Submitted_ID = r.ZZ_WSP_ATR_Submitted_ID
-LEFT JOIN C_Year y
-       ON y.C_Year_ID = s.ZZ_FinYear_ID
-WHERE t.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
-ORDER BY programme_type, specify_txt, target_beneficiaries]]>
+		<![CDATA[WITH hdr AS (
+    SELECT COALESCE(y.FiscalYear,'') AS fiscal_year
+    FROM ZZ_WSP_ATR_Report r
+    LEFT JOIN ZZ_WSP_ATR_Submitted s
+           ON s.ZZ_WSP_ATR_Submitted_ID = r.ZZ_WSP_ATR_Submitted_ID
+    LEFT JOIN C_Year y
+           ON y.C_Year_ID = s.ZZ_FinYear_ID
+    WHERE r.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
+),
+d AS (
+    SELECT
+        TRUE AS has_detail,
+        COALESCE(lpt.Name,'') AS programme_type,
+        COALESCE(lp.Name,'')  AS specify_txt,
+        COALESCE(tb.Name,'')  AS target_beneficiaries,
+        COALESCE(t.ZZ_Total_Planned,0)    AS total_planned,
+        COALESCE(t.ZZ_Disabled_Planned,0) AS disabled_total
+    FROM ZZ_WSP_ATR_Non_Emp_Skills_Dev_Plan_Rep t
+    LEFT JOIN ZZ_Learning_Programme_Ref lpt
+           ON lpt.ZZ_Learning_Programme_Ref_ID = t.ZZ_Learning_Programme_Type_Planned_ID
+    LEFT JOIN ZZ_Qualification_Type_Details_Ref lp
+           ON lp.ZZ_Qualification_Type_Details_Ref_ID = t.ZZ_Learning_Programme_Planned_ID
+    LEFT JOIN ZZ_Target_Beneficiary_Ref tb
+           ON tb.ZZ_Target_Beneficiary_Ref_ID = t.ZZ_Target_Ben_Planned_ID
+    WHERE t.ZZ_WSP_ATR_Report_ID = $P{ZZ_WSP_ATR_Report_ID}
+)
+SELECT
+    hdr.fiscal_year,
+    COALESCE(d.has_detail, FALSE) AS has_detail,
+    d.programme_type, d.specify_txt, d.target_beneficiaries,
+    d.total_planned, d.disabled_total
+FROM hdr
+LEFT JOIN d ON TRUE
+ORDER BY d.programme_type, d.specify_txt, d.target_beneficiaries]]>
 	</queryString>
 	<field name="programme_type" class="java.lang.String"/>
 	<field name="fiscal_year" class="java.lang.String"/>
@@ -46,6 +58,7 @@ ORDER BY programme_type, specify_txt, target_beneficiaries]]>
 	<field name="target_beneficiaries" class="java.lang.String"/>
 	<field name="total_planned" class="java.lang.Integer"/>
 	<field name="disabled_total" class="java.lang.Integer"/>
+	<field name="has_detail" class="java.lang.Boolean"/>
 	<variable name="SumTotalPlanned" class="java.lang.Integer" calculation="Sum">
 		<variableExpression><![CDATA[$F{total_planned}]]></variableExpression>
 		<initialValueExpression><![CDATA[0]]></initialValueExpression>
@@ -116,6 +129,7 @@ ORDER BY programme_type, specify_txt, target_beneficiaries]]>
 	</columnHeader>
 	<detail>
 		<band height="26" splitType="Stretch">
+			<printWhenExpression><![CDATA[$F{has_detail}]]></printWhenExpression>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
 				<reportElement style="CellText" positionType="Float" stretchType="ElementGroupHeight" x="0" y="0" width="380" height="26" uuid="30321178-df23-484c-b454-708daa8c9521"/>
 				<box>
@@ -179,14 +193,14 @@ ORDER BY programme_type, specify_txt, target_beneficiaries]]>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
-				<textFieldExpression><![CDATA[$V{SumTotalPlanned}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$V{SumTotalPlanned} == null ? Integer.valueOf(0) : $V{SumTotalPlanned}]]></textFieldExpression>
 			</textField>
 			<textField pattern="###0">
 				<reportElement style="CellNum" x="1110" y="0" width="100" height="28" uuid="b1889f43-155b-4db9-85ef-58dffc02affb"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
-				<textFieldExpression><![CDATA[$V{SumDisabled}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$V{SumDisabled} == null ? Integer.valueOf(0) : $V{SumDisabled}]]></textFieldExpression>
 			</textField>
 		</band>
 	</summary>
