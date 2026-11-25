@@ -22,6 +22,7 @@ import org.compiere.model.MUser;
 import org.compiere.model.Query;
 import org.compiere.util.CLogger;
 import org.compiere.util.DB;
+import org.compiere.util.Msg;
 
 import com.lowagie.text.Document;
 import com.lowagie.text.Element;
@@ -29,6 +30,10 @@ import com.lowagie.text.Paragraph;
 import com.lowagie.text.html.simpleparser.HTMLWorker;
 import com.lowagie.text.pdf.PdfWriter;
 
+import za.co.ntier.api.model.I_C_BPartner;
+import za.co.ntier.api.model.I_ZZOrganisationLinkage;
+import za.co.ntier.api.model.X_C_BPartner;
+import za.co.ntier.api.model.X_ZZOrganisationLinkage;
 import za.co.ntier.api.model.X_ZZSdfOrganisation;
 
 public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
@@ -74,6 +79,49 @@ public class MZZSdfOrganisation extends X_ZZSdfOrganisation {
         return "Primary";
     }
 
+
+    @Override
+    protected boolean beforeSave(boolean newRecord) {
+        if (newRecord || is_ValueChanged(COLUMNNAME_C_BPartner_ID)) {
+            int bpId = getC_BPartner_ID();
+            if (bpId > 0) {
+                MBPartner bp = MBPartner.get(getCtx(), bpId);
+                if (bp != null) {
+                    String orgType = bp.get_ValueAsString(I_C_BPartner.COLUMNNAME_ZZOrganisationType);
+                    if (X_C_BPartner.ZZORGANISATIONTYPE_Child.equalsIgnoreCase(orgType)) {
+                        int parentId = bp.get_ValueAsInt(I_C_BPartner.COLUMNNAME_BPartner_Parent_ID);
+                        String whereClause;
+                        Object[] params;
+                        if (parentId > 0) {
+                            whereClause = String.format(
+                                    "%s = ? AND %s = ? AND %s = 'Y' AND COALESCE(%s, ?) = ?",
+                                    I_ZZOrganisationLinkage.COLUMNNAME_C_BPartner_ID,
+                                    I_ZZOrganisationLinkage.COLUMNNAME_BPartner_Parent_ID,
+                                    I_ZZOrganisationLinkage.COLUMNNAME_IsActive,
+                                    I_ZZOrganisationLinkage.COLUMNNAME_ZZ_Parent_Uploads);
+                            params = new Object[] { bpId, parentId, X_ZZOrganisationLinkage.ZZ_PARENT_UPLOADS_No, X_ZZOrganisationLinkage.ZZ_PARENT_UPLOADS_Yes };
+                        } else {
+                            whereClause = String.format(
+                                    "%s = ? AND %s IS NOT NULL AND %s = 'Y' AND COALESCE(%s, ?) = ?",
+                                    I_ZZOrganisationLinkage.COLUMNNAME_C_BPartner_ID,
+                                    I_ZZOrganisationLinkage.COLUMNNAME_BPartner_Parent_ID,
+                                    I_ZZOrganisationLinkage.COLUMNNAME_IsActive,
+                                    I_ZZOrganisationLinkage.COLUMNNAME_ZZ_Parent_Uploads);
+                            params = new Object[] { bpId, X_ZZOrganisationLinkage.ZZ_PARENT_UPLOADS_No, X_ZZOrganisationLinkage.ZZ_PARENT_UPLOADS_Yes };
+                        }
+                        boolean hasParentUploads = new Query(getCtx(), I_ZZOrganisationLinkage.Table_Name, whereClause, get_TrxName())
+                                .setParameters(params)
+                                .match();
+                        if (hasParentUploads) {
+                            log.saveError("Error", Msg.getMsg(getCtx(), "ZZOrgLinkChildParentUploads"));
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        return super.beforeSave(newRecord);
+    }
 
     @Override
     protected boolean afterSave(boolean newRecord, boolean success) {
