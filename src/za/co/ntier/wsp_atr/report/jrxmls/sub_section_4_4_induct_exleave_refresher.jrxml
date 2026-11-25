@@ -97,7 +97,7 @@ ORDER BY mg.value]]>
 				</textElement>
 				<text><![CDATA[Section 4: Employees Trained and Planned]]></text>
 			</staticText>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement x="0" y="36" width="1210" height="18" uuid="84a4a9f7-c5c4-46db-ab4d-ac2d17f5aa05"/>
 				<textElement verticalAlignment="Middle">
 					<font size="12" isBold="true"/>
@@ -131,7 +131,7 @@ ORDER BY mg.value]]>
 				</textElement>
 				<text><![CDATA[Occupational Category]]></text>
 			</staticText>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="HdrSmall" x="490" y="0" width="360" height="30" uuid="6c5b0305-c4e9-497f-ba4b-324553830917"/>
 				<box>
 					<pen lineWidth="0.5"/>
@@ -139,7 +139,7 @@ ORDER BY mg.value]]>
 				<textFieldExpression><![CDATA["Total Trained "
  + ($F{atr_year} == null || $F{atr_year}.intValue() <= 0 ? "previous financial year" : $F{atr_year}.toString())]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="HdrSmall" x="850" y="0" width="360" height="30" uuid="3e18c554-7e43-40c6-834e-7fe0be8b8299"/>
 				<box>
 					<pen lineWidth="0.5"/>
@@ -259,42 +259,42 @@ ORDER BY mg.value]]>
 				</textElement>
 				<text><![CDATA[Total]]></text>
 			</staticText>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="490" y="0" width="120" height="28" uuid="bf7487e8-ed95-465d-a448-79a27388dd51"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_Tr_Induction}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="610" y="0" width="120" height="28" uuid="9fec46ef-bd43-450b-b382-f7dea2757740"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_Tr_ExLeave}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="730" y="0" width="120" height="28" uuid="7f9ba1b0-44de-42bb-b4b4-ee35c266a083"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_Tr_Refresher}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="850" y="0" width="120" height="28" uuid="100dba05-b67d-4aa4-8fc4-dff20b52ae86"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_Pl_Induction}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="970" y="0" width="120" height="28" uuid="04d0a4b0-a061-4c18-8780-42f6e0299854"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_Pl_ExLeave}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="1090" y="0" width="120" height="28" uuid="13bc4195-62e6-4ccc-857d-0d597dafd510"/>
 				<box>
 					<pen lineWidth="0.5"/>
@@ -311,14 +311,14 @@ ORDER BY mg.value]]>
 				</textElement>
 				<text><![CDATA[Grand Total]]></text>
 			</staticText>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="490" y="28" width="360" height="28" uuid="530837f8-8b10-43ac-af9c-0eb3352766fe"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Grand_Total_Trained}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="850" y="28" width="360" height="28" uuid="7a3b473d-124c-40d9-ae76-1cd9ac513f28"/>
 				<box>
 					<pen lineWidth="0.5"/>

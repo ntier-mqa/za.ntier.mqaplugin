@@ -94,7 +94,7 @@ ORDER BY t.Row_No]]>
 				</box>
 				<text><![CDATA[Non-Employee Status]]></text>
 			</staticText>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="Hdr" x="760" y="0" width="225" height="40" uuid="c8a7a4d2-6cba-4b08-91d9-9d9f9e9e9e01"/>
 				<box>
 					<pen lineWidth="0.5"/>
@@ -102,7 +102,7 @@ ORDER BY t.Row_No]]>
 				<textFieldExpression><![CDATA["Total Trained "
  + ($F{atr_year} == null || $F{atr_year}.intValue() <= 0 ? "previous financial year" : $F{atr_year}.toString())]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="Hdr" x="985" y="0" width="225" height="40" uuid="a7b6c5d4-e3f2-4a11-8b22-334455667788"/>
 				<box>
 					<pen lineWidth="0.5"/>
@@ -134,14 +134,14 @@ ORDER BY t.Row_No]]>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{non_emp_status}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="760" y="0" width="225" height="26" uuid="f1111111-2222-3333-4444-777777777777"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{total_done}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="985" y="0" width="225" height="26" uuid="01111111-2222-3333-4444-888888888888"/>
 				<box>
 					<pen lineWidth="0.5"/>
@@ -162,14 +162,14 @@ ORDER BY t.Row_No]]>
 				</textElement>
 				<text><![CDATA[Grand Total]]></text>
 			</staticText>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="760" y="0" width="225" height="28" uuid="22222222-aaaa-bbbb-cccc-999999999999"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_Done}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="985" y="0" width="225" height="28" uuid="33333333-aaaa-bbbb-cccc-999999999999"/>
 				<box>
 					<pen lineWidth="0.5"/>

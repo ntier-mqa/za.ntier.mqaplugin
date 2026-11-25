@@ -20,7 +20,7 @@
 		<![CDATA[SELECT
     COALESCE((SELECT CASE
                         WHEN NULLIF(regexp_replace(y.FiscalYear, '[^0-9]', '', 'g'), '') IS NOT NULL
-                        THEN CAST(NULLIF(regexp_replace(y.FiscalYear, '[^0-9]', '', 'g'), '') AS INTEGER) - 1
+                        THEN CAST(NULLIF(regexp_replace(y.FiscalYear, '[^0-9]', '', 'g'), '') AS INTEGER)
                      END
               FROM ZZ_WSP_ATR_Report r2
               LEFT JOIN ZZ_WSP_ATR_Submitted s2 ON s2.ZZ_WSP_ATR_Submitted_ID = r2.ZZ_WSP_ATR_Submitted_ID

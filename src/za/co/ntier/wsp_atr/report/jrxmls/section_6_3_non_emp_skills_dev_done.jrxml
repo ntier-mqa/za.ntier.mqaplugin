@@ -106,7 +106,7 @@ ORDER BY programme_type, specify_txt, target_beneficiaries]]>
 				</textElement>
 				<text><![CDATA[Section 6: Non-Employees AET and Bursaries]]></text>
 			</staticText>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement x="0" y="36" width="1210" height="18" uuid="52d1f0a2-6e7b-4f33-9d08-ef6b4f64b302"/>
 				<textElement verticalAlignment="Middle">
 					<font size="12" isBold="true"/>
@@ -252,63 +252,63 @@ ORDER BY programme_type, specify_txt, target_beneficiaries]]>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{target_beneficiaries}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="710" y="0" width="50" height="26" uuid="6ad4e4f3-8e77-404d-9155-705273661a84"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{male_cnt}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="760" y="0" width="50" height="26" uuid="b9d20b6f-a1a4-4aba-acde-e5fd182feff4"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{female_cnt}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="810" y="0" width="50" height="26" uuid="6e1a0481-63d9-4e2c-bc98-e3c67f8cf22c"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{total_gender}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="860" y="0" width="60" height="26" uuid="151d3cce-396b-4fdd-bbb7-e138d29c4780"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{african_cnt}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="920" y="0" width="60" height="26" uuid="c5f68f42-11f3-42ba-8a9e-3f8d4ac52074"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{coloured_cnt}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="980" y="0" width="60" height="26" uuid="78ac8bcb-7ca4-4f66-a498-aaf171515df9"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{indian_cnt}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="1040" y="0" width="60" height="26" uuid="892a870b-190d-49cf-86df-e2a66ed5e473"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{white_cnt}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="1100" y="0" width="60" height="26" uuid="0481cbb1-90cf-4d78-b25c-c9430534b536"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$F{total_race}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" positionType="Float" stretchType="ElementGroupHeight" x="1160" y="0" width="50" height="26" uuid="ab647712-5d10-4624-9edf-51bec648f804"/>
 				<box>
 					<pen lineWidth="0.5"/>
@@ -329,63 +329,63 @@ ORDER BY programme_type, specify_txt, target_beneficiaries]]>
 				</textElement>
 				<text><![CDATA[Grand Total]]></text>
 			</staticText>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="710" y="0" width="50" height="28" uuid="9bffa1b7-76a8-4285-822d-c039965ee2d0"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{SumMale}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="760" y="0" width="50" height="28" uuid="e3f74c79-21d5-4cd9-ad2d-2ba9c279286a"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{SumFemale}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="810" y="0" width="50" height="28" uuid="47f32f19-f540-42a6-88d6-9376e87ad991"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{SumTotalGender}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="860" y="0" width="60" height="28" uuid="685d2cc9-2d2f-4473-9dff-a1abe785375a"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{SumAfrican}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="920" y="0" width="60" height="28" uuid="3d700686-249c-4805-9c03-de20df1a1533"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{SumColoured}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="980" y="0" width="60" height="28" uuid="bb41c4ba-01e1-49a1-95b4-ab4fd66388d0"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{SumIndian}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="1040" y="0" width="60" height="28" uuid="efa87105-1a64-4983-a156-3b33b07e79ad"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{SumWhite}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="1100" y="0" width="60" height="28" uuid="2dd844c7-c95c-4217-af56-ccc71cb668f8"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{SumTotalRace}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="1160" y="0" width="50" height="28" uuid="8c6bc818-a3a3-4810-be49-4f4eebb9af46"/>
 				<box>
 					<pen lineWidth="0.5"/>

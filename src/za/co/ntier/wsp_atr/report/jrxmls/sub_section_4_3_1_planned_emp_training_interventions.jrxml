@@ -98,7 +98,7 @@ ORDER BY t.Row_No, occ.Value, lp.Name]]>
 				</textElement>
 				<text><![CDATA[Section 4: Employees Trained and Planned]]></text>
 			</staticText>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement x="0" y="36" width="1210" height="18" uuid="bca6418e-6750-412d-9657-04f765a3c122"/>
 				<textElement verticalAlignment="Middle">
 					<font size="12" isBold="true"/>
@@ -108,7 +108,7 @@ ORDER BY t.Row_No, occ.Value, lp.Name]]>
  + ($F{fiscal_year} == null || $F{fiscal_year}.trim().isEmpty() ? "financial year" : $F{fiscal_year})
  + " (excludes Refresher, Induction and Ex-leave training)"]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement x="0" y="58" width="1210" height="18" uuid="bca6418e-6750-412d-9657-04f765a3c123"/>
 				<textElement verticalAlignment="Middle">
 					<font size="12" isBold="true"/>
@@ -378,7 +378,7 @@ ORDER BY t.Row_No, occ.Value, lp.Name]]>
 				</textElement>
 				<text><![CDATA[Grand Total]]></text>
 			</staticText>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="700" y="0" width="52" height="28" uuid="ec826b1b-3bde-482c-9bf2-7ca33806e954">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
@@ -387,7 +387,7 @@ ORDER BY t.Row_No, occ.Value, lp.Name]]>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_Male}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="752" y="0" width="52" height="28" uuid="d79e30e6-a0ba-4e9c-87a5-59c23288d233">
 					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
@@ -397,7 +397,7 @@ ORDER BY t.Row_No, occ.Value, lp.Name]]>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_Female}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="804" y="0" width="52" height="28" uuid="902aace6-ca07-405b-ba15-46bdd2874369">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
@@ -406,7 +406,7 @@ ORDER BY t.Row_No, occ.Value, lp.Name]]>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_African}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="856" y="0" width="52" height="28" uuid="d21228d8-2b97-4133-bc29-145e096b48b4">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
@@ -415,7 +415,7 @@ ORDER BY t.Row_No, occ.Value, lp.Name]]>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_Coloured}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="908" y="0" width="52" height="28" uuid="411372b1-4b4f-4fdf-8a37-9bbc1478440a">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
@@ -424,7 +424,7 @@ ORDER BY t.Row_No, occ.Value, lp.Name]]>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_Indian}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="960" y="0" width="52" height="28" uuid="23a80b8a-1fd6-4dce-81e8-e4eb1f25a2e5">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
@@ -433,14 +433,14 @@ ORDER BY t.Row_No, occ.Value, lp.Name]]>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_White}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="1012" y="0" width="62" height="28" uuid="cb7eafe9-f42b-4734-bcae-0910850d30ab"/>
 				<box>
 					<pen lineWidth="0.5"/>
 				</box>
 				<textFieldExpression><![CDATA[$V{Sum_Disabled}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement style="CellNum" x="1074" y="0" width="136" height="28" uuid="858ab748-7f24-48ca-b720-1636da2958f2"/>
 				<box>
 					<pen lineWidth="0.5"/>
