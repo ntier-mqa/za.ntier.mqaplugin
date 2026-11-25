@@ -11,13 +11,19 @@ import org.adempiere.base.annotation.Process;
 import org.compiere.model.MSysConfig;
 import org.compiere.process.ProcessInfoParameter;
 import org.compiere.process.SvrProcess;
+import org.compiere.util.CLogger;
 import org.compiere.util.Env;
 import org.compiere.util.Trx;
 
 import net.sf.jasperreports.engine.JRParameter;
+import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.design.JasperDesign;
+import net.sf.jasperreports.engine.util.JRLoader;
+import net.sf.jasperreports.engine.xml.JRXmlLoader;
 
 /**
  * Renders the Mandatory Grant Statement for one company as a PDF export file.
@@ -31,7 +37,12 @@ public class GenerateMandatoryGrantStatement extends SvrProcess
 	public static final String PARAM_DateTo = "DateTo";
 
 	private static final String MQA_REPORT_JRXML_PATH = "MQA_REPORT_JRXML_PATH";
-	private static final String REPORT_NAME = "Mandatory_Grant_Statement_Report.jasper";
+	private static final String REPORT_NAME = "Mandatory_Grant_Statement_Report";
+	private static final CLogger s_log = CLogger.getCLogger(GenerateMandatoryGrantStatement.class);
+
+	/** Compiled template, cached per report path. */
+	private static JasperReport cachedReport;
+	private static String cachedReportPath;
 
 	private Timestamp dateFrom;
 	private Timestamp dateTo;
@@ -75,21 +86,54 @@ public class GenerateMandatoryGrantStatement extends SvrProcess
 		params.put("RESOURCE_DIR", resourceDir);
 		params.put(JRParameter.REPORT_CLASS_LOADER, GenerateMandatoryGrantStatement.class.getClassLoader());
 
-		String jasperFile = reportPath + REPORT_NAME;
-		try (InputStream jasperStream = GenerateMandatoryGrantStatement.class.getResourceAsStream(jasperFile))
-		{
-			if (jasperStream == null)
-				throw new Exception("Could not find the Jasper report template on classpath: " + jasperFile);
+		JasperPrint print = JasperFillManager.fillReport(getReport(reportPath), params, Trx.get(get_TrxName(), false).getConnection());
+		if (print == null || print.getPages().isEmpty())
+			throw new Exception("No levy data was found for the selected period.");
 
-			JasperPrint print = JasperFillManager.fillReport(jasperStream, params, Trx.get(get_TrxName(), false).getConnection());
-			if (print == null || print.getPages().isEmpty())
-				throw new Exception("No levy data was found for the selected period.");
-
-			File pdf = File.createTempFile("GrantStatement_" + bpartnerId + "_", ".pdf");
-			Files.write(pdf.toPath(), JasperExportManager.exportReportToPdf(print));
-			getProcessInfo().setExportFile(pdf);
-		}
+		File pdf = File.createTempFile("GrantStatement_" + bpartnerId + "_", ".pdf");
+		Files.write(pdf.toPath(), JasperExportManager.exportReportToPdf(print));
+		getProcessInfo().setExportFile(pdf);
 
 		return "Grant Statement generated.";
+	}
+
+	/**
+	 * Loads the precompiled .jasper; if it was built with a different JasperReports version
+	 * (InvalidClassException on load), compiles the .jrxml instead. The result is cached.
+	 */
+	private static synchronized JasperReport getReport(String reportPath) throws Exception
+	{
+		if (cachedReport != null && reportPath.equals(cachedReportPath))
+			return cachedReport;
+
+		JasperReport report = null;
+		try (InputStream jasperStream = GenerateMandatoryGrantStatement.class.getResourceAsStream(reportPath + REPORT_NAME + ".jasper"))
+		{
+			if (jasperStream != null)
+				report = (JasperReport) JRLoader.loadObject(jasperStream);
+		}
+		catch (Exception e)
+		{
+			s_log.warning("Could not load precompiled " + REPORT_NAME + ".jasper, compiling .jrxml instead: " + e.getMessage());
+		}
+
+		if (report == null)
+		{
+			String jrxmlFile = reportPath + REPORT_NAME + ".jrxml";
+			try (InputStream jrxmlStream = GenerateMandatoryGrantStatement.class.getResourceAsStream(jrxmlFile))
+			{
+				if (jrxmlStream == null)
+					throw new Exception("Could not find the Jasper report template on classpath: " + jrxmlFile);
+				JasperDesign design = JRXmlLoader.load(jrxmlStream);
+				// The template is marked groovy but its expressions are plain Java; compile as Java
+				// so the server does not need the Groovy compiler.
+				design.setLanguage(JasperDesign.LANGUAGE_JAVA);
+				report = JasperCompileManager.compileReport(design);
+			}
+		}
+
+		cachedReport = report;
+		cachedReportPath = reportPath;
+		return report;
 	}
 }
