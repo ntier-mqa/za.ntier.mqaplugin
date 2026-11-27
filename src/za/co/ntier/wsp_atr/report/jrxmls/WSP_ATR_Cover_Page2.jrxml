@@ -115,8 +115,7 @@
 				<textElement verticalAlignment="Top"/>
 				<textFieldExpression><![CDATA["The WSP-ATR must be submitted to MQA by 30 April "
 + java.time.Year.now().toString()
-+ ". Please note that your submission is incomplete unless the signature and declaration pages (with all the required signatures) are completed.\n"
-+ "Organisations with less than 50 employees do not have to submit signatures of consulted parties."]]></textFieldExpression>
++ ". Please note that your submission is incomplete unless the signature and declaration pages (with all the required signatures) are completed."]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>

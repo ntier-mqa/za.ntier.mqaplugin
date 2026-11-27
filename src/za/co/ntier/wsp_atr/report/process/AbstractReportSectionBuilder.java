@@ -25,7 +25,33 @@ public abstract class AbstractReportSectionBuilder implements IReportSectionBuil
 		String sql = "DELETE FROM " + targetTable + " WHERE ZZ_WSP_ATR_Report_ID=?";
 		return DB.executeUpdateEx(sql, new Object[] { reportId}, trxName);
 	}
-	
+
+	/**
+	 * Learning programme types that are NOT pivotal (MQA "List of Non-Pivotal courses").
+	 * Compared against ZZ_Learning_Programme_Ref.Name with everything except letters stripped
+	 * and upper-cased, so "Ex-Leave Training", "Ex_Leave" and "EXLEAVE" all match.
+	 */
+	private static final String NON_PIVOTAL_PROGRAMME_KEYS =
+			"'INDUCTION','INDUCTIONTRAINING',"
+			+ "'EXLEAVE','EXLEAVETRAINING',"
+			+ "'CERTIFICATE',"
+			+ "'SHORTCOURSE','SHORTCOURSES',"
+			+ "'OPERATORLICENCERENEWAL','OPERATORLICENSERENEWAL',"
+			+ "'REFRESHER','REFRESHERTRAINING'";
+
+	/**
+	 * SQL predicate that is true when the given learning-programme-type id column does not point
+	 * to a non-pivotal programme. Rows with no programme type are kept.
+	 *
+	 * @param learningProgrammeTypeIdColumn qualified column holding a ZZ_Learning_Programme_Ref_ID
+	 */
+	protected String pivotalProgrammesOnlyPredicate(String learningProgrammeTypeIdColumn) {
+		return "NOT EXISTS (SELECT 1 FROM zz_learning_programme_ref np \n"
+				+ "    WHERE np.zz_learning_programme_ref_id = " + learningProgrammeTypeIdColumn + " \n"
+				+ "      AND UPPER(regexp_replace(COALESCE(np.name,''), '[^A-Za-z]', '', 'g')) IN ("
+				+ NON_PIVOTAL_PROGRAMME_KEYS + ")) \n";
+	}
+
 		
 	protected String getParentAndChildSubmittedIdsInClause(
 	        Properties ctx,

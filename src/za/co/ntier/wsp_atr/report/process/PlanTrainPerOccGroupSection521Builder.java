@@ -63,6 +63,7 @@ public class PlanTrainPerOccGroupSection521Builder extends AbstractReportSection
 						+ "  FROM ZZ_WSP_ATR_WSP wsp \n"
 						+ "  WHERE wsp.ZZ_WSP_ATR_Submitted_ID in "
 						+ getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,onlySubLevyOrgs,trxName)
+						+ "    AND " + pivotalProgrammesOnlyPredicate("wsp.ZZ_Learning_Programme_Type_ID")
 						+ "), agg AS ( \n"
 						+ "  SELECT \n"
 						+ "    ZZ_OFO_Specialisation_ID, \n"

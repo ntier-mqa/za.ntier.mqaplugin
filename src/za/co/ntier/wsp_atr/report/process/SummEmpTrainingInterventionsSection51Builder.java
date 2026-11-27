@@ -60,6 +60,7 @@ public class SummEmpTrainingInterventionsSection51Builder extends AbstractReport
             + "  WHERE d.zz_wsp_atr_submitted_id in " 
             + getParentAndChildSubmittedIdsInClause(report.getCtx(),submitted.getZZ_WSP_ATR_Submitted_ID(),consolidatedSubmission,onlySubLevyOrgs,trxName)
             + "    AND d.zz_wsp_employees_id IS NOT NULL \n"
+            + "    AND " + pivotalProgrammesOnlyPredicate("d.qualification_type_id")
             + "), txt AS ( \n"
             + "  SELECT \n"
             + "      b.qualification_type_id, \n"

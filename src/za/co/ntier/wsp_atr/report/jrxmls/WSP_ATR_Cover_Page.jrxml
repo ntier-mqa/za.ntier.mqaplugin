@@ -128,8 +128,7 @@
 				<reportElement style="Normal" x="135" y="800" width="1000" height="220" uuid="1ad89576-6436-41ef-a8f8-6824b5a6b728"/>
 				<textElement verticalAlignment="Top"/>
 				<textFieldExpression><![CDATA["PLEASE NOTE:\n"
-+ "The WSP-ATR must be submitted to MQA by " + $F{submit_deadline_text} + ". Please note that your submission is incomplete unless the signature and declaration pages (with all the required signatures) are completed.\n"
-+ "Organisations with less than 50 employees do not have to submit signatures of consulted parties."]]></textFieldExpression>
++ "The WSP-ATR must be submitted to MQA by " + $F{submit_deadline_text} + ". Please note that your submission is incomplete unless the signature and declaration pages (with all the required signatures) are completed."]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>
