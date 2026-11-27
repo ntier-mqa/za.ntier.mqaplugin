@@ -21,10 +21,16 @@
 --
 -- separate_wsp_atr is the INVERSE of the stored flag: ZZ_Parent_Uploads = 'N' means the child
 -- files its own separate WSP-ATR ('Y' here); 'Y' means the parent uploads for it ('N' here).
+--
+-- Driven from the linkage + child business partner, NOT from zzsdforganisation: some linked
+-- children (e.g. T-number organisations) have no zzsdforganisation record at all, and an inner
+-- join to it silently dropped them. A child is still excluded when its only SDF organisation
+-- records are delinked ('UnSdfOrg'). zz_docstatus is compared NULL-safely.
 SELECT DISTINCT
     COALESCE(v.orgname, bp.name, '<Sub Levy Organisation>') AS organisation_name,
-    COALESCE(v.zz_sdl_no, bp.zz_sdl_no, '<SDL Number>')     AS sdl_number,
-    COALESCE(NULLIF(bp.zzsiccode,''), '<SIC Code>')         AS sic_code,
+    -- No SDL number (e.g. T-number organisations): show the business partner's Search Key.
+    COALESCE(NULLIF(v.zz_sdl_no,''), NULLIF(bp.zz_sdl_no,''), bp.value) AS sdl_number,
+    COALESCE(bp.zzsiccode, '')                              AS sic_code,
     CASE WHEN COALESCE(l.zz_parent_uploads, 'N') = 'N' THEN 'Y' ELSE 'N' END AS separate_wsp_atr
 FROM adempiere.zz_wsp_atr_submitted s
 JOIN adempiere.zzsdforganisation parent_so
@@ -32,16 +38,20 @@ JOIN adempiere.zzsdforganisation parent_so
 JOIN adempiere.zzorganisationlinkage l
   ON l.bpartner_parent_id = parent_so.c_bpartner_id
  AND l.isactive = 'Y'
-JOIN adempiere.zzsdforganisation child_so
+JOIN adempiere.c_bpartner bp
+  ON bp.c_bpartner_id = l.c_bpartner_id
+ AND bp.isactive = 'Y'
+LEFT JOIN adempiere.zzsdforganisation child_so
   ON child_so.c_bpartner_id = l.c_bpartner_id
  AND child_so.isactive = 'Y'
- AND child_so.zz_docstatus <> 'UnSdfOrg'
+ AND child_so.zz_docstatus IS DISTINCT FROM 'UnSdfOrg'
 LEFT JOIN adempiere.zzsdforganisation_v v
   ON v.zzsdforganisation_id = child_so.zzsdforganisation_id
-LEFT JOIN adempiere.c_bpartner bp
-  ON bp.isactive = 'Y'
- AND bp.c_bpartner_id = child_so.c_bpartner_id
 WHERE s.zz_wsp_atr_submitted_id = $P{ZZ_WSP_ATR_Submitted_ID}
+  AND NOT (child_so.zzsdforganisation_id IS NULL
+           AND EXISTS (SELECT 1 FROM adempiere.zzsdforganisation d
+                       WHERE d.c_bpartner_id = l.c_bpartner_id
+                         AND d.zz_docstatus = 'UnSdfOrg'))
 ORDER BY 1, 2]]>
 	</queryString>
 	<field name="organisation_name" class="java.lang.String"/>
