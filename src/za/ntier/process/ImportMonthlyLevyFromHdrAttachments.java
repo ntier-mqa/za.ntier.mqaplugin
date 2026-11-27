@@ -75,8 +75,10 @@ public class ImportMonthlyLevyFromHdrAttachments extends SvrProcess {
 		if (att == null || att.getEntryCount() == 0)
 			throw new AdempiereException("No attachments found on header. Please attach .csv files and try again.");
 
-		// Optional: clear existing rows for this header (or for year+month scope)
 		boolean clearExisting = hdr.isZZ_Is_Clear_Existing();
+		checkReimportAllowed(clearExisting);
+
+		// Optional: clear existing rows for this header (or for year+month scope)
 		int deleted = 0;
 		if (clearExisting) {			
 			deleted = DB.executeUpdateEx(
@@ -224,6 +226,40 @@ public class ImportMonthlyLevyFromHdrAttachments extends SvrProcess {
 
 
 	// Helpers
+
+	/**
+	 * Stops imports that would duplicate levy lines or break grant links:
+	 * 1. the header's lines are already linked to invoice batch lines (re-importing would
+	 *    delete the links and the next batch run would grant those months again);
+	 * 2. the header already has lines and Clear Existing is not ticked (would duplicate them);
+	 * 3. another active header exists for the same year and month.
+	 */
+	private void checkReimportAllowed(boolean clearExisting) {
+		int hdrId = hdr.getZZ_Monthly_Levy_Files_Hdr_ID();
+
+		int batched = DB.getSQLValueEx(get_TrxName(),
+				"SELECT COUNT(*) FROM ZZ_Monthly_Levy_Files WHERE ZZ_Monthly_Levy_Files_Hdr_ID=? AND C_InvoiceBatchLine_ID IS NOT NULL",
+				hdrId);
+		if (batched > 0)
+			throw new AdempiereException("This levy file has already been batched (" + batched
+					+ " lines are linked to invoice batches). Re-importing would lose the grant links and cause grants to be paid again."
+					+ " Reverse the invoice batch lines first if the file really must be re-imported.");
+
+		int existing = DB.getSQLValueEx(get_TrxName(),
+				"SELECT COUNT(*) FROM ZZ_Monthly_Levy_Files WHERE ZZ_Monthly_Levy_Files_Hdr_ID=?",
+				hdrId);
+		if (existing > 0 && !clearExisting)
+			throw new AdempiereException("This header already has " + existing
+					+ " levy lines. Tick 'Clear Existing' to replace them, otherwise they would be duplicated.");
+
+		int otherHdrId = DB.getSQLValueEx(get_TrxName(),
+				"SELECT MIN(ZZ_Monthly_Levy_Files_Hdr_ID) FROM ZZ_Monthly_Levy_Files_Hdr"
+				+ " WHERE C_Year_ID=? AND ZZ_Month=? AND IsActive='Y' AND AD_Client_ID=? AND ZZ_Monthly_Levy_Files_Hdr_ID<>?",
+				hdr.getC_Year_ID(), hdr.getZZ_Month(), hdr.getAD_Client_ID(), hdrId);
+		if (otherHdrId > 0)
+			throw new AdempiereException("Another levy header (ID " + otherHdrId + ") already exists for "
+					+ fiscalYear + "/" + hdr.getZZ_Month() + ". Import the file on that header instead.");
+	}
 
 	private boolean hasColumn(org.compiere.model.PO po, String column) {
 		return po.get_ColumnIndex(column) >= 0;

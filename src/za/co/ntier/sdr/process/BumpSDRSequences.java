@@ -1,5 +1,6 @@
 package za.co.ntier.sdr.process;
 
+import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -91,8 +92,10 @@ public class BumpSDRSequences extends SvrProcess {
             if (current >= wantedNext) {
                 unchanged++;
             } else {
+                // DB.setParameters does not accept Long - bind as BigDecimal.
+                BigDecimal wanted = BigDecimal.valueOf(wantedNext);
                 DB.executeUpdateEx("UPDATE AD_Sequence SET CurrentNext = ? WHERE Name = ? AND IsTableID = 'Y' "
-                        + "AND CurrentNext < ?", new Object[] { wantedNext, tableName, wantedNext }, get_TrxName());
+                        + "AND CurrentNext < ?", new Object[] { wanted, tableName, wanted }, get_TrxName());
                 bumped++;
                 addLog(tableName + ": CurrentNext " + current + " -> " + wantedNext);
             }
