@@ -6,6 +6,7 @@ import java.net.URL;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
+import org.adempiere.exceptions.AdempiereException;
 import org.compiere.model.I_R_MailText;
 import org.compiere.model.MBPartner;
 import org.compiere.model.MClient;
@@ -67,6 +69,14 @@ public class ZZLearnerUtil
 	public static final String LEARNER_CONFIRMATION_MAIL_TEMPLATE_UU = "eac216ef-5331-4d12-980d-7d7710b9829c";
 	public static final String LEARNER_QUERY_MAIL_TEMPLATE_UU = "ba58e3ff-6b42-4f4c-be01-cfbe1255803e";
 	public static final String LEARNER_REGISTRATION_LETTER_CC = "LEARNER_REGISTRATION_LETTER_CC";
+
+	private static final List<String> INTERVENTION_TABLES = List.of(
+			I_ZZLearnerDGProgramme.Table_Name,
+			I_ZZLearnerLearnership.Table_Name,
+			I_ZZLearnerSkillsProgramme.Table_Name,
+			I_ZZLearnerQCTOLearnership.Table_Name,
+			I_ZZLearnerQCTOArtisans.Table_Name,
+			I_ZZLearnerQCTOSkillsProgramme.Table_Name);
 
 	/**
 	 * Common beforeSave logic for learner intervention tables.
@@ -414,6 +424,8 @@ public class ZZLearnerUtil
 		}
 	}
 
+	private record LearnerProgramme(X_ZZLearner learner, PO prog) {}
+
 	/**
 	 * Generates the Registration Confirmation Letter in landscape orientation and returns the PDF file.
 	 */
@@ -423,140 +435,239 @@ public class ZZLearnerUtil
 		{
 			Properties ctx = prog != null ? prog.getCtx() : learner.getCtx();
 			String trxName = prog != null ? prog.get_TrxName() : learner.get_TrxName();
-
-			int sdpId = (prog != null && prog.get_ColumnIndex(I_ZZLearnerLearnership.COLUMNNAME_ZZ_SDP_ID) >= 0)
-					? prog.get_ValueAsInt(I_ZZLearnerLearnership.COLUMNNAME_ZZ_SDP_ID) : 0;
-			if (sdpId <= 0 && learner != null && learner.getZZ_SDPAdmin_ID() > 0)
-			{
-				MUser adminUser = MUser.get(ctx, learner.getZZ_SDPAdmin_ID());
-				if (adminUser != null)
-				{
-					sdpId = adminUser.getC_BPartner_ID();
-				}
-			}
-
-			String sdpName = "";
-			String sdpSearchKey = "";
-			if (sdpId > 0)
-			{
-				MBPartner sdpBp = new MBPartner(ctx, sdpId, trxName);
-				if (sdpBp != null && sdpBp.get_ID() > 0)
-				{
-					sdpName = sdpBp.getName() != null ? sdpBp.getName() : "";
-					sdpSearchKey = sdpBp.getValue() != null ? sdpBp.getValue() : "";
-				}
-			}
-
-			SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-			String datePrinted = sdf.format(new Date());
-
-			String progName = resolveProgrammeName(prog);
-			String companyName = (sdpName + " " + sdpSearchKey).trim();
-
-			Timestamp startTs = null;
-			if (prog != null && prog.get_ColumnIndex(I_ZZLearnerLearnership.COLUMNNAME_ZZCommencementDate) >= 0)
-			{
-				startTs = (Timestamp) prog.get_Value(I_ZZLearnerLearnership.COLUMNNAME_ZZCommencementDate);
-			}
-			Timestamp endTs = null;
-			if (prog != null && prog.get_ColumnIndex(I_ZZLearnerLearnership.COLUMNNAME_ZZCompletionDate) >= 0)
-			{
-				endTs = (Timestamp) prog.get_Value(I_ZZLearnerLearnership.COLUMNNAME_ZZCompletionDate);
-			}
-			Timestamp regTs = null;
-			if (prog != null && prog.get_ColumnIndex(I_ZZLearnerLearnership.COLUMNNAME_ZZRegistrationDate) >= 0)
-			{
-				regTs = (Timestamp) prog.get_Value(I_ZZLearnerLearnership.COLUMNNAME_ZZRegistrationDate);
-			}
-			if (regTs == null && prog != null && prog.get_ColumnIndex(I_ZZLearnerLearnership.COLUMNNAME_ZZ_DateRegistered) >= 0)
-			{
-				regTs = (Timestamp) prog.get_Value(I_ZZLearnerLearnership.COLUMNNAME_ZZ_DateRegistered);
-			}
-			if (regTs == null && learner != null)
-			{
-				regTs = learner.getZZ_DateRegistered();
-			}
-			if (regTs == null)
-			{
-				regTs = new Timestamp(System.currentTimeMillis());
-			}
-
-			Map<String, Object> jasperParams = new HashMap<>();
-			jasperParams.put("SDPName", sdpName);
-			jasperParams.put("SDPSearchKey", sdpSearchKey);
-			jasperParams.put("DatePrinted", datePrinted);
-			jasperParams.put("ProgrammeName", progName);
-			jasperParams.put("CompanyName", companyName);
-
-			final String reportPath = "/za/co/ntier/wsp_atr/report/jrxmls/";
-
-			URL headerUrl = ZZLearnerUtil.class.getResource(reportPath + "MQA_Address_Logo_Header.png");
-			if (headerUrl != null)
-			{
-				jasperParams.put("HeaderImagePath", headerUrl);
-			}
-
-			URL footerUrl = ZZLearnerUtil.class.getResource(reportPath + "Footer_Mining_Future_Skills.png");
-			if (footerUrl != null)
-			{
-				jasperParams.put("FooterImagePath", footerUrl);
-			}
-
-			jasperParams.put("RESOURCE_DIR", "za/co/ntier/wsp_atr/report/jrxmls/");
-			jasperParams.put(JRParameter.REPORT_CLASS_LOADER, ZZLearnerUtil.class.getClassLoader());
-
-			List<Map<String, ?>> rows = new ArrayList<>();
-			Map<String, Object> row = new HashMap<>();
-			row.put("LearnerName", getLearnerFirstName(prog, learner));
-			row.put("LearnerSurname", getLearnerSurname(prog, learner));
-			row.put("LearnerIDNo", getIDOrPassportNo(prog, learner));
-			row.put("StartDate", startTs != null ? sdf.format(startTs) : "");
-			row.put("EndDate", endTs != null ? sdf.format(endTs) : "");
-			row.put("RegistrationDate", sdf.format(regTs));
-			rows.add(row);
-
-			JasperReport jasperReport = null;
-			InputStream jasperStream = ZZLearnerUtil.class.getResourceAsStream(reportPath + "Learner_Registration_Confirmation_Letter.jasper");
-			if (jasperStream != null)
-			{
-				try
-				{
-					jasperReport = (JasperReport) JRLoader.loadObject(jasperStream);
-				}
-				catch (Exception e)
-				{
-					log.warning("Could not load precompiled .jasper: " + e.getMessage());
-				}
-			}
-			if (jasperReport == null)
-			{
-				InputStream jrxmlStream = ZZLearnerUtil.class.getResourceAsStream(reportPath + "Learner_Registration_Confirmation_Letter.jrxml");
-				if (jrxmlStream == null)
-				{
-					log.severe("Could not find Learner_Registration_Confirmation_Letter (.jasper or .jrxml) on classpath");
-					return null;
-				}
-				jasperReport = JasperCompileManager.compileReport(jrxmlStream);
-			}
-
-			JasperPrint print = JasperFillManager.fillReport(jasperReport, jasperParams, new JRMapCollectionDataSource(rows));
-			File tempDir = new File(System.getProperty("java.io.tmpdir"), "reg_confirm_" + System.currentTimeMillis());
-			tempDir.mkdirs();
-
-			String idNo = getIDOrPassportNo(prog, learner);
-			if (Util.isEmpty(idNo) && prog != null)
-			{
-				idNo = String.valueOf(prog.get_ID());
-			}
-			File pdfFile = new File(tempDir, "Registration_Confirmation_Letter_" + idNo + ".pdf");
-			JasperExportManager.exportReportToPdfFile(print, pdfFile.getAbsolutePath());
-			return pdfFile;
+			return createRegistrationLetterPdf(ctx, learner, prog, trxName);
 		}
 		catch (Exception e)
 		{
 			log.severe("Failed to generate Registration Confirmation Letter PDF: " + e.getMessage());
 			return null;
 		}
+	}
+
+	/**
+	 * Generates one Registration Confirmation Letter PDF per selected learner
+	 * using each learner's latest Registered programme.
+	 */
+	public static List<File> generateRegistrationConfirmationLetterPdfs(Properties ctx, List<Integer> learnerIds, String trxName)
+	{
+		List<Integer> uniqueIds = learnerIds == null ? List.of() : learnerIds.stream()
+				.filter(id -> id != null && id > 0)
+				.distinct()
+				.toList();
+		if (uniqueIds.isEmpty())
+		{
+			throw new AdempiereException("Please select at least one learner to print the Registration Letter.");
+		}
+
+		List<LearnerProgramme> selections = new ArrayList<>();
+		List<String> unregisteredLearners = new ArrayList<>();
+		for (int learnerId : uniqueIds)
+		{
+			X_ZZLearner learner = new Query(ctx, I_ZZLearner.Table_Name,
+					I_ZZLearner.COLUMNNAME_ZZLearner_ID + "=?", trxName)
+					.setParameters(learnerId)
+					.setOnlyActiveRecords(true)
+					.first();
+			if (learner == null)
+			{
+				throw new AdempiereException("Selected learner (ID=" + learnerId + ") could not be found or is inactive.");
+			}
+
+			PO prog = findLatestRegisteredProgramme(learner);
+			if (prog == null)
+			{
+				unregisteredLearners.add(formatLearnerLabel(learner));
+			}
+			else
+			{
+				selections.add(new LearnerProgramme(learner, prog));
+			}
+		}
+
+		if (!unregisteredLearners.isEmpty())
+		{
+			throw new AdempiereException(
+					"The following selected learner(s) do not have a Registered programme: "
+							+ String.join(", ", unregisteredLearners));
+		}
+
+		List<File> pdfFiles = new ArrayList<>();
+		for (LearnerProgramme item : selections)
+		{
+			File pdfFile;
+			try
+			{
+				pdfFile = createRegistrationLetterPdf(ctx, item.learner(), item.prog(), trxName);
+			}
+			catch (Exception e)
+			{
+				throw new AdempiereException("Failed to generate Registration Confirmation Letter PDF: " + e.getMessage(), e);
+			}
+			if (pdfFile == null || !pdfFile.exists())
+			{
+				throw new AdempiereException("Failed to generate Registration Confirmation Letter PDF for "
+						+ formatLearnerLabel(item.learner()));
+			}
+			pdfFiles.add(pdfFile);
+		}
+		return pdfFiles;
+	}
+
+	private static File createRegistrationLetterPdf(Properties ctx, X_ZZLearner learner, PO prog, String trxName)
+			throws Exception
+	{
+		int sdpId = resolveSdpId(ctx, learner, prog);
+		String sdpName = "";
+		String sdpSearchKey = "";
+		if (sdpId > 0)
+		{
+			MBPartner sdpBp = new MBPartner(ctx, sdpId, trxName);
+			if (sdpBp.get_ID() > 0)
+			{
+				sdpName = sdpBp.getName() != null ? sdpBp.getName() : "";
+				sdpSearchKey = sdpBp.getValue() != null ? sdpBp.getValue() : "";
+			}
+		}
+
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+		Map<String, Object> jasperParams = new HashMap<>();
+		jasperParams.put("SDPName", sdpName);
+		jasperParams.put("SDPSearchKey", sdpSearchKey);
+		jasperParams.put("DatePrinted", sdf.format(new Date()));
+		jasperParams.put("ProgrammeName", resolveProgrammeName(prog));
+		jasperParams.put("CompanyName", (sdpName + " " + sdpSearchKey).trim());
+
+		final String reportPath = "/za/co/ntier/wsp_atr/report/jrxmls/";
+		URL headerUrl = ZZLearnerUtil.class.getResource(reportPath + "MQA_Address_Logo_Header.png");
+		if (headerUrl != null)
+		{
+			jasperParams.put("HeaderImagePath", headerUrl);
+		}
+		URL footerUrl = ZZLearnerUtil.class.getResource(reportPath + "Footer_Mining_Future_Skills.png");
+		if (footerUrl != null)
+		{
+			jasperParams.put("FooterImagePath", footerUrl);
+		}
+		jasperParams.put("RESOURCE_DIR", "za/co/ntier/wsp_atr/report/jrxmls/");
+		jasperParams.put(JRParameter.REPORT_CLASS_LOADER, ZZLearnerUtil.class.getClassLoader());
+
+		String idNo = getIDOrPassportNo(prog, learner);
+		Timestamp startTs = getTimestampColumn(prog, I_ZZLearnerLearnership.COLUMNNAME_ZZCommencementDate);
+		Timestamp endTs = getTimestampColumn(prog, I_ZZLearnerLearnership.COLUMNNAME_ZZCompletionDate);
+		Timestamp regTs = resolveRegistrationTimestamp(learner, prog);
+
+		Map<String, Object> row = new HashMap<>();
+		row.put("LearnerName", getLearnerFirstName(prog, learner));
+		row.put("LearnerSurname", getLearnerSurname(prog, learner));
+		row.put("LearnerIDNo", idNo);
+		row.put("StartDate", startTs != null ? sdf.format(startTs) : "");
+		row.put("EndDate", endTs != null ? sdf.format(endTs) : "");
+		row.put("RegistrationDate", sdf.format(regTs));
+
+		JasperReport jasperReport = loadRegistrationLetterReport(reportPath);
+		if (jasperReport == null)
+		{
+			return null;
+		}
+
+		JasperPrint print = JasperFillManager.fillReport(jasperReport, jasperParams, new JRMapCollectionDataSource(List.of(row)));
+		File tempDir = new File(System.getProperty("java.io.tmpdir"),
+				"reg_confirm_" + System.currentTimeMillis() + "_" + System.nanoTime());
+		tempDir.mkdirs();
+
+		if (Util.isEmpty(idNo) && prog != null)
+		{
+			idNo = String.valueOf(prog.get_ID());
+		}
+		if (Util.isEmpty(idNo) && learner != null)
+		{
+			idNo = String.valueOf(learner.get_ID());
+		}
+		String safeIdNo = Util.isEmpty(idNo) ? "learner" : idNo.replaceAll("[\\\\/:*?\"<>|]", "_");
+
+		File pdfFile = new File(tempDir, "Registration_Confirmation_Letter_" + safeIdNo + ".pdf");
+		JasperExportManager.exportReportToPdfFile(print, pdfFile.getAbsolutePath());
+		return pdfFile;
+	}
+
+	private static JasperReport loadRegistrationLetterReport(String reportPath) throws Exception
+	{
+		try (InputStream jasperStream = ZZLearnerUtil.class.getResourceAsStream(reportPath + "Learner_Registration_Confirmation_Letter.jasper"))
+		{
+			if (jasperStream != null)
+			{
+				try
+				{
+					return (JasperReport) JRLoader.loadObject(jasperStream);
+				}
+				catch (Exception e)
+				{
+					log.warning("Could not load precompiled .jasper: " + e.getMessage());
+				}
+			}
+		}
+		try (InputStream jrxmlStream = ZZLearnerUtil.class.getResourceAsStream(reportPath + "Learner_Registration_Confirmation_Letter.jrxml"))
+		{
+			if (jrxmlStream == null)
+			{
+				log.severe("Could not find Learner_Registration_Confirmation_Letter (.jasper or .jrxml) on classpath");
+				return null;
+			}
+			return JasperCompileManager.compileReport(jrxmlStream);
+		}
+	}
+
+	private static int resolveSdpId(Properties ctx, X_ZZLearner learner, PO prog)
+	{
+		int sdpId = (prog != null && prog.get_ColumnIndex(I_ZZLearnerLearnership.COLUMNNAME_ZZ_SDP_ID) >= 0)
+				? prog.get_ValueAsInt(I_ZZLearnerLearnership.COLUMNNAME_ZZ_SDP_ID) : 0;
+		if (sdpId <= 0 && learner != null && learner.getZZ_SDPAdmin_ID() > 0 && ctx != null)
+		{
+			MUser adminUser = MUser.get(ctx, learner.getZZ_SDPAdmin_ID());
+			if (adminUser != null)
+			{
+				sdpId = adminUser.getC_BPartner_ID();
+			}
+		}
+		return sdpId;
+	}
+
+	private static Timestamp getTimestampColumn(PO po, String columnName)
+	{
+		if (po != null && po.get_ColumnIndex(columnName) >= 0)
+		{
+			return (Timestamp) po.get_Value(columnName);
+		}
+		return null;
+	}
+
+	private static Timestamp resolveRegistrationTimestamp(X_ZZLearner learner, PO prog)
+	{
+		Timestamp regTs = getTimestampColumn(prog, I_ZZLearnerLearnership.COLUMNNAME_ZZRegistrationDate);
+		if (regTs == null)
+		{
+			regTs = getTimestampColumn(prog, I_ZZLearnerLearnership.COLUMNNAME_ZZ_DateRegistered);
+		}
+		if (regTs == null && learner != null)
+		{
+			regTs = learner.getZZ_DateRegistered();
+		}
+		return regTs != null ? regTs : new Timestamp(System.currentTimeMillis());
+	}
+
+	private static String formatLearnerLabel(X_ZZLearner learner)
+	{
+		String name = (getLearnerFirstName(learner) + " " + getLearnerSurname(learner)).trim();
+		String idNo = getIDOrPassportNo(learner);
+		if (!name.isEmpty() && !idNo.isEmpty())
+		{
+			return name + " (" + idNo + ")";
+		}
+		if (!name.isEmpty())
+		{
+			return name;
+		}
+		return !idNo.isEmpty() ? idNo : "ID=" + learner.get_ID();
 	}
 
 	/**
@@ -765,6 +876,67 @@ public class ZZLearnerUtil
 			description += " " + levelText;
 		}
 		return label + " (" + description + ")";
+	}
+
+	/**
+	 * Finds the latest Registered programme child record across all 6 intervention tables.
+	 */
+	public static PO findLatestRegisteredProgramme(X_ZZLearner learner)
+	{
+		if (learner == null || learner.get_ID() <= 0)
+		{
+			return null;
+		}
+
+		String whereClause = I_ZZLearnerLearnership.COLUMNNAME_ZZLearner_ID + "=? AND "
+				+ I_ZZLearnerLearnership.COLUMNNAME_ZZ_DocStatus + "=?";
+		String orderBy = "COALESCE(" + I_ZZLearnerLearnership.COLUMNNAME_ZZRegistrationDate + ", "
+				+ I_ZZLearnerLearnership.COLUMNNAME_ZZ_DateRegistered + ", "
+				+ I_ZZLearnerLearnership.COLUMNNAME_Created + ") DESC, "
+				+ I_ZZLearnerLearnership.COLUMNNAME_Created + " DESC";
+
+		PO latestProg = null;
+		Timestamp latestTs = null;
+		for (String tableName : INTERVENTION_TABLES)
+		{
+			PO candidate = new Query(learner.getCtx(), tableName, whereClause, learner.get_TrxName())
+					.setParameters(learner.get_ID(), X_ZZLearner.ZZ_DOCSTATUS_Registered)
+					.setOnlyActiveRecords(true)
+					.setOrderBy(orderBy)
+					.first();
+			if (candidate == null)
+			{
+				continue;
+			}
+			Timestamp candidateTs = getEffectiveRegistrationTimestamp(candidate);
+			if (latestProg == null || isLaterProgramme(candidate, candidateTs, latestProg, latestTs))
+			{
+				latestProg = candidate;
+				latestTs = candidateTs;
+			}
+		}
+		return latestProg;
+	}
+
+	private static Timestamp getEffectiveRegistrationTimestamp(PO prog)
+	{
+		Timestamp ts = getTimestampColumn(prog, I_ZZLearnerLearnership.COLUMNNAME_ZZRegistrationDate);
+		if (ts == null)
+		{
+			ts = getTimestampColumn(prog, I_ZZLearnerLearnership.COLUMNNAME_ZZ_DateRegistered);
+		}
+		return ts != null ? ts : prog.getCreated();
+	}
+
+	private static boolean isLaterProgramme(PO candidate, Timestamp candidateTs, PO current, Timestamp currentTs)
+	{
+		Comparator<Timestamp> nullsFirstTs = Comparator.nullsFirst(Comparator.naturalOrder());
+		int cmp = nullsFirstTs.compare(candidateTs, currentTs);
+		if (cmp != 0)
+		{
+			return cmp > 0;
+		}
+		return nullsFirstTs.compare(candidate.getCreated(), current.getCreated()) > 0;
 	}
 
 	/**
