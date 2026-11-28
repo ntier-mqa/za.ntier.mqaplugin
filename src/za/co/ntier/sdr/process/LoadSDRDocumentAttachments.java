@@ -57,7 +57,10 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
 
     // Package-private: ExportSDRReconciliationReport searches the same directories.
     static final String[] DEFAULT_BASE_DIRS = { "/home/ntier/MQASkillsDocuments",
-            "/home/ntier/MQASkillsDocuments_250926-1", "/home/ntier/MQASkillsDocuments_250926-2","/home/ntier/MQASkillsDocuments_19102026" };
+            // dev names these with a hyphen, UAT with an underscore - list both, missing ones are skipped
+            "/home/ntier/MQASkillsDocuments_250926-1", "/home/ntier/MQASkillsDocuments_250926-2",
+            "/home/ntier/MQASkillsDocuments_250926_1", "/home/ntier/MQASkillsDocuments_250926_2",
+            "/home/ntier/MQASkillsDocuments_19102026" };
     private static final String SAVED_FILENAME_COL = "sdr_savedfilename";
     private static final String ORIGINAL_FILENAME_COL = "sdr_originalfilename";
     private static final String ISACTIVE_COL = "isactive";
@@ -136,15 +139,21 @@ public class LoadSDRDocumentAttachments extends SvrProcess {
     @Override
     protected String doIt() throws Exception {
         List<File> dirs = new ArrayList<>();
-        String[] dirNames = (p_BaseDirectory != null && !p_BaseDirectory.trim().isEmpty())
-                ? p_BaseDirectory.split(",")
-                : DEFAULT_BASE_DIRS;
+        boolean explicit = p_BaseDirectory != null && !p_BaseDirectory.trim().isEmpty();
+        String[] dirNames = explicit ? p_BaseDirectory.split(",") : DEFAULT_BASE_DIRS;
         for (String dirName : dirNames) {
             File dir = new File(dirName.trim());
             if (!dir.isDirectory()) {
-                throw new AdempiereException("Base directory does not exist or is not a directory: " + dirName);
+                if (explicit) {
+                    throw new AdempiereException("Base directory does not exist or is not a directory: " + dirName);
+                }
+                addLog("Default directory not present on this server - skipped: " + dirName);
+                continue;
             }
             dirs.add(dir);
+        }
+        if (dirs.isEmpty()) {
+            throw new AdempiereException("None of the default document directories exist on this server");
         }
         long maxRows = p_MaxRows != null ? p_MaxRows.longValue() : 0L;
 
